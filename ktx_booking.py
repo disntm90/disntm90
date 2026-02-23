@@ -9,10 +9,10 @@ Korail 공식 웹사이트(www.letskorail.com)를 Selenium으로 자동화하여
     python ktx_booking.py
 """
 
+import os
 import time
 import logging
-import subprocess
-import shutil
+import tempfile
 from dataclasses import dataclass
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -99,11 +99,16 @@ class KTXBooker:
     def _init_driver(self) -> None:
         opts = Options()
 
+        # ── 임시 프로필 디렉터리 (ASCII 경로) ─────────────────────────────
+        # OneDrive/문서 등 한글 경로에서 Chrome이 크래시하는 문제를 우회합니다.
+        # C:\Users\<user>\AppData\Local\Temp\ 아래에 임시 폴더를 생성합니다.
+        self._tmp_profile = tempfile.mkdtemp(prefix="ktx_chrome_")
+        opts.add_argument(f"--user-data-dir={self._tmp_profile}")
+
         # ── 안정성 옵션 (Windows Chrome 145+ 호환) ────────────────────────
         opts.add_argument("--no-sandbox")
         opts.add_argument("--disable-dev-shm-usage")
         opts.add_argument("--disable-gpu")
-        opts.add_argument("--remote-debugging-port=0")
         opts.add_argument("--window-size=1280,900")
         opts.add_argument("--disable-blink-features=AutomationControlled")
 
@@ -114,9 +119,8 @@ class KTXBooker:
         # 헤드리스 실행을 원하면 아래 주석 해제
         # opts.add_argument("--headless=new")
 
-        # ── ChromeDriver 자동 탐색 ────────────────────────────────────────
-        # Selenium 4.6+ 에 내장된 SeleniumManager 가 Chrome 버전에 맞는
-        # ChromeDriver 를 자동으로 다운로드·관리하므로 webdriver-manager 불필요
+        # ── ChromeDriver 실행 (Selenium 4.6+ 자동 관리) ──────────────────
+        log.info("Chrome 시작 중... (프로필: %s)", self._tmp_profile)
         try:
             self.driver = webdriver.Chrome(options=opts)
         except SessionNotCreatedException as exc:
@@ -125,7 +129,8 @@ class KTXBooker:
                 "[해결 방법]\n"
                 "1. Chrome 을 최신 버전으로 업데이트하세요.\n"
                 "2. pip install -U selenium  (4.25 이상 권장)\n"
-                "3. 백신/방화벽이 chromedriver 를 차단하는지 확인하세요.\n",
+                "3. 백신/방화벽이 chromedriver 를 차단하는지 확인하세요.\n"
+                "4. 실행 중인 Chrome 창을 모두 닫고 다시 시도하세요.\n",
                 exc,
             )
             raise
