@@ -3,7 +3,7 @@ KTX 자동 예매 스크립트
 Korail 공식 웹사이트(www.letskorail.com)를 Selenium으로 자동화하여 KTX를 예매합니다.
 
 필요 패키지 설치:
-    pip install selenium webdriver-manager
+    pip install selenium
 
 사용법:
     python ktx_booking.py
@@ -11,8 +11,9 @@ Korail 공식 웹사이트(www.letskorail.com)를 Selenium으로 자동화하여
 
 import time
 import logging
+import subprocess
+import shutil
 from dataclasses import dataclass
-from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -23,9 +24,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import (
     TimeoutException,
     NoSuchElementException,
-    ElementClickInterceptedException,
+    SessionNotCreatedException,
 )
-from webdriver_manager.chrome import ChromeDriverManager
 
 # ── 로깅 설정 ─────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -98,25 +98,52 @@ class KTXBooker:
     # ── 드라이버 초기화 ───────────────────────────────────────────────────────
     def _init_driver(self) -> None:
         opts = Options()
-        # 헤드리스 실행을 원하면 아래 주석 해제
-        # opts.add_argument("--headless=new")
+
+        # ── 안정성 옵션 (Windows Chrome 145+ 호환) ────────────────────────
+        opts.add_argument("--no-sandbox")
+        opts.add_argument("--disable-dev-shm-usage")
+        opts.add_argument("--disable-gpu")
+        opts.add_argument("--remote-debugging-port=0")
         opts.add_argument("--window-size=1280,900")
         opts.add_argument("--disable-blink-features=AutomationControlled")
-        opts.add_experimental_option("excludeSwitches", ["enable-automation"])
+
+        # 자동화 탐지 우회
+        opts.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
         opts.add_experimental_option("useAutomationExtension", False)
-        opts.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/121.0.0.0 Safari/537.36"
-        )
-        service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=service, options=opts)
+
+        # 헤드리스 실행을 원하면 아래 주석 해제
+        # opts.add_argument("--headless=new")
+
+        # ── ChromeDriver 자동 탐색 ────────────────────────────────────────
+        # Selenium 4.6+ 에 내장된 SeleniumManager 가 Chrome 버전에 맞는
+        # ChromeDriver 를 자동으로 다운로드·관리하므로 webdriver-manager 불필요
+        try:
+            self.driver = webdriver.Chrome(options=opts)
+        except SessionNotCreatedException as exc:
+            log.error(
+                "Chrome 세션 생성 실패: %s\n\n"
+                "[해결 방법]\n"
+                "1. Chrome 을 최신 버전으로 업데이트하세요.\n"
+                "2. pip install -U selenium  (4.25 이상 권장)\n"
+                "3. 백신/방화벽이 chromedriver 를 차단하는지 확인하세요.\n",
+                exc,
+            )
+            raise
+
         self.driver.execute_cdp_cmd(
             "Page.addScriptToEvaluateOnNewDocument",
             {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"},
         )
         self.wait = WebDriverWait(self.driver, 15)
-        log.info("Chrome 드라이버 초기화 완료")
+        log.info("Chrome 드라이버 초기화 완료 (Chrome %s)", self._chrome_version())
+
+    def _chrome_version(self) -> str:
+        """현재 연결된 Chrome 버전 반환"""
+        try:
+            caps = self.driver.capabilities
+            return caps.get("browserVersion", caps.get("version", "unknown"))
+        except Exception:
+            return "unknown"
 
     # ── 로그인 ────────────────────────────────────────────────────────────────
     def login(self) -> None:
