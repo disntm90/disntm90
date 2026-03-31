@@ -17,6 +17,8 @@ from dataclasses import dataclass
 from typing import Optional
 import warnings
 
+from fpm_plugins import PluginManager
+
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -217,7 +219,8 @@ def reconstruct_fpm(
     kx_arr: np.ndarray,
     ky_arr: np.ndarray,
     cfg: FPMConfig,
-    callback=None
+    callback=None,
+    plugin_manager: Optional[PluginManager] = None,
 ) -> dict:
     """
     FPM 복원 알고리즘.
@@ -229,6 +232,7 @@ def reconstruct_fpm(
     ky_arr   : 각 LED의 y 방향 공간 주파수 [rad/m], shape (N_led,)
     cfg      : FPMConfig 인스턴스
     callback : 선택적 콜백 함수 callback(iter_idx, O_hr) — 중간 결과 모니터링용
+    plugin_manager : 플러그인 매니저 인스턴스 (선택)
 
     Returns
     -------
@@ -238,6 +242,10 @@ def reconstruct_fpm(
         'spectrum'   : 고해상도 푸리에 스펙트럼 (complex)
         'errors'     : 반복당 평균 세기 오차 리스트
     """
+    # 플러그인 전처리
+    if plugin_manager is not None:
+        images = plugin_manager.run_preprocess(images, cfg)
+
     N_led, Ny_lr, Nx_lr = images.shape
     Ny_hr = Ny_lr * cfg.upsample_factor
     Nx_hr = Nx_lr * cfg.upsample_factor
@@ -265,6 +273,10 @@ def reconstruct_fpm(
 
     for it in range(cfg.n_iterations):
         total_error = 0.0
+
+        # 플러그인: 반복 시작 전 훅
+        if plugin_manager is not None:
+            O_hr_fshift = plugin_manager.run_before_iteration(it, O_hr_fshift, cfg)
 
         # LED를 랜덤하게 섞어서 갱신 (수렴 개선)
         order = np.random.permutation(N_led)
@@ -298,6 +310,10 @@ def reconstruct_fpm(
 
             delta_patch = pupil_conj / pupil_max2 * (patch_f_new - patch_f)
 
+            # 플러그인: 업데이트 수정 훅
+            if plugin_manager is not None:
+                delta_patch = plugin_manager.run_on_update(delta_patch, i, it, cfg)
+
             # HR 스펙트럼 갱신
             update = insert_patch(np.zeros(hr_shape, dtype=complex),
                                   delta_patch, cy, cx)
@@ -305,6 +321,11 @@ def reconstruct_fpm(
 
         avg_error = total_error / N_led
         errors.append(avg_error)
+
+        # 플러그인: 반복 완료 후 훅
+        if plugin_manager is not None:
+            O_hr_fshift = plugin_manager.run_after_iteration(it, O_hr_fshift,
+                                                              avg_error, cfg)
 
         if callback is not None:
             callback(it, O_hr_fshift)
@@ -315,12 +336,18 @@ def reconstruct_fpm(
     # 물체 공간으로 변환
     O_hr = ifft2(ifftshift(O_hr_fshift))
 
-    return {
+    result = {
         'amplitude': np.abs(O_hr),
         'phase':     np.angle(O_hr),
         'spectrum':  O_hr_fshift,
         'errors':    errors,
     }
+
+    # 플러그인: 후처리 훅
+    if plugin_manager is not None:
+        result = plugin_manager.run_postprocess(result, cfg)
+
+    return result
 
 
 # ---------------------------------------------------------------------------

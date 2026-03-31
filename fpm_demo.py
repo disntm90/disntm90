@@ -22,6 +22,12 @@ from fpm_reconstruction import (
     reconstruct_fpm,
     make_pupil_mask,
 )
+from fpm_plugins import (
+    PluginManager,
+    NoiseReductionPlugin,
+    ConvergenceMonitorPlugin,
+    IntensityCorrectionPlugin,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -210,11 +216,28 @@ def main():
     images = simulate_measurements(O_gt, kx_arr, ky_arr, cfg, noise_level=0.02)
     print(f"  생성 완료: {images.shape} 형태, 강도 범위 [{images.min():.4f}, {images.max():.4f}]")
 
-    # 5) FPM 복원
-    print(f"\nFPM 복원 시작 (반복 횟수={cfg.n_iterations})...")
-    result = reconstruct_fpm(images, kx_arr, ky_arr, cfg)
+    # 5) 플러그인 설정
+    pm = PluginManager()
+    pm.register(IntensityCorrectionPlugin())
+    pm.register(NoiseReductionPlugin(sigma=0.5))
+    pm.register(ConvergenceMonitorPlugin(patience=5, min_delta=1e-5))
 
-    # 6) 정량 평가
+    print(f"\n등록된 플러그인:")
+    for p in pm.plugins:
+        print(f"  - {p.name} (priority={p.priority})")
+
+    # 6) FPM 복원 (플러그인 적용)
+    print(f"\nFPM 복원 시작 (반복 횟수={cfg.n_iterations})...")
+    result = reconstruct_fpm(images, kx_arr, ky_arr, cfg, plugin_manager=pm)
+
+    # 수렴 정보 출력
+    if 'convergence_info' in result:
+        ci = result['convergence_info']
+        if ci['converged']:
+            print(f"  조기 수렴 감지: iter {ci['converged_at'] + 1}")
+        print(f"  최소 오차: {ci['best_error']:.6f}")
+
+    # 7) 정량 평가
     amp_gt = np.abs(O_gt)
     amp_rec = result['amplitude']
 
@@ -226,7 +249,7 @@ def main():
     print(f"  진폭 RMSE (정규화): {rmse:.4f}")
     print(f"  최종 오차         : {result['errors'][-1]:.4f}")
 
-    # 7) 시각화
+    # 8) 시각화
     print("\n결과 시각화 중...")
     visualize(O_gt, images, result, cfg, kx_arr, ky_arr)
 
