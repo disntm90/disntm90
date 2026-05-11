@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SLNH 분석 v2 — 2026.05.11</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#0a0f1e;font-family:system-ui,-apple-system,sans-serif;color:#f1f5f9}
+    h1,h2{margin:0}
+    button{font-family:inherit}
+    canvas{display:block}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useRef, useEffect } = React
+
+const C = {
+  green:'#22c55e', red:'#ef4444', yellow:'#f59e0b',
+  blue:'#3b82f6', gray:'#6b7280',
+  darkBg:'#0a0f1e', cardBg:'#141b2d', border:'#1e2d45',
+  text:'#f1f5f9', muted:'#7a90aa', cyan:'#06b6d4',
+  orange:'#f97316', purple:'#a855f7', teal:'#14b8a6',
+}
+
+function CJSChart({ config, height=220 }) {
+  const ref = useRef(null), inst = useRef(null)
+  useEffect(() => {
+    if (inst.current) inst.current.destroy()
+    inst.current = new Chart(ref.current, config)
+    return () => inst.current?.destroy()
+  }, [])
+  return <canvas ref={ref} style={{width:'100%',maxHeight:height}} height={height}/>
+}
+
+const Card = ({children,style={}}) => (
+  <div style={{background:C.cardBg,border:`1px solid ${C.border}`,borderRadius:16,padding:'20px 16px',marginBottom:14,...style}}>
+    {children}
+  </div>
+)
+const Badge = ({children,color=C.blue}) => (
+  <span style={{background:color+'20',color,border:`1px solid ${color}44`,borderRadius:6,padding:'3px 10px',fontSize:12,fontWeight:700,display:'inline-block',marginRight:4,marginBottom:4}}>
+    {children}
+  </span>
+)
+const SectionTitle = ({children,sub}) => (
+  <div style={{marginBottom:16}}>
+    <h2 style={{color:C.text,fontSize:17,fontWeight:800,margin:0,lineHeight:1.3}}>{children}</h2>
+    {sub && <p style={{color:C.muted,fontSize:12,margin:'5px 0 0',lineHeight:1.5}}>{sub}</p>}
+  </div>
+)
+const Row = ({label,value,color=C.text,sub}) => (
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'12px 0',borderBottom:`1px solid ${C.border}`}}>
+    <div>
+      <div style={{color:C.muted,fontSize:13}}>{label}</div>
+      {sub && <div style={{color:C.gray,fontSize:11,marginTop:2}}>{sub}</div>}
+    </div>
+    <span style={{color,fontWeight:800,fontSize:15,textAlign:'right',marginLeft:8}}>{value}</span>
+  </div>
+)
+const InfoBox = ({children,color=C.blue}) => (
+  <div style={{background:color+'15',border:`1px solid ${color}40`,borderRadius:10,padding:'12px 14px',marginTop:12}}>
+    <p style={{color,fontSize:13,margin:0,lineHeight:1.6,fontWeight:500}}>{children}</p>
+  </div>
+)
+const BullishBox = ({children}) => (
+  <div style={{background:'#22c55e18',border:'2px solid #22c55e',borderRadius:12,padding:'14px 16px',marginBottom:14}}>
+    <div style={{color:'#22c55e',fontWeight:900,fontSize:14,marginBottom:4}}>🟢 기술적 돌파 신호 (Bullish Breakout)</div>
+    <p style={{color:'#86efac',fontSize:13,margin:0,lineHeight:1.6}}>{children}</p>
+  </div>
+)
+const WarnBox = ({children,title}) => (
+  <div style={{background:'#f59e0b18',border:'2px solid #f59e0b',borderRadius:12,padding:'14px 16px',marginBottom:14}}>
+    <div style={{color:'#f59e0b',fontWeight:900,fontSize:14,marginBottom:4}}>{title||'⚠️ 주의'}</div>
+    <p style={{color:'#fcd34d',fontSize:13,margin:0,lineHeight:1.6}}>{children}</p>
+  </div>
+)
+
+/* ── 데이터 ── */
+const priceData = {
+  labels:["'24 Q3","'24 Q4","'25 Q1","'25 Q2","'25 Q3","'25 Q4","'26 Q1","'26 Apr","5/7","5/10"],
+  datasets:[{
+    label:'주가 ($)', data:[2.8,1.4,0.8,0.55,0.72,1.05,0.62,1.05,1.52,1.83],
+    borderColor:'#22c55e', backgroundColor:'#22c55e20',
+    fill:true, tension:0.35, pointRadius:3, borderWidth:2.5,
+    pointBackgroundColor:(ctx)=>{
+      const idx=ctx.dataIndex
+      return idx===9?'#22c55e':idx===8?'#f59e0b':'#22c55e'
+    }
+  }]
+}
+
+const revenueAnnual = {
+  labels:['FY2023','FY2024','FY2025','FY2026E','FY2028E'],
+  datasets:[
+    {label:'매출 ($M)', data:[38.0,38.02,29.72,52.0,132.8], backgroundColor:'#22c55e70', borderColor:'#22c55e', borderWidth:1.5, borderRadius:6},
+    {label:'순손실 ($M)', data:[-45,-42,-57,-30,null], backgroundColor:'#ef444470', borderColor:'#ef4444', borderWidth:1.5, borderRadius:6},
+  ]
+}
+
+const cashData = {
+  labels:['FY2023','FY2024','FY2025'],
+  datasets:[
+    {label:'총 현금 ($M)', data:[10.5,11.4,88.8], backgroundColor:'#06b6d480', borderColor:'#06b6d4', borderWidth:1.5, borderRadius:6},
+    {label:'PP&E ($M)', data:[28.0,47.3,74.8], backgroundColor:'#a855f780', borderColor:'#a855f7', borderWidth:1.5, borderRadius:6},
+  ]
+}
+
+const mwData = {
+  labels:['Briscoe\n풍력','Kati 1A','Kati 1B','Dorothy 1A','Dorothy 1B','Kati 2','Dorothy 3'],
+  datasets:[{
+    label:'MW', data:[150,48,35,20,17,300,300],
+    backgroundColor:['#22c55e','#22c55e','#22c55e','#22c55e','#f59e0b','#3b82f6','#3b82f6'],
+    borderRadius:6
+  }]
+}
+
+const dilutionData = {
+  labels:['기존 주주 (~141M)','SEPA 오버행 (26.51M)','워런트 등록 (2.46M)'],
+  datasets:[{
+    data:[141.3,26.51,2.46],
+    backgroundColor:['#3b82f6','#ef4444','#f97316'],
+    borderWidth:0,
+  }]
+}
+
+const radarData = {
+  labels:['성장 잠재력','재무 안정성','실행 역량','테마 적합성','희석 리스크','상장 안정성'],
+  datasets:[
+    {label:'SLNH', data:[88,55,55,90,75,60],
+      borderColor:'#22c55e', backgroundColor:'#22c55e20', borderWidth:2, pointRadius:3},
+    {label:'IREN', data:[75,65,80,90,70,85],
+      borderColor:'#f97316', backgroundColor:'#f9731620', borderWidth:2, pointRadius:3},
+    {label:'CORZ', data:[70,60,75,90,65,90],
+      borderColor:'#a855f7', backgroundColor:'#a855f720', borderWidth:2, pointRadius:3},
+  ]
+}
+
+const darkOpts = (yFmt='$', legend=false) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{
+    legend:{display:legend, labels:{color:'#7a90aa', boxWidth:12, font:{size:11}}},
+    tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}
+  },
+  scales:{
+    x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+    y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:11},
+      callback:yFmt==='$M'?v=>v==null?'':(`$${v}M`):yFmt==='$'?v=>`$${v}`:v=>v}}
+  }
+})
+
+/* ── 탭 콘텐츠 ── */
+function OverviewTab() {
+  const catalysts = [
+    {date:'2026.02',event:'Kati 1 83MW 가동 시작',type:'pos'},
+    {date:'2026.04',event:'Briscoe 풍력 150MW $53M 인수 완료',type:'pos'},
+    {date:'2026.04',event:'Dorothy 1A 완전 지분 인수 완료 → AI 캠퍼스',type:'pos'},
+    {date:'2026.04',event:'26.51M 주식 재매각 등록 (SEPA 오버행)',type:'risk'},
+    {date:'2026.05.01',event:'Nasdaq 컴플라이언스 완전 회복 확인',type:'pos'},
+    {date:'2026.05.07',event:'Dorothy 1B — Sazmining 3MW BTC 채굴 개시',type:'pos'},
+    {date:'2026.05.07',event:'Kati 2 AI 데이터센터 전문 설계사 선정 (RFP)',type:'pos'},
+    {date:'2026.05.10',event:'주가 $1.83 — 200일 MA 상향 돌파 (+20%)',type:'pos'},
+  ]
+  return <>
+    <BullishBox>200일 이동평균 돌파 + RSI 55~58 중립 구간 = 기술적 개선. 이전 분석 대비 진입 환경 유리. 단, 29M 재매각 오버행은 단기 저항 요인.</BullishBox>
+
+    <Card>
+      <SectionTitle sub="Soluna Holdings · NASDAQ: SLNH · 2026.05.10">기업 개요</SectionTitle>
+      <div style={{display:'flex',flexWrap:'wrap',marginBottom:16}}>
+        <Badge color={C.green}>재생에너지 데이터센터</Badge>
+        <Badge color={C.blue}>AI/HPC 호스팅</Badge>
+        <Badge color={C.yellow}>BTC 채굴</Badge>
+        <Badge color={C.red}>마이크로캡 소형주</Badge>
+      </div>
+      {[
+        {label:'현재가',value:'$1.83',color:C.green,sub:'2026.05.10 · 전일 대비 +20.39%'},
+        {label:'52주 저점',value:'$0.415',color:C.red,sub:'상장폐지 위기 구간'},
+        {label:'52주 고점',value:'$5.14',color:C.cyan},
+        {label:'시가총액',value:'~$271M',color:C.text,sub:'주가 반등으로 상승'},
+        {label:'저점 대비 수익률',value:'+341%',color:C.green,sub:'$0.415 → $1.83'},
+        {label:'RSI (14)',value:'55~58',color:C.green,sub:'중립 — 과매수 아님'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="2024~2026 주가 흐름 (Nasdaq $1 기준선)">주가 흐름</SectionTitle>
+      <div style={{height:200}}>
+        <CJSChart height={200} config={{
+          type:'line', data:priceData,
+          options:{...darkOpts('$'), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+            y:{grid:{color:'#1e2d4560'},
+              ticks:{color:'#7a90aa',callback:v=>`$${v}`},min:0,max:6},
+          }, plugins:{
+            legend:{display:false},
+            tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'},
+            annotation:{annotations:{line1:{type:'line',yMin:1,yMax:1,borderColor:'#ef4444',borderDash:[4,4],borderWidth:2}}}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.green}>최신: $1.83 (5/10). 200일 이동평균($1.53~1.60 추정) 상향 돌파 — 장기 추세 전환 신호.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="May 7, 2026 월간 업데이트 기준">주요 이벤트 타임라인</SectionTitle>
+      {catalysts.map((c,i) => (
+        <div key={i} style={{display:'flex',alignItems:'flex-start',gap:12,padding:'11px 0',borderBottom:i<catalysts.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{width:8,height:8,borderRadius:'50%',marginTop:5,flexShrink:0,
+            background:c.type==='risk'?C.red:C.green,
+            boxShadow:`0 0 6px ${c.type==='risk'?C.red:C.green}`}}/>
+          <div style={{flex:1}}>
+            <div style={{color:C.muted,fontSize:11,fontFamily:'monospace',marginBottom:2}}>{c.date}</div>
+            <div style={{color:c.type==='risk'?C.red:C.text,fontSize:13,fontWeight:600,lineHeight:1.4}}>{c.event}</div>
+          </div>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="3단 수직통합 비즈니스 모델">사업 구조</SectionTitle>
+      {[
+        {icon:'🌬️',label:'재생에너지 생산',desc:'Briscoe 풍력 150MW 직접 소유 (전기 원가 ≈ $0)',color:C.green},
+        {icon:'🖥️',label:'데이터센터 운영',desc:'BTC 채굴 + AI/HPC 코로케이션 (Kati·Dorothy 캠퍼스)',color:C.blue},
+        {icon:'💡',label:'연산 서비스 판매',desc:'하이퍼스케일러·네오클라우드 실사 진행 중',color:C.purple},
+      ].map((s,i) => (
+        <div key={i} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 0',borderBottom:i<2?`1px solid ${C.border}`:'none'}}>
+          <span style={{fontSize:28}}>{s.icon}</span>
+          <div>
+            <Badge color={s.color}>{s.label}</Badge>
+            <div style={{color:C.muted,fontSize:13,marginTop:5,lineHeight:1.4}}>{s.desc}</div>
+          </div>
+        </div>
+      ))}
+    </Card>
+  </>
+}
+
+function TechTab() {
+  const signals = [
+    {label:'현재가',value:'$1.83',signal:'🟢 강한 반등',color:C.green,desc:'5/10 기준 +20.39% 급등'},
+    {label:'RSI (14)',value:'55~58',signal:'🟢 중립 — 건강한 구간',color:C.green,desc:'70 미만 = 과매수 아님'},
+    {label:'200일 이동평균',value:'돌파',signal:'🟢 장기 추세 전환',color:C.green,desc:'핵심 기술적 돌파 신호'},
+    {label:'볼린저밴드 상단',value:'$1.778 돌파',signal:'🟢 상향 모멘텀',color:C.green,desc:'밴드 외곽 돌파 = 강한 추세'},
+    {label:'52주 저점 대비',value:'+341%',signal:'🟡 강한 반등 구간',color:C.yellow,desc:'$0.415 → $1.83'},
+    {label:'재매각 오버행',value:'~29M주',signal:'🔴 공급 압력 상존',color:C.red,desc:'유통주식 대비 ~20% 잠재 물량'},
+  ]
+  return <>
+    <BullishBox>200일 이동평균 상향 돌파 + 볼린저밴드 상단 돌파 = 이중 기술적 돌파 신호. RSI 55~58 중립으로 추가 상승 여력 있음. 단기 저항 $1.92.</BullishBox>
+
+    <Card>
+      <SectionTitle sub="Morgan Stanley 기술적 분석">핵심 기술 지표</SectionTitle>
+      {signals.map((s,i) => (
+        <div key={i} style={{padding:'12px 0',borderBottom:i<signals.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+            <div>
+              <span style={{color:C.muted,fontSize:13}}>{s.label}</span>
+              <div style={{color:C.gray,fontSize:11,marginTop:2}}>{s.desc}</div>
+            </div>
+            <span style={{color:s.color,fontWeight:900,fontSize:15}}>{s.value}</span>
+          </div>
+          <div style={{color:s.color,fontSize:12,fontWeight:700}}>{s.signal}</div>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="지지선 & 저항선">진입·청산 포인트</SectionTitle>
+      {[
+        {label:'애널리스트 목표가', value:'$5.00', color:C.purple, sub:'HC Wainwright · +173%'},
+        {label:'2차 저항선', value:'$3.00', color:C.green, sub:'심리적 저항 / 공매도 커버'},
+        {label:'1차 저항선', value:'$1.92', color:C.yellow, sub:'5/10 인트라데이 고점'},
+        {label:'현재가', value:'$1.83 ◀', color:C.green, sub:'2026.05.10 기준'},
+        {label:'볼린저밴드 상단', value:'$1.78', color:C.teal, sub:'돌파 후 지지선 전환'},
+        {label:'1차 지지선', value:'$1.53', color:C.blue, sub:'전일 종가 / 200일 MA'},
+        {label:'2차 지지선', value:'$1.27', color:C.blue, sub:'볼린저 중간밴드'},
+        {label:'3차 지지선', value:'$1.08', color:C.blue, sub:'30일 이동평균'},
+        {label:'손절선', value:'$1.00', color:C.red, sub:'Nasdaq 기준선 이탈 시 청산'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="하이킨아시 (Heikin-Ashi) 분석">추세 패턴</SectionTitle>
+      <div style={{background:'#22c55e12',border:'1px solid #22c55e40',borderRadius:10,padding:'14px'}}>
+        <div style={{color:C.green,fontWeight:800,fontSize:14,marginBottom:8}}>🟢 단기 상승 추세 — 돌파 국면</div>
+        <div style={{color:'#86efac',fontSize:13,lineHeight:1.7}}>
+          • 일봉: $0.62(26 Q1 저점) → $1.83 연속 양봉 반등 중<br/>
+          • 주봉: $0.415 이중바닥 확인 후 상승 추세 전환<br/>
+          • 패턴: 기저(Basing) 구간 이탈 → 상승 브레이크아웃<br/>
+          • RSI 55~58 = 추가 상승 공간 충분 (70 미만)
+        </div>
+      </div>
+      <InfoBox color={C.yellow}>단기 오버행 주의: 29M 재매각 주식이 시장에 공급될 경우 일시적 조정 가능. $1.53~1.27 지지선에서 매집 기회.</InfoBox>
+    </Card>
+  </>
+}
+
+function FinancialTab() {
+  return <>
+    <Card>
+      <SectionTitle sub="Goldman Sachs 펀더멘털 분석 · 2025 확정치">핵심 재무 지표</SectionTitle>
+      {[
+        {label:'PER (주가수익비율)', value:'N/A', color:C.gray, sub:'적자 기업 — 산출 불가'},
+        {label:'P/S (현재)', value:'~9.1x', color:C.yellow, sub:'시총$271M ÷ 매출$29.7M'},
+        {label:'Forward P/S (FY28E)', value:'~2.0x', color:C.green, sub:'시총$271M ÷ 예상$132.8M'},
+        {label:'2025 매출', value:'$29.72M', color:C.orange, sub:'-21.84% YoY (BTC 채굴 단가 전환기)'},
+        {label:'2025 순손실', value:'-$57.0M', color:C.red},
+        {label:'총 현금 (2025말)', value:'$88.8M', color:C.green, sub:'비제한 $76M — 강력한 유동성'},
+        {label:'PP&E (2025말)', value:'$74.8M', color:C.cyan, sub:'+58% YoY — 자산 급증'},
+        {label:'2025 자본 조달', value:'~$142M', color:C.green, sub:'현금 포지션 750% 증가'},
+        {label:'FY28 매출 예상', value:'$132.8M', color:C.purple, sub:'기본 시나리오 — AI 가동 시'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.green}>핵심 인사이트: 매출은 감소했으나 현금 $88.8M + PP&E $74.8M으로 자산 기반이 크게 강화됨. Briscoe 풍력이 2026년부터 연 $20~24.4M 기여 예정 → 실질 매출 반등 사이클 진입.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="연간 매출 & 순손실 ($M) · FY28E 기준">재무 성과 추이</SectionTitle>
+      <div style={{height:230}}>
+        <CJSChart height={230} config={{
+          type:'bar', data:revenueAnnual,
+          options:{...darkOpts('$M', true), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:11}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`$${v}M`}}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.cyan}>FY26E $52M (+75% YoY): Briscoe 기여 시작 + Kati 1 완전 가동. FY28E $132.8M은 Kati 2·Dorothy 3 AI 가동 가정.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="현금 vs PP&E 성장 — 자산 강화 트렌드">현금 & 자산 현황</SectionTitle>
+      <div style={{height:200}}>
+        <CJSChart height={200} config={{
+          type:'bar', data:cashData,
+          options:{...darkOpts('$M', true), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:11}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`$${v}M`}}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.green}>2025년 $142M 자본 조달로 현금 $88.8M 확보. 운전자본 충분 — 추가 희석 없이 12~18개월 운영 가능 추정.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="프로젝트별 MW 용량 (초록=운영 / 노랑=준공 중 / 파랑=개발)">전력 용량 현황</SectionTitle>
+      <div style={{height:230}}>
+        <CJSChart height={230} config={{
+          type:'bar', data:mwData,
+          options:{...darkOpts('mw'), plugins:{
+            legend:{display:false},
+            tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9',callbacks:{label:ctx=>`${ctx.raw}MW`}}
+          }, scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`${v}MW`}}
+          }}
+        }}/>
+      </div>
+      <div style={{display:'flex',gap:16,justifyContent:'center',marginTop:12}}>
+        {[['운영 중',C.green],['준공 중',C.yellow],['개발 중',C.blue]].map(([l,c]) => (
+          <div key={l} style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:10,height:10,borderRadius:3,background:c}}/>
+            <span style={{color:C.muted,fontSize:12}}>{l}</span>
+          </div>
+        ))}
+      </div>
+      <InfoBox color={C.yellow}>운영 ~270MW (Briscoe+Kati+Dorothy 1A) vs 개발 600MW+. 파이프라인 실현 시 총 ~870MW.</InfoBox>
+    </Card>
+  </>
+}
+
+function SentimentTab() {
+  const opinions = [
+    {src:'HC Wainwright (Kevin Dede)', stance:'강세', color:C.green, opinion:'"Strong Buy. 목표주가 $5.00. 현재가($1.83) 대비 +173% 업사이드. 재생에너지 수직통합 + AI 파이프라인이 핵심 가치."'},
+    {src:'Ainvest 분석', stance:'강세', color:C.green, opinion:'"5/10 intraday +20% 급등은 단순 소문이 아닌 AI 인프라 테마 재조명 신호. 볼린저밴드 돌파로 기술적 모멘텀 확인."'},
+    {src:'투자 커뮤니티 (Stocktwits)', stance:'강세', color:C.green, opinion:'"Briscoe 풍력 + Dorothy 1A 완전 인수 = 진짜 수직통합 실현. 하이퍼스케일러 실사가 계속 진행 중이라는 점이 핵심."'},
+    {src:'r/investing 커뮤니티', stance:'강세', color:C.green, opinion:'"$76M 비제한 현금은 이 섹터에서 보기 드문 유동성. IREN 초기 단계와 유사한 스토리. Kati 2 계약이 game-changer."'},
+    {src:'StocksToTrade (5/4)', stance:'중립', color:C.yellow, opinion:'"긍정적 모멘텀 있으나 29M 재매각 주식 오버행을 무시할 수 없다. 상승 때마다 매도 물량 출회 가능. 신중한 포지션 권고."'},
+    {src:'StocksToTrade (5/7)', stance:'중립', color:C.yellow, opinion:'"월간 업데이트는 긍정적이나 AI 실제 계약은 아직 없음. 하이퍼스케일러 실사 단계는 계약 체결과 다르다. 모니터링 필요."'},
+    {src:'TimothySykes (5/6)', stance:'중립', color:C.yellow, opinion:'"SLNH 반등은 AI 인프라 + 풍력 테마의 교과서적 모멘텀 플레이. 추세 추종 트레이더에겐 기회, 장기 투자자는 AI 계약 확인 후 진입 권고."'},
+    {src:'TimothySykes (5/7)', stance:'약세', color:C.orange, opinion:'"재매각 등록 파일이 계속 나오고 있다. 26.51M + 2.46M = 29M 주식이 시장에 대기 중. 상승 랠리 때 YA II의 매도 압력 주의."'},
+    {src:'Nasdaq 컴플라이언스 관찰', stance:'약세', color:C.red, opinion:'"두 번의 상장폐지 위기 이력. 기관 투자자 대다수 투자 불가 등급. 컴플라이언스 회복했지만 기관 신뢰도 회복엔 시간 필요."'},
+    {src:'공매도 커뮤니티', stance:'약세', color:C.red, opinion:'"매출 -21.84% + 순손실 $57M인데 시총 $271M은 고평가. AI 계약 없으면 P/S 9.1x 정당화 어렵다. 오버행 + 실적 미스 조합 주의."'},
+  ]
+  return <>
+    <WarnBox title="⚠️ 재매각 오버행 경고 (Share Resale Overhang)">
+      26.51M (SEPA) + 2.46M (워런트) = 총 ~29M 주식이 재매각 등록. 현재 유통주식 ~141M 대비 약 20% 잠재 공급 압력. 주가 상승 시 YA II PN Ltd의 매도 가능성 상존.
+    </WarnBox>
+
+    <Card>
+      <SectionTitle sub="애널리스트 컨센서스">기관 의견</SectionTitle>
+      {[
+        {label:'커버리지 애널리스트', value:'1명', color:C.text, sub:'소형주 특성상 커버리지 제한적'},
+        {label:'컨센서스 레이팅', value:'Strong Buy', color:C.green},
+        {label:'목표주가', value:'$5.00', color:C.green, sub:'HC Wainwright · Kevin Dede'},
+        {label:'현재가 대비 업사이드', value:'+173%', color:C.green, sub:'$1.83 → $5.00'},
+        {label:'공매도 비율', value:'확인 중', color:C.muted},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.yellow}>단독 애널리스트 커버리지로 목표가 신뢰도 제한적. 독립적 판단 필수.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="X · Reddit · StocksToTrade 의견 10선">소셜 센티먼트</SectionTitle>
+      {opinions.map((o,i) => (
+        <div key={i} style={{padding:'13px 0',borderBottom:i<opinions.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+            <span style={{color:C.text,fontSize:13,fontWeight:700,flex:1,paddingRight:8}}>{o.src}</span>
+            <Badge color={o.color}>{o.stance}</Badge>
+          </div>
+          <div style={{color:C.muted,fontSize:13,lineHeight:1.6}}>{o.opinion}</div>
+        </div>
+      ))}
+    </Card>
+  </>
+}
+
+function CompareTab() {
+  const peers = [
+    {ticker:'SLNH',name:'Soluna Holdings',ps:'9.1x',mkt:'$271M',rsi:'55~58',특징:'재생에너지 수직통합, Kati 2 개발 중',color:C.green},
+    {ticker:'IREN',name:'Iris Energy',ps:'~6x',mkt:'~$1.8B',rsi:'50~55',특징:'BTC→AI 전환 성공 선례',color:C.orange},
+    {ticker:'CORZ',name:'Core Scientific',ps:'N/A',mkt:'~$2.5B',rsi:'48',특징:'AI 코로케이션 선도',color:C.purple},
+    {ticker:'DGXX',name:'Digi Power X',ps:'13.2x',mkt:'$450M',rsi:'86',특징:'Cerebras 딜, 과매수 구간',color:C.cyan},
+    {ticker:'MARA',name:'Marathon Digital',ps:'~8x',mkt:'~$4.5B',rsi:'52',특징:'대형 BTC 채굴 대장주',color:C.yellow},
+    {ticker:'WULF',name:'TeraWulf',ps:'~7x',mkt:'~$600M',rsi:'55',특징:'원자력 기반 그린 채굴',color:C.blue},
+  ]
+  return <>
+    <Card>
+      <SectionTitle sub="6개 항목 정성 평가 (업데이트)">SLNH vs 경쟁사 레이더</SectionTitle>
+      <div style={{height:280}}>
+        <CJSChart height={280} config={{
+          type:'radar', data:radarData,
+          options:{plugins:{
+            legend:{display:true,labels:{color:'#7a90aa',boxWidth:10,font:{size:11}}},
+            tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}
+          },scales:{r:{grid:{color:'#1e2d45'},angleLines:{color:'#1e2d45'},pointLabels:{color:'#7a90aa',font:{size:11}},ticks:{color:'#7a90aa',backdropColor:'transparent'},suggestedMin:0,suggestedMax:100}}}
+        }}/>
+      </div>
+      <InfoBox color={C.green}>이전 대비 업데이트: 재무 안정성 점수 상향 (현금 $88.8M), 실행 역량 상향 (Dorothy 1A 완전 인수, Dorothy 1B 가동).</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="동종 BTC 채굴 → AI 전환 기업">경쟁사 비교</SectionTitle>
+      {peers.map((p,i) => (
+        <div key={i} style={{padding:'13px 0',borderBottom:i<peers.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <span style={{color:p.color,fontWeight:900,fontSize:15,minWidth:50}}>{p.ticker}</span>
+              <span style={{color:C.muted,fontSize:12}}>{p.name}</span>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{color:C.text,fontSize:13,fontWeight:700}}>P/S {p.ps}</div>
+              <div style={{color:C.muted,fontSize:11}}>RSI {p.rsi}</div>
+            </div>
+          </div>
+          <div style={{color:C.gray,fontSize:12,marginTop:2}}>{p.특징}</div>
+        </div>
+      ))}
+      <InfoBox color={C.green}>SLNH RSI 55~58 = 6개 종목 중 가장 건전한 기술적 구간. DGXX RSI 86 대비 과매수 위험 없음.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="주식 희석 구조 비교">SEPA 오버행 상세</SectionTitle>
+      <div style={{height:200,display:'flex',justifyContent:'center'}}>
+        <div style={{width:220,height:200}}>
+          <CJSChart height={200} config={{
+            type:'doughnut', data:dilutionData,
+            options:{cutout:'58%',plugins:{
+              legend:{display:true,position:'bottom',labels:{color:'#7a90aa',boxWidth:10,font:{size:10}}},
+              tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9',callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}M주`}}
+            }}
+          }}/>
+        </div>
+      </div>
+      <InfoBox color={C.red}>오버행 총 ~29M주 = 유통주식의 ~20.5%. 주가 상승 시 YA II·HEL 매도 압력. ATM과 달리 단계적 해소 가능.</InfoBox>
+    </Card>
+  </>
+}
+
+function ConclusionTab() {
+  return <>
+    <Card style={{border:`2px solid ${C.green}`}}>
+      <SectionTitle>종합 투자 의견</SectionTitle>
+      <div style={{display:'flex',gap:4,marginBottom:16}}>
+        {['강한 매도','매도','중립','매수','강한 매수'].map((label,i) => (
+          <div key={i} style={{flex:1,textAlign:'center',padding:'10px 4px',borderRadius:8,
+            background:i===3?C.green+'30':'#1e2d45',
+            border:`2px solid ${i===3?C.green:'#1e2d4500'}`,
+          }}>
+            <div style={{color:i===3?C.green:C.muted,fontSize:10,fontWeight:i===3?900:400,lineHeight:1.3}}>{label}</div>
+            {i===3 && <div style={{color:C.green,fontSize:16,marginTop:4}}>◉</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{color:C.green,fontSize:18,fontWeight:900,marginBottom:12}}>매수 — 기술적 개선 + 현금 강화</div>
+      <div style={{color:C.muted,fontSize:14,lineHeight:1.7}}>
+        200일 MA 돌파 + RSI 중립 + 현금 $76M 유동성 = 이전 분석 대비 진입 환경 크게 개선. 단, 29M 재매각 오버행은 지속 모니터링. Kati 2 AI 계약 체결이 $3~5 목표가 달성의 핵심 트리거.
+      </div>
+    </Card>
+
+    <Card>
+      <SectionTitle>🐂 Bull Case (상승 근거)</SectionTitle>
+      {[
+        '200일 이동평균 돌파 — 장기 추세 전환 신호 (핵심 기술적 개선)',
+        'RSI 55~58 중립 = 추가 상승 여력 충분 (과매수 아님)',
+        '현금 $88.8M ($76M 비제한) — 운전자본 12~18개월 확보',
+        'Briscoe 풍력 연 $20~24.4M 기여 시작 → 매출 반등 사이클',
+        'Kati 2 하이퍼스케일러 복수 실사 진행 중 → 계약 임박 기대',
+        'Dorothy 1A 완전 인수 + Dorothy 1B 가동 = 실행력 증명',
+        'HC Wainwright 목표가 $5.00 (+173%) 유지',
+      ].map((r,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:i<6?`1px solid ${C.border}`:'none'}}>
+          <span style={{color:C.green,fontSize:16,flexShrink:0}}>✓</span>
+          <span style={{color:C.muted,fontSize:13,lineHeight:1.5}}>{r}</span>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle>🐻 Bear Case (하락 근거)</SectionTitle>
+      {[
+        '29M 재매각 오버행 (~20% 유통주식) — 구조적 상한선 압박',
+        '2025 매출 -21.84% 감소, 순손실 $57M — 수익성 없음',
+        'AI 계약 미체결 — 하이퍼스케일러 실사 단계이지 계약 아님',
+        '단독 애널리스트 커버리지 — 기관 신뢰도 회복 미완',
+        '두 번의 상장폐지 위기 이력 — 기관 투자자 접근 제한',
+        'BTC 가격 하락 시 채굴 사업 타격 직접적',
+      ].map((r,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:i<5?`1px solid ${C.border}`:'none'}}>
+          <span style={{color:C.red,fontSize:16,flexShrink:0}}>✗</span>
+          <span style={{color:C.muted,fontSize:13,lineHeight:1.5}}>{r}</span>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle>실행 계획 (Action Plan)</SectionTitle>
+      {[
+        {label:'즉시 소액 진입', value:'$1.83 부근', color:C.green, sub:'200일 MA 돌파 확인 · 포트 1.5%'},
+        {label:'1차 추가 매수', value:'$1.27~1.53', color:C.blue, sub:'오버행 조정 시 · 포트 1.5%'},
+        {label:'2차 추가 매수', value:'$1.08~1.27', color:C.blue, sub:'심화 조정 시 · 포트 1%'},
+        {label:'총 포지션 한도', value:'포트의 4%', color:C.yellow, sub:'소형주 투기적 포지션'},
+        {label:'손절선', value:'$1.00 이탈', color:C.red, sub:'Nasdaq 기준선 → 전량 청산'},
+        {label:'1차 익절', value:'$2.50~3.00', color:C.green, sub:'50% 청산 — 저항선'},
+        {label:'2차 익절', value:'$4.00~5.00', color:C.purple, sub:'나머지 청산 — Kati 2 AI 계약 후'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.cyan}>핵심 모니터링: ① Kati 2 AI/하이퍼스케일러 계약 체결 ② SEPA 오버행 소진 속도 ③ Q1 2026 실적 (브리스코 기여 첫 분기) ④ Dorothy 3 계통 연계 승인</InfoBox>
+    </Card>
+
+    <div style={{borderTop:`1px solid ${C.border}`,padding:'16px',textAlign:'center',marginTop:8}}>
+      <p style={{color:C.gray,fontSize:11,margin:0,lineHeight:1.7}}>
+        ⚠️ 교육 목적 분석 · 투자 권고 아님<br/>
+        분석 기준일: 2026년 5월 11일 · 현재가: $1.83 (5/10 기준)<br/>
+        Morgan Stanley TA + Goldman Sachs FA + JPMorgan Earnings Framework
+      </p>
+    </div>
+  </>
+}
+
+/* ── 메인 ── */
+function App() {
+  const [tab, setTab] = useState('overview')
+  const tabs = [
+    {id:'overview', label:'📊 개요'},
+    {id:'tech',     label:'📈 기술적'},
+    {id:'fund',     label:'💰 재무'},
+    {id:'sent',     label:'💬 센티먼트'},
+    {id:'compare',  label:'🆚 비교'},
+    {id:'conclude', label:'🎯 결론'},
+  ]
+  return (
+    <div style={{background:C.darkBg,minHeight:'100vh',color:C.text}}>
+      {/* 헤더 */}
+      <div style={{background:'linear-gradient(180deg,#0f2018 0%,#0a0f1e 100%)',padding:'20px 16px 22px'}}>
+        <a href="https://disntm90.github.io/disntm90/" style={{display:'inline-flex',alignItems:'center',gap:6,color:'#7a90aa',fontSize:12,textDecoration:'none',marginBottom:14,padding:'5px 10px',background:'#1e2d45',borderRadius:6}}>← 목록으로</a>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+          <div style={{background:C.green+'20',border:`2px solid ${C.green}`,borderRadius:10,padding:'6px 14px'}}>
+            <span style={{color:C.green,fontWeight:900,fontSize:22,letterSpacing:1}}>SLNH</span>
+          </div>
+          <div>
+            <div style={{fontWeight:800,fontSize:17,lineHeight:1.2}}>Soluna Holdings</div>
+            <div style={{color:C.muted,fontSize:12,marginTop:3}}>재생에너지 AI/BTC 데이터센터 · NASDAQ</div>
+          </div>
+        </div>
+        <div style={{display:'flex',flexWrap:'wrap',marginBottom:16}}>
+          <Badge color={C.green}>200일 MA 돌파 🟢</Badge>
+          <Badge color={C.green}>RSI 중립 (55~58)</Badge>
+          <Badge color={C.red}>29M 재매각 오버행</Badge>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+          {[
+            {label:'현재가', value:'$1.83', sub:'↑ +20.39%', color:C.green},
+            {label:'52주 저점', value:'$0.415', sub:'', color:C.red},
+            {label:'52주 고점', value:'$5.14', sub:'', color:C.cyan},
+            {label:'저점 대비', value:'+341%', sub:'', color:C.green},
+            {label:'시가총액', value:'$271M', sub:'', color:C.text},
+            {label:'목표주가', value:'$5.00', sub:'+173%', color:C.purple},
+          ].map((s,i) => (
+            <div key={i} style={{background:C.cardBg,border:`1px solid ${C.border}`,borderRadius:12,padding:'11px 8px',textAlign:'center'}}>
+              <div style={{color:s.color,fontSize:18,fontWeight:900,lineHeight:1}}>{s.value}</div>
+              <div style={{color:C.muted,fontSize:10,marginTop:4}}>{s.label}</div>
+              {s.sub && <div style={{color:s.color+'bb',fontSize:10,marginTop:2}}>{s.sub}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 탭바 */}
+      <div style={{borderBottom:`1px solid ${C.border}`,background:C.cardBg,overflowX:'auto',whiteSpace:'nowrap',WebkitOverflowScrolling:'touch'}}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            display:'inline-block',background:'none',
+            color:tab===t.id?C.green:C.muted,
+            border:'none',borderBottom:tab===t.id?`3px solid ${C.green}`:'3px solid transparent',
+            padding:'13px 16px',fontSize:12,fontWeight:700,cursor:'pointer',
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* 콘텐츠 */}
+      <div style={{padding:'16px',maxWidth:600,margin:'0 auto'}}>
+        {tab==='overview' && <OverviewTab/>}
+        {tab==='tech'     && <TechTab/>}
+        {tab==='fund'     && <FinancialTab/>}
+        {tab==='sent'     && <SentimentTab/>}
+        {tab==='compare'  && <CompareTab/>}
+        {tab==='conclude' && <ConclusionTab/>}
+      </div>
+    </div>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>)
+</script>
+</body>
+</html>
