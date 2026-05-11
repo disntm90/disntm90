@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SLNH Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#0a0f1e;font-family:system-ui,-apple-system,sans-serif;color:#f1f5f9}
+    h1,h2{margin:0}
+    button{font-family:inherit}
+    canvas{display:block}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+const { useState, useRef, useEffect } = React
+
+const C = {
+  green:'#22c55e', red:'#ef4444', yellow:'#f59e0b',
+  blue:'#3b82f6', gray:'#6b7280',
+  darkBg:'#0a0f1e', cardBg:'#141b2d', border:'#1e2d45',
+  text:'#f1f5f9', muted:'#7a90aa', cyan:'#06b6d4',
+  orange:'#f97316', purple:'#a855f7',
+}
+
+/* ── Chart.js wrapper ── */
+function CJSChart({ config, height = 220 }) {
+  const ref = useRef(null)
+  const inst = useRef(null)
+  useEffect(() => {
+    if (inst.current) inst.current.destroy()
+    inst.current = new Chart(ref.current, config)
+    return () => inst.current?.destroy()
+  }, [])
+  return <canvas ref={ref} style={{ width:'100%', maxHeight: height }} height={height}/>
+}
+
+/* ── 데이터 ── */
+const mwData = {
+  labels:['Briscoe\n풍력','Kati 1A','Kati 1B','Dorothy\n1A','Dorothy\n1B','Kati 2','Dorothy 3'],
+  datasets:[{ label:'MW', data:[150,48,35,20,17,350,300],
+    backgroundColor:['#22c55e','#22c55e','#f59e0b','#22c55e','#22c55e','#3b82f6','#3b82f6'],
+    borderRadius:6, borderSkipped:false }]
+}
+
+const pipelineData = {
+  labels:['SLNH','IREN'],
+  datasets:[
+    { label:'운영', data:[235,660], backgroundColor:'#22c55e', borderRadius:4 },
+    { label:'계획', data:[650,2090], backgroundColor:'#3b82f6', borderRadius:4 },
+  ]
+}
+
+const financialData = {
+  labels:['Q1 25','Q2 25','Q3 25','Q4 25','Q1 26E'],
+  datasets:[
+    { label:'매출', data:[5.1,6.3,7.8,10.5,13.2], backgroundColor:'#22c55e', borderRadius:4 },
+    { label:'순손실', data:[-14.2,-18.7,-20.1,-16.0,-12.5], backgroundColor:'#ef4444', borderRadius:4 },
+  ]
+}
+
+const dilutionData = {
+  labels:['기존 주주','SEPA 희석 (YA)','추가 등록'],
+  datasets:[{ data:[141.3,26.5,2.5],
+    backgroundColor:['#3b82f6','#ef4444','#f97316'],
+    borderWidth:0 }]
+}
+
+const radarData = {
+  labels:['희석 리스크','재무 건전성','실행 역량','테마 적합성','성장 잠재력','상장 안정성'],
+  datasets:[
+    { label:'SLNH', data:[90,15,35,95,85,30],
+      borderColor:'#06b6d4', backgroundColor:'#06b6d420', borderWidth:2, pointRadius:3 },
+    { label:'IREN', data:[20,70,80,90,75,85],
+      borderColor:'#f97316', backgroundColor:'#f9731620', borderWidth:2, pointRadius:3 },
+  ]
+}
+
+const priceHistory = [
+  ["'24 Q3",2.8],["'24 Q4",1.4],["'25 Q1",0.8],["'25 Q2",0.55],
+  ["'25 Q3",0.72],["'25 Q4",1.05],["'26 Q1",0.62],["'26 Apr",1.05],["'26 May",1.54],
+]
+const priceChartData = {
+  labels: priceHistory.map(d=>d[0]),
+  datasets:[{
+    label:'주가($)', data:priceHistory.map(d=>d[1]),
+    borderColor:'#06b6d4', backgroundColor:'#06b6d420',
+    fill:true, tension:0.3, pointRadius:3, borderWidth:2,
+  }]
+}
+
+const chartOpts = (yFmt='v', xRot=0) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#0a0f1e', borderColor:'#1e2d45', borderWidth:1,
+    titleColor:'#7a90aa', bodyColor:'#f1f5f9' }},
+  scales:{
+    x:{ grid:{color:'#1e2d45'}, ticks:{color:'#7a90aa', maxRotation:xRot, minRotation:xRot} },
+    y:{ grid:{color:'#1e2d45'}, ticks:{color:'#7a90aa',
+      callback: yFmt==='mw' ? v=>`${v}MW` : yFmt==='$' ? v=>`$${v}M` : v=>`$${v}` } }
+  }
+})
+
+const catalysts = [
+  {date:'2025.05',event:'Nasdaq $1 경고 1차',type:'risk'},
+  {date:'2025.10',event:'컴플라이언스 1차 회복',type:'pos'},
+  {date:'2025.12',event:'Generate Capital $100M 신용 확보',type:'pos'},
+  {date:'2026.02',event:'Kati 1 83MW 가동 시작',type:'pos'},
+  {date:'2026.04',event:'Briscoe 풍력 150MW $53M 인수',type:'pos'},
+  {date:'2026.04',event:'Dorothy 1A 완전 지분 인수',type:'pos'},
+  {date:'2026.04',event:'26.5M주 재매각 등록 (SEPA)',type:'risk'},
+  {date:'2026.05',event:'컴플라이언스 2차 회복',type:'pos'},
+]
+
+const valuationComp = [
+  {metric:'시가총액 ($M)',SLNH:228,IREN:1820},
+  {metric:'운영 MW',SLNH:235,IREN:660},
+  {metric:'MW당 시총 ($M/MW)',SLNH:0.97,IREN:2.76},
+  {metric:'매출 ($M, TTM)',SLNH:29.7,IREN:185},
+  {metric:'파이프라인 (GW)',SLNH:4.3,IREN:2.75},
+]
+
+/* ── 공통 컴포넌트 ── */
+const Card = ({children,style={}}) => (
+  <div style={{background:C.cardBg,border:`1px solid ${C.border}`,borderRadius:16,padding:'20px 16px',marginBottom:14,...style}}>
+    {children}
+  </div>
+)
+const Badge = ({children,color=C.blue}) => (
+  <span style={{background:color+'20',color,border:`1px solid ${color}44`,borderRadius:6,padding:'3px 10px',fontSize:12,fontWeight:700,display:'inline-block'}}>
+    {children}
+  </span>
+)
+const SectionTitle = ({children,sub}) => (
+  <div style={{marginBottom:18}}>
+    <h2 style={{color:C.text,fontSize:17,fontWeight:800,margin:0,lineHeight:1.3}}>{children}</h2>
+    {sub && <p style={{color:C.muted,fontSize:12,margin:'5px 0 0',lineHeight:1.5}}>{sub}</p>}
+  </div>
+)
+const Row = ({label,value,color=C.text}) => (
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'13px 0',borderBottom:`1px solid ${C.border}`}}>
+    <span style={{color:C.muted,fontSize:13}}>{label}</span>
+    <span style={{color,fontWeight:800,fontSize:15}}>{value}</span>
+  </div>
+)
+const InfoBox = ({children,color=C.blue}) => (
+  <div style={{background:color+'12',border:`1px solid ${color}30`,borderRadius:10,padding:'12px 14px',marginTop:12}}>
+    <p style={{color,fontSize:13,margin:0,lineHeight:1.6,fontWeight:500}}>{children}</p>
+  </div>
+)
+
+/* ── 탭 콘텐츠 ── */
+function OverviewTab() {
+  return <>
+    <Card>
+      <SectionTitle sub="2025~2026 주가 흐름 · 빨간 점선 = Nasdaq $1 기준">주가 흐름</SectionTitle>
+      <div style={{position:'relative',height:200}}>
+        <CJSChart height={200} config={{
+          type:'line', data:priceChartData,
+          options:{...chartOpts('$'), plugins:{
+            legend:{display:false},
+            tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'},
+            annotation:{annotations:{line1:{type:'line',yMin:1,yMax:1,borderColor:'#ef4444',borderDash:[4,4],borderWidth:2}}}
+          },
+          scales:{x:{grid:{color:'#1e2d45'},ticks:{color:'#7a90aa'}},y:{grid:{color:'#1e2d45'},ticks:{color:'#7a90aa',callback:v=>`$${v}`},min:0,max:6}}}
+        }}/>
+      </div>
+      <InfoBox color={C.red}>빨간 점선 아래 = Nasdaq 상장폐지 기준선 ($1.00)</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle>주요 이벤트 타임라인</SectionTitle>
+      {catalysts.map((c,i) => (
+        <div key={i} style={{display:'flex',alignItems:'flex-start',gap:12,padding:'12px 0',borderBottom:i<catalysts.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{width:8,height:8,borderRadius:'50%',marginTop:5,flexShrink:0,background:c.type==='risk'?C.red:C.green,boxShadow:`0 0 6px ${c.type==='risk'?C.red:C.green}`}}/>
+          <div style={{flex:1}}>
+            <div style={{color:C.muted,fontSize:11,fontFamily:'monospace',marginBottom:2}}>{c.date}</div>
+            <div style={{color:c.type==='risk'?C.red:C.text,fontSize:14,fontWeight:600,lineHeight:1.4}}>{c.event}</div>
+          </div>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="3단 수직통합 비즈니스 모델">사업 구조</SectionTitle>
+      {[
+        {icon:'🌬️',label:'재생에너지 생산',desc:'Briscoe 풍력 150MW 직접 소유',color:C.green},
+        {icon:'🖥️',label:'데이터센터 운영',desc:'BTC 채굴 + AI/HPC 컴퓨팅',color:C.blue},
+        {icon:'💡',label:'연산 서비스 판매',desc:'호스팅 파트너 + AI 고객 유치',color:C.purple},
+      ].map((s,i) => (
+        <div key={i} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 0',borderBottom:i<2?`1px solid ${C.border}`:'none'}}>
+          <span style={{fontSize:28}}>{s.icon}</span>
+          <div>
+            <Badge color={s.color}>{s.label}</Badge>
+            <div style={{color:C.muted,fontSize:13,marginTop:5,lineHeight:1.4}}>{s.desc}</div>
+          </div>
+        </div>
+      ))}
+      <InfoBox color={C.green}>✅ 핵심 경쟁력: 자체 발전 → 전기 원가 ≈ $0 → 연산 마진 구조적 우위</InfoBox>
+    </Card>
+  </>
+}
+
+function CapacityTab() {
+  return <>
+    <Card>
+      <SectionTitle sub="프로젝트별 MW 용량 · 초록=운영 / 노랑=준공중 / 파랑=계획">전력 용량 현황</SectionTitle>
+      <div style={{height:240}}>
+        <CJSChart height={240} config={{type:'bar',data:mwData,options:{...chartOpts('mw',30),plugins:{legend:{display:false},tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}}}}}/>
+      </div>
+      <div style={{display:'flex',gap:16,justifyContent:'center',marginTop:12}}>
+        {[['운영 중',C.green],['준공 중',C.yellow],['계획',C.blue]].map(([l,c]) => (
+          <div key={l} style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:10,height:10,borderRadius:3,background:c}}/>
+            <span style={{color:C.muted,fontSize:12}}>{l}</span>
+          </div>
+        ))}
+      </div>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="SLNH vs IREN — 실가동 대비 계획 파이프라인">운영 vs 파이프라인</SectionTitle>
+      <div style={{height:220}}>
+        <CJSChart height={220} config={{type:'bar',data:pipelineData,options:{...chartOpts('mw'),plugins:{legend:{labels:{color:'#7a90aa'}},tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}}}}}/>
+      </div>
+      <InfoBox color={C.yellow}>⚠️ SLNH 전체 4.3GW 중 실가동 ~235MW = 5.5% · 파이프라인이 주가에 과도하게 선반영</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="Briscoe 150MW 풍력 — $53M 인수 효과">핵심 자산: Briscoe 풍력</SectionTitle>
+      {[
+        {label:'취득가',value:'$53M',color:C.orange},
+        {label:'예상 연간 매출',value:'$20~24.4M',color:C.green},
+        {label:'1년차 EBITDA 예상',value:'$6~11M',color:C.green},
+        {label:'취득가 회수 기간',value:'6~7년',color:C.yellow},
+        {label:'P/EBITDA (인수 기준)',value:'~6.2x',color:C.blue},
+        {label:'전기 원가',value:'≈ $0',color:C.green},
+      ].map((r,i) => <Row key={i} label={r.label} value={r.value} color={r.color}/>)}
+    </Card>
+  </>
+}
+
+function FinancialTab() {
+  return <>
+    <Card>
+      <SectionTitle sub="분기별 매출 vs 순손실 ($M)">매출 vs 순손실</SectionTitle>
+      <div style={{height:230}}>
+        <CJSChart height={230} config={{type:'bar',data:financialData,options:{...chartOpts('$'),plugins:{legend:{labels:{color:'#7a90aa'}},tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}}}}}/>
+      </div>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="TTM 기준">핵심 재무 지표</SectionTitle>
+      {[
+        {label:'연간 매출',value:'$29.7M',color:C.green},
+        {label:'영업손실',value:'-$49.6M',color:C.red},
+        {label:'순손실',value:'-$69M',color:C.red},
+        {label:'EBIT 마진',value:'-167%',color:C.red},
+        {label:'순이익 마진',value:'-192%',color:C.red},
+        {label:'분기 잉여현금흐름',value:'-$16.8M',color:C.red},
+        {label:'유동비율',value:'1.9x',color:C.green},
+        {label:'P/S',value:'5.8x',color:C.yellow},
+      ].map((r,i) => <Row key={i} label={r.label} value={r.value} color={r.color}/>)}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="연간 ~$67M 소각 vs 조달 구조">현금 소각 &amp; 조달</SectionTitle>
+      <InfoBox color={C.red}>연간 현금 소각 ~$67M · 매출 대비 소각률 225% — 지속적 외부 조달 필요</InfoBox>
+      <div style={{marginTop:16}}>
+        {[
+          {src:'Generate Capital 신용',amt:'$100M',color:C.blue,note:'확보 완료'},
+          {src:'SEPA (YA II)',amt:'$25M',color:C.red,note:'희석 조건부'},
+          {src:'Briscoe 신규 매출',amt:'$20~24M/년',color:C.green,note:'2026년 가산'},
+          {src:'기존 호스팅 매출',amt:'$29.7M/년',color:C.green,note:'TTM'},
+        ].map((r,i) => (
+          <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'13px 0',borderBottom:i<3?`1px solid ${C.border}`:'none'}}>
+            <div>
+              <div style={{color:C.text,fontSize:14,fontWeight:600}}>{r.src}</div>
+              <div style={{color:C.muted,fontSize:12,marginTop:2}}>{r.note}</div>
+            </div>
+            <Badge color={r.color}>{r.amt}</Badge>
+          </div>
+        ))}
+      </div>
+    </Card>
+  </>
+}
+
+function RiskTab() {
+  return <>
+    <Card>
+      <SectionTitle sub="발행주식 대비 잠재 희석 비율">SEPA 희석 구조</SectionTitle>
+      <div style={{height:220,display:'flex',justifyContent:'center'}}>
+        <div style={{width:220,height:220}}>
+          <CJSChart height={220} config={{type:'doughnut',data:dilutionData,options:{cutout:'60%',plugins:{legend:{labels:{color:'#7a90aa',boxWidth:12}},tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9',callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}M주`}}}}}}/>
+        </div>
+      </div>
+      <InfoBox color={C.red}>⚠️ 잠재 희석률 +20.5% · 주가 오를 때마다 YA II가 신주 받아 매도 → 천장 구조</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="두 번의 상장폐지 위기 이력">Nasdaq 상장 안정성</SectionTitle>
+      {[
+        {date:'2025.05.08',event:'1차 경고',detail:'30영업일 연속 $1 미만',color:C.red,icon:'🚨'},
+        {date:'2025.10.06',event:'1차 회복',detail:'10영업일 $1 이상 유지',color:C.green,icon:'✅'},
+        {date:'2026 Q1',event:'2차 위기',detail:'주가 $0.42까지 하락',color:C.red,icon:'🚨'},
+        {date:'2026.04.30',event:'2차 회복',detail:'4/14~4/29 $1 이상 유지',color:C.green,icon:'✅'},
+        {date:'2026.05.01',event:'공식 발표',detail:'Nasdaq 서한 수령 완료',color:C.green,icon:'📄'},
+      ].map((e,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'12px 0',borderBottom:i<4?`1px solid ${C.border}`:'none'}}>
+          <span style={{fontSize:20}}>{e.icon}</span>
+          <div>
+            <div style={{color:C.muted,fontSize:11,fontFamily:'monospace'}}>{e.date}</div>
+            <div style={{color:e.color,fontSize:14,fontWeight:700,marginTop:2}}>{e.event}</div>
+            <div style={{color:C.gray,fontSize:12,marginTop:2}}>{e.detail}</div>
+          </div>
+        </div>
+      ))}
+      <InfoBox color={C.orange}>⚠️ 두 번의 위기 → 기관투자자 투자 불가 낙인 · ETF 편입 불가</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle>🐻 Bear Case — 하락 리스크</SectionTitle>
+      {['SEPA 희석으로 주가 상한 천장 구조적 형성','두 번의 상장폐지 위기 → 기관 신뢰도 훼손','매출 대비 2배 이상 손실 → 자립 불가능','4.3GW 파이프라인 중 5.5%만 실가동','AI 수익화는 아직 계획 단계'].map((r,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'11px 0',borderBottom:i<4?`1px solid ${C.border}`:'none'}}>
+          <span style={{color:C.red,fontSize:16,flexShrink:0}}>✗</span>
+          <span style={{color:C.muted,fontSize:14,lineHeight:1.5}}>{r}</span>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle>🐂 Bull Case — 상승 트리거</SectionTitle>
+      {['자체 발전 = 전기 원가 0 → 구조적 마진 우위','Dorothy 3 / Kati 2 AI 고객 실계약 체결 시','4.3GW 파이프라인 = 성장 옵션 가치','IREN 대비 MW당 시총 65% 할인 상태','SEPA 상환 완료 시 희석 구조 종료'].map((r,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'11px 0',borderBottom:i<4?`1px solid ${C.border}`:'none'}}>
+          <span style={{color:C.green,fontSize:16,flexShrink:0}}>✓</span>
+          <span style={{color:C.muted,fontSize:14,lineHeight:1.5}}>{r}</span>
+        </div>
+      ))}
+    </Card>
+  </>
+}
+
+function CompareTab() {
+  return <>
+    <Card>
+      <SectionTitle sub="6개 항목 정성 평가 (100점 만점)">SLNH vs IREN 레이더</SectionTitle>
+      <div style={{height:280}}>
+        <CJSChart height={280} config={{type:'radar',data:radarData,options:{plugins:{legend:{labels:{color:'#7a90aa'}},tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}},scales:{r:{grid:{color:'#1e2d45'},angleLines:{color:'#1e2d45'},pointLabels:{color:'#7a90aa',font:{size:11}},ticks:{color:'#7a90aa',backdropColor:'transparent'},suggestedMin:0,suggestedMax:100}}}}}/>
+      </div>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="주요 정량 지표 비교">핵심 지표</SectionTitle>
+      {valuationComp.map((v,i) => {
+        const maxV = Math.max(v.SLNH, v.IREN)
+        return (
+          <div key={i} style={{marginBottom:18}}>
+            <div style={{color:C.muted,fontSize:12,marginBottom:8}}>{v.metric}</div>
+            {[{label:'SLNH',val:v.SLNH,color:C.cyan},{label:'IREN',val:v.IREN,color:C.orange}].map(({label,val,color}) => (
+              <div key={label} style={{marginBottom:6}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                  <span style={{color,fontSize:13,fontWeight:700}}>{label}</span>
+                  <span style={{color,fontSize:13,fontWeight:700}}>{val<10?val.toFixed(2):val.toLocaleString()}</span>
+                </div>
+                <div style={{background:C.border,borderRadius:4,height:8}}>
+                  <div style={{width:`${(val/maxV)*100}%`,background:color,borderRadius:4,height:'100%'}}/>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      })}
+    </Card>
+
+    <Card>
+      <SectionTitle>"제2의 IREN" — 최종 판단</SectionTitle>
+      {[
+        {title:'지금 당장',score:'❌ 아직 아님',color:C.red,desc:'IREN은 660MW 실가동+수익성. SLNH는 235MW+적자. 같은 테마지만 실행력 차이 큼.'},
+        {title:'1~2년 후',score:'⚠️ 조건부 가능',color:C.yellow,desc:'Dorothy 3 AI 계약 + Kati 2 착공 + SEPA 해소 달성 시 IREN 수준 재평가 가능. $5+ 시나리오.'},
+        {title:'투자 포지션',score:'🎲 소액 투기적',color:C.blue,desc:'포트폴리오 2~3% 이하. 손절선 $1. Dorothy 3 계약 체결이 핵심 트리거. 반드시 분할매수.'},
+      ].map((c,i) => (
+        <div key={i} style={{padding:'16px 14px',marginBottom:i<2?10:0,background:c.color+'12',borderRadius:12,border:`1px solid ${c.color}30`}}>
+          <div style={{color:C.muted,fontSize:12,marginBottom:5}}>{c.title}</div>
+          <div style={{color:c.color,fontSize:18,fontWeight:900,marginBottom:8}}>{c.score}</div>
+          <div style={{color:C.muted,fontSize:13,lineHeight:1.6}}>{c.desc}</div>
+        </div>
+      ))}
+    </Card>
+  </>
+}
+
+/* ── 메인 ── */
+function App() {
+  const [tab, setTab] = useState('overview')
+  const tabs = [
+    {id:'overview',label:'📊 현황'},
+    {id:'capacity',label:'⚡ 전력'},
+    {id:'financial',label:'💰 재무'},
+    {id:'risk',label:'⚠️ 리스크'},
+    {id:'compare',label:'🆚 IREN'},
+  ]
+
+  return (
+    <div style={{background:C.darkBg,minHeight:'100vh',color:C.text}}>
+
+      {/* 헤더 */}
+      <div style={{background:'linear-gradient(180deg,#0f1f3d 0%,#0a0f1e 100%)',padding:'20px 16px 24px'}}>
+        <a href="https://disntm90.github.io/disntm90/" style={{display:'inline-flex',alignItems:'center',gap:6,color:'#7a90aa',fontSize:12,textDecoration:'none',marginBottom:14,padding:'5px 10px',background:'#1e2d45',borderRadius:6}}>← 목록으로</a>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+          <div style={{background:C.green+'20',border:`2px solid ${C.green}`,borderRadius:10,padding:'6px 14px'}}>
+            <span style={{color:C.green,fontWeight:900,fontSize:22,letterSpacing:1}}>SLNH</span>
+          </div>
+          <div>
+            <div style={{fontWeight:800,fontSize:18,lineHeight:1.2}}>Soluna Holdings</div>
+            <div style={{color:C.muted,fontSize:12,marginTop:2}}>재생에너지 AI/BTC 데이터센터 · NASDAQ</div>
+          </div>
+        </div>
+
+        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:20}}>
+          <Badge color={C.yellow}>마이크로캡</Badge>
+          <Badge color={C.orange}>SEPA 희석 주의</Badge>
+          <Badge color={C.green}>Nasdaq 회복</Badge>
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+          {[
+            {label:'현재가',value:'$1.54',sub:'↑ +4.52%',color:C.green},
+            {label:'52주 저점',value:'$0.42',sub:'상장폐지 위기',color:C.red},
+            {label:'52주 고점',value:'$5.14',sub:'',color:C.cyan},
+            {label:'1개월 수익',value:'+128%',sub:'',color:C.green},
+            {label:'시가총액',value:'$228M',sub:'',color:C.text},
+            {label:'목표가',value:'$5.00',sub:'+224%',color:C.purple},
+          ].map((s,i) => (
+            <div key={i} style={{background:C.cardBg,border:`1px solid ${C.border}`,borderRadius:12,padding:'12px 8px',textAlign:'center'}}>
+              <div style={{color:s.color,fontSize:20,fontWeight:900,lineHeight:1}}>{s.value}</div>
+              <div style={{color:C.muted,fontSize:11,marginTop:4}}>{s.label}</div>
+              {s.sub && <div style={{color:s.color+'bb',fontSize:10,marginTop:2}}>{s.sub}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 탭바 */}
+      <div style={{borderBottom:`1px solid ${C.border}`,background:C.cardBg,overflowX:'auto',whiteSpace:'nowrap',WebkitOverflowScrolling:'touch'}}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            display:'inline-block',background:'none',
+            color:tab===t.id?C.cyan:C.muted,
+            border:'none',borderBottom:tab===t.id?`3px solid ${C.cyan}`:'3px solid transparent',
+            padding:'14px 18px',fontSize:13,fontWeight:700,cursor:'pointer',
+          }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 콘텐츠 */}
+      <div style={{padding:'16px',maxWidth:600,margin:'0 auto'}}>
+        {tab==='overview'  && <OverviewTab/>}
+        {tab==='capacity'  && <CapacityTab/>}
+        {tab==='financial' && <FinancialTab/>}
+        {tab==='risk'      && <RiskTab/>}
+        {tab==='compare'   && <CompareTab/>}
+      </div>
+
+      <div style={{borderTop:`1px solid ${C.border}`,padding:'16px',textAlign:'center',marginTop:8}}>
+        <p style={{color:C.gray,fontSize:11,margin:0,lineHeight:1.6}}>
+          ⚠️ 교육 목적 브레인스토밍 · 투자 권고 아님<br/>데이터 기준: 2026년 5월 10일
+        </p>
+      </div>
+    </div>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>)
+  </script>
+</body>
+</html>
