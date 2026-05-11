@@ -7,6 +7,18 @@ __pycache__/
 dist/
 build/
 .env
-.venv
+venv/
+.venv/
 *.png
 *.jpg
+
+# 프로젝트 런타임 파일
+data/
+generated_files/
+logs/
+*.db
+*.log
+
+# Bootstrap 로컬 파일 (download_static.py로 별도 다운로드)
+static/css/bootstrap.min.css
+static/js/bootstrap.bundle.min.js

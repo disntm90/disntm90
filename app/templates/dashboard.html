@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}대시보드 - 설비 배포 대시보드{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">오늘의 배포 현황</h4>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-secondary btn-sm" onclick="refreshStatus()">
+      새로고침
+    </button>
+    <button class="btn btn-warning btn-sm" onclick="runGenerate()">
+      파일 재생성
+    </button>
+    <button class="btn btn-primary btn-sm" onclick="runDeploy()">
+      전체 즉시 배포
+    </button>
+  </div>
+</div>
+
+<!-- 요약 카드 -->
+<div class="row g-3 mb-4" id="summaryCards">
+  <div class="col-md-3">
+    <div class="card text-center border-0 bg-secondary bg-opacity-10">
+      <div class="card-body">
+        <h2 class="mb-0 fw-bold" id="totalCount">-</h2>
+        <small class="text-muted">전체 설비</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center border-0 bg-success bg-opacity-10">
+      <div class="card-body">
+        <h2 class="mb-0 fw-bold text-success" id="successCount">-</h2>
+        <small class="text-muted">배포 성공</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center border-0 bg-danger bg-opacity-10">
+      <div class="card-body">
+        <h2 class="mb-0 fw-bold text-danger" id="failedCount">-</h2>
+        <small class="text-muted">배포 실패</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center border-0 bg-warning bg-opacity-10">
+      <div class="card-body">
+        <h2 class="mb-0 fw-bold text-warning" id="pendingCount">-</h2>
+        <small class="text-muted">미배포</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 파일 생성 현황 -->
+<div class="card mb-4">
+  <div class="card-header fw-semibold">파일 생성 현황 (오늘)</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>파일 타입</th>
+            <th>파일명</th>
+            <th>상태</th>
+            <th>메시지</th>
+            <th>생성 시각</th>
+          </tr>
+        </thead>
+        <tbody id="generateTable">
+          <tr><td colspan="5" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 설비별 배포 현황 -->
+<div class="card">
+  <div class="card-header fw-semibold">설비별 배포 현황 (오늘)</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>설비명</th>
+            <th>IP</th>
+            <th>X 파일</th>
+            <th>Y 파일</th>
+            <th>작업</th>
+          </tr>
+        </thead>
+        <tbody id="deployTable">
+          <tr><td colspan="5" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 알림 -->
+<div id="alertArea" class="position-fixed bottom-0 end-0 p-3" style="z-index:1100; min-width:300px"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const active_page = 'dashboard';
+
+  function statusBadge(info) {
+    if (!info || !info.status || info.status === 'pending') {
+      return '<span class="badge bg-secondary">미배포</span>';
+    }
+    if (info.status === 'success') {
+      return `<span class="badge bg-success">성공</span><br><small class="text-muted">${info.deployed_at || ''}</small>`;
+    }
+    return `<span class="badge bg-danger" title="${info.message || ''}">실패</span><br><small class="text-muted">${info.deployed_at || ''}</small>`;
+  }
+
+  function genBadge(status) {
+    if (status === 'success') return '<span class="badge bg-success">성공</span>';
+    if (status === 'failed') return '<span class="badge bg-danger">실패</span>';
+    return '<span class="badge bg-secondary">-</span>';
+  }
+
+  function showAlert(msg, type = 'info') {
+    const id = 'alert-' + Date.now();
+    const el = document.createElement('div');
+    el.id = id;
+    el.className = `alert alert-${type} alert-dismissible fade show shadow`;
+    el.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    document.getElementById('alertArea').appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+  }
+
+  function refreshStatus() {
+    fetch('/api/deploy/status/today')
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('totalCount').textContent = data.summary.total;
+        document.getElementById('successCount').textContent = data.summary.success;
+        document.getElementById('failedCount').textContent = data.summary.failed;
+        document.getElementById('pendingCount').textContent = data.summary.pending;
+
+        const genRows = data.generate_logs.length === 0
+          ? '<tr><td colspan="5" class="text-center text-muted py-3">오늘 생성 이력이 없습니다.</td></tr>'
+          : data.generate_logs.map(g => `
+              <tr>
+                <td><span class="badge bg-primary">${g.file_type}</span></td>
+                <td><code>${g.filename}</code></td>
+                <td>${genBadge(g.status)}</td>
+                <td><small>${g.message}</small></td>
+                <td><small>${g.generated_at}</small></td>
+              </tr>`).join('');
+        document.getElementById('generateTable').innerHTML = genRows;
+
+        const depRows = data.equipment_status.length === 0
+          ? '<tr><td colspan="5" class="text-center text-muted py-3">등록된 설비가 없습니다.</td></tr>'
+          : data.equipment_status.map(e => `
+              <tr>
+                <td>${e.name}</td>
+                <td><code>${e.ip}</code></td>
+                <td>${statusBadge(e.file_X)}</td>
+                <td>${statusBadge(e.file_Y)}</td>
+                <td>
+                  <button class="btn btn-outline-primary btn-sm" onclick="deployOne(${e.id}, '${e.name}')">
+                    재배포
+                  </button>
+                </td>
+              </tr>`).join('');
+        document.getElementById('deployTable').innerHTML = depRows;
+      })
+      .catch(() => showAlert('상태 조회 실패', 'danger'));
+  }
+
+  function runGenerate() {
+    if (!confirm('파일을 재생성하시겠습니까?')) return;
+    fetch('/api/deploy/generate?triggered_by=manual', {method: 'POST'})
+      .then(r => r.json())
+      .then(d => { showAlert(d.message, 'warning'); setTimeout(refreshStatus, 3000); })
+      .catch(() => showAlert('파일 생성 요청 실패', 'danger'));
+  }
+
+  function runDeploy() {
+    if (!confirm('모든 활성 설비에 즉시 배포하시겠습니까?')) return;
+    fetch('/api/deploy/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({triggered_by: 'manual'})
+    })
+      .then(r => r.json())
+      .then(d => { showAlert(d.message, 'primary'); setTimeout(refreshStatus, 5000); })
+      .catch(() => showAlert('배포 요청 실패', 'danger'));
+  }
+
+  function deployOne(equipmentId, name) {
+    if (!confirm(`'${name}' 설비에 즉시 배포하시겠습니까?`)) return;
+    fetch('/api/deploy/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({equipment_ids: [equipmentId], triggered_by: 'manual'})
+    })
+      .then(r => r.json())
+      .then(d => { showAlert(d.message, 'primary'); setTimeout(refreshStatus, 5000); })
+      .catch(() => showAlert('배포 요청 실패', 'danger'));
+  }
+
+  refreshStatus();
+  setInterval(refreshStatus, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}파일 포맷 관리 - 설비 배포 대시보드{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">파일 포맷 관리 (X / Y)</h4>
+  <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ 템플릿 추가</button>
+</div>
+
+<div class="alert alert-info py-2 mb-3">
+  <small>
+    <strong>사용 가능한 변수:</strong>
+    <code>{{DATE}}</code> 오늘 날짜 &nbsp;
+    <code>{{TIME}}</code> 현재 시각 &nbsp;
+    <code>{{DATETIME}}</code> 날짜+시각 &nbsp;
+    <code>{{YEAR}}</code> 년 &nbsp;
+    <code>{{MONTH}}</code> 월 &nbsp;
+    <code>{{DAY}}</code> 일 &nbsp;
+    <code>{{ref:KEY}}</code> 상위서버 기준 데이터
+  </small>
+</div>
+
+<div class="row g-3">
+  {% for file_type in ['X', 'Y'] %}
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold">파일 타입: <span class="badge bg-primary fs-6">{{ file_type }}</span></span>
+      </div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+          {% set found = [] %}
+          {% for t in template_list %}
+            {% if t.file_type == file_type %}
+              {% set _ = found.append(t) %}
+              <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <code class="fw-semibold">{{ t.filename }}</code>
+                    {% if not t.is_active %}<span class="badge bg-secondary ms-2">비활성</span>{% endif %}
+                    <br>
+                    <small class="text-muted">{{ t.description or '설명 없음' }}</small>
+                    <br>
+                    <small class="text-muted">수정: {{ t.updated_at.strftime('%Y-%m-%d %H:%M') }} {% if t.updated_by %}({{ t.updated_by }}){% endif %}</small>
+                  </div>
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" onclick="openEditModal({{ t.id }})">편집</button>
+                    <button class="btn btn-outline-danger" onclick="deleteTemplate({{ t.id }}, '{{ t.filename }}')">삭제</button>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+          {% if not found %}
+          <div class="list-group-item text-center text-muted py-4">
+            {{ file_type }} 파일 템플릿이 없습니다.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- 추가/수정 모달 -->
+<div class="modal fade" id="templateModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">템플릿 추가</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">파일 타입 <span class="text-danger">*</span></label>
+            <select class="form-select" id="f_type">
+              <option value="X">X</option>
+              <option value="Y">Y</option>
+            </select>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">파일명 <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="f_filename" placeholder="예: config_X.txt">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">수정자</label>
+            <input type="text" class="form-control" id="f_by" placeholder="이름 또는 ID">
+          </div>
+          <div class="col-12">
+            <label class="form-label">설명</label>
+            <input type="text" class="form-control" id="f_desc" placeholder="이 파일의 용도 설명">
+          </div>
+          <div class="col-12">
+            <label class="form-label">파일 내용 <span class="text-danger">*</span></label>
+            <textarea class="form-control font-monospace" id="f_content" rows="20"
+              placeholder="파일 내용을 입력하세요. 변수는 {{DATE}}, {{ref:KEY}} 형식으로 사용하세요."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary" onclick="saveTemplate()">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="alertArea" class="position-fixed bottom-0 end-0 p-3" style="z-index:1100; min-width:300px"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const modal = new bootstrap.Modal(document.getElementById('templateModal'));
+
+  function showAlert(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `alert alert-${type} alert-dismissible fade show shadow`;
+    el.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    document.getElementById('alertArea').appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  function openAddModal() {
+    document.getElementById('modalTitle').textContent = '템플릿 추가';
+    document.getElementById('editId').value = '';
+    document.getElementById('f_filename').value = '';
+    document.getElementById('f_content').value = '';
+    document.getElementById('f_desc').value = '';
+    document.getElementById('f_by').value = '';
+    document.getElementById('f_type').value = 'X';
+    modal.show();
+  }
+
+  function openEditModal(id) {
+    fetch(`/api/templates/${id}`)
+      .then(r => r.json())
+      .then(t => {
+        document.getElementById('modalTitle').textContent = '템플릿 편집';
+        document.getElementById('editId').value = t.id;
+        document.getElementById('f_type').value = t.file_type;
+        document.getElementById('f_filename').value = t.filename;
+        document.getElementById('f_content').value = t.content;
+        document.getElementById('f_desc').value = t.description;
+        document.getElementById('f_by').value = '';
+        modal.show();
+      });
+  }
+
+  function saveTemplate() {
+    const editId = document.getElementById('editId').value;
+    const payload = {
+      file_type: document.getElementById('f_type').value,
+      filename: document.getElementById('f_filename').value.trim(),
+      content: document.getElementById('f_content').value,
+      description: document.getElementById('f_desc').value.trim(),
+      updated_by: document.getElementById('f_by').value.trim(),
+    };
+
+    if (!payload.filename || !payload.content) {
+      showAlert('파일명과 내용은 필수입니다.', 'warning'); return;
+    }
+
+    const url = editId ? `/api/templates/${editId}` : '/api/templates';
+    const method = editId ? 'PUT' : 'POST';
+
+    fetch(url, {method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)})
+      .then(r => r.json().then(d => ({ok: r.ok, data: d})))
+      .then(({ok, data}) => {
+        if (ok) { showAlert(data.message, 'success'); modal.hide(); setTimeout(() => location.reload(), 500); }
+        else showAlert(data.detail || '저장 실패', 'danger');
+      })
+      .catch(() => showAlert('저장 중 오류 발생', 'danger'));
+  }
+
+  function deleteTemplate(id, name) {
+    if (!confirm(`'${name}' 템플릿을 삭제하시겠습니까?`)) return;
+    fetch(`/api/templates/${id}`, {method: 'DELETE'})
+      .then(r => r.json())
+      .then(d => { showAlert(d.message, 'success'); setTimeout(() => location.reload(), 500); })
+      .catch(() => showAlert('삭제 실패', 'danger'));
+  }
+</script>
+{% endblock %}

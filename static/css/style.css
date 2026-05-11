@@ -1,0 +1,45 @@
+body {
+  background-color: #f5f6fa;
+  font-size: 0.9rem;
+}
+
+.navbar-brand {
+  letter-spacing: 0.5px;
+}
+
+.card {
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+
+.card-header {
+  background-color: #fff;
+  border-bottom: 1px solid #e9ecef;
+}
+
+code {
+  color: #495057;
+  background: #f0f0f0;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.table th {
+  font-weight: 600;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.font-monospace {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+.badge {
+  font-weight: 500;
+}
