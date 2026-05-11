@@ -7,12 +7,13 @@
 **→ `/home/user/disntm90/stock-analysis-template.md` 참고**
 
 ### 시각화 파일 저장 규칙
-- 파일명: `dashboard-{TICKER}.html` (소문자)
-  - 예: `dashboard-slnh.html`, `dashboard-nvda.html`, `dashboard-tsla.html`
+- 파일명: `dashboard-{TICKER}-{YYYYMMDD}.html` (소문자, 날짜 포함)
+  - 예: `dashboard-slnh-20260511.html`, `dashboard-nvda-20260511.html`
+  - 날짜는 분석 요청 당일 기준 (currentDate 사용)
 - 저장 위치: `/home/user/disntm90/`
-- **덮어쓰기 금지**: 같은 티커가 이미 존재하면 `dashboard-{TICKER}-v2.html` 형식으로 버전 증가
-- gh-pages 배포 시: GitHub API(`mcp__github__create_or_update_file`)로 `{TICKER}.html` 경로에 push
-  - URL: `https://disntm90.github.io/disntm90/{ticker}.html`
+- **덮어쓰기 금지**: 같은 티커+날짜 파일이 이미 존재하면 `dashboard-{TICKER}-{YYYYMMDD}-v2.html` 형식으로 버전 증가
+- gh-pages 배포 시: GitHub API(`mcp__github__create_or_update_file`)로 `{ticker}-{YYYYMMDD}.html` 경로에 push
+  - URL: `https://disntm90.github.io/disntm90/{ticker}-{YYYYMMDD}.html`
 
 ### 분석 순서
 1. 웹 검색으로 실시간 가격·지표 수집
