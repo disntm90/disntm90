@@ -5,4 +5,16 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/disntm90/',
+  build: {
+    rollupOptions: {
+      external: ['react', 'react-dom', 'recharts'],
+      output: {
+        globals: {
+          react: 'React',
+          'react-dom': 'ReactDOM',
+          recharts: 'Recharts',
+        },
+      },
+    },
+  },
 })
