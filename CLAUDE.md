@@ -14,13 +14,26 @@
 - **덮어쓰기 금지**: 같은 티커+날짜 파일이 이미 존재하면 `dashboard-{TICKER}-{YYYYMMDD}-v2.html` 형식으로 버전 증가
 - gh-pages 배포 시: GitHub API(`mcp__github__create_or_update_file`)로 `{ticker}-{YYYYMMDD}.html` 경로에 push
   - URL: `https://disntm90.github.io/disntm90/{ticker}-{YYYYMMDD}.html`
+  - **배포하면 인덱스에 자동 반영** (별도 작업 불필요)
+
+### 열람 인덱스 (자동 업데이트)
+- URL: **`https://disntm90.github.io/disntm90/`**
+- `index.html`이 GitHub Contents API로 `{ticker}-{YYYYMMDD}.html` 파일을 자동 감지
+- 신규 종목을 gh-pages에 배포하면 인덱스에 즉시 반영됨 (수동 편집 불필요)
+- 인덱스 로컬 파일: `/home/user/disntm90/index.html`
+
+### 대시보드 필수 요소
+각 대시보드 헤더에 반드시 포함:
+```jsx
+<a href="https://disntm90.github.io/disntm90/" style={{...}}>← 목록으로</a>
+```
 
 ### 분석 순서
 1. 웹 검색으로 실시간 가격·지표 수집
 2. `stock-analysis-template.md` 7개 섹션 순서대로 분석 작성
-3. 분석 완료 후 인터랙티브 React 대시보드 생성 → `dashboard-{TICKER}.html`
-4. GitHub API로 gh-pages에 배포
-5. 접속 URL 유저에게 안내
+3. 분석 완료 후 인터랙티브 React 대시보드 생성 → `dashboard-{TICKER}-{YYYYMMDD}.html`
+4. GitHub API로 gh-pages에 배포 → 인덱스 자동 반영
+5. 개별 대시보드 URL + 인덱스 URL 유저에게 안내
 
 ### 언어 & 포맷
 - 한국어, 맞춤법 확인
