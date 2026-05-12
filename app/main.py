@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.database import init_db
-from app.routers import equipment, file_templates, deploy, logs
+from app.routers import equipment, file_templates, deploy, logs, files
 from app.services.scheduler import start_scheduler, stop_scheduler, get_scheduler_status
 
 import os
@@ -39,6 +39,7 @@ app.include_router(equipment.router)
 app.include_router(file_templates.router)
 app.include_router(deploy.router)
 app.include_router(logs.router)
+app.include_router(files.router)
 
 
 @app.get("/", response_class=HTMLResponse)

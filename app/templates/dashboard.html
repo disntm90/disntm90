@@ -2,99 +2,146 @@
 {% block title %}대시보드 - 설비 배포 대시보드{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">오늘의 배포 현황</h4>
-  <div class="d-flex gap-2">
-    <button class="btn btn-outline-secondary btn-sm" onclick="refreshStatus()">
-      새로고침
-    </button>
-    <button class="btn btn-warning btn-sm" onclick="runGenerate()">
-      파일 재생성
-    </button>
-    <button class="btn btn-primary btn-sm" onclick="runDeploy()">
-      전체 즉시 배포
-    </button>
-  </div>
-</div>
 
-<!-- 요약 카드 -->
-<div class="row g-3 mb-4" id="summaryCards">
-  <div class="col-md-3">
-    <div class="card text-center border-0 bg-secondary bg-opacity-10">
-      <div class="card-body">
-        <h2 class="mb-0 fw-bold" id="totalCount">-</h2>
-        <small class="text-muted">전체 설비</small>
-      </div>
-    </div>
+<!-- 테스트 모드 카드 -->
+<div class="card border-warning mb-4">
+  <div class="card-header d-flex align-items-center gap-2">
+    <span class="badge bg-warning text-dark">테스트 모드</span>
+    <span class="text-muted small">설비 IP 없이 파일 생성만 확인</span>
   </div>
-  <div class="col-md-3">
-    <div class="card text-center border-0 bg-success bg-opacity-10">
-      <div class="card-body">
-        <h2 class="mb-0 fw-bold text-success" id="successCount">-</h2>
-        <small class="text-muted">배포 성공</small>
-      </div>
+  <div class="card-body">
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <button class="btn btn-outline-secondary btn-sm" onclick="checkDb()">DB 연결 확인</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('X')">X파일만 생성</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('Y')">Y파일만 생성</button>
+      <button class="btn btn-primary btn-sm" onclick="testGenerate('ALL')">전체 생성</button>
     </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card text-center border-0 bg-danger bg-opacity-10">
-      <div class="card-body">
-        <h2 class="mb-0 fw-bold text-danger" id="failedCount">-</h2>
-        <small class="text-muted">배포 실패</small>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card text-center border-0 bg-warning bg-opacity-10">
-      <div class="card-body">
-        <h2 class="mb-0 fw-bold text-warning" id="pendingCount">-</h2>
-        <small class="text-muted">미배포</small>
-      </div>
-    </div>
-  </div>
-</div>
+    <div id="dbCheckResult"></div>
 
-<!-- 파일 생성 현황 -->
-<div class="card mb-4">
-  <div class="card-header fw-semibold">파일 생성 현황 (오늘)</div>
-  <div class="card-body p-0">
-    <div class="table-responsive">
+    <div class="table-responsive mt-3">
       <table class="table table-sm table-hover mb-0">
         <thead class="table-light">
           <tr>
-            <th>파일 타입</th>
             <th>파일명</th>
-            <th>상태</th>
-            <th>메시지</th>
-            <th>생성 시각</th>
+            <th>크기</th>
+            <th>생성시각</th>
+            <th>미리보기</th>
           </tr>
         </thead>
-        <tbody id="generateTable">
-          <tr><td colspan="5" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
+        <tbody id="generatedFilesTable">
+          <tr><td colspan="4" class="text-center text-muted py-3">생성된 파일이 없습니다.</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
 
-<!-- 설비별 배포 현황 -->
-<div class="card">
-  <div class="card-header fw-semibold">설비별 배포 현황 (오늘)</div>
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-sm table-hover mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>설비명</th>
-            <th>IP</th>
-            <th>X 파일</th>
-            <th>Y 파일</th>
-            <th>작업</th>
-          </tr>
-        </thead>
-        <tbody id="deployTable">
-          <tr><td colspan="5" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
-        </tbody>
-      </table>
+<!-- 운영 모드 카드 -->
+<div class="card border-primary mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary">운영 모드</span>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary btn-sm" onclick="refreshStatus()">새로고침</button>
+      <button class="btn btn-warning btn-sm" onclick="runGenerate()">파일 재생성</button>
+      <button class="btn btn-primary btn-sm" onclick="runDeploy()">전체 배포</button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="row g-3 mb-4" id="summaryCards">
+      <div class="col-md-3">
+        <div class="card text-center border-0 bg-secondary bg-opacity-10">
+          <div class="card-body">
+            <h2 class="mb-0 fw-bold" id="totalCount">-</h2>
+            <small class="text-muted">전체 설비</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-0 bg-success bg-opacity-10">
+          <div class="card-body">
+            <h2 class="mb-0 fw-bold text-success" id="successCount">-</h2>
+            <small class="text-muted">성공</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-0 bg-danger bg-opacity-10">
+          <div class="card-body">
+            <h2 class="mb-0 fw-bold text-danger" id="failedCount">-</h2>
+            <small class="text-muted">실패</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-0 bg-warning bg-opacity-10">
+          <div class="card-body">
+            <h2 class="mb-0 fw-bold text-warning" id="pendingCount">-</h2>
+            <small class="text-muted">미배포</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">파일 생성 현황 (오늘)</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>파일 타입</th>
+                <th>파일명</th>
+                <th>상태</th>
+                <th>메시지</th>
+                <th>생성 시각</th>
+              </tr>
+            </thead>
+            <tbody id="generateTable">
+              <tr><td colspan="5" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header fw-semibold">설비별 배포 현황 (오늘)</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>설비명</th>
+                <th>IP</th>
+                <th>X 파일</th>
+                <th>Y 파일</th>
+                <th>작업</th>
+              </tr>
+            </thead>
+            <tbody id="deployTable">
+              <tr><td colspan="5" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 파일 미리보기 모달 -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewModalTitle">파일 미리보기</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <pre id="previewContent" style="max-height:500px; overflow-y:auto; white-space:pre-wrap; word-break:break-all;"></pre>
+        <div id="previewTruncated" class="text-muted small mt-2" style="display:none;">... (이하 생략)</div>
+      </div>
     </div>
   </div>
 </div>
@@ -131,6 +178,77 @@
     el.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
     document.getElementById('alertArea').appendChild(el);
     setTimeout(() => el.remove(), 5000);
+  }
+
+  function checkDb() {
+    const resultEl = document.getElementById('dbCheckResult');
+    resultEl.innerHTML = '<span class="text-muted small">확인 중...</span>';
+    fetch('/api/test/db-check', {method: 'POST'})
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          resultEl.innerHTML = `<span class="text-success fw-semibold">&#10003; ${d.message}</span>`;
+        } else {
+          resultEl.innerHTML = `<span class="text-danger fw-semibold">&#10007; ${d.message}</span>`;
+        }
+      })
+      .catch(() => {
+        resultEl.innerHTML = '<span class="text-danger fw-semibold">&#10007; 요청 실패</span>';
+      });
+  }
+
+  function testGenerate(fileType) {
+    showAlert(`파일 생성 중 (${fileType})...`, 'info');
+    fetch('/api/test/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({file_type: fileType})
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          showAlert('파일 생성 완료', 'success');
+        } else {
+          showAlert('일부 파일 생성 실패', 'warning');
+        }
+        loadGeneratedFiles();
+      })
+      .catch(() => showAlert('파일 생성 요청 실패', 'danger'));
+  }
+
+  function loadGeneratedFiles() {
+    fetch('/api/files/generated')
+      .then(r => r.json())
+      .then(data => {
+        const tbody = document.getElementById('generatedFilesTable');
+        if (!data.files || data.files.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">생성된 파일이 없습니다.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.files.map(f => `
+          <tr>
+            <td><code>${f.name}</code></td>
+            <td>${f.size.toLocaleString()} B</td>
+            <td>${f.modified_at}</td>
+            <td>
+              <button class="btn btn-outline-secondary btn-sm" onclick="previewFile('${f.name}')">미리보기</button>
+            </td>
+          </tr>`).join('');
+      })
+      .catch(() => showAlert('파일 목록 조회 실패', 'danger'));
+  }
+
+  function previewFile(filename) {
+    fetch(`/api/files/generated/${encodeURIComponent(filename)}`)
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('previewModalTitle').textContent = d.filename;
+        document.getElementById('previewContent').textContent = d.content;
+        const truncEl = document.getElementById('previewTruncated');
+        truncEl.style.display = d.truncated ? '' : 'none';
+        new bootstrap.Modal(document.getElementById('previewModal')).show();
+      })
+      .catch(() => showAlert('파일 미리보기 실패', 'danger'));
   }
 
   function refreshStatus() {
@@ -205,6 +323,7 @@
       .catch(() => showAlert('배포 요청 실패', 'danger'));
   }
 
+  loadGeneratedFiles();
   refreshStatus();
   setInterval(refreshStatus, 30000);
 </script>
