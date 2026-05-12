@@ -9,6 +9,7 @@ BASE_DIR = Path(__file__).parent
 DATABASE_URL = f"sqlite:///{BASE_DIR}/data/dashboard.db"
 
 GENERATED_DIR = BASE_DIR / "generated_files"
+DATA_DIR = BASE_DIR / "data"
 LOG_DIR = BASE_DIR / "logs"
 
 SCHEDULE_HOUR = int(os.getenv("SCHEDULE_HOUR", "12"))
