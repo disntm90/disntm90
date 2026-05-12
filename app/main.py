@@ -9,6 +9,9 @@ from app.database import init_db
 from app.routers import equipment, file_templates, deploy, logs
 from app.services.scheduler import start_scheduler, stop_scheduler, get_scheduler_status
 
+import os
+os.makedirs("logs", exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",

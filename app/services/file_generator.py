@@ -237,11 +237,12 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
 # X파일: YieldConvDef.xml
 # ------------------------------------------------------------------
 
-def generate_yield_condef(triggered_by: str = "scheduler") -> dict:
+def generate_yield_condef(triggered_by: str = "scheduler", df: "pd.DataFrame | None" = None) -> dict:
     filename = "YieldConvDef.xml"
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
-    df = _fetch_scrap_data()
+    if df is None:
+        df = _fetch_scrap_data()
     if df is None:
         return {"file_type": "X", "filename": filename, "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
 
@@ -303,12 +304,13 @@ def _ensure_template() -> str:
     return TEMPLATE_FILE.read_text(encoding="utf-8")
 
 
-def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
+def generate_reject_mapfile(triggered_by: str = "scheduler", df: "pd.DataFrame | None" = None) -> dict:
     filename = "RejectCodeMap.xml"
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
     prime_map = _load_primecode_map()
-    df = _fetch_scrap_data()
+    if df is None:
+        df = _fetch_scrap_data()
     if df is None:
         return {"file_type": "Y", "filename": filename, "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
 
@@ -344,6 +346,8 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
 def generate_all_files(triggered_by: str = "scheduler") -> list[dict]:
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
+    shared_df = _fetch_scrap_data()
+
     generators = [
         ("X", "YieldConvDef.xml", generate_yield_condef),
         ("Y", "RejectCodeMap.xml", generate_reject_mapfile),
@@ -353,7 +357,7 @@ def generate_all_files(triggered_by: str = "scheduler") -> list[dict]:
     db = SessionLocal()
     try:
         for file_type, filename, fn in generators:
-            result = fn(triggered_by=triggered_by)
+            result = fn(triggered_by=triggered_by, df=shared_df)
             status = result["status"]
             message = result.get("error", f"파일 생성 완료: {GENERATED_DIR / filename}") if status == "failed" else f"파일 생성 완료: {GENERATED_DIR / filename}"
 

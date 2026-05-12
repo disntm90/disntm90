@@ -5,14 +5,19 @@ import logging
 from pathlib import Path
 
 from app.database import SessionLocal
-from app.models import Equipment, DeployLog, FileTemplate
+from app.models import Equipment, DeployLog
 from config import GENERATED_DIR
 
 logger = logging.getLogger(__name__)
 
+# file_generator.py와 동기화: 생성되는 파일 목록
+DEPLOY_FILES = [
+    ("X", "YieldConvDef.xml"),
+    ("Y", "RejectCodeMap.xml"),
+]
+
 
 def _deploy_via_ftp(eq: Equipment, local_file: Path) -> None:
-    """FTP로 파일을 업로드합니다."""
     with ftplib.FTP() as ftp:
         ftp.connect(eq.ip, eq.port, timeout=30)
         ftp.login(eq.ftp_user, eq.ftp_pass)
@@ -22,16 +27,17 @@ def _deploy_via_ftp(eq: Equipment, local_file: Path) -> None:
 
 
 def _deploy_via_sftp(eq: Equipment, local_file: Path) -> None:
-    """SFTP로 파일을 업로드합니다."""
     import paramiko
     transport = paramiko.Transport((eq.ip, eq.port))
+    sftp = None
     try:
         transport.connect(username=eq.ftp_user, password=eq.ftp_pass)
         sftp = paramiko.SFTPClient.from_transport(transport)
         remote_path = f"{eq.ftp_path.rstrip('/')}/{local_file.name}"
         sftp.put(str(local_file), remote_path)
-        sftp.close()
     finally:
+        if sftp:
+            sftp.close()
         transport.close()
 
 
@@ -41,21 +47,19 @@ def deploy_to_equipment(eq: Equipment, triggered_by: str = "manual") -> list[dic
     results = []
 
     try:
-        templates = db.query(FileTemplate).filter(FileTemplate.is_active == True).all()
-
-        for tmpl in templates:
-            local_file = GENERATED_DIR / tmpl.filename
+        for file_type, filename in DEPLOY_FILES:
+            local_file = GENERATED_DIR / filename
 
             if not local_file.exists():
                 log = DeployLog(
                     equipment_id=eq.id,
-                    file_type=tmpl.file_type,
+                    file_type=file_type,
                     status="failed",
                     message=f"생성된 파일이 없습니다: {local_file}",
                     triggered_by=triggered_by,
                 )
                 db.add(log)
-                results.append({"equipment": eq.name, "file_type": tmpl.file_type, "status": "failed"})
+                results.append({"equipment": eq.name, "file_type": file_type, "status": "failed"})
                 continue
 
             try:
@@ -66,26 +70,26 @@ def deploy_to_equipment(eq: Equipment, triggered_by: str = "manual") -> list[dic
 
                 log = DeployLog(
                     equipment_id=eq.id,
-                    file_type=tmpl.file_type,
+                    file_type=file_type,
                     status="success",
-                    message=f"{local_file.name} → {eq.ip}:{eq.ftp_path} 배포 완료",
+                    message=f"{filename} → {eq.ip}:{eq.ftp_path} 배포 완료",
                     triggered_by=triggered_by,
                 )
                 db.add(log)
-                results.append({"equipment": eq.name, "file_type": tmpl.file_type, "status": "success"})
-                logger.info(f"배포 완료: {eq.name} ({eq.ip}) ← {local_file.name}")
+                results.append({"equipment": eq.name, "file_type": file_type, "status": "success"})
+                logger.info(f"배포 완료: {eq.name} ({eq.ip}) ← {filename}")
 
             except Exception as exc:
                 log = DeployLog(
                     equipment_id=eq.id,
-                    file_type=tmpl.file_type,
+                    file_type=file_type,
                     status="failed",
                     message=str(exc),
                     triggered_by=triggered_by,
                 )
                 db.add(log)
-                results.append({"equipment": eq.name, "file_type": tmpl.file_type, "status": "failed", "error": str(exc)})
-                logger.error(f"배포 실패: {eq.name} ({eq.ip}) ← {local_file.name}: {exc}")
+                results.append({"equipment": eq.name, "file_type": file_type, "status": "failed", "error": str(exc)})
+                logger.error(f"배포 실패: {eq.name} ({eq.ip}) ← {filename}: {exc}")
 
         db.commit()
 
@@ -104,7 +108,8 @@ def run_full_deploy(equipment_list: list[Equipment], triggered_by: str = "schedu
     generate_results = generate_all_files(triggered_by)
     gen_failed = [r for r in generate_results if r["status"] == "failed"]
     if gen_failed:
-        logger.warning(f"파일 생성 실패 {len(gen_failed)}건: {gen_failed}")
+        logger.error(f"파일 생성 실패로 배포를 중단합니다: {gen_failed}")
+        return
 
     for eq in equipment_list:
         deploy_to_equipment(eq, triggered_by)
