@@ -23,6 +23,5 @@ logs/
 static/css/bootstrap.min.css
 static/js/bootstrap.bundle.min.js
 
-# 배포용 zip
-*.zip
+# 배포용 zip (dashboard.zip은 임시 배포용으로 커밋)
 wheels/
