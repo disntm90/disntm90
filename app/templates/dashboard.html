@@ -154,14 +154,21 @@
 <script>
   const active_page = 'dashboard';
 
+  function esc(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   function statusBadge(info) {
     if (!info || !info.status || info.status === 'pending') {
       return '<span class="badge bg-secondary">미배포</span>';
     }
     if (info.status === 'success') {
-      return `<span class="badge bg-success">성공</span><br><small class="text-muted">${info.deployed_at || ''}</small>`;
+      return `<span class="badge bg-success">성공</span><br><small class="text-muted">${esc(info.deployed_at)}</small>`;
     }
-    return `<span class="badge bg-danger" title="${info.message || ''}">실패</span><br><small class="text-muted">${info.deployed_at || ''}</small>`;
+    return `<span class="badge bg-danger" title="${esc(info.message)}">실패</span><br><small class="text-muted">${esc(info.deployed_at)}</small>`;
   }
 
   function genBadge(status) {
@@ -227,11 +234,11 @@
         }
         tbody.innerHTML = data.files.map(f => `
           <tr>
-            <td><code>${f.name}</code></td>
+            <td><code>${esc(f.name)}</code></td>
             <td>${f.size.toLocaleString()} B</td>
-            <td>${f.modified_at}</td>
+            <td>${esc(f.modified_at)}</td>
             <td>
-              <button class="btn btn-outline-secondary btn-sm" onclick="previewFile('${f.name}')">미리보기</button>
+              <button class="btn btn-outline-secondary btn-sm" data-file="${esc(f.name)}" onclick="previewFile(this.dataset.file)">미리보기</button>
             </td>
           </tr>`).join('');
       })
@@ -264,11 +271,11 @@
           ? '<tr><td colspan="5" class="text-center text-muted py-3">오늘 생성 이력이 없습니다.</td></tr>'
           : data.generate_logs.map(g => `
               <tr>
-                <td><span class="badge bg-primary">${g.file_type}</span></td>
-                <td><code>${g.filename}</code></td>
+                <td><span class="badge bg-primary">${esc(g.file_type)}</span></td>
+                <td><code>${esc(g.filename)}</code></td>
                 <td>${genBadge(g.status)}</td>
-                <td><small>${g.message}</small></td>
-                <td><small>${g.generated_at}</small></td>
+                <td><small>${esc(g.message)}</small></td>
+                <td><small>${esc(g.generated_at)}</small></td>
               </tr>`).join('');
         document.getElementById('generateTable').innerHTML = genRows;
 
@@ -276,12 +283,12 @@
           ? '<tr><td colspan="5" class="text-center text-muted py-3">등록된 설비가 없습니다.</td></tr>'
           : data.equipment_status.map(e => `
               <tr>
-                <td>${e.name}</td>
-                <td><code>${e.ip}</code></td>
+                <td>${esc(e.name)}</td>
+                <td><code>${esc(e.ip)}</code></td>
                 <td>${statusBadge(e.file_X)}</td>
                 <td>${statusBadge(e.file_Y)}</td>
                 <td>
-                  <button class="btn btn-outline-primary btn-sm" onclick="deployOne(${e.id}, '${e.name}')">
+                  <button class="btn btn-outline-primary btn-sm" data-id="${e.id}" data-name="${esc(e.name)}" onclick="deployOne(this.dataset.id, this.dataset.name)">
                     재배포
                   </button>
                 </td>

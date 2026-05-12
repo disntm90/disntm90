@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from app.services.file_generator import (
     generate_reject_mapfile,
 )
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 MAX_PREVIEW_LINES = 200
@@ -60,14 +62,21 @@ def preview_generated_file(filename: str):
 
 @router.post("/api/test/db-check")
 def test_db_check():
+    """실제 운영 쿼리에 LIMIT를 붙여 호출 (DB 종류 호환성 + 실 데이터 검증)."""
     try:
         import bigdataquery as bdq
     except ImportError:
         return {"success": False, "message": "bigdataquery 패키지 없음"}
     try:
-        bdq.getData(param="SELECT 1")
-        return {"success": True, "message": "DB 연결 성공"}
+        df = bdq.getData(param="""
+            SELECT code_type, code_id
+            FROM mos_tsp_smi.gpm_tp_be_mng_sbl_scrap_code
+            WHERE vendor_name = 'ICOS'
+            LIMIT 1
+        """)
+        return {"success": True, "message": f"DB 연결 성공 (조회 컬럼: {list(df.columns)})"}
     except Exception as e:
+        logger.exception("DB 연결 테스트 실패")
         return {"success": False, "message": f"DB 연결 실패: {e}"}
 
 
@@ -88,6 +97,7 @@ def test_generate(req: TestGenerateRequest):
         else:
             results = generate_all_files(triggered_by="test")
     except Exception as e:
+        logger.exception("test_generate 실패")
         return {"results": [], "success": False, "message": str(e)}
 
     success = all(r.get("status") == "success" for r in results)

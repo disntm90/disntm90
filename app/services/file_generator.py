@@ -25,6 +25,12 @@ PRIMECODE_CSV = DATA_DIR / "primecode.csv"
 TEMPLATE_FILE = DATA_DIR / "static_xml_template.txt"
 DEFAULT_PRIMECODE = "9"
 
+# 생성/배포 대상 파일 단일 소스 (deployer.py 등에서 import해서 사용)
+OUTPUT_FILES = [
+    ("X", "YieldConvDef.xml"),
+    ("Y", "RejectCodeMap.xml"),
+]
+
 _BDQ_QUERY = """
     SELECT code_type, code_id
     FROM mos_tsp_smi.gpm_tp_be_mng_sbl_scrap_code
@@ -246,6 +252,7 @@ def generate_yield_condef(triggered_by: str = "scheduler", df: "pd.DataFrame | N
     if df is None:
         return {"file_type": "X", "filename": filename, "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
 
+    df = df.copy()
     conditions = [
         df["code_type"].str.startswith("BGA", na=False),
         df["code_type"].str.startswith("3D", na=False),
@@ -314,6 +321,7 @@ def generate_reject_mapfile(triggered_by: str = "scheduler", df: "pd.DataFrame |
     if df is None:
         return {"file_type": "Y", "filename": filename, "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
 
+    df = df.copy()
     df["prime_code"] = df["code_type"].astype(str).str.upper().map(prime_map).fillna(DEFAULT_PRIMECODE)
     df.sort_values(by=["prime_code", "code_id"], inplace=True)
 
@@ -357,9 +365,18 @@ def generate_all_files(triggered_by: str = "scheduler") -> list[dict]:
     db = SessionLocal()
     try:
         for file_type, filename, fn in generators:
-            result = fn(triggered_by=triggered_by, df=shared_df)
+            if shared_df is None:
+                result = {
+                    "file_type": file_type,
+                    "filename": filename,
+                    "status": "failed",
+                    "error": "DB 조회 실패 또는 데이터 없음",
+                }
+            else:
+                result = fn(triggered_by=triggered_by, df=shared_df)
+
             status = result["status"]
-            message = result.get("error", f"파일 생성 완료: {GENERATED_DIR / filename}") if status == "failed" else f"파일 생성 완료: {GENERATED_DIR / filename}"
+            message = result.get("error", "") if status == "failed" else f"파일 생성 완료: {GENERATED_DIR / filename}"
 
             db.add(GenerateLog(
                 file_type=file_type,

@@ -6,15 +6,10 @@ from pathlib import Path
 
 from app.database import SessionLocal
 from app.models import Equipment, DeployLog
+from app.services.file_generator import OUTPUT_FILES as DEPLOY_FILES
 from config import GENERATED_DIR
 
 logger = logging.getLogger(__name__)
-
-# file_generator.py와 동기화: 생성되는 파일 목록
-DEPLOY_FILES = [
-    ("X", "YieldConvDef.xml"),
-    ("Y", "RejectCodeMap.xml"),
-]
 
 
 def _deploy_via_ftp(eq: Equipment, local_file: Path) -> None:
