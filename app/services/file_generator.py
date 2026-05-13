@@ -10,7 +10,6 @@ import getpass
 import logging
 import os
 import xml.etree.ElementTree as ET
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -219,7 +218,7 @@ STATIC_XML_TEMPLATE = """\
 
 
 # ------------------------------------------------------------------
-# bigdataquery 자동 로그인
+# bigdataquery 자동 로그인 + DB 조회
 # ------------------------------------------------------------------
 
 _bdq_session_active = False
@@ -227,9 +226,9 @@ _bdq_session_active = False
 
 def _bdq_login() -> bool:
     """
-    .env의 BDQ_USER / BDQ_PASS 를 읽어 bigdataquery.login()을 자동 실행.
-    login()이 내부적으로 input() / getpass.getpass() 를 호출하므로
-    호출 전에 임시로 교체하고, 완료 후 원복한다.
+    .env의 BDQ_USER / BDQ_PASS 로 login() 자동 실행.
+    login()이 input() / getpass.getpass() 로 ID·PW를 입력받으므로
+    호출 전 임시 교체 후 원복한다.
     """
     global _bdq_session_active
 
@@ -243,14 +242,14 @@ def _bdq_login() -> bool:
     pw   = os.getenv("BDQ_PASS", "")
 
     if not user or not pw:
-        logger.error("BDQ_USER 또는 BDQ_PASS 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.")
+        logger.error("BDQ_USER 또는 BDQ_PASS 환경변수가 설정되지 않았습니다.")
         return False
 
     orig_input   = builtins.input
     orig_getpass = getpass.getpass
     try:
-        builtins.input   = lambda prompt="": (logger.info(f"[bdq] {prompt}{user}"), user)[1]
-        getpass.getpass  = lambda prompt="", stream=None: pw
+        builtins.input  = lambda prompt="": user
+        getpass.getpass = lambda prompt="", stream=None: pw
         bdq.login()
         _bdq_session_active = True
         logger.info(f"bigdataquery 로그인 성공 (user: {user})")
@@ -264,10 +263,6 @@ def _bdq_login() -> bool:
         getpass.getpass = orig_getpass
 
 
-# ------------------------------------------------------------------
-# 공통: DB 조회
-# ------------------------------------------------------------------
-
 def _fetch_scrap_data() -> Optional[pd.DataFrame]:
     global _bdq_session_active
 
@@ -277,20 +272,25 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
         logger.error("bigdataquery 패키지가 설치되어 있지 않습니다.")
         return None
 
+    user = os.getenv("BDQ_USER", "")
+    if not user:
+        logger.error("BDQ_USER 환경변수가 설정되지 않았습니다.")
+        return None
+
     if not _bdq_session_active:
         if not _bdq_login():
             return None
 
     try:
-        df = bdq.getData(param=_BDQ_QUERY)
+        df = bdq.getData(param=_BDQ_QUERY, user_name=user)
     except Exception as exc:
-        # 세션 만료 가능성 → 1회 재로그인 후 재시도
+        # 세션 만료 가능성 → 재로그인 1회 재시도
         logger.warning(f"getData 실패, 재로그인 시도: {exc}")
         _bdq_session_active = False
         if not _bdq_login():
             return None
         try:
-            df = bdq.getData(param=_BDQ_QUERY)
+            df = bdq.getData(param=_BDQ_QUERY, user_name=user)
         except Exception as exc2:
             logger.error(f"재시도 후에도 DB 조회 실패: {exc2}")
             return None
@@ -313,7 +313,7 @@ def generate_yield_condef(triggered_by: str = "scheduler", df: "pd.DataFrame | N
     if df is None:
         df = _fetch_scrap_data()
     if df is None:
-        return {"file_type": "X", "filename": filename, "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
+        return {"file_type": "YieldConvDef", "filename": filename, "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
 
     df = df.copy()
     conditions = [
@@ -337,8 +337,8 @@ def generate_yield_condef(triggered_by: str = "scheduler", df: "pd.DataFrame | N
     output_path = GENERATED_DIR / filename
     ET.ElementTree(root).write(str(output_path), encoding="utf-8", xml_declaration=True)
 
-    logger.info(f"X파일 생성 완료: {output_path} ({len(df)}개 항목)")
-    return {"file_type": "X", "filename": filename, "status": "success"}
+    logger.info(f"YieldConvDef 생성 완료: {output_path} ({len(df)}개 항목)")
+    return {"file_type": "YieldConvDef", "filename": filename, "status": "success"}
 
 
 # ------------------------------------------------------------------
@@ -382,7 +382,7 @@ def generate_reject_mapfile(triggered_by: str = "scheduler", df: "pd.DataFrame |
     if df is None:
         df = _fetch_scrap_data()
     if df is None:
-        return {"file_type": "Y", "filename": filename, "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
+        return {"file_type": "RejectMapFile", "filename": filename, "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
 
     df = df.copy()
     df["prime_code"] = df["code_type"].astype(str).str.upper().map(prime_map).fillna(DEFAULT_PRIMECODE)
@@ -406,8 +406,8 @@ def generate_reject_mapfile(triggered_by: str = "scheduler", df: "pd.DataFrame |
             logger.warning(f"백업 실패 (계속 진행): {exc}")
 
     output_path.write_text(final_xml, encoding="utf-8")
-    logger.info(f"Y파일 생성 완료: {output_path} ({len(df)}개 항목)")
-    return {"file_type": "Y", "filename": filename, "status": "success"}
+    logger.info(f"RejectMapFile 생성 완료: {output_path} ({len(df)}개 항목)")
+    return {"file_type": "RejectMapFile", "filename": filename, "status": "success"}
 
 
 # ------------------------------------------------------------------

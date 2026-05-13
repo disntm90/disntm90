@@ -72,22 +72,24 @@ def download_generated_file(filename: str):
 
 @router.post("/api/test/db-check")
 def test_db_check():
-    """로그인 → 실제 운영 쿼리(LIMIT 1)로 DB 연결 검증."""
+    """login() 인증 후 실제 운영 쿼리(LIMIT 1)로 DB 연결 검증."""
+    import os
     try:
         import bigdataquery as bdq
     except ImportError:
         return {"success": False, "message": "bigdataquery 패키지 없음"}
 
     if not _bdq_login():
-        return {"success": False, "message": "bigdataquery 로그인 실패 (BDQ_USER/BDQ_PASS 확인)"}
+        return {"success": False, "message": "login() 실패 (BDQ_USER / BDQ_PASS 확인)"}
 
+    user = os.getenv("BDQ_USER", "")
     try:
         df = bdq.getData(param="""
             SELECT code_type, code_id
             FROM mos_tsp_smi.gpm_tp_be_mng_sbl_scrap_code
             WHERE vendor_name = 'ICOS'
             LIMIT 1
-        """)
+        """, user_name=user)
         return {"success": True, "message": f"DB 연결 성공 (조회 컬럼: {list(df.columns)})"}
     except Exception as e:
         logger.exception("DB 연결 테스트 실패")
