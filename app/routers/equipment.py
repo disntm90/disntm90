@@ -1,6 +1,6 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -10,6 +10,18 @@ from app.services import health_check
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+
+
+def _is_htmx(request: Request) -> bool:
+    return request.headers.get("HX-Request") == "true"
+
+
+def _render_row(request: Request, eq: Equipment) -> HTMLResponse:
+    return templates.TemplateResponse("_equipment_row.html", {"request": request, "e": eq})
+
+
+def _render_ping(request: Request, eq: Equipment) -> HTMLResponse:
+    return templates.TemplateResponse("_ping_cell.html", {"request": request, "e": eq})
 
 
 class EquipmentCreate(BaseModel):
@@ -67,11 +79,15 @@ def list_equipment(db: Session = Depends(get_db)):
 
 
 @router.post("/api/equipment/{equipment_id}/test-connection")
-def test_equipment_connection(equipment_id: int):
+def test_equipment_connection(equipment_id: int, request: Request, db: Session = Depends(get_db)):
     """단일 설비 FTP/SFTP 로그인까지 시도해 연결 상태를 갱신한다."""
     result = health_check.check_equipment(equipment_id, protocol_login=True)
     if result.get("status") not in ("ok", "failed"):
         raise HTTPException(status_code=404, detail=result.get("message", "설비를 찾을 수 없습니다."))
+
+    if _is_htmx(request):
+        eq = db.query(Equipment).filter(Equipment.id == equipment_id).first()
+        return _render_ping(request, eq)
     return result
 
 
@@ -125,23 +141,29 @@ def update_equipment(equipment_id: int, data: EquipmentUpdate, db: Session = Dep
 
 
 @router.delete("/api/equipment/{equipment_id}")
-def delete_equipment(equipment_id: int, db: Session = Depends(get_db)):
+def delete_equipment(equipment_id: int, request: Request, db: Session = Depends(get_db)):
     eq = db.query(Equipment).filter(Equipment.id == equipment_id).first()
     if not eq:
         raise HTTPException(status_code=404, detail="설비를 찾을 수 없습니다.")
     name = eq.name
     db.delete(eq)
     db.commit()
+
+    if _is_htmx(request):
+        return Response(content="", media_type="text/html")
     return {"message": f"설비 '{name}' 이(가) 삭제되었습니다."}
 
 
 @router.post("/api/equipment/{equipment_id}/toggle")
-def toggle_equipment(equipment_id: int, db: Session = Depends(get_db)):
+def toggle_equipment(equipment_id: int, request: Request, db: Session = Depends(get_db)):
     eq = db.query(Equipment).filter(Equipment.id == equipment_id).first()
     if not eq:
         raise HTTPException(status_code=404, detail="설비를 찾을 수 없습니다.")
     eq.is_active = not eq.is_active
     eq.updated_at = datetime.now()
     db.commit()
+
+    if _is_htmx(request):
+        return _render_row(request, eq)
     status = "활성화" if eq.is_active else "비활성화"
     return {"message": f"설비 '{eq.name}' 이(가) {status}되었습니다.", "is_active": eq.is_active}

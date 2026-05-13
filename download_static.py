@@ -9,11 +9,15 @@ import urllib.request
 from pathlib import Path
 
 BOOTSTRAP_VERSION = "5.3.3"
+HTMX_VERSION = "1.9.12"
+
 FILES = {
     f"https://cdn.jsdelivr.net/npm/bootstrap@{BOOTSTRAP_VERSION}/dist/css/bootstrap.min.css":
         "static/css/bootstrap.min.css",
     f"https://cdn.jsdelivr.net/npm/bootstrap@{BOOTSTRAP_VERSION}/dist/js/bootstrap.bundle.min.js":
         "static/js/bootstrap.bundle.min.js",
+    f"https://cdn.jsdelivr.net/npm/htmx.org@{HTMX_VERSION}/dist/htmx.min.js":
+        "static/js/htmx.min.js",
 }
 
 for url, dest in FILES.items():
@@ -23,7 +27,8 @@ for url, dest in FILES.items():
     size = Path(dest).stat().st_size
     print(f"  저장 완료: {dest} ({size:,} bytes)")
 
-print("\nBootstrap 파일 다운로드 완료!")
-print("base.html의 CDN 링크를 로컬 경로로 변경하려면:")
+print("\n정적 파일 다운로드 완료!")
+print("base.html은 이미 로컬 경로를 참조하도록 설정되어 있습니다:")
 print("  <link href='/static/css/bootstrap.min.css'>")
 print("  <script src='/static/js/bootstrap.bundle.min.js'>")
+print("  <script src='/static/js/htmx.min.js'>")

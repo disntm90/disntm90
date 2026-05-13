@@ -1,0 +1,48 @@
+{# 단일 설비 행 partial — 초기 렌더링 + HTMX swap 공용 #}
+<tr id="row-{{ e.id }}">
+  <td class="fw-semibold">
+    {{ e.name }}
+    {% if e.description %}<br><small class="text-muted">{{ e.description }}</small>{% endif %}
+  </td>
+  <td><code>{{ e.ip }}</code></td>
+  <td>{{ e.port }}</td>
+  <td>
+    <span class="badge {% if e.use_sftp %}bg-info{% else %}bg-secondary{% endif %}">
+      {% if e.use_sftp %}SFTP{% else %}FTP{% endif %}
+    </span>
+  </td>
+  <td>
+    <span class="badge {% if e.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+      {% if e.is_active %}활성{% else %}비활성{% endif %}
+    </span>
+  </td>
+  <td id="ping-{{ e.id }}">
+    {% include "_ping_cell.html" %}
+  </td>
+  <td><small class="text-muted">{% if e.last_ping_at %}{{ e.last_ping_at.strftime('%m-%d %H:%M:%S') }}{% else %}-{% endif %}</small></td>
+  <td>
+    <div class="btn-group btn-group-sm">
+      <button class="btn btn-outline-success"
+              hx-post="/api/equipment/{{ e.id }}/test-connection"
+              hx-target="#ping-{{ e.id }}"
+              hx-swap="innerHTML"
+              hx-indicator="#ping-{{ e.id }}">
+        연결 테스트
+      </button>
+      <button class="btn btn-outline-secondary" onclick="openEditModal({{ e.id }})">수정</button>
+      <button class="btn btn-outline-warning"
+              hx-post="/api/equipment/{{ e.id }}/toggle"
+              hx-target="#row-{{ e.id }}"
+              hx-swap="outerHTML">
+        {% if e.is_active %}비활성화{% else %}활성화{% endif %}
+      </button>
+      <button class="btn btn-outline-danger"
+              hx-delete="/api/equipment/{{ e.id }}"
+              hx-target="#row-{{ e.id }}"
+              hx-swap="outerHTML swap:200ms"
+              hx-confirm="'{{ e.name }}' 설비를 삭제하시겠습니까?">
+        삭제
+      </button>
+    </div>
+  </td>
+</tr>
