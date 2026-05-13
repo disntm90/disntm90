@@ -10,6 +10,7 @@
 <div class="alert alert-info py-2 mb-3">
   <small>
     <strong>사용 가능한 변수:</strong>
+    {% raw %}
     <code>{{DATE}}</code> 오늘 날짜 &nbsp;
     <code>{{TIME}}</code> 현재 시각 &nbsp;
     <code>{{DATETIME}}</code> 날짜+시각 &nbsp;
@@ -17,6 +18,7 @@
     <code>{{MONTH}}</code> 월 &nbsp;
     <code>{{DAY}}</code> 일 &nbsp;
     <code>{{ref:KEY}}</code> 상위서버 기준 데이터
+    {% endraw %}
   </small>
 </div>
 
@@ -96,7 +98,7 @@
           <div class="col-12">
             <label class="form-label">파일 내용 <span class="text-danger">*</span></label>
             <textarea class="form-control font-monospace" id="f_content" rows="20"
-              placeholder="파일 내용을 입력하세요. 변수는 {{DATE}}, {{ref:KEY}} 형식으로 사용하세요."></textarea>
+              placeholder="파일 내용을 입력하세요. 변수는 {% raw %}{{DATE}}, {{ref:KEY}}{% endraw %} 형식으로 사용하세요."></textarea>
           </div>
         </div>
       </div>
