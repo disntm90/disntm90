@@ -12,24 +12,23 @@ from config import GENERATED_DIR
 logger = logging.getLogger(__name__)
 
 
-def _deploy_via_ftp(eq: Equipment, local_file: Path) -> None:
+def _deploy_via_ftp(eq: Equipment, local_file: Path, remote_path: str) -> None:
     with ftplib.FTP() as ftp:
         ftp.connect(eq.ip, eq.port, timeout=30)
         ftp.login(eq.ftp_user, eq.ftp_pass)
-        ftp.cwd(eq.ftp_path)
+        ftp.cwd(remote_path)
         with open(local_file, "rb") as f:
             ftp.storbinary(f"STOR {local_file.name}", f)
 
 
-def _deploy_via_sftp(eq: Equipment, local_file: Path) -> None:
+def _deploy_via_sftp(eq: Equipment, local_file: Path, remote_path: str) -> None:
     import paramiko
     transport = paramiko.Transport((eq.ip, eq.port))
     sftp = None
     try:
         transport.connect(username=eq.ftp_user, password=eq.ftp_pass)
         sftp = paramiko.SFTPClient.from_transport(transport)
-        remote_path = f"{eq.ftp_path.rstrip('/')}/{local_file.name}"
-        sftp.put(str(local_file), remote_path)
+        sftp.put(str(local_file), f"{remote_path.rstrip('/')}/{local_file.name}")
     finally:
         if sftp:
             sftp.close()
@@ -37,52 +36,49 @@ def _deploy_via_sftp(eq: Equipment, local_file: Path) -> None:
 
 
 def deploy_to_equipment(eq: Equipment, triggered_by: str = "manual") -> list[dict]:
-    """단일 설비에 X, Y 파일을 모두 배포합니다."""
+    """단일 설비에 X, Y 파일을 배포합니다. 배포 경로는 파일별로 고정입니다."""
     db = SessionLocal()
     results = []
 
     try:
-        for file_type, filename in DEPLOY_FILES:
+        for file_type, filename, remote_path in DEPLOY_FILES:
             local_file = GENERATED_DIR / filename
 
             if not local_file.exists():
-                log = DeployLog(
+                db.add(DeployLog(
                     equipment_id=eq.id,
                     file_type=file_type,
                     status="failed",
                     message=f"생성된 파일이 없습니다: {local_file}",
                     triggered_by=triggered_by,
-                )
-                db.add(log)
+                ))
                 results.append({"equipment": eq.name, "file_type": file_type, "status": "failed"})
                 continue
 
             try:
                 if eq.use_sftp:
-                    _deploy_via_sftp(eq, local_file)
+                    _deploy_via_sftp(eq, local_file, remote_path)
                 else:
-                    _deploy_via_ftp(eq, local_file)
+                    _deploy_via_ftp(eq, local_file, remote_path)
 
-                log = DeployLog(
+                db.add(DeployLog(
                     equipment_id=eq.id,
                     file_type=file_type,
                     status="success",
-                    message=f"{filename} → {eq.ip}:{eq.ftp_path} 배포 완료",
+                    message=f"{filename} → {eq.ip}:{remote_path} 배포 완료",
                     triggered_by=triggered_by,
-                )
-                db.add(log)
+                ))
                 results.append({"equipment": eq.name, "file_type": file_type, "status": "success"})
-                logger.info(f"배포 완료: {eq.name} ({eq.ip}) ← {filename}")
+                logger.info(f"배포 완료: {eq.name} ({eq.ip}:{remote_path}) ← {filename}")
 
             except Exception as exc:
-                log = DeployLog(
+                db.add(DeployLog(
                     equipment_id=eq.id,
                     file_type=file_type,
                     status="failed",
                     message=str(exc),
                     triggered_by=triggered_by,
-                )
-                db.add(log)
+                ))
                 results.append({"equipment": eq.name, "file_type": file_type, "status": "failed", "error": str(exc)})
                 logger.error(f"배포 실패: {eq.name} ({eq.ip}) ← {filename}: {exc}")
 

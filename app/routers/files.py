@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from config import GENERATED_DIR
@@ -58,6 +59,14 @@ def preview_generated_file(filename: str):
         "truncated": truncated,
         "total_lines": len(lines),
     }
+
+
+@router.get("/api/files/download/{filename}")
+def download_generated_file(filename: str):
+    path = _safe_path(filename)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다.")
+    return FileResponse(str(path), filename=filename, media_type="application/octet-stream")
 
 
 @router.post("/api/test/db-check")

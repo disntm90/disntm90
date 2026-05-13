@@ -26,9 +26,10 @@ TEMPLATE_FILE = DATA_DIR / "static_xml_template.txt"
 DEFAULT_PRIMECODE = "9"
 
 # 생성/배포 대상 파일 단일 소스 (deployer.py 등에서 import해서 사용)
+# (파일타입, 파일명, 설비 내 배포 경로) - 배포 경로는 하드코딩, 변경 불가
 OUTPUT_FILES = [
-    ("X", "YieldConvDef.xml"),
-    ("Y", "RejectCodeMap.xml"),
+    ("X", "YieldConvDef.xml",  "C:/Icos"),
+    ("Y", "RejectCodeMap.xml", "C:/Handler/SamsungAutomation/Configuration"),
 ]
 
 _BDQ_QUERY = """

@@ -237,8 +237,9 @@
             <td><code>${esc(f.name)}</code></td>
             <td>${f.size.toLocaleString()} B</td>
             <td>${esc(f.modified_at)}</td>
-            <td>
+            <td class="d-flex gap-1">
               <button class="btn btn-outline-secondary btn-sm" data-file="${esc(f.name)}" onclick="previewFile(this.dataset.file)">미리보기</button>
+              <a class="btn btn-outline-primary btn-sm" href="/api/files/download/${encodeURIComponent(f.name)}" download="${esc(f.name)}">다운로드</a>
             </td>
           </tr>`).join('');
       })
