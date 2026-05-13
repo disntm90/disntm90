@@ -5,6 +5,8 @@ X파일: YieldConvDef.xml  - bigdataquery로 DB 조회 후 정렬하여 XML 생�
 Y파일: RejectCodeMap.xml - bigdataquery + primecode.csv + static_xml_template.txt 조합
 """
 
+import builtins
+import getpass
 import logging
 import os
 import xml.etree.ElementTree as ET
@@ -217,21 +219,81 @@ STATIC_XML_TEMPLATE = """\
 
 
 # ------------------------------------------------------------------
+# bigdataquery 자동 로그인
+# ------------------------------------------------------------------
+
+_bdq_session_active = False
+
+
+def _bdq_login() -> bool:
+    """
+    .env의 BDQ_USER / BDQ_PASS 를 읽어 bigdataquery.login()을 자동 실행.
+    login()이 내부적으로 input() / getpass.getpass() 를 호출하므로
+    호출 전에 임시로 교체하고, 완료 후 원복한다.
+    """
+    global _bdq_session_active
+
+    try:
+        import bigdataquery as bdq
+    except ImportError:
+        logger.error("bigdataquery 패키지가 설치되어 있지 않습니다.")
+        return False
+
+    user = os.getenv("BDQ_USER", "")
+    pw   = os.getenv("BDQ_PASS", "")
+
+    if not user or not pw:
+        logger.error("BDQ_USER 또는 BDQ_PASS 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.")
+        return False
+
+    orig_input   = builtins.input
+    orig_getpass = getpass.getpass
+    try:
+        builtins.input   = lambda prompt="": (logger.info(f"[bdq] {prompt}{user}"), user)[1]
+        getpass.getpass  = lambda prompt="", stream=None: pw
+        bdq.login()
+        _bdq_session_active = True
+        logger.info(f"bigdataquery 로그인 성공 (user: {user})")
+        return True
+    except Exception as exc:
+        logger.error(f"bigdataquery 로그인 실패: {exc}")
+        _bdq_session_active = False
+        return False
+    finally:
+        builtins.input  = orig_input
+        getpass.getpass = orig_getpass
+
+
+# ------------------------------------------------------------------
 # 공통: DB 조회
 # ------------------------------------------------------------------
 
 def _fetch_scrap_data() -> Optional[pd.DataFrame]:
+    global _bdq_session_active
+
     try:
         import bigdataquery as bdq
     except ImportError:
         logger.error("bigdataquery 패키지가 설치되어 있지 않습니다.")
         return None
 
+    if not _bdq_session_active:
+        if not _bdq_login():
+            return None
+
     try:
         df = bdq.getData(param=_BDQ_QUERY)
     except Exception as exc:
-        logger.error(f"DB 조회 실패: {exc}")
-        return None
+        # 세션 만료 가능성 → 1회 재로그인 후 재시도
+        logger.warning(f"getData 실패, 재로그인 시도: {exc}")
+        _bdq_session_active = False
+        if not _bdq_login():
+            return None
+        try:
+            df = bdq.getData(param=_BDQ_QUERY)
+        except Exception as exc2:
+            logger.error(f"재시도 후에도 DB 조회 실패: {exc2}")
+            return None
 
     if df.empty:
         logger.warning("조회된 데이터가 없습니다.")

@@ -11,6 +11,7 @@ from app.services.file_generator import (
     generate_all_files,
     generate_yield_condef,
     generate_reject_mapfile,
+    _bdq_login,
 )
 
 logger = logging.getLogger(__name__)
@@ -71,11 +72,15 @@ def download_generated_file(filename: str):
 
 @router.post("/api/test/db-check")
 def test_db_check():
-    """실제 운영 쿼리에 LIMIT를 붙여 호출 (DB 종류 호환성 + 실 데이터 검증)."""
+    """로그인 → 실제 운영 쿼리(LIMIT 1)로 DB 연결 검증."""
     try:
         import bigdataquery as bdq
     except ImportError:
         return {"success": False, "message": "bigdataquery 패키지 없음"}
+
+    if not _bdq_login():
+        return {"success": False, "message": "bigdataquery 로그인 실패 (BDQ_USER/BDQ_PASS 확인)"}
+
     try:
         df = bdq.getData(param="""
             SELECT code_type, code_id
