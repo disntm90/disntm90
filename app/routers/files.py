@@ -97,10 +97,10 @@ class TestGenerateRequest(BaseModel):
 def test_generate(req: TestGenerateRequest):
     ft = req.file_type.upper()
     try:
-        if ft == "X":
+        if ft == "YIELDCONVDEF":
             result = generate_yield_condef(triggered_by="test")
             results = [result]
-        elif ft == "Y":
+        elif ft == "REJECTMAPFILE":
             result = generate_reject_mapfile(triggered_by="test")
             results = [result]
         else:

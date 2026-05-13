@@ -28,8 +28,8 @@ DEFAULT_PRIMECODE = "9"
 # 생성/배포 대상 파일 단일 소스 (deployer.py 등에서 import해서 사용)
 # (파일타입, 파일명, 설비 내 배포 경로) - 배포 경로는 하드코딩, 변경 불가
 OUTPUT_FILES = [
-    ("X", "YieldConvDef.xml",  "C:/Icos"),
-    ("Y", "RejectCodeMap.xml", "C:/Handler/SamsungAutomation/Configuration"),
+    ("YieldConvDef",  "YieldConvDef.xml",  "C:/Icos"),
+    ("RejectMapFile", "RejectMapFile.xml",  "C:/Handler/SamsungAutomation/Configuration"),
 ]
 
 _BDQ_QUERY = """
@@ -313,7 +313,7 @@ def _ensure_template() -> str:
 
 
 def generate_reject_mapfile(triggered_by: str = "scheduler", df: "pd.DataFrame | None" = None) -> dict:
-    filename = "RejectCodeMap.xml"
+    filename = "RejectMapFile.xml"
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
     prime_map = _load_primecode_map()
@@ -358,8 +358,8 @@ def generate_all_files(triggered_by: str = "scheduler") -> list[dict]:
     shared_df = _fetch_scrap_data()
 
     generators = [
-        ("X", "YieldConvDef.xml", generate_yield_condef),
-        ("Y", "RejectCodeMap.xml", generate_reject_mapfile),
+        ("YieldConvDef",  "YieldConvDef.xml",  generate_yield_condef),
+        ("RejectMapFile", "RejectMapFile.xml",  generate_reject_mapfile),
     ]
 
     results = []

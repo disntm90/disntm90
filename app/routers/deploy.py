@@ -78,8 +78,8 @@ def today_status(db: Session = Depends(get_db)):
             "id": eq.id,
             "name": eq.name,
             "ip": eq.ip,
-            "file_X": eq_logs.get("X", {"status": "pending"}),
-            "file_Y": eq_logs.get("Y", {"status": "pending"}),
+            "file_YieldConvDef":  eq_logs.get("YieldConvDef",  {"status": "pending"}),
+            "file_RejectMapFile": eq_logs.get("RejectMapFile", {"status": "pending"}),
         })
 
     return {
@@ -98,15 +98,15 @@ def today_status(db: Session = Depends(get_db)):
             "total": len(equipment_list),
             "success": sum(
                 1 for e in equipment_status
-                if e["file_X"].get("status") == "success" and e["file_Y"].get("status") == "success"
+                if e["file_YieldConvDef"].get("status") == "success" and e["file_RejectMapFile"].get("status") == "success"
             ),
             "failed": sum(
                 1 for e in equipment_status
-                if e["file_X"].get("status") == "failed" or e["file_Y"].get("status") == "failed"
+                if e["file_YieldConvDef"].get("status") == "failed" or e["file_RejectMapFile"].get("status") == "failed"
             ),
             "pending": sum(
                 1 for e in equipment_status
-                if e["file_X"].get("status") == "pending" or e["file_Y"].get("status") == "pending"
+                if e["file_YieldConvDef"].get("status") == "pending" or e["file_RejectMapFile"].get("status") == "pending"
             ),
         },
     }

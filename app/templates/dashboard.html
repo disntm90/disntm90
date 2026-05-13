@@ -12,8 +12,8 @@
   <div class="card-body">
     <div class="d-flex flex-wrap gap-2 mb-3">
       <button class="btn btn-outline-secondary btn-sm" onclick="checkDb()">DB 연결 확인</button>
-      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('X')">X파일만 생성</button>
-      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('Y')">Y파일만 생성</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('YieldConvDef')">YieldConvDef 생성</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('RejectMapFile')">RejectMapFile 생성</button>
       <button class="btn btn-primary btn-sm" onclick="testGenerate('ALL')">전체 생성</button>
     </div>
     <div id="dbCheckResult"></div>
@@ -91,7 +91,6 @@
           <table class="table table-sm table-hover mb-0">
             <thead class="table-light">
               <tr>
-                <th>파일 타입</th>
                 <th>파일명</th>
                 <th>상태</th>
                 <th>메시지</th>
@@ -99,7 +98,7 @@
               </tr>
             </thead>
             <tbody id="generateTable">
-              <tr><td colspan="5" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
+              <tr><td colspan="4" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
             </tbody>
           </table>
         </div>
@@ -115,8 +114,8 @@
               <tr>
                 <th>설비명</th>
                 <th>IP</th>
-                <th>X 파일</th>
-                <th>Y 파일</th>
+                <th>YieldConvDef</th>
+                <th>RejectMapFile</th>
                 <th>작업</th>
               </tr>
             </thead>
@@ -269,10 +268,9 @@
         document.getElementById('pendingCount').textContent = data.summary.pending;
 
         const genRows = data.generate_logs.length === 0
-          ? '<tr><td colspan="5" class="text-center text-muted py-3">오늘 생성 이력이 없습니다.</td></tr>'
+          ? '<tr><td colspan="4" class="text-center text-muted py-3">오늘 생성 이력이 없습니다.</td></tr>'
           : data.generate_logs.map(g => `
               <tr>
-                <td><span class="badge bg-primary">${esc(g.file_type)}</span></td>
                 <td><code>${esc(g.filename)}</code></td>
                 <td>${genBadge(g.status)}</td>
                 <td><small>${esc(g.message)}</small></td>
@@ -286,8 +284,8 @@
               <tr>
                 <td>${esc(e.name)}</td>
                 <td><code>${esc(e.ip)}</code></td>
-                <td>${statusBadge(e.file_X)}</td>
-                <td>${statusBadge(e.file_Y)}</td>
+                <td>${statusBadge(e.file_YieldConvDef)}</td>
+                <td>${statusBadge(e.file_RejectMapFile)}</td>
                 <td>
                   <button class="btn btn-outline-primary btn-sm" data-id="${e.id}" data-name="${esc(e.name)}" onclick="deployOne(this.dataset.id, this.dataset.name)">
                     재배포
