@@ -231,7 +231,10 @@
           tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">생성된 파일이 없습니다.</td></tr>';
           return;
         }
-        tbody.innerHTML = data.files.map(f => `
+        const files = data.files
+          .sort((a, b) => b.modified_at.localeCompare(a.modified_at))
+          .slice(0, 4);
+        tbody.innerHTML = files.map(f => `
           <tr>
             <td><code>${esc(f.name)}</code></td>
             <td>${f.size.toLocaleString()} B</td>
@@ -269,7 +272,7 @@
 
         const genRows = data.generate_logs.length === 0
           ? '<tr><td colspan="4" class="text-center text-muted py-3">오늘 생성 이력이 없습니다.</td></tr>'
-          : data.generate_logs.map(g => `
+          : data.generate_logs.slice(0, 6).map(g => `
               <tr>
                 <td><code>${esc(g.filename)}</code></td>
                 <td>${genBadge(g.status)}</td>
