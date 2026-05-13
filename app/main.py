@@ -24,6 +24,8 @@ logging.basicConfig(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from app.services.file_generator import _bdq_login
+    _bdq_login()
     init_db()
     start_scheduler()
     yield
