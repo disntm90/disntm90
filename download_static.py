@@ -5,77 +5,129 @@ Bootstrap / HTMX 정적 파일을 로컬에 다운로드하는 스크립트.
 사용법:
   python download_static.py
 
-문제 해결:
-  - [WinError 10054] ConnectionResetError  → User-Agent 헤더 + TLS 설정으로 해결
-  - 프록시 환경                            → 환경변수 HTTPS_PROXY=http://proxy:port 설정 후 실행
+다운로드 순서 (자동 폴백):
+  1순위: Windows 내장 curl.exe  (Windows 10 1803 / Server 2019 이상)
+  2순위: PowerShell Invoke-WebRequest
+  3순위: Python urllib (SSL 검증 우회 포함)
 """
+import subprocess
+import sys
 import ssl
-import time
 import urllib.request
 from pathlib import Path
 
 BOOTSTRAP_VERSION = "5.3.3"
 HTMX_VERSION      = "1.9.12"
 
-FILES = {
-    f"https://cdn.jsdelivr.net/npm/bootstrap@{BOOTSTRAP_VERSION}/dist/css/bootstrap.min.css":
+FILES = [
+    (
+        f"https://cdn.jsdelivr.net/npm/bootstrap@{BOOTSTRAP_VERSION}/dist/css/bootstrap.min.css",
         "static/css/bootstrap.min.css",
-    f"https://cdn.jsdelivr.net/npm/bootstrap@{BOOTSTRAP_VERSION}/dist/js/bootstrap.bundle.min.js":
-        "static/js/bootstrap.bundle.min.js",
-    f"https://cdn.jsdelivr.net/npm/htmx.org@{HTMX_VERSION}/dist/htmx.min.js":
-        "static/js/htmx.min.js",
-}
-
-# CDN이 Python urllib의 기본 User-Agent를 차단하는 경우가 있어 브라우저로 위장
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
     ),
-    "Accept": "*/*",
-}
+    (
+        f"https://cdn.jsdelivr.net/npm/bootstrap@{BOOTSTRAP_VERSION}/dist/js/bootstrap.bundle.min.js",
+        "static/js/bootstrap.bundle.min.js",
+    ),
+    (
+        f"https://cdn.jsdelivr.net/npm/htmx.org@{HTMX_VERSION}/dist/htmx.min.js",
+        "static/js/htmx.min.js",
+    ),
+]
 
-# SSL 인증서 검증 실패 시 우회 컨텍스트 (사내 프록시가 인증서를 교체하는 환경 대응)
-_ssl_ctx = ssl.create_default_context()
-_ssl_ctx.check_hostname = False
-_ssl_ctx.verify_mode    = ssl.CERT_NONE
+
+def _try_curl(url: str, dest: str) -> bool:
+    """Windows 내장 curl.exe로 다운로드 (Windows 10 1803+ / Server 2019+)."""
+    try:
+        result = subprocess.run(
+            ["curl.exe", "-L", "--ssl-no-revoke", "-o", dest, url],
+            capture_output=True, timeout=60,
+        )
+        if result.returncode == 0 and Path(dest).exists():
+            return True
+        # curl 오류 메시지 표시
+        print(f"    curl 오류: {result.stderr.decode(errors='replace').strip()}")
+    except FileNotFoundError:
+        pass  # curl.exe 없으면 다음 방법으로
+    except Exception as e:
+        print(f"    curl 예외: {e}")
+    return False
 
 
-def download(url: str, dest: str, retries: int = 3) -> None:
+def _try_powershell(url: str, dest: str) -> bool:
+    """PowerShell Invoke-WebRequest로 다운로드 (Windows 내장, WinHTTP 사용)."""
+    dest_abs = str(Path(dest).resolve())
+    ps_cmd = (
+        f"[Net.ServicePointManager]::SecurityProtocol = "
+        f"[Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13; "
+        f"Invoke-WebRequest -Uri '{url}' -OutFile '{dest_abs}' -UseBasicParsing"
+    )
+    try:
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", ps_cmd],
+            capture_output=True, timeout=60,
+        )
+        if result.returncode == 0 and Path(dest).exists():
+            return True
+        print(f"    PowerShell 오류: {result.stderr.decode(errors='replace').strip()}")
+    except Exception as e:
+        print(f"    PowerShell 예외: {e}")
+    return False
+
+
+def _try_urllib(url: str, dest: str) -> bool:
+    """Python urllib으로 다운로드 (SSL 검증 우회 포함)."""
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Accept": "*/*",
+    }
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode    = ssl.CERT_NONE
+
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
+            Path(dest).write_bytes(resp.read())
+        return Path(dest).exists()
+    except Exception as e:
+        print(f"    urllib 오류: {e}")
+    return False
+
+
+def download(url: str, dest: str) -> None:
     Path(dest).parent.mkdir(parents=True, exist_ok=True)
     print(f"다운로드 중: {url}")
 
-    req = urllib.request.Request(url, headers=HEADERS)
-    last_err = None
+    methods = [
+        ("curl.exe",    _try_curl),
+        ("PowerShell",  _try_powershell),
+        ("urllib",      _try_urllib),
+    ]
 
-    for attempt in range(1, retries + 1):
-        try:
-            # 먼저 정상 SSL 검증으로 시도
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                Path(dest).write_bytes(resp.read())
+    for name, fn in methods:
+        print(f"  [{name}] 시도 중...", end=" ", flush=True)
+        if fn(url, dest):
             size = Path(dest).stat().st_size
-            print(f"  저장 완료: {dest} ({size:,} bytes)")
+            print(f"완료 ({size:,} bytes)")
             return
-        except Exception as e:
-            last_err = e
-            if attempt == 1:
-                # 두 번째 시도부터 SSL 검증 우회 (사내 프록시 대응)
-                try:
-                    with urllib.request.urlopen(req, timeout=30, context=_ssl_ctx) as resp:
-                        Path(dest).write_bytes(resp.read())
-                    size = Path(dest).stat().st_size
-                    print(f"  저장 완료 (SSL 우회): {dest} ({size:,} bytes)")
-                    return
-                except Exception as e2:
-                    last_err = e2
-            print(f"  재시도 {attempt}/{retries}: {e}")
-            time.sleep(2 ** attempt)  # 2s, 4s 대기 후 재시도
+        print("실패")
 
-    raise RuntimeError(f"다운로드 실패 ({url}): {last_err}")
+    # 세 가지 방법 모두 실패
+    print()
+    print("=" * 60)
+    print(f"[수동 다운로드 필요]")
+    print(f"  URL  : {url}")
+    print(f"  저장 : {dest}")
+    print("  브라우저에서 위 URL에 접속해 직접 저장하세요.")
+    print("=" * 60)
+    sys.exit(1)
 
 
-for url, dest in FILES.items():
+for url, dest in FILES:
     download(url, dest)
 
 print("\n정적 파일 다운로드 완료!")
