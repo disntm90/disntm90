@@ -306,6 +306,24 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
 # X파일: YieldConvDef.xml
 # ------------------------------------------------------------------
 
+def _validate_xml(path: Path, *, expected_root: str, min_items: int = 1) -> tuple[bool, str]:
+    """생성된 XML이 well-formed 인지 + 루트/최소 항목 검증."""
+    try:
+        tree = ET.parse(str(path))
+    except ET.ParseError as exc:
+        return False, f"XML 파싱 실패: {exc}"
+
+    root = tree.getroot()
+    if root.tag != expected_root:
+        return False, f"루트 태그 불일치 (expected={expected_root}, actual={root.tag})"
+
+    items = list(root.iter())
+    if len(items) < min_items:
+        return False, f"항목 수 부족 ({len(items)} < {min_items})"
+
+    return True, f"검증 OK (요소 {len(items)}개)"
+
+
 def generate_yield_condef(triggered_by: str = "scheduler", df: "pd.DataFrame | None" = None) -> dict:
     filename = "YieldConvDef.xml"
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
@@ -337,8 +355,13 @@ def generate_yield_condef(triggered_by: str = "scheduler", df: "pd.DataFrame | N
     output_path = GENERATED_DIR / filename
     ET.ElementTree(root).write(str(output_path), encoding="utf-8", xml_declaration=True)
 
-    logger.info(f"YieldConvDef 생성 완료: {output_path} ({len(df)}개 항목)")
-    return {"file_type": "YieldConvDef", "filename": filename, "status": "success"}
+    valid, validation_msg = _validate_xml(output_path, expected_root="YieldDefinitions", min_items=3)
+    if not valid:
+        logger.error(f"YieldConvDef 무결성 검증 실패: {validation_msg}")
+        return {"file_type": "YieldConvDef", "filename": filename, "status": "failed", "error": validation_msg}
+
+    logger.info(f"YieldConvDef 생성 완료: {output_path} ({len(df)}개 항목, {validation_msg})")
+    return {"file_type": "YieldConvDef", "filename": filename, "status": "success", "message": validation_msg}
 
 
 # ------------------------------------------------------------------
@@ -406,8 +429,14 @@ def generate_reject_mapfile(triggered_by: str = "scheduler", df: "pd.DataFrame |
             logger.warning(f"백업 실패 (계속 진행): {exc}")
 
     output_path.write_text(final_xml, encoding="utf-8")
-    logger.info(f"RejectMapFile 생성 완료: {output_path} ({len(df)}개 항목)")
-    return {"file_type": "RejectMapFile", "filename": filename, "status": "success"}
+
+    valid, validation_msg = _validate_xml(output_path, expected_root="RejectCodeMapSettings", min_items=3)
+    if not valid:
+        logger.error(f"RejectMapFile 무결성 검증 실패: {validation_msg}")
+        return {"file_type": "RejectMapFile", "filename": filename, "status": "failed", "error": validation_msg}
+
+    logger.info(f"RejectMapFile 생성 완료: {output_path} ({len(df)}개 항목, {validation_msg})")
+    return {"file_type": "RejectMapFile", "filename": filename, "status": "success", "message": validation_msg}
 
 
 # ------------------------------------------------------------------

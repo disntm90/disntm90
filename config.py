@@ -15,6 +15,8 @@ LOG_DIR = BASE_DIR / "logs"
 SCHEDULE_HOUR = int(os.getenv("SCHEDULE_HOUR", "12"))
 SCHEDULE_MINUTE = int(os.getenv("SCHEDULE_MINUTE", "0"))
 
+HEALTH_CHECK_INTERVAL_MIN = int(os.getenv("HEALTH_CHECK_INTERVAL_MIN", "5"))
+
 UPSTREAM_HOST = os.getenv("UPSTREAM_HOST", "")
 UPSTREAM_PORT = int(os.getenv("UPSTREAM_PORT", "21"))
 UPSTREAM_USER = os.getenv("UPSTREAM_USER", "")

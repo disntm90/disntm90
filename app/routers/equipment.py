@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
 from app.models import Equipment
+from app.services import health_check
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -40,24 +41,63 @@ def equipment_page(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("equipment.html", {"request": request, "equipment_list": items})
 
 
+def _serialize(e: Equipment) -> dict:
+    return {
+        "id": e.id,
+        "name": e.name,
+        "ip": e.ip,
+        "port": e.port,
+        "ftp_user": e.ftp_user,
+        "ftp_path": e.ftp_path,
+        "use_sftp": e.use_sftp,
+        "is_active": e.is_active,
+        "description": e.description,
+        "created_at": e.created_at.strftime("%Y-%m-%d %H:%M"),
+        "last_ping_at": e.last_ping_at.strftime("%Y-%m-%d %H:%M:%S") if e.last_ping_at else None,
+        "last_ping_status": e.last_ping_status or "unknown",
+        "last_ping_message": e.last_ping_message or "",
+        "last_ping_ms": e.last_ping_ms,
+    }
+
+
 @router.get("/api/equipment")
 def list_equipment(db: Session = Depends(get_db)):
     items = db.query(Equipment).order_by(Equipment.name).all()
-    return [
-        {
-            "id": e.id,
-            "name": e.name,
-            "ip": e.ip,
-            "port": e.port,
-            "ftp_user": e.ftp_user,
-            "ftp_path": e.ftp_path,
-            "use_sftp": e.use_sftp,
-            "is_active": e.is_active,
-            "description": e.description,
-            "created_at": e.created_at.strftime("%Y-%m-%d %H:%M"),
-        }
-        for e in items
-    ]
+    return [_serialize(e) for e in items]
+
+
+@router.post("/api/equipment/{equipment_id}/test-connection")
+def test_equipment_connection(equipment_id: int):
+    """단일 설비 FTP/SFTP 로그인까지 시도해 연결 상태를 갱신한다."""
+    result = health_check.check_equipment(equipment_id, protocol_login=True)
+    if result.get("status") not in ("ok", "failed"):
+        raise HTTPException(status_code=404, detail=result.get("message", "설비를 찾을 수 없습니다."))
+    return result
+
+
+@router.post("/api/equipment/health-check")
+def run_health_check():
+    """활성 설비 전체에 대해 TCP ping 기반 헬스체크 실행."""
+    results = health_check.check_all(only_active=True, protocol_login=False)
+    summary = {
+        "total": len(results),
+        "ok": sum(1 for r in results if r["status"] == "ok"),
+        "failed": sum(1 for r in results if r["status"] == "failed"),
+    }
+    return {"results": results, "summary": summary}
+
+
+@router.get("/api/equipment/health-status")
+def health_status(db: Session = Depends(get_db)):
+    items = db.query(Equipment).filter(Equipment.is_active == True).order_by(Equipment.name).all()
+    statuses = [_serialize(e) for e in items]
+    summary = {
+        "total": len(statuses),
+        "ok":      sum(1 for s in statuses if s["last_ping_status"] == "ok"),
+        "failed":  sum(1 for s in statuses if s["last_ping_status"] == "failed"),
+        "unknown": sum(1 for s in statuses if s["last_ping_status"] == "unknown"),
+    }
+    return {"equipment": statuses, "summary": summary}
 
 
 @router.post("/api/equipment")

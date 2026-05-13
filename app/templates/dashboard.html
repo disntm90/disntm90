@@ -44,11 +44,38 @@
     </div>
     <div class="d-flex gap-2">
       <button class="btn btn-outline-secondary btn-sm" onclick="refreshStatus()">새로고침</button>
+      <button class="btn btn-outline-success btn-sm" onclick="runHealthCheckQuick()">설비 헬스체크</button>
       <button class="btn btn-warning btn-sm" onclick="runGenerate()">파일 재생성</button>
       <button class="btn btn-primary btn-sm" onclick="runDeploy()">전체 배포</button>
     </div>
   </div>
   <div class="card-body">
+    <div class="card border-0 bg-light mb-3">
+      <div class="card-body py-2">
+        <div class="row text-center small">
+          <div class="col">
+            <div class="fw-bold" id="healthTotal">-</div>
+            <div class="text-muted">설비</div>
+          </div>
+          <div class="col">
+            <div class="fw-bold text-success" id="healthOk">-</div>
+            <div class="text-muted">정상</div>
+          </div>
+          <div class="col">
+            <div class="fw-bold text-danger" id="healthFailed">-</div>
+            <div class="text-muted">연결실패</div>
+          </div>
+          <div class="col">
+            <div class="fw-bold text-secondary" id="healthUnknown">-</div>
+            <div class="text-muted">미확인</div>
+          </div>
+          <div class="col-md-3 text-end">
+            <small class="text-muted" id="nextHealthRun"></small>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row g-3 mb-4" id="summaryCards">
       <div class="col-md-3">
         <div class="card text-center border-0 bg-secondary bg-opacity-10">
@@ -332,8 +359,44 @@
       .catch(() => showAlert('배포 요청 실패', 'danger'));
   }
 
+  function refreshHealth() {
+    fetch('/api/equipment/health-status')
+      .then(r => r.json())
+      .then(d => {
+        const s = d.summary || {};
+        document.getElementById('healthTotal').textContent = s.total ?? '-';
+        document.getElementById('healthOk').textContent = s.ok ?? '-';
+        document.getElementById('healthFailed').textContent = s.failed ?? '-';
+        document.getElementById('healthUnknown').textContent = s.unknown ?? '-';
+      })
+      .catch(() => {});
+
+    fetch('/api/scheduler/status')
+      .then(r => r.json())
+      .then(d => {
+        const el = document.getElementById('nextHealthRun');
+        if (d.next_health_run) {
+          el.textContent = `다음 헬스체크: ${d.next_health_run}`;
+        }
+      }).catch(() => {});
+  }
+
+  function runHealthCheckQuick() {
+    showAlert('설비 헬스체크 진행 중...', 'info');
+    fetch('/api/equipment/health-check', {method: 'POST'})
+      .then(r => r.json())
+      .then(d => {
+        const s = d.summary || {};
+        showAlert(`헬스체크 완료 — 정상 ${s.ok}/${s.total}, 실패 ${s.failed}`, s.failed ? 'warning' : 'success');
+        refreshHealth();
+      })
+      .catch(() => showAlert('헬스체크 실패', 'danger'));
+  }
+
   loadGeneratedFiles();
   refreshStatus();
+  refreshHealth();
   setInterval(refreshStatus, 30000);
+  setInterval(refreshHealth, 60000);
 </script>
 {% endblock %}

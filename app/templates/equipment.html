@@ -4,45 +4,59 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h4 class="mb-0">설비 관리</h4>
-  <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ 설비 추가</button>
+  <div>
+    <button class="btn btn-outline-success btn-sm" onclick="runHealthCheck()">전체 헬스체크</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ 설비 추가</button>
+  </div>
 </div>
 
 <div class="card">
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-hover mb-0">
+      <table class="table table-hover align-middle mb-0">
         <thead class="table-dark">
           <tr>
             <th>설비명</th>
             <th>IP</th>
             <th>포트</th>
             <th>프로토콜</th>
-            <th>경로</th>
-            <th>설명</th>
             <th>상태</th>
-            <th>등록일</th>
+            <th>연결</th>
+            <th>최근 점검</th>
             <th>작업</th>
           </tr>
         </thead>
         <tbody id="equipmentTable">
           {% for e in equipment_list %}
           <tr id="row-{{ e.id }}">
-            <td class="fw-semibold">{{ e.name }}</td>
+            <td class="fw-semibold">
+              {{ e.name }}
+              {% if e.description %}<br><small class="text-muted">{{ e.description }}</small>{% endif %}
+            </td>
             <td><code>{{ e.ip }}</code></td>
             <td>{{ e.port }}</td>
             <td><span class="badge {% if e.use_sftp %}bg-info{% else %}bg-secondary{% endif %}">
               {% if e.use_sftp %}SFTP{% else %}FTP{% endif %}
             </span></td>
-            <td><code>{{ e.ftp_path }}</code></td>
-            <td><small class="text-muted">{{ e.description }}</small></td>
             <td>
               <span class="badge {% if e.is_active %}bg-success{% else %}bg-secondary{% endif %}">
                 {% if e.is_active %}활성{% else %}비활성{% endif %}
               </span>
             </td>
-            <td><small>{{ e.created_at.strftime('%Y-%m-%d') }}</small></td>
+            <td id="ping-{{ e.id }}">
+              {% if e.last_ping_status == 'ok' %}
+                <span class="badge bg-success">정상</span>
+                {% if e.last_ping_ms is not none %}<small class="text-muted ms-1">{{ e.last_ping_ms }}ms</small>{% endif %}
+              {% elif e.last_ping_status == 'failed' %}
+                <span class="badge bg-danger" title="{{ e.last_ping_message }}">실패</span>
+              {% else %}
+                <span class="badge bg-secondary">미확인</span>
+              {% endif %}
+            </td>
+            <td><small class="text-muted">{% if e.last_ping_at %}{{ e.last_ping_at.strftime('%m-%d %H:%M:%S') }}{% else %}-{% endif %}</small></td>
             <td>
               <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-success" onclick="testConnection({{ e.id }}, '{{ e.name }}')">연결 테스트</button>
                 <button class="btn btn-outline-secondary" onclick="openEditModal({{ e.id }})">수정</button>
                 <button class="btn btn-outline-warning" onclick="toggleEquipment({{ e.id }}, '{{ e.name }}')">
                   {% if e.is_active %}비활성화{% else %}활성화{% endif %}
@@ -52,7 +66,7 @@
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="9" class="text-center text-muted py-4">등록된 설비가 없습니다.</td></tr>
+          <tr><td colspan="8" class="text-center text-muted py-4">등록된 설비가 없습니다.</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -203,6 +217,47 @@
       .then(r => r.json())
       .then(d => { showAlert(d.message, 'success'); setTimeout(() => location.reload(), 500); })
       .catch(() => showAlert('삭제 실패', 'danger'));
+  }
+
+  function escHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  }
+
+  function renderPingCell(result) {
+    if (!result) return '<span class="badge bg-secondary">미확인</span>';
+    if (result.status === 'ok') {
+      const ms = result.elapsed_ms != null ? `<small class="text-muted ms-1">${result.elapsed_ms}ms</small>` : '';
+      return `<span class="badge bg-success">정상</span>${ms}`;
+    }
+    return `<span class="badge bg-danger" title="${escHtml(result.message || '')}">실패</span>`;
+  }
+
+  function testConnection(id, name) {
+    const cell = document.getElementById(`ping-${id}`);
+    if (cell) cell.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    fetch(`/api/equipment/${id}/test-connection`, {method: 'POST'})
+      .then(r => r.json())
+      .then(d => {
+        if (cell) cell.innerHTML = renderPingCell(d);
+        const level = d.status === 'ok' ? 'success' : 'danger';
+        showAlert(`'${escHtml(name)}': ${escHtml(d.message || '')}`, level);
+      })
+      .catch(() => {
+        if (cell) cell.innerHTML = '<span class="badge bg-danger">실패</span>';
+        showAlert('연결 테스트 실패', 'danger');
+      });
+  }
+
+  function runHealthCheck() {
+    showAlert('전체 설비 헬스체크 진행 중...', 'info');
+    fetch('/api/equipment/health-check', {method: 'POST'})
+      .then(r => r.json())
+      .then(d => {
+        const s = d.summary || {};
+        showAlert(`헬스체크 완료 — 정상 ${s.ok}/${s.total}, 실패 ${s.failed}`, s.failed ? 'warning' : 'success');
+        setTimeout(() => location.reload(), 800);
+      })
+      .catch(() => showAlert('헬스체크 실패', 'danger'));
   }
 </script>
 {% endblock %}

@@ -20,6 +20,11 @@ class Equipment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
 
+    last_ping_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_ping_status: Mapped[str] = mapped_column(String(20), default="unknown")
+    last_ping_message: Mapped[str] = mapped_column(Text, default="")
+    last_ping_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     deploy_logs: Mapped[list["DeployLog"]] = relationship("DeployLog", back_populates="equipment")
 
 
