@@ -21,35 +21,42 @@ def _ftp_cwd(ftp: ftplib.FTP, path: str) -> None:
     """
     FTP 원격 디렉토리로 이동한다.
 
-    Windows FTP 서버는 'C:/Icos' 형식 또는 '/C:/Icos' 형식 모두 가능하지만
-    서버 구현마다 다르므로 두 형식을 순서대로 시도한다.
-    디렉토리가 없으면 MKD로 생성한다.
+    Windows FTP 서버는 루트가 C:\ 로 잡혀 있는 경우가 많아
+    'C:/Icos' 가 아닌 '/Icos' 형식으로 접근해야 한다.
+    아래 순서로 시도한다:
+      1. C:/Icos          (원본)
+      2. /Icos            (드라이브 문자 제거 + 절대 경로)
+      3. Icos             (드라이브 문자 제거 + 상대 경로)
+      4. /C:/Icos         (앞에 / 추가)
     """
-    paths_to_try = [path]
-    # 슬래시로 시작하지 않으면 앞에 / 를 붙인 버전도 시도
-    if not path.startswith("/"):
-        paths_to_try.append("/" + path)
+    import re
+
+    # 드라이브 문자 제거: "C:/Icos" → "/Icos"
+    no_drive = re.sub(r"^[A-Za-z]:", "", path)
+
+    paths_to_try = [
+        path,                    # C:/Icos
+        no_drive,                # /Icos
+        no_drive.lstrip("/"),    # Icos
+        "/" + path,              # /C:/Icos
+    ]
+    # 중복 제거 (순서 유지)
+    seen = set()
+    paths_to_try = [p for p in paths_to_try if not (p in seen or seen.add(p))]
 
     last_err = None
     for p in paths_to_try:
         try:
             ftp.cwd(p)
-            logger.debug(f"FTP CWD 성공: {p!r}")
+            logger.info(f"FTP CWD 성공: {p!r}")
             return
         except ftplib.error_perm as e:
             last_err = e
             logger.debug(f"FTP CWD 실패 ({p!r}): {e}")
 
-    # 두 형식 모두 실패하면 디렉토리 생성 후 재시도
-    logger.warning(f"원격 디렉토리 없음, 생성 시도: {path!r}")
-    try:
-        ftp.mkd(path)
-        ftp.cwd(path)
-        return
-    except Exception as e:
-        raise ftplib.error_perm(
-            f"디렉토리 이동 실패 ({path!r}): {last_err} / 생성도 실패: {e}"
-        )
+    raise ftplib.error_perm(
+        f"디렉토리 이동 실패. 시도한 경로: {paths_to_try} / 마지막 오류: {last_err}"
+    )
 
 
 def _deploy_via_ftp(eq: Equipment, local_file: Path, remote_path: str) -> None:
@@ -60,14 +67,15 @@ def _deploy_via_ftp(eq: Equipment, local_file: Path, remote_path: str) -> None:
     - STOR 명령은 기존 파일이 있으면 자동으로 덮어쓰기한다
     """
     with ftplib.FTP() as ftp:
-        ftp.connect(eq.ip, eq.port, timeout=30)  # TCP 연결
-        ftp.login(eq.ftp_user, eq.ftp_pass)       # FTP 인증
+        ftp.connect(eq.ip, eq.port, timeout=30)
+        ftp.login(eq.ftp_user, eq.ftp_pass)
         ftp.set_pasv(True)                         # 패시브 모드 (방화벽 환경 필수)
-        _ftp_cwd(ftp, remote_path)                 # 원격 디렉토리 이동
+        logger.info(f"FTP 로그인 성공 ({eq.ip}), 현재 디렉토리: {ftp.pwd()!r}")
+        _ftp_cwd(ftp, remote_path)
         with open(local_file, "rb") as f:
             # STOR: 기존 파일이 있으면 덮어쓰기, 없으면 신규 생성
             ftp.storbinary(f"STOR {local_file.name}", f)
-        logger.debug(f"FTP STOR 완료: {local_file.name} → {remote_path}")
+        logger.info(f"FTP STOR 완료: {local_file.name} → {ftp.pwd()}/{local_file.name}")
 
 
 def _deploy_via_sftp(eq: Equipment, local_file: Path, remote_path: str) -> None:
