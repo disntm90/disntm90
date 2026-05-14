@@ -21,7 +21,6 @@ from app.services.file_generator import (
     generate_all_files,
     generate_yield_condef,
     generate_reject_mapfile,
-    _bdq_login,
 )
 
 logger = logging.getLogger(__name__)
@@ -100,8 +99,8 @@ def download_generated_file(filename: str):
 @router.post("/api/test/db-check")
 def test_db_check():
     """
-    bigdataquery 로그인 후 실제 쿼리를 1건 실행해 DB 연결을 검증한다.
-    테스트 모드 화면의 'DB 연결 확인' 버튼에서 호출된다.
+    실제 쿼리를 1건 실행해 DB 연결을 검증한다.
+    로그인은 앱 시작 시 이미 완료된 상태이므로 여기서는 getData만 호출한다.
     """
     import os
     try:
@@ -109,12 +108,8 @@ def test_db_check():
     except ImportError:
         return {"success": False, "message": "bigdataquery 패키지 없음"}
 
-    if not _bdq_login():
-        return {"success": False, "message": "login() 실패 (BDQ_USER / BDQ_PASS 확인)"}
-
     user = os.getenv("BDQ_USER", "")
     try:
-        # LIMIT 1로 최소한의 데이터만 조회해 연결 여부를 확인
         df = bdq.getData(param="""
             SELECT code_type, code_id
             FROM mos_tsp_smi.gpm_tp_be_mng_sbl_scrap_code

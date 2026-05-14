@@ -11,12 +11,10 @@ file_generator.py — XML 파일 생성 서비스
   generate_all_files()     — 두 파일 한 번에 생성 (DB 조회는 1회만)
 """
 
-import builtins       # 내장 input() 을 임시로 교체하기 위해
-import getpass        # getpass.getpass() 를 임시로 교체하기 위해
 import io            # StringIO — sys.stdin 교체용
 import logging
 import os
-import sys           # sys.stdin 교체용
+import sys           # sys.stdin / sys.__stdin__ 교체용
 import xml.etree.ElementTree as ET  # XML 생성·파싱 표준 라이브러리
 from pathlib import Path
 from typing import Optional
@@ -246,11 +244,8 @@ def _bdq_login() -> bool:
     """
     .env의 BDQ_USER / BDQ_PASS 로 bigdataquery login() 자동 실행.
 
-    bigdataquery.login()이 사용자 입력을 받는 방식은 라이브러리 버전에 따라 다르다:
-      - input() 호출     → builtins.input 교체로 대응
-      - getpass() 호출   → getpass.getpass 교체로 대응
-      - sys.stdin 직접   → sys.stdin을 StringIO로 교체해 대응
-    세 가지를 모두 교체해 어떤 방식이든 자동 입력되도록 한다.
+    sys.stdin을 StringIO로 교체해 login()이 읽는 순간 자격증명이 입력된다.
+    복원은 sys.__stdin__ (Python 시작 시 원본 stdin)을 사용한다.
     """
     global _bdq_session_active
 
@@ -267,42 +262,20 @@ def _bdq_login() -> bool:
         logger.error("BDQ_USER 또는 BDQ_PASS 환경변수가 설정되지 않았습니다.")
         return False
 
-    # 원본 보관 (finally에서 반드시 복원)
-    orig_input   = builtins.input
-    orig_getpass = getpass.getpass
-    orig_stdin   = sys.stdin
-
+    account_info = io.StringIO(f"{user}\n{pw}")
     try:
-        # 방법 1: builtins.input 교체 — input("prompt") 형태 대응
-        # 프롬프트에 id/user가 포함되면 user, 그 외(password 등)는 pw 반환
-        def _fake_input(prompt=""):
-            val = user if ("id" in str(prompt).lower() or "user" in str(prompt).lower()) else pw
-            logger.debug(f"[bdq] input 가로채기: {prompt!r}")
-            return val
-        builtins.input = _fake_input
-
-        # 방법 2: getpass.getpass 교체 — 비밀번호 입력 대응
-        getpass.getpass = lambda prompt="", stream=None: pw
-
-        # 방법 3: sys.stdin 교체 — readline()/read() 직접 호출 대응
-        # user\n 다음 pw\n 순서로 두 번 읽힌다고 가정
-        sys.stdin = io.StringIO(f"{user}\n{pw}\n")
-
+        sys.stdin = account_info
         bdq.login()
         _bdq_session_active = True
         logger.info(f"bigdataquery 로그인 성공 (user: {user})")
         return True
-
     except Exception as exc:
         logger.error(f"bigdataquery 로그인 실패: {exc}")
         _bdq_session_active = False
         return False
-
     finally:
-        # 성공/실패/예외 무관하게 반드시 원본 복원
-        builtins.input  = orig_input
-        getpass.getpass = orig_getpass
-        sys.stdin       = orig_stdin
+        account_info.close()
+        sys.stdin = sys.__stdin__  # 원본 stdin으로 복원 (캡처 값 아닌 Python 시작 시 원본)
 
 
 def _fetch_scrap_data() -> Optional[pd.DataFrame]:
@@ -325,25 +298,13 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
         logger.error("BDQ_USER 환경변수가 설정되지 않았습니다.")
         return None
 
-    # 세션이 없으면 먼저 로그인 시도
-    if not _bdq_session_active:
-        if not _bdq_login():
-            return None
-
     try:
         # user_name 파라미터는 bigdataquery의 권한 체크에 필요
+        # 로그인은 앱 시작 시 main.py lifespan에서 한 번만 실행됨
         df = bdq.getData(param=_BDQ_QUERY, user_name=user)
     except Exception as exc:
-        # 세션 만료로 실패했을 가능성 → 재로그인 후 1회 재시도
-        logger.warning(f"getData 실패, 재로그인 시도: {exc}")
-        _bdq_session_active = False
-        if not _bdq_login():
-            return None
-        try:
-            df = bdq.getData(param=_BDQ_QUERY, user_name=user)
-        except Exception as exc2:
-            logger.error(f"재시도 후에도 DB 조회 실패: {exc2}")
-            return None
+        logger.error(f"DB 조회 실패: {exc}")
+        return None
 
     if df.empty:
         logger.warning("조회된 데이터가 없습니다.")
