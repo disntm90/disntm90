@@ -69,9 +69,10 @@ def _deploy_via_ftp(eq: Equipment, local_file: Path, remote_path: str) -> None:
     with ftplib.FTP() as ftp:
         ftp.connect(eq.ip, eq.port, timeout=30)
         ftp.login(eq.ftp_user, eq.ftp_pass)
-        ftp.set_pasv(True)                         # 패시브 모드 (방화벽 환경 필수)
+        ftp.set_pasv(True)
         logger.info(f"FTP 로그인 성공 ({eq.ip}), 현재 디렉토리: {ftp.pwd()!r}")
         _ftp_cwd(ftp, remote_path)
+
         with open(local_file, "rb") as f:
             # STOR: 기존 파일이 있으면 덮어쓰기, 없으면 신규 생성
             ftp.storbinary(f"STOR {local_file.name}", f)
@@ -92,7 +93,7 @@ def _deploy_via_sftp(eq: Equipment, local_file: Path, remote_path: str) -> None:
         transport.connect(username=eq.ftp_user, password=eq.ftp_pass)
         sftp = paramiko.SFTPClient.from_transport(transport)
         remote_file = f"{remote_path.rstrip('/')}/{local_file.name}"
-        # put()은 기존 파일이 있으면 자동 덮어쓰기
+        # put(): 기존 파일이 있으면 덮어쓰기, 없으면 신규 생성
         sftp.put(str(local_file), remote_file)
         logger.debug(f"SFTP PUT 완료: {local_file.name} → {remote_file}")
     finally:
