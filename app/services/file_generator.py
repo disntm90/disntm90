@@ -21,6 +21,9 @@ from typing import Optional
 
 import numpy as np    # 조건별 컬럼 값 일괄 설정 (np.select)
 import pandas as pd   # DB 조회 결과 데이터프레임 처리
+from dotenv import load_dotenv  # .env를 여기서도 직접 로드 (import 순서 무관하게 보장)
+
+load_dotenv()  # BDQ_USER / BDQ_PASS가 os.getenv()보다 먼저 로드되도록
 
 from app.database import SessionLocal
 from app.models import GenerateLog
@@ -295,9 +298,10 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
 
     user = os.getenv("BDQ_USER", "")
     if not user:
-        logger.error("BDQ_USER 환경변수가 설정되지 않았습니다.")
+        logger.error("BDQ_USER 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.")
         return None
 
+    logger.info(f"getData 호출: user_name='{user}'")  # 실제 전달값 확인용
     try:
         # user_name 파라미터는 bigdataquery의 권한 체크에 필요
         # 로그인은 앱 시작 시 main.py lifespan에서 한 번만 실행됨

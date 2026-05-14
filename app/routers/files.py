@@ -109,6 +109,9 @@ def test_db_check():
         return {"success": False, "message": "bigdataquery 패키지 없음"}
 
     user = os.getenv("BDQ_USER", "")
+    if not user:
+        return {"success": False, "message": "BDQ_USER 환경변수가 없습니다. .env 파일을 확인하세요."}
+    logger.info(f"DB 연결 테스트: user_name='{user}'")  # 실제 전달값 확인용
     try:
         df = bdq.getData(param="""
             SELECT code_type, code_id
