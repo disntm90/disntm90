@@ -17,20 +17,57 @@ from config import GENERATED_DIR
 logger = logging.getLogger(__name__)
 
 
+def _ftp_cwd(ftp: ftplib.FTP, path: str) -> None:
+    """
+    FTP 원격 디렉토리로 이동한다.
+
+    Windows FTP 서버는 'C:/Icos' 형식 또는 '/C:/Icos' 형식 모두 가능하지만
+    서버 구현마다 다르므로 두 형식을 순서대로 시도한다.
+    디렉토리가 없으면 MKD로 생성한다.
+    """
+    paths_to_try = [path]
+    # 슬래시로 시작하지 않으면 앞에 / 를 붙인 버전도 시도
+    if not path.startswith("/"):
+        paths_to_try.append("/" + path)
+
+    last_err = None
+    for p in paths_to_try:
+        try:
+            ftp.cwd(p)
+            logger.debug(f"FTP CWD 성공: {p!r}")
+            return
+        except ftplib.error_perm as e:
+            last_err = e
+            logger.debug(f"FTP CWD 실패 ({p!r}): {e}")
+
+    # 두 형식 모두 실패하면 디렉토리 생성 후 재시도
+    logger.warning(f"원격 디렉토리 없음, 생성 시도: {path!r}")
+    try:
+        ftp.mkd(path)
+        ftp.cwd(path)
+        return
+    except Exception as e:
+        raise ftplib.error_perm(
+            f"디렉토리 이동 실패 ({path!r}): {last_err} / 생성도 실패: {e}"
+        )
+
+
 def _deploy_via_ftp(eq: Equipment, local_file: Path, remote_path: str) -> None:
     """
     표준 FTP 프로토콜로 파일 1개를 전송한다.
 
-    with ftplib.FTP() as ftp: 구문으로 컨텍스트 매니저를 사용해
-    예외 발생 시에도 자동으로 연결이 닫힌다.
+    - 패시브 모드 활성화: 방화벽 환경에서 데이터 채널을 클라이언트가 열어 NAT/방화벽 통과
+    - STOR 명령은 기존 파일이 있으면 자동으로 덮어쓰기한다
     """
     with ftplib.FTP() as ftp:
-        ftp.connect(eq.ip, eq.port, timeout=30)  # TCP 연결 (30초 타임아웃)
+        ftp.connect(eq.ip, eq.port, timeout=30)  # TCP 연결
         ftp.login(eq.ftp_user, eq.ftp_pass)       # FTP 인증
-        ftp.cwd(remote_path)                       # 원격 디렉토리 이동
+        ftp.set_pasv(True)                         # 패시브 모드 (방화벽 환경 필수)
+        _ftp_cwd(ftp, remote_path)                 # 원격 디렉토리 이동
         with open(local_file, "rb") as f:
-            # STOR 명령: 파일명을 유지한 채 바이너리 스트림으로 업로드
+            # STOR: 기존 파일이 있으면 덮어쓰기, 없으면 신규 생성
             ftp.storbinary(f"STOR {local_file.name}", f)
+        logger.debug(f"FTP STOR 완료: {local_file.name} → {remote_path}")
 
 
 def _deploy_via_sftp(eq: Equipment, local_file: Path, remote_path: str) -> None:
@@ -41,17 +78,19 @@ def _deploy_via_sftp(eq: Equipment, local_file: Path, remote_path: str) -> None:
     transport와 sftp 객체를 finally 블록에서 반드시 닫아 연결 누수를 방지한다.
     """
     import paramiko
-    transport = paramiko.Transport((eq.ip, eq.port))  # SSH 트랜스포트 레이어
+    transport = paramiko.Transport((eq.ip, eq.port))
     sftp = None
     try:
-        transport.connect(username=eq.ftp_user, password=eq.ftp_pass)  # SSH 인증
-        sftp = paramiko.SFTPClient.from_transport(transport)            # SFTP 채널 생성
-        # 원격 경로 끝의 / 를 정규화한 뒤 파일명을 붙여 전체 경로 구성
-        sftp.put(str(local_file), f"{remote_path.rstrip('/')}/{local_file.name}")
+        transport.connect(username=eq.ftp_user, password=eq.ftp_pass)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        remote_file = f"{remote_path.rstrip('/')}/{local_file.name}"
+        # put()은 기존 파일이 있으면 자동 덮어쓰기
+        sftp.put(str(local_file), remote_file)
+        logger.debug(f"SFTP PUT 완료: {local_file.name} → {remote_file}")
     finally:
         if sftp:
-            sftp.close()       # SFTP 채널 해제
-        transport.close()      # SSH 연결 해제
+            sftp.close()
+        transport.close()
 
 
 def deploy_to_equipment(eq: Equipment, triggered_by: str = "manual") -> list[dict]:
@@ -61,7 +100,7 @@ def deploy_to_equipment(eq: Equipment, triggered_by: str = "manual") -> list[dic
     각 파일마다:
       - 로컬에 파일이 없으면 → failed 기록
       - 전송 성공 → success 기록
-      - 전송 실패 → failed 기록 (다음 파일은 계속 시도)
+      - 전송 실패 → failed 기록 + 상세 오류 로그 (다음 파일은 계속 시도)
 
     반환: 각 파일별 결과 딕셔너리 리스트
     """
@@ -74,46 +113,50 @@ def deploy_to_equipment(eq: Equipment, triggered_by: str = "manual") -> list[dic
 
             # 생성된 파일이 없으면 배포 불가
             if not local_file.exists():
+                msg = f"생성된 파일이 없습니다: {local_file}"
+                logger.error(msg)
                 db.add(DeployLog(
                     equipment_id = eq.id,
                     file_type    = file_type,
                     status       = "failed",
-                    message      = f"생성된 파일이 없습니다: {local_file}",
+                    message      = msg,
                     triggered_by = triggered_by,
                 ))
                 results.append({"equipment": eq.name, "file_type": file_type, "status": "failed"})
-                continue   # 이 파일은 건너뛰고 다음 파일로
+                continue
 
             try:
-                # 설비 설정에 따라 프로토콜 선택
                 if eq.use_sftp:
                     _deploy_via_sftp(eq, local_file, remote_path)
                 else:
                     _deploy_via_ftp(eq, local_file, remote_path)
 
+                msg = f"{filename} → {eq.ip}:{remote_path} 배포 완료"
                 db.add(DeployLog(
                     equipment_id = eq.id,
                     file_type    = file_type,
                     status       = "success",
-                    message      = f"{filename} → {eq.ip}:{remote_path} 배포 완료",
+                    message      = msg,
                     triggered_by = triggered_by,
                 ))
                 results.append({"equipment": eq.name, "file_type": file_type, "status": "success"})
                 logger.info(f"배포 완료: {eq.name} ({eq.ip}:{remote_path}) ← {filename}")
 
             except Exception as exc:
+                # 오류 타입과 메시지를 모두 기록해 원인 파악이 쉽도록
+                msg = f"[{type(exc).__name__}] {exc}"
+                logger.error(f"배포 실패: {eq.name} ({eq.ip}) ← {filename}: {msg}")
                 db.add(DeployLog(
                     equipment_id = eq.id,
                     file_type    = file_type,
                     status       = "failed",
-                    message      = str(exc),
+                    message      = msg,
                     triggered_by = triggered_by,
                 ))
                 results.append({"equipment": eq.name, "file_type": file_type,
-                                 "status": "failed", "error": str(exc)})
-                logger.error(f"배포 실패: {eq.name} ({eq.ip}) ← {filename}: {exc}")
+                                 "status": "failed", "error": msg})
 
-        db.commit()   # 모든 파일 처리 완료 후 한 번에 커밋
+        db.commit()
 
     finally:
         db.close()
@@ -137,12 +180,10 @@ def run_full_deploy(equipment_list: list[Equipment], triggered_by: str = "schedu
     generate_results = generate_all_files(triggered_by)
     gen_failed = [r for r in generate_results if r["status"] == "failed"]
     if gen_failed:
-        # 파일 생성이 하나라도 실패하면 전체 배포를 중단한다.
-        # 오래된 파일을 배포하는 것보다 배포하지 않는 게 더 안전하기 때문.
         logger.error(f"파일 생성 실패로 배포를 중단합니다: {gen_failed}")
         return
 
     for eq in equipment_list:
-        deploy_to_equipment(eq, triggered_by)   # 설비마다 순차 배포
+        deploy_to_equipment(eq, triggered_by)
 
     logger.info("전체 배포 완료")
