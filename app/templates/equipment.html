@@ -72,10 +72,6 @@
             <label class="form-label">FTP 비밀번호</label>
             <input type="password" class="form-control" id="f_pass" placeholder="ftp password">
           </div>
-          <div class="col-md-8">
-            <label class="form-label">배포 경로</label>
-            <input type="text" class="form-control" id="f_path" value="/" placeholder="예: /configs/">
-          </div>
           <div class="col-md-4 d-flex align-items-end">
             <div class="form-check">
               <input type="checkbox" class="form-check-input" id="f_sftp">
@@ -116,7 +112,6 @@
     document.getElementById('editId').value = '';
     ['f_name','f_ip','f_user','f_pass','f_desc'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('f_port').value = 21;
-    document.getElementById('f_path').value = '/';
     document.getElementById('f_sftp').checked = false;
     modal.show();
   }
@@ -134,7 +129,6 @@
         document.getElementById('f_port').value = e.port;
         document.getElementById('f_user').value = e.ftp_user;
         document.getElementById('f_pass').value = '';
-        document.getElementById('f_path').value = e.ftp_path;
         document.getElementById('f_sftp').checked = e.use_sftp;
         document.getElementById('f_desc').value = e.description;
         modal.show();
@@ -149,7 +143,6 @@
       port: parseInt(document.getElementById('f_port').value),
       ftp_user: document.getElementById('f_user').value.trim(),
       ftp_pass: document.getElementById('f_pass').value,
-      ftp_path: document.getElementById('f_path').value.trim() || '/',
       use_sftp: document.getElementById('f_sftp').checked,
       description: document.getElementById('f_desc').value.trim(),
     };

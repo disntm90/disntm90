@@ -54,7 +54,6 @@ def _serialize(e: Equipment) -> dict:
         "ip":                e.ip,
         "port":              e.port,
         "ftp_user":          e.ftp_user,
-        "ftp_path":          e.ftp_path,
         "use_sftp":          e.use_sftp,
         "is_active":         e.is_active,
         "description":       e.description,
@@ -76,7 +75,6 @@ class EquipmentCreate(BaseModel):
     port:        int  = 21
     ftp_user:    str  = ""
     ftp_pass:    str  = ""
-    ftp_path:    str  = "/"
     use_sftp:    bool = False
     description: str  = ""
 
@@ -88,7 +86,6 @@ class EquipmentUpdate(BaseModel):
     port:        int | None  = None
     ftp_user:    str | None  = None
     ftp_pass:    str | None  = None
-    ftp_path:    str | None  = None
     use_sftp:    bool | None = None
     is_active:   bool | None = None
     description: str | None  = None
