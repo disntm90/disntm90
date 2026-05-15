@@ -131,6 +131,8 @@ def update_equipment(equipment_id: int, data: EquipmentUpdate, db: Session = Dep
         raise HTTPException(status_code=404, detail="설비를 찾을 수 없습니다.")
     # exclude_none=True: None인 필드는 건너뛰어 기존 값을 유지
     for field, value in data.model_dump(exclude_none=True).items():
+        if field == "ftp_pass" and value == "":
+            continue  # 빈 문자열이면 기존 비밀번호 유지
         setattr(eq, field, value)
     eq.updated_at = datetime.now()
     db.commit()
