@@ -300,12 +300,6 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
         logger.error("BDQ_USER 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.")
         return None
 
-    # 파일 생성마다 새로 로그인해 세션을 갱신 → 최신 데이터 보장
-    logger.info("DB 조회 전 재로그인 (최신 데이터 반영)")
-    if not _bdq_login():
-        logger.error("로그인 실패로 DB 조회를 중단합니다.")
-        return None
-
     logger.info(f"getData 호출: user_name='{user}'")
     try:
         df = bdq.getData(param=_BDQ_QUERY, user_name=user)
