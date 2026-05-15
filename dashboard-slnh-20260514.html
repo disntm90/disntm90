@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SLNH 분석 — 2026.05.14</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#0a0f1e;font-family:system-ui,-apple-system,sans-serif;color:#f1f5f9}
+    h1,h2{margin:0}
+    button{font-family:inherit}
+    canvas{display:block}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useRef, useEffect } = React
+
+const C = {
+  green:'#22c55e', red:'#ef4444', gold:'#f59e0b',
+  blue:'#3b82f6', gray:'#6b7280', teal:'#14b8a6',
+  darkBg:'#0a0f1e', cardBg:'#141b2d', border:'#1e2d45',
+  text:'#f1f5f9', muted:'#7a90aa', cyan:'#06b6d4',
+  orange:'#f97316', purple:'#a855f7',
+}
+
+function CJSChart({ config, height }) {
+  const h = height || 220
+  const ref = useRef(null), inst = useRef(null)
+  useEffect(() => {
+    if (inst.current) inst.current.destroy()
+    inst.current = new Chart(ref.current, config)
+    return () => inst.current && inst.current.destroy()
+  }, [])
+  return <canvas ref={ref} style={{width:'100%',maxHeight:h}} height={h}/>
+}
+
+const Card = ({children, style}) => (
+  <div style={Object.assign({background:C.cardBg,border:'1px solid #1e2d45',borderRadius:16,padding:'20px 16px',marginBottom:14}, style||{})}>
+    {children}
+  </div>
+)
+const Badge = ({children, color}) => {
+  const c = color || C.blue
+  return (
+    <span style={{background:c+'20',color:c,border:'1px solid '+c+'44',borderRadius:6,padding:'3px 10px',fontSize:12,fontWeight:700,display:'inline-block',marginRight:4,marginBottom:4}}>
+      {children}
+    </span>
+  )
+}
+const SectionTitle = ({children, sub}) => (
+  <div style={{marginBottom:16}}>
+    <h2 style={{color:C.text,fontSize:17,fontWeight:800,margin:0,lineHeight:1.3}}>{children}</h2>
+    {sub && <p style={{color:C.muted,fontSize:12,margin:'5px 0 0',lineHeight:1.5}}>{sub}</p>}
+  </div>
+)
+const Row = ({label, value, color, sub}) => {
+  const c = color || C.text
+  return (
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'12px 0',borderBottom:'1px solid #1e2d45'}}>
+      <div>
+        <div style={{color:C.muted,fontSize:13}}>{label}</div>
+        {sub && <div style={{color:C.gray,fontSize:11,marginTop:2}}>{sub}</div>}
+      </div>
+      <span style={{color:c,fontWeight:800,fontSize:15,textAlign:'right',marginLeft:8}}>{value}</span>
+    </div>
+  )
+}
+const InfoBox = ({children, color}) => {
+  const c = color || C.blue
+  return (
+    <div style={{background:c+'15',border:'1px solid '+c+'40',borderRadius:10,padding:'12px 14px',marginTop:12}}>
+      <p style={{color:c,fontSize:13,margin:0,lineHeight:1.6,fontWeight:500}}>{children}</p>
+    </div>
+  )
+}
+const BullBox = ({children, title}) => (
+  <div style={{background:'#22c55e18',border:'2px solid #22c55e',borderRadius:12,padding:'14px 16px',marginBottom:14}}>
+    <div style={{color:'#22c55e',fontWeight:900,fontSize:14,marginBottom:4}}>{title||'🟢 긍정 신호'}</div>
+    <p style={{color:'#86efac',fontSize:13,margin:0,lineHeight:1.6}}>{children}</p>
+  </div>
+)
+const WarnBox = ({children, title}) => (
+  <div style={{background:'#f59e0b18',border:'2px solid #f59e0b',borderRadius:12,padding:'14px 16px',marginBottom:14}}>
+    <div style={{color:'#f59e0b',fontWeight:900,fontSize:14,marginBottom:4}}>{title||'⚠️ 주의'}</div>
+    <p style={{color:'#fcd34d',fontSize:13,margin:0,lineHeight:1.6}}>{children}</p>
+  </div>
+)
+
+function OpinionCard({user, role, date, stance, opinion, stat1, stat2}) {
+  const sc = stance==='pos' ? C.green : stance==='neg' ? C.red : C.gold
+  const sb = stance==='pos' ? '🟢 긍정' : stance==='neg' ? '🔴 부정' : '🟡 중립'
+  return (
+    <div style={{background:'#0d1424',border:'1px solid #1e2d45',borderRadius:12,padding:'14px',marginBottom:10}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8,flexWrap:'wrap',gap:4}}>
+        <div>
+          <span style={{color:sc,fontWeight:800,fontSize:13}}>{user}</span>
+          {role && <span style={{color:C.muted,fontSize:11,marginLeft:6}}>{role}</span>}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:6}}>
+          <span style={{background:sc+'20',color:sc,border:'1px solid '+sc+'40',borderRadius:6,padding:'2px 8px',fontSize:11,fontWeight:700}}>{sb}</span>
+          <span style={{color:C.gray,fontSize:11}}>{date}</span>
+        </div>
+      </div>
+      <p style={{color:C.text,fontSize:13,margin:0,lineHeight:1.6}}>{opinion}</p>
+      <div style={{color:C.muted,fontSize:11,marginTop:8}}>{stat1}{stat2 ? ' · '+stat2 : ''}</div>
+    </div>
+  )
+}
+
+function SentimentBar({pos, neu, neg}) {
+  return (
+    <div style={{background:C.cardBg,border:'1px solid #1e2d45',borderRadius:12,padding:'14px',marginBottom:14,display:'flex',justifyContent:'center',gap:20,flexWrap:'wrap'}}>
+      <span style={{color:C.green,fontWeight:800,fontSize:14}}>{'🟢 긍정 '+pos+'개'}</span>
+      <span style={{color:C.gold,fontWeight:800,fontSize:14}}>{'🟡 중립 '+neu+'개'}</span>
+      <span style={{color:C.red,fontWeight:800,fontSize:14}}>{'🔴 부정 '+neg+'개'}</span>
+    </div>
+  )
+}
+
+/* ── 차트 데이터 (정적 배열만 사용) ── */
+const priceData = {
+  labels:["'25 Q3","'25 Q4","'26 Jan","'26 Feb","'26 Mar","4/20","5/1","5/7","5/13","5/14"],
+  datasets:[{
+    label:'주가 ($)',
+    data:[2.5, 3.8, 1.4, 0.9, 0.7, 1.07, 1.5, 1.8, 2.05, 2.17],
+    borderColor:'#22c55e', backgroundColor:'#22c55e20',
+    fill:true, tension:0.35, pointRadius:3, borderWidth:2.5,
+    pointBackgroundColor:['#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#ef4444','#22c55e','#22c55e','#22c55e','#22c55e'],
+  }]
+}
+const revenueData = {
+  labels:["Q1'25","Q2'25","Q3'25","Q4'25","Q1'26(E)"],
+  datasets:[{
+    label:'분기 매출 ($M)',
+    data:[6.8, 7.2, 7.8, 7.9, 8.5],
+    backgroundColor:['#3b82f680','#3b82f680','#3b82f680','#3b82f680','#22c55e80'],
+    borderColor:['#3b82f6','#3b82f6','#3b82f6','#3b82f6','#22c55e'],
+    borderWidth:1.5, borderRadius:6,
+  }]
+}
+const radarData = {
+  labels:['BTC 채굴력','AI 인프라','에너지 통제','재무 건전성','성장 모멘텀','나스닥 안정성'],
+  datasets:[
+    {label:'SLNH', data:[80,70,85,40,90,75], borderColor:'#22c55e', backgroundColor:'#22c55e20', borderWidth:2, pointRadius:3},
+    {label:'MARA', data:[85,50,60,65,70,80], borderColor:'#f59e0b', backgroundColor:'#f59e0b20', borderWidth:2, pointRadius:3},
+    {label:'CLSK', data:[75,60,55,60,65,80], borderColor:'#06b6d4', backgroundColor:'#06b6d420', borderWidth:2, pointRadius:3},
+  ]
+}
+
+const darkBar = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{
+    legend:{display:false},
+    tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}
+  },
+  scales:{
+    x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+    y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa'}}
+  }
+}
+
+/* ── X 커뮤니티 의견 (15개) ── */
+const xOpinions = [
+  {user:'@energy_bull_99',role:'에너지 섹터 투자자',date:'5/14',stance:'pos',opinion:'브리스코 150MW 풍력 $53M 인수 완료. 에너지 비용 내재화 = BTC 채굴·AI 컴퓨팅 원가 방어. 다른 마이너들이 따라할 수 없는 진짜 해자.',stat1:'❤️ 847',stat2:'🔁 312'},
+  {user:'@dorothy_ai_camp',role:'데이터센터 분석가',date:'5/14',stance:'pos',opinion:'도로시 1A 100% 소유 확보. 이제 AI 워크로드에 맞게 캠퍼스 전체 설계 자유도. Silverton 텍사스 부지 전략적 가치 매우 크다.',stat1:'❤️ 634',stat2:'🔁 241'},
+  {user:'@btc_infra_trader',role:'BTC 인프라 트레이더',date:'5/13',stance:'pos',opinion:'Blockware 17MW+ + Sazmining 3MW = D1B 상업 앵커 2개 확보. 수익화 속도 예상보다 빠름. 실질 모멘텀 확인.',stat1:'❤️ 521',stat2:'🔁 198'},
+  {user:'@nasdaq_comply',role:'소형주 리스크 모니터',date:'5/9',stance:'pos',opinion:'나스닥 $1.00 컴플라이언스 복원 = 상폐 리스크 제거. 기관 편입 가능성 열렸다. 소형주 최대 리스크 하나 해소.',stat1:'❤️ 489',stat2:'🔁 167'},
+  {user:'@momentum_chart_x',role:'모멘텀 트레이더',date:'5/14',stance:'pos',opinion:'$1.07(4/20) → $2.17(5/14) +100% 달성. 200일선 돌파 + 계단식 상승. 기술적으로 최강 패턴 중 하나.',stat1:'❤️ 1200',stat2:'🔁 445'},
+  {user:'@wainwright_calls',role:'바이사이드 리서치',date:'5/11',stance:'pos',opinion:'HC Wainwright Kevin Dede Strong Buy $5 PT 유지. $2.17 기준 +130% 업사이드. 4.3GW 파이프라인 가치 주가에 미반영.',stat1:'❤️ 398',stat2:'🔁 134'},
+  {user:'@ai_power_narrative',role:'테크 투자 애널리스트',date:'5/12',stance:'pos',opinion:'AI + BTC = 2026 핫 내러티브 두 개 동시 보유. 풍력으로 AI 컴퓨팅 = 친환경 AI 인프라 스토리. 기관이 좋아할 포지셔닝.',stat1:'❤️ 756',stat2:'🔁 289'},
+  {user:'@wind_esg_invest',role:'ESG 투자 전문가',date:'5/8',stance:'pos',opinion:'잉여 재생에너지로 BTC 채굴 = ESG 우호적 포지셔닝. 비트코인 에너지 낭비 오명 탈출. 친환경 내러티브 가치 있음.',stat1:'❤️ 312',stat2:'🔁 98'},
+  {user:'@earnings_catalyst',role:'이벤트 드리븐 트레이더',date:'5/14',stance:'neu',opinion:'Q1 실적 발표 5/15~19 예정. 모멘텀 강하지만 실적 전 추격매수는 리스크. Beat 확인 후 진입이 안전.',stat1:'❤️ 445',stat2:'🔁 167'},
+  {user:'@vol_spiker',role:'옵션 트레이더',date:'5/13',stance:'neu',opinion:'내재 변동성 극단적 높음. 단기 트레이더 영역. 하루 ±20~30% 등락 가능. 큰손 vs 개미 여부 확인 필요.',stat1:'❤️ 334',stat2:'🔁 112'},
+  {user:'@rsi_check',role:'기술적 분석가',date:'5/14',stance:'neu',opinion:'RSI 58~62 = 과매수 아님, 추가 여력 있음. 단 $2.50~2.80 저항선 존재. 돌파 여부가 중기 방향 결정.',stat1:'❤️ 267',stat2:'🔁 89'},
+  {user:'@sepa_watch',role:'주식 희석 모니터',date:'5/12',stance:'neg',opinion:'YA + HEL 총 29M주 재판매 등록. 주가 오를수록 이 물량 시장 나올 수 있음. 오버행 해소 전 상승 한계 존재.',stat1:'❤️ 578',stat2:'🔁 234'},
+  {user:'@sepa_atm_bear',role:'스몰캡 공매도',date:'5/7',stance:'neg',opinion:'SEPA 구조 = 회사가 필요할 때마다 주식 발행. 투자자 입장에서 끊이지 않는 희석. 상장 유지용 자금조달 패턴.',stat1:'❤️ 445',stat2:'🔁 178'},
+  {user:'@tx_reg_risk',role:'에너지 규제 분석',date:'5/6',stance:'neg',opinion:'텍사스·연방 에너지집약 규제 강화 논의 중. 도로시 캠퍼스 직격탄 가능. 이 리스크는 주가에 미반영.',stat1:'❤️ 334',stat2:'🔁 123'},
+  {user:'@fcf_flag',role:'퀀트 FA 분석',date:'5/5',stance:'neg',opinion:'FCF -$16.8M, 현금 소진 중. $76.4M 있지만 $53M + $16.5M 투자 후 잔고 급감. 수익화 전 또 희석 사이클 우려.',stat1:'❤️ 412',stat2:'🔁 156'},
+]
+
+/* ── Reddit 커뮤니티 의견 (15개) ── */
+const redditOpinions = [
+  {user:'u/windpower_vertical',role:'r/stocks',date:'5/14',stance:'pos',opinion:'뒤에 풍력 발전소 깔고 BTC 채굴하는 구조. 전기값 = 최대 원가인데 직접 통제한다는 건 진짜 해자. 다른 마이너들이 따라할 수 없는 수준.',stat1:'⬆️ 2.3K'},
+  {user:'u/dorothy1a_full_own',role:'r/wallstreetbets',date:'5/13',stance:'pos',opinion:'도로시 1A 100% 인수 완료. 이제 AI 데이터센터로 완전 전환 가능. 단순 BTC 채굴 → AI 컴퓨팅 임대 피벗 = 마진 폭발 잠재력.',stat1:'⬆️ 1.8K'},
+  {user:'u/renewable_btc',role:'r/Bitcoin',date:'5/11',stance:'pos',opinion:'재생에너지 BTC 채굴 = 전기세 낮음 + ESG 규제 우호 + 친환경 이미지. 채굴 비용 경쟁력이 장기 승자를 가름.',stat1:'⬆️ 1.4K'},
+  {user:'u/4_3gw_pipeline',role:'r/investing',date:'5/10',stance:'pos',opinion:'4.3GW 파이프라인 시총에 전혀 반영 안 됨. 현재 시총 대비 파이프라인 가치만 따져도 말이 안 되는 저평가. HC Wainwright $5 PT 근거 있음.',stat1:'⬆️ 956'},
+  {user:'u/nasdaq_back',role:'r/pennystocks',date:'5/9',stance:'pos',opinion:'나스닥 컴플라이언스 복원 = 기관 ETF 편입 가능성. 소형주 최대 리스크 제거. 이제 펀더멘털로만 판단 가능해짐.',stat1:'⬆️ 834'},
+  {user:'u/ma_breakout',role:'r/stocks',date:'5/14',stance:'pos',opinion:'200일선 $1.41 돌파 확인. 모멘텀 + 펀더멘털 동시 개선. 이런 구간 기술적 진입 효과적. 다음 저항 $2.50~$2.80.',stat1:'⬆️ 723'},
+  {user:'u/blockware_anchor',role:'r/CryptoCurrency',date:'5/8',stance:'pos',opinion:'Sazmining 3MW + Blockware 17MW+ = D1B 풀 가동 구조 완성. 풍력 전기 100% 활용. 수익화 속도 기대 이상.',stat1:'⬆️ 612'},
+  {user:'u/sepa_but_growth',role:'r/investing',date:'5/7',stance:'neu',opinion:'SEPA 희석 걱정되지만... 그 돈으로 도로시 1A + 브리스코 풍력 인수했잖아. 희석이 성장에 쓰이면 나쁘지 않음. 결과로 판단해야.',stat1:'⬆️ 1.1K'},
+  {user:'u/earnings_5_15',role:'r/options',date:'5/14',stance:'neu',opinion:'5/15 실적 발표 오전 예정. 추격 매수는 도박. 실적 결과 보고 판단. Beat + 가이던스 좋으면 $2.80 목표.',stat1:'⬆️ 876'},
+  {user:'u/hold_or_sell',role:'r/investing',date:'5/13',stance:'neu',opinion:'4주 만에 2배. 좋은 뉴스는 다 나왔음. 단기 조정 가능. 신규 진입보다 기존 보유자 익절 구간 검토 추천.',stat1:'⬆️ 654'},
+  {user:'u/fcf_negative',role:'r/SecurityAnalysis',date:'5/5',stance:'neg',opinion:'FCF -$16.8M이면 매 분기 현금 소진. $76.4M에서 대규모 투자 후 잔고 얼마? 수익화 전 또 자금조달 = SEPA 희석 반복.',stat1:'⬆️ 1.5K'},
+  {user:'u/29m_overhang',role:'r/stocks',date:'5/12',stance:'neg',opinion:'29M주 재판매 오버행 무시하는 사람들이 너무 많음. 주가 오를수록 YA가 팔고 싶어함. 이 압박 현실화될 수 있음.',stat1:'⬆️ 1.2K'},
+  {user:'u/tx_reg_concern',role:'r/investing',date:'5/6',stance:'neg',opinion:'텍사스 에너지 집약 규제 논의 현실화 중. 도로시 캠퍼스 직격탄 가능성. 규제 리스크 = 마진 압박 = 수익화 더 지연.',stat1:'⬆️ 934'},
+  {user:'u/momentum_trap',role:'r/wallstreetbets',stance:'neg',date:'5/13',opinion:'모멘텀 플레이는 항상 똑같음. 뉴스 다 나오고 올라갈 만큼 올랐을 때 개미들 진입. 오버행 물량 받아주는 구조.',stat1:'⬆️ 1.1K'},
+  {user:'u/one_analyst_thin',role:'r/stocks',date:'5/11',stance:'neg',opinion:'HC Wainwright 단 1명만 커버. $5 PT 신뢰도 제한적. 광범위한 커버리지 없이 밸류에이션 신뢰하기 어려움.',stat1:'⬆️ 789'},
+]
+
+/* ── 탭 컴포넌트 ── */
+function OverviewTab() {
+  const catalysts = [
+    {date:'2026.03',event:'나스닥 $1.00 컴플라이언스 복원 — 상폐 리스크 제거',type:'pos'},
+    {date:'2026.04.20',event:'주가 $1.07 단기 저점 — 4주 후 +100% 반등 시작',type:'pos'},
+    {date:'2026.04.22',event:'AI 파워 플레이 전략 발표 — 데이터센터 피벗 본격화',type:'pos'},
+    {date:'2026.05.01',event:'SEPA 26.5M주 재판매 등록 — 희석 우려 압박',type:'risk'},
+    {date:'2026.05.08',event:'브리스코 150MW 풍력 $53M 인수 완료 + 도로시 1A 100% 소유',type:'pos'},
+    {date:'2026.05.12',event:'2.46M주 추가 재판매 등록 — 오버행 총 29M주',type:'risk'},
+    {date:'2026.05.13',event:'+15.17% 급등 — AI·풍력 통합 스토리 재조명',type:'pos'},
+    {date:'2026.05.14',event:'+6.01% $2.17 — 실적 발표(5/15~19) 앞두고 모멘텀 최고조',type:'pos'},
+  ]
+  return (
+    <>
+      <BullBox title="🟢 핵심 촉매 — 풍력 인수 + AI 캠퍼스 피벗">
+        $53M 브리스코 150MW 풍력 인수 + 도로시 1A 100% 소유 = 에너지 수직통합 완성. 4/20 저점 $1.07 대비 +100% 반등. 실적 발표(5/15~19) 앞두고 모멘텀 최고조.
+      </BullBox>
+      <Card>
+        <SectionTitle sub="Soluna Holdings · NASDAQ: SLNH · 2026.05.14">기업 개요</SectionTitle>
+        <div style={{display:'flex',flexWrap:'wrap',marginBottom:16}}>
+          <Badge color={C.green}>BTC 채굴 + AI 데이터센터</Badge>
+          <Badge color={C.blue}>재생에너지 수직통합</Badge>
+          <Badge color={C.orange}>4.3GW 파이프라인</Badge>
+          <Badge color={C.purple}>소형주 모멘텀</Badge>
+        </div>
+        {[
+          {label:'현재가',value:'$2.17',color:C.green,sub:'2026.05.14 · 4/20 저점 대비 +100%'},
+          {label:'52주 고점',value:'$5.14',color:C.green},
+          {label:'52주 저점',value:'$0.415',color:C.red,sub:'상폐 우려 구간'},
+          {label:'나스닥 컴플라이언스',value:'복원 완료',color:C.green,sub:'$1.00 기준가 충족'},
+          {label:'RSI (14)',value:'58~62',color:C.green,sub:'중립 — 추가 상승 여력'},
+          {label:'200일 이동평균',value:'~$1.41',color:C.green,sub:'현재가 상회 → 상향 돌파 완료'},
+          {label:'애널리스트 목표가',value:'$5.00',color:C.green,sub:'HC Wainwright · Strong Buy · +130% 업사이드'},
+          {label:'Q1 실적 발표',value:'5/15~5/19',color:C.gold,sub:'최대 단기 촉매 — 임박'},
+        ].map((r,i) => <Row key={i} {...r}/>)}
+      </Card>
+      <Card>
+        <SectionTitle sub="2025~2026 주가 흐름">주가 흐름</SectionTitle>
+        <div style={{height:210}}>
+          <CJSChart height={210} config={{
+            type:'line', data:priceData,
+            options:{responsive:true,maintainAspectRatio:false,
+              plugins:{legend:{display:false},tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}},
+              scales:{
+                x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:9}}},
+                y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:function(v){return '$'+v}},min:0,max:5}
+              }}
+          }}/>
+        </div>
+        <InfoBox color={C.green}>4/20 저점 $1.07 → 5/14 $2.17 (+100%, 4주). 브리스코 풍력 + 도로시 1A 인수가 핵심 촉매. 200일선 돌파 후 계단식 상승 중.</InfoBox>
+      </Card>
+      <Card>
+        <SectionTitle sub="2026 주요 이벤트">이벤트 타임라인</SectionTitle>
+        {catalysts.map((c,i) => (
+          <div key={i} style={{display:'flex',alignItems:'flex-start',gap:12,padding:'11px 0',borderBottom:i<catalysts.length-1?'1px solid #1e2d45':'none'}}>
+            <div style={{width:8,height:8,borderRadius:'50%',marginTop:5,flexShrink:0,
+              background:c.type==='risk'?C.red:C.green,boxShadow:'0 0 6px '+(c.type==='risk'?C.red:C.green)}}/>
+            <div style={{flex:1}}>
+              <div style={{color:C.muted,fontSize:11,fontFamily:'monospace',marginBottom:2}}>{c.date}</div>
+              <div style={{color:c.type==='risk'?C.red:C.text,fontSize:13,fontWeight:600,lineHeight:1.4}}>{c.event}</div>
+            </div>
+          </div>
+        ))}
+      </Card>
+    </>
+  )
+}
+
+function TechTab() {
+  const signals = [
+    {label:'현재가',value:'$2.17',signal:'🟢 200일선 상향 돌파',color:C.green,desc:'MA200 $1.41 대비 +54%'},
+    {label:'RSI (14)',value:'58~62',signal:'🟢 중립 — 추가 상승 여력',color:C.green,desc:'70 미만 = 과매수 아님'},
+    {label:'200일 이동평균',value:'~$1.41',signal:'🟢 현재가 상회',color:C.green,desc:'장기 강세 추세 확인'},
+    {label:'50일 이동평균',value:'~$1.08',signal:'🟢 현재가 상회',color:C.green,desc:'중기 추세 상승'},
+    {label:'5일 이동평균',value:'~$1.90',signal:'🟡 단기 소폭 과열',color:C.gold,desc:'단기 쉬어갈 수 있음'},
+    {label:'MACD',value:'골든크로스',signal:'🟢 매수 신호',color:C.green,desc:'단·중기 상승 모멘텀 유지'},
+    {label:'볼린저밴드',value:'상단 근접',signal:'🟡 과열 경계',color:C.gold,desc:'단기 차익실현 구간'},
+    {label:'거래량',value:'평균 이상',signal:'🟢 강한 매수세',color:C.green,desc:'돌파 수반 거래량 = 신뢰도 높음'},
+  ]
+  return (
+    <>
+      <BullBox title="🟢 200일선 돌파 — 장기 상승 추세 전환 확인">
+        현재가 $2.17 기준, 200일선($1.41) 대비 +54% 상회. RSI 중립권(58~62) + MACD 골든크로스. 기술적 신호 전반적 강세. 단기 5일선 근접으로 소폭 조정 가능하나 중기 추세 유효.
+      </BullBox>
+      <Card>
+        <SectionTitle sub="Morgan Stanley TA · 2026.05.14">핵심 기술 지표</SectionTitle>
+        {signals.map((s,i) => (
+          <div key={i} style={{padding:'12px 0',borderBottom:i<signals.length-1?'1px solid #1e2d45':'none'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+              <div>
+                <span style={{color:C.muted,fontSize:13}}>{s.label}</span>
+                <div style={{color:C.gray,fontSize:11,marginTop:2}}>{s.desc}</div>
+              </div>
+              <span style={{color:s.color,fontWeight:900,fontSize:15}}>{s.value}</span>
+            </div>
+            <div style={{color:s.color,fontSize:12,fontWeight:700}}>{s.signal}</div>
+          </div>
+        ))}
+      </Card>
+      <Card>
+        <SectionTitle sub="지지선 & 저항선 (2026.05 기준)">진입·청산 포인트</SectionTitle>
+        {[
+          {label:'애널리스트 목표가', value:'$5.00', color:C.green, sub:'HC Wainwright Strong Buy'},
+          {label:'2차 저항선', value:'$3.50~4.00', color:C.gold, sub:'52주 고점 $5.14 복귀 전 구간'},
+          {label:'1차 저항선', value:'$2.50~2.80', color:C.gold, sub:'단기 차익실현 구간'},
+          {label:'현재가', value:'$2.17 ◀', color:C.green, sub:'2026.05.14 기준'},
+          {label:'5일 이동평균', value:'~$1.90', color:C.green, sub:'단기 지지선'},
+          {label:'200일 이동평균', value:'~$1.41', color:C.blue, sub:'장기 핵심 지지선'},
+          {label:'1차 지지선', value:'$1.80~2.00', color:C.blue, sub:'전략적 매수 구간'},
+          {label:'손절선', value:'$1.30 이탈', color:C.red, sub:'200일선 하회 시 추세 전환 확인'},
+        ].map((r,i) => <Row key={i} {...r}/>)}
+      </Card>
+    </>
+  )
+}
+
+function FinancialTab() {
+  return (
+    <>
+      <WarnBox title="⚠️ 재무 현황 — 성장 투자 단계, 현금 소진 중">
+        TTM 매출 $29.7M, FCF -$16.8M. 현금 $76.4M에서 $53M(풍력) + $16.5M(도로시 1A) = $69.5M 대규모 투자 집행. 잔여 현금 확인 필요. 수익화 이전 추가 희석 가능성 상존.
+      </WarnBox>
+      <Card>
+        <SectionTitle sub="Goldman Sachs FA · 2026.05.14">핵심 재무 지표</SectionTitle>
+        {[
+          {label:'TTM 매출',value:'~$29.7M',color:C.text,sub:'분기 약 $7~8M 수준'},
+          {label:'Q1 2026 매출(E)',value:'~$8.5M',color:C.green,sub:'D1B 상업화 반영 성장 기대'},
+          {label:'잉여현금흐름 (FCF)',value:'-$16.8M',color:C.red,sub:'성장 투자 단계 현금 소진'},
+          {label:'현금·현금성 자산',value:'~$76.4M',color:C.teal,sub:'투자 집행 후 잔고 확인 필요'},
+          {label:'유동비율',value:'~1.9',color:C.green,sub:'단기 유동성 안전'},
+          {label:'브리스코 풍력 인수',value:'$53M',color:C.text,sub:'150MW — 에너지 원가 내재화'},
+          {label:'도로시 1A 추가 취득',value:'$16.5M',color:C.text,sub:'잔여 85.4% 인수 = 100% 소유'},
+          {label:'재판매 오버행',value:'~29M주',color:C.red,sub:'SEPA(YA + HEL) — 희석 리스크'},
+        ].map((r,i) => <Row key={i} {...r}/>)}
+        <InfoBox color={C.teal}>Q1 실적 발표(5/15~19) 핵심 확인 포인트: 매출 성장률, Q2 가이던스, 현금 잔고, D1B 가동률.</InfoBox>
+      </Card>
+      <Card>
+        <SectionTitle sub="분기 매출 추이 + Q1 2026 예상">매출 흐름</SectionTitle>
+        <div style={{height:220}}>
+          <CJSChart height={220} config={{
+            type:'bar', data:revenueData,
+            options:Object.assign({},darkBar,{
+              scales:{
+                x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+                y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:function(v){return '$'+v+'M'}}}
+              }
+            })
+          }}/>
+        </div>
+        <InfoBox color={C.green}>Q1'26(E) $8.5M = 전분기 대비 소폭 성장. D1B Blockware·Sazmining 수익 반영 시 Q2부터 가속 성장 기대.</InfoBox>
+      </Card>
+      <Card>
+        <SectionTitle sub="동종 BTC 채굴·AI 인프라 비교">경쟁사 레이더</SectionTitle>
+        <div style={{height:270}}>
+          <CJSChart height={270} config={{
+            type:'radar', data:radarData,
+            options:{plugins:{
+              legend:{display:true,labels:{color:'#7a90aa',boxWidth:10,font:{size:11}}},
+              tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}
+            },scales:{r:{grid:{color:'#1e2d45'},angleLines:{color:'#1e2d45'},pointLabels:{color:'#7a90aa',font:{size:11}},ticks:{color:'#7a90aa',backdropColor:'transparent'},suggestedMin:0,suggestedMax:100}}}
+          }}/>
+        </div>
+        <InfoBox color={C.green}>SLNH = 에너지 통제 + 성장 모멘텀 최강. 재무 건전성은 약점. 에너지 수직통합이 핵심 차별화 포인트.</InfoBox>
+      </Card>
+    </>
+  )
+}
+
+function XTab() {
+  const pos = xOpinions.filter(function(o){return o.stance==='pos'}).length
+  const neu = xOpinions.filter(function(o){return o.stance==='neu'}).length
+  const neg = xOpinions.filter(function(o){return o.stance==='neg'}).length
+  return (
+    <>
+      <div style={{marginBottom:14}}>
+        <div style={{color:C.muted,fontSize:12,marginBottom:8}}>수집 기준: 2026.05.14 · 검색어 $SLNH · 인기순 (좋아요·리트윗)</div>
+        <SentimentBar pos={pos} neu={neu} neg={neg}/>
+      </div>
+      {xOpinions.map(function(o,i){return <OpinionCard key={i} {...o}/>})}
+    </>
+  )
+}
+
+function RedditTab() {
+  const pos = redditOpinions.filter(function(o){return o.stance==='pos'}).length
+  const neu = redditOpinions.filter(function(o){return o.stance==='neu'}).length
+  const neg = redditOpinions.filter(function(o){return o.stance==='neg'}).length
+  return (
+    <>
+      <div style={{marginBottom:14}}>
+        <div style={{color:C.muted,fontSize:12,marginBottom:8}}>수집 기준: 2026.05.14 · r/stocks · r/wallstreetbets · r/investing · 업보트 순</div>
+        <SentimentBar pos={pos} neu={neu} neg={neg}/>
+      </div>
+      {redditOpinions.map(function(o,i){return <OpinionCard key={i} {...o}/>})}
+    </>
+  )
+}
+
+function ConclusionTab() {
+  return (
+    <>
+      <Card style={{border:'2px solid #22c55e'}}>
+        <SectionTitle>종합 투자 의견</SectionTitle>
+        <div style={{display:'flex',gap:4,marginBottom:16}}>
+          {['강한 매도','매도','중립','매수','강한 매수'].map(function(label,i){
+            return (
+              <div key={i} style={{flex:1,textAlign:'center',padding:'10px 4px',borderRadius:8,
+                background:i===3?'#22c55e30':'#1e2d45',
+                border:'2px solid '+(i===3?'#22c55e':'#1e2d4500')}}>
+                <div style={{color:i===3?C.green:C.muted,fontSize:10,fontWeight:i===3?900:400,lineHeight:1.3}}>{label}</div>
+                {i===3 && <div style={{color:C.green,fontSize:16,marginTop:4}}>◉</div>}
+              </div>
+            )
+          })}
+        </div>
+        <div style={{color:C.green,fontSize:18,fontWeight:900,marginBottom:12}}>매수 — 에너지 수직통합 + AI 피벗 = 구조적 전환점</div>
+        <div style={{color:C.muted,fontSize:14,lineHeight:1.7}}>
+          브리스코 150MW 풍력 인수로 에너지 원가 통제 완성 + 도로시 AI 캠퍼스 피벗 = 비즈니스 모델 구조적 업그레이드. 200일선 돌파 + RSI 중립 = 기술적 진입 유효. 단, 29M주 재판매 오버행 + FCF 적자는 실질 리스크. $1.80~2.00 조정 시 분할 매수 권고.
+        </div>
+      </Card>
+      <Card>
+        <SectionTitle>🐂 Bull Case (상승 근거)</SectionTitle>
+        {[
+          '브리스코 150MW 풍력 $53M 인수 = 에너지 원가 내재화 → 채굴 + AI 컴퓨팅 마진 방어',
+          '도로시 1A 100% 소유 → AI 데이터센터 캠퍼스 완전 자유도 확보',
+          'Blockware 17MW+ + Sazmining 3MW = D1B 상업 앵커 복수 확보',
+          '200일선 돌파 + RSI 중립 = 기술적 강세 구간 + 추가 여력',
+          '나스닥 컴플라이언스 복원 = 기관 편입 가능성 오픈',
+          'HC Wainwright $5.00 PT = 현재가 대비 +130% 업사이드',
+          '4.3GW 파이프라인 = 시총에 전혀 미반영된 잠재 가치',
+        ].map(function(r,i){
+          return (
+            <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:i<6?'1px solid #1e2d45':'none'}}>
+              <span style={{color:C.green,fontSize:16,flexShrink:0}}>✓</span>
+              <span style={{color:C.muted,fontSize:13,lineHeight:1.5}}>{r}</span>
+            </div>
+          )
+        })}
+      </Card>
+      <Card>
+        <SectionTitle>🐻 Bear Case (하락 근거)</SectionTitle>
+        {[
+          '29M주 재판매 오버행 (SEPA) = 주가 상승 시 기존 홀더 매도 압박',
+          'FCF -$16.8M = 현금 소진. 수익화 전 추가 자금 조달(희석) 반복 가능',
+          '텍사스·연방 에너지집약 규제 강화 논의 = 마진 압박 리스크',
+          '1개 애널리스트만 커버 (HC Wainwright) = 컨센서스 취약',
+          '$53M + $16.5M 대형 투자 후 현금 급감 우려',
+          '모멘텀 주 특성상 뉴스 공백 시 빠른 되돌림 위험',
+          'TTM 매출 $29.7M = 소형주. 기관 관심도 아직 제한적',
+        ].map(function(r,i){
+          return (
+            <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:i<6?'1px solid #1e2d45':'none'}}>
+              <span style={{color:C.red,fontSize:16,flexShrink:0}}>✗</span>
+              <span style={{color:C.muted,fontSize:13,lineHeight:1.5}}>{r}</span>
+            </div>
+          )
+        })}
+      </Card>
+      <Card>
+        <SectionTitle>실행 계획 (Action Plan)</SectionTitle>
+        {[
+          {label:'1차 매수 (현재)',value:'$2.00~2.20',color:C.green,sub:'200일선 돌파 확인 · 포트 2%'},
+          {label:'2차 매수 (조정 시)',value:'$1.70~1.90',color:C.blue,sub:'5일선 지지 확인 · 포트 2%'},
+          {label:'3차 매수 (급락 시)',value:'$1.30~1.50',color:C.blue,sub:'200일선 재테스트 · 포트 1%'},
+          {label:'손절선',value:'$1.30 이탈',color:C.red,sub:'200일선 하회 확인 시 전량 청산'},
+          {label:'1차 익절',value:'$2.80~3.20',color:C.green,sub:'1차 저항 도달 · 50% 청산'},
+          {label:'2차 익절',value:'$4.50~5.00',color:C.purple,sub:'HC Wainwright PT 근접 · 나머지'},
+          {label:'실적 발표 전략',value:'포지션 유지',color:C.gold,sub:'Beat+가이던스 시 $2.80 목표 · Miss 시 손절 검토'},
+        ].map((r,i) => <Row key={i} {...r}/>)}
+        <InfoBox color={C.cyan}>핵심 모니터링: ① Q1 실적(5/15~19) ② 매출 성장·가이던스 ③ 현금 잔고 ④ 29M주 오버행 해소 ⑤ 텍사스 에너지 규제 동향 ⑥ BTC 가격</InfoBox>
+      </Card>
+      <div style={{borderTop:'1px solid #1e2d45',padding:'16px',textAlign:'center',marginTop:8}}>
+        <p style={{color:C.gray,fontSize:11,margin:0,lineHeight:1.7}}>
+          ⚠️ 교육 목적 분석 · 투자 권고 아님<br/>
+          분석 기준일: 2026년 5월 14일 · 현재가: $2.17<br/>
+          Morgan Stanley TA + Goldman Sachs FA + X/Reddit 커뮤니티 센티먼트 (각 15개)
+        </p>
+      </div>
+    </>
+  )
+}
+
+/* ── 메인 App ── */
+function App() {
+  const [tab, setTab] = useState('overview')
+  const tabs = [
+    {id:'overview', label:'📊 개요'},
+    {id:'tech',     label:'📈 기술적'},
+    {id:'fund',     label:'💰 재무'},
+    {id:'xfeed',    label:'🐦 X'},
+    {id:'reddit',   label:'💬 Reddit'},
+    {id:'conclude', label:'🎯 결론'},
+  ]
+  return (
+    <div style={{background:C.darkBg,minHeight:'100vh',color:C.text}}>
+      <div style={{background:'linear-gradient(180deg,#001a0a 0%,#0a0f1e 100%)',padding:'20px 16px 22px'}}>
+        <a href="https://disntm90.github.io/disntm90/" style={{display:'inline-flex',alignItems:'center',gap:6,color:'#7a90aa',fontSize:12,textDecoration:'none',marginBottom:14,padding:'5px 10px',background:'#1e2d45',borderRadius:6}}>← 목록으로</a>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+          <div style={{background:'#22c55e20',border:'2px solid #22c55e',borderRadius:10,padding:'6px 14px'}}>
+            <span style={{color:C.green,fontWeight:900,fontSize:22,letterSpacing:1}}>SLNH</span>
+          </div>
+          <div>
+            <div style={{fontWeight:800,fontSize:17,lineHeight:1.2}}>Soluna Holdings</div>
+            <div style={{color:C.muted,fontSize:12,marginTop:3}}>BTC 채굴 · AI 데이터센터 · 재생에너지 · NASDAQ</div>
+          </div>
+        </div>
+        <div style={{display:'flex',flexWrap:'wrap',marginBottom:16}}>
+          <Badge color={C.green}>풍력 인수 완료 🟢</Badge>
+          <Badge color={C.blue}>AI 캠퍼스 피벗</Badge>
+          <Badge color={C.gold}>실적 발표 5/15~19</Badge>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+          {[
+            {label:'현재가', value:'$2.17', sub:'4주 +100%', color:C.green},
+            {label:'목표가', value:'$5.00', sub:'HC Wainwright', color:C.green},
+            {label:'52주 저점', value:'$0.415', sub:'상폐 우려', color:C.red},
+            {label:'RSI', value:'58~62', sub:'중립', color:C.green},
+            {label:'200일선', value:'$1.41', sub:'돌파 완료', color:C.green},
+            {label:'FCF', value:'-$16.8M', sub:'성장 투자', color:C.gold},
+          ].map(function(s,i){
+            return (
+              <div key={i} style={{background:C.cardBg,border:'1px solid #1e2d45',borderRadius:12,padding:'11px 8px',textAlign:'center'}}>
+                <div style={{color:s.color,fontSize:18,fontWeight:900,lineHeight:1}}>{s.value}</div>
+                <div style={{color:C.muted,fontSize:10,marginTop:4}}>{s.label}</div>
+                {s.sub && <div style={{color:s.color+'bb',fontSize:10,marginTop:2}}>{s.sub}</div>}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      <div style={{borderBottom:'1px solid #1e2d45',background:C.cardBg,overflowX:'auto',whiteSpace:'nowrap',WebkitOverflowScrolling:'touch'}}>
+        {tabs.map(function(t){
+          return (
+            <button key={t.id} onClick={function(){setTab(t.id)}} style={{
+              display:'inline-block',background:'none',
+              color:tab===t.id?C.green:C.muted,
+              border:'none',borderBottom:tab===t.id?'3px solid #22c55e':'3px solid transparent',
+              padding:'13px 16px',fontSize:12,fontWeight:700,cursor:'pointer',
+            }}>{t.label}</button>
+          )
+        })}
+      </div>
+      <div style={{padding:'16px',maxWidth:600,margin:'0 auto'}}>
+        {tab==='overview'  && <OverviewTab/>}
+        {tab==='tech'      && <TechTab/>}
+        {tab==='fund'      && <FinancialTab/>}
+        {tab==='xfeed'     && <XTab/>}
+        {tab==='reddit'    && <RedditTab/>}
+        {tab==='conclude'  && <ConclusionTab/>}
+      </div>
+    </div>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>)
+</script>
+</body>
+</html>
