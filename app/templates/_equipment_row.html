@@ -24,9 +24,8 @@
     <div class="btn-group btn-group-sm">
       <button class="btn btn-outline-success"
               hx-post="/api/equipment/{{ e.id }}/test-connection"
-              hx-target="#ping-{{ e.id }}"
-              hx-swap="innerHTML"
-              hx-indicator="#ping-{{ e.id }}">
+              hx-target="#row-{{ e.id }}"
+              hx-swap="outerHTML">
         연결 테스트
       </button>
       <button class="btn btn-outline-secondary" onclick="openEditModal({{ e.id }})">수정</button>

@@ -188,9 +188,9 @@ def test_equipment_connection(equipment_id: int, request: Request, db: Session =
         raise HTTPException(status_code=404, detail=result.get("message", "설비를 찾을 수 없습니다."))
 
     if _is_htmx(request):
-        # DB에서 최신 ping 결과가 반영된 설비를 다시 읽어 셀 렌더링
+        # DB에서 최신 ping 결과가 반영된 설비를 다시 읽어 행 전체 렌더링
         eq = db.query(Equipment).filter(Equipment.id == equipment_id).first()
-        return _render_ping(request, eq)
+        return _render_row(request, eq)
     return result
 
 
