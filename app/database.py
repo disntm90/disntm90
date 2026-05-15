@@ -108,6 +108,8 @@ def _seed_file_templates() -> None:
         ))
         db.commit()
         logger.info("FileTemplate 시드 완료: RejectMapFile")
+    except Exception as exc:
+        logger.error(f"FileTemplate 시드 실패 (앱 시작은 계속됩니다): {exc}")
     finally:
         db.close()
 

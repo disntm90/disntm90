@@ -437,18 +437,6 @@ def _load_primecode_map() -> dict:
     return {}
 
 
-def _ensure_template() -> str:
-    """
-    static_xml_template.txt 가 없으면 코드 내 기본값(STATIC_XML_TEMPLATE)으로 자동 생성한다.
-    항상 파일 내용을 문자열로 반환한다.
-    """
-    if not TEMPLATE_FILE.exists():
-        DATA_DIR.mkdir(parents=True, exist_ok=True)
-        TEMPLATE_FILE.write_text(STATIC_XML_TEMPLATE, encoding="utf-8")
-        logger.info(f"템플릿 파일 생성: {TEMPLATE_FILE}")
-    return TEMPLATE_FILE.read_text(encoding="utf-8")
-
-
 def _load_template_content() -> str:
     """
     DB FileTemplate 테이블에서 RejectMapFile 템플릿을 읽는다.
