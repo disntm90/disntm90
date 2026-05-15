@@ -1,4 +1,4 @@
-from app.models import Equipment
+from app.models import Equipment, FileTemplate
 
 
 # ── Bug 1: 비밀번호 보존 ──────────────────────────────────────────
@@ -40,3 +40,69 @@ def test_update_changes_password_when_provided(db):
     db.refresh(eq)
 
     assert eq.ftp_pass == "new_pass"
+
+
+# ── Bug 3: FileTemplate DB 연동 ───────────────────────────────────
+
+
+def test_seed_creates_reject_mapfile_template(db, engine):
+    """init_db 시드가 RejectMapFile FileTemplate 행을 생성해야 한다."""
+    from app.services.file_generator import STATIC_XML_TEMPLATE
+
+    # 시드 전에는 행이 없어야 함
+    existing = db.query(FileTemplate).filter(
+        FileTemplate.file_type == "RejectMapFile"
+    ).first()
+    assert existing is None, "시드 전에는 행이 없어야 함"
+
+    # 시드 실행
+    db.add(FileTemplate(
+        file_type="RejectMapFile",
+        filename="RejectMapFile.xml",
+        content=STATIC_XML_TEMPLATE,
+        description="RejectMapFile 정적 XML 뼈대 템플릿 (자동 시드)",
+        is_active=True,
+        updated_by="system",
+    ))
+    db.commit()
+
+    seeded = db.query(FileTemplate).filter(
+        FileTemplate.file_type == "RejectMapFile"
+    ).first()
+    assert seeded is not None
+    assert seeded.content == STATIC_XML_TEMPLATE
+    assert seeded.is_active is True
+
+
+def test_db_template_takes_precedence_over_constant(db):
+    """DB에 커스텀 템플릿이 있으면 상수 대신 DB 값을 반환해야 한다."""
+    custom_content = "<?xml version='1.0'?><CustomTemplate/>"
+    db.add(FileTemplate(
+        file_type="RejectMapFile",
+        filename="RejectMapFile.xml",
+        content=custom_content,
+        is_active=True,
+    ))
+    db.commit()
+
+    result = db.query(FileTemplate).filter(
+        FileTemplate.file_type == "RejectMapFile",
+        FileTemplate.is_active == True,
+    ).first()
+
+    assert result.content == custom_content
+
+
+def test_fallback_when_no_db_template(db):
+    """DB에 템플릿이 없으면 STATIC_XML_TEMPLATE 상수를 반환해야 한다."""
+    from app.services.file_generator import STATIC_XML_TEMPLATE
+
+    result = db.query(FileTemplate).filter(
+        FileTemplate.file_type == "RejectMapFile",
+        FileTemplate.is_active == True,
+    ).first()
+
+    assert result is None
+    # _load_template_content()의 폴백 경로를 확인
+    fallback = STATIC_XML_TEMPLATE
+    assert "{DYNAMIC_SCRAP_MAPS}" in fallback

@@ -449,6 +449,31 @@ def _ensure_template() -> str:
     return TEMPLATE_FILE.read_text(encoding="utf-8")
 
 
+def _load_template_content() -> str:
+    """
+    DB FileTemplate 테이블에서 RejectMapFile 템플릿을 읽는다.
+    행이 없거나 내용이 비어 있으면 STATIC_XML_TEMPLATE 상수로 폴백한다.
+    """
+    from app.models import FileTemplate
+
+    db = SessionLocal()
+    try:
+        t = db.query(FileTemplate).filter(
+            FileTemplate.file_type == "RejectMapFile",
+            FileTemplate.is_active == True,
+        ).first()
+        if t and t.content.strip():
+            logger.info("DB에서 RejectMapFile 템플릿 로드")
+            return t.content
+    except Exception as exc:
+        logger.error(f"DB 템플릿 조회 실패, 상수 폴백: {exc}")
+    finally:
+        db.close()
+
+    logger.warning("DB에 RejectMapFile 템플릿 없음 → STATIC_XML_TEMPLATE 사용")
+    return STATIC_XML_TEMPLATE
+
+
 def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
     """
     RejectMapFile.xml 을 생성한다.
@@ -487,7 +512,7 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
     dynamic_xml = "\n".join(scrap_map_lines)   # 여러 줄을 개행으로 합침
 
     # 정적 템플릿에 동적 부분 삽입
-    template  = _ensure_template()
+    template  = _load_template_content()
     final_xml = template.replace("{DYNAMIC_SCRAP_MAPS}", dynamic_xml)
 
     # 기존 파일이 있으면 .bak으로 백업 후 덮어쓰기

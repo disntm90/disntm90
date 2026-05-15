@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="mb-0">파일 포맷 관리 (X / Y)</h4>
+  <h4 class="mb-0">파일 포맷 관리</h4>
   <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ 템플릿 추가</button>
 </div>
 
@@ -22,8 +22,15 @@
   </small>
 </div>
 
+<div class="alert alert-success py-2 mb-3">
+  <small>
+    <strong>RejectMapFile</strong> 템플릿을 수정하고 저장하면
+    다음 파일 생성 시 자동으로 반영됩니다.
+  </small>
+</div>
+
 <div class="row g-3">
-  {% for file_type in ['X', 'Y'] %}
+  {% for file_type in ['YieldConvDef', 'RejectMapFile'] %}
   <div class="col-md-6">
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
@@ -79,8 +86,8 @@
           <div class="col-md-3">
             <label class="form-label">파일 타입 <span class="text-danger">*</span></label>
             <select class="form-select" id="f_type">
-              <option value="X">X</option>
-              <option value="Y">Y</option>
+              <option value="YieldConvDef">YieldConvDef</option>
+              <option value="RejectMapFile">RejectMapFile</option>
             </select>
           </div>
           <div class="col-md-5">
@@ -132,7 +139,7 @@
     document.getElementById('f_content').value = '';
     document.getElementById('f_desc').value = '';
     document.getElementById('f_by').value = '';
-    document.getElementById('f_type').value = 'X';
+    document.getElementById('f_type').value = 'YieldConvDef';
     modal.show();
   }
 

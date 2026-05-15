@@ -86,13 +86,41 @@ def _apply_lightweight_migrations() -> None:
                 logger.info(f"마이그레이션: {table}.{col_name} 컬럼 추가")
 
 
+def _seed_file_templates() -> None:
+    """앱 최초 실행 시 RejectMapFile 기본 템플릿을 DB에 시드한다."""
+    from app.models import FileTemplate
+    from app.services.file_generator import STATIC_XML_TEMPLATE
+
+    db = SessionLocal()
+    try:
+        existing = db.query(FileTemplate).filter(
+            FileTemplate.file_type == "RejectMapFile"
+        ).first()
+        if existing:
+            return
+        db.add(FileTemplate(
+            file_type="RejectMapFile",
+            filename="RejectMapFile.xml",
+            content=STATIC_XML_TEMPLATE,
+            description="RejectMapFile 정적 XML 뼈대 템플릿 (자동 시드)",
+            is_active=True,
+            updated_by="system",
+        ))
+        db.commit()
+        logger.info("FileTemplate 시드 완료: RejectMapFile")
+    finally:
+        db.close()
+
+
 def init_db():
     """
     앱 시작 시 한 번 호출된다 (main.py lifespan).
 
     1. create_all : ORM 모델 기준으로 없는 테이블을 생성한다.
     2. 마이그레이션: 기존 테이블에 누락된 컬럼을 추가한다.
+    3. 시드: FileTemplate 기본 데이터가 없으면 삽입한다.
     """
     from app import models  # noqa: F401 — 모델 클래스를 Base에 등록하기 위해 import
     Base.metadata.create_all(bind=engine)   # 정의된 테이블이 없으면 생성
     _apply_lightweight_migrations()          # 새 컬럼이 있으면 추가
+    _seed_file_templates()                   # RejectMapFile 기본 템플릿 시드
