@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MSTR 분석 — 2026.05.11</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#0a0f1e;font-family:system-ui,-apple-system,sans-serif;color:#f1f5f9}
+    h1,h2{margin:0}
+    button{font-family:inherit}
+    canvas{display:block}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useRef, useEffect } = React
+
+const C = {
+  gold:'#f59e0b', red:'#ef4444', green:'#22c55e',
+  blue:'#3b82f6', gray:'#6b7280',
+  darkBg:'#0a0f1e', cardBg:'#141b2d', border:'#1e2d45',
+  text:'#f1f5f9', muted:'#7a90aa', cyan:'#06b6d4',
+  orange:'#f97316', purple:'#a855f7', teal:'#14b8a6',
+}
+
+function CJSChart({ config, height=220 }) {
+  const ref = useRef(null), inst = useRef(null)
+  useEffect(() => {
+    if (inst.current) inst.current.destroy()
+    inst.current = new Chart(ref.current, config)
+    return () => inst.current?.destroy()
+  }, [])
+  return <canvas ref={ref} style={{width:'100%',maxHeight:height}} height={height}/>
+}
+
+const Card = ({children,style={}}) => (
+  <div style={{background:C.cardBg,border:`1px solid ${C.border}`,borderRadius:16,padding:'20px 16px',marginBottom:14,...style}}>
+    {children}
+  </div>
+)
+const Badge = ({children,color=C.blue}) => (
+  <span style={{background:color+'20',color,border:`1px solid ${color}44`,borderRadius:6,padding:'3px 10px',fontSize:12,fontWeight:700,display:'inline-block',marginRight:4,marginBottom:4}}>
+    {children}
+  </span>
+)
+const SectionTitle = ({children,sub}) => (
+  <div style={{marginBottom:16}}>
+    <h2 style={{color:C.text,fontSize:17,fontWeight:800,margin:0,lineHeight:1.3}}>{children}</h2>
+    {sub && <p style={{color:C.muted,fontSize:12,margin:'5px 0 0',lineHeight:1.5}}>{sub}</p>}
+  </div>
+)
+const Row = ({label,value,color=C.text,sub}) => (
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'12px 0',borderBottom:`1px solid ${C.border}`}}>
+    <div>
+      <div style={{color:C.muted,fontSize:13}}>{label}</div>
+      {sub && <div style={{color:C.gray,fontSize:11,marginTop:2}}>{sub}</div>}
+    </div>
+    <span style={{color,fontWeight:800,fontSize:15,textAlign:'right',marginLeft:8}}>{value}</span>
+  </div>
+)
+const InfoBox = ({children,color=C.blue}) => (
+  <div style={{background:color+'15',border:`1px solid ${color}40`,borderRadius:10,padding:'12px 14px',marginTop:12}}>
+    <p style={{color,fontSize:13,margin:0,lineHeight:1.6,fontWeight:500}}>{children}</p>
+  </div>
+)
+const CautionBox = ({children,title}) => (
+  <div style={{background:'#ef444418',border:'2px solid #ef4444',borderRadius:12,padding:'14px 16px',marginBottom:14}}>
+    <div style={{color:'#ef4444',fontWeight:900,fontSize:14,marginBottom:4}}>{title||'⚠️ 주의'}</div>
+    <p style={{color:'#fca5a5',fontSize:13,margin:0,lineHeight:1.6}}>{children}</p>
+  </div>
+)
+const WarnBox = ({children,title}) => (
+  <div style={{background:'#f59e0b18',border:'2px solid #f59e0b',borderRadius:12,padding:'14px 16px',marginBottom:14}}>
+    <div style={{color:'#f59e0b',fontWeight:900,fontSize:14,marginBottom:4}}>{title||'⚠️ 주의'}</div>
+    <p style={{color:'#fcd34d',fontSize:13,margin:0,lineHeight:1.6}}>{children}</p>
+  </div>
+)
+
+/* ── 차트 데이터 ── */
+const priceData = {
+  labels:["'24 Q2","'24 Q3","'24 Q4","'25 Q1","'25 Q2","'25 Q3 (ATH)","'25 Q4","'26 Q1 (저점)","'26 Apr","5/10"],
+  datasets:[{
+    label:'주가 ($)',
+    data:[145, 155, 397, 295, 390, 457, 270, 138, 134, 187.59],
+    borderColor:'#f59e0b', backgroundColor:'#f59e0b20',
+    fill:true, tension:0.35, pointRadius:3, borderWidth:2.5,
+    pointBackgroundColor:(ctx)=>{
+      const i=ctx.dataIndex
+      if(i===5) return '#22c55e'
+      if(i===7) return '#ef4444'
+      if(i===9) return '#f59e0b'
+      return '#f59e0b'
+    }
+  }]
+}
+
+const btcHoldingsData = {
+  labels:["'24 Q2","'24 Q3","'24 Q4","'25 Q1","'25 Q2","'25 Q3","'25 Q4","'26 Q1"],
+  datasets:[{
+    label:'BTC 보유량 (만 BTC)',
+    data:[22.6, 25.2, 44.7, 52.8, 60.8, 68.8, 72.7, 81.8],
+    backgroundColor:'#f59e0b80', borderColor:'#f59e0b', borderWidth:1.5, borderRadius:6,
+  }]
+}
+
+const softwareRevData = {
+  labels:["Q1'25","Q2'25","Q3'25","Q4'25","Q1'26"],
+  datasets:[{
+    label:'소프트웨어 매출 ($M)',
+    data:[111.1, 116.1, 119.3, 120.7, 124.3],
+    backgroundColor:'#06b6d480', borderColor:'#06b6d4', borderWidth:1.5, borderRadius:6,
+  }]
+}
+
+const capitalData = {
+  labels:['보통주 ATM','STRC 우선주','전환사채'],
+  datasets:[{
+    label:'2026 Q1 자본 조달 ($B)',
+    data:[3.7, 3.67, 0],
+    backgroundColor:['#f59e0b80','#a855f780','#3b82f680'],
+    borderColor:['#f59e0b','#a855f7','#3b82f6'],
+    borderWidth:1.5, borderRadius:6,
+  }]
+}
+
+const dilutionData = {
+  labels:['기존 희석 주식 (~328M)','잔여 ATM 가능 물량 (추정 1,400M)','전환/우선 관련 (추정 300M)'],
+  datasets:[{
+    data:[328, 1400, 300],
+    backgroundColor:['#3b82f6','#ef4444','#f97316'],
+    borderWidth:0,
+  }]
+}
+
+const radarData = {
+  labels:['BTC 노출도','레버리지','기관 접근성','희석 위험(역)','소프트웨어 자산','유동성'],
+  datasets:[
+    {label:'MSTR', data:[98,90,80,30,55,85],
+      borderColor:'#f59e0b', backgroundColor:'#f59e0b20', borderWidth:2, pointRadius:3},
+    {label:'COIN', data:[60,20,90,80,90,95],
+      borderColor:'#22c55e', backgroundColor:'#22c55e20', borderWidth:2, pointRadius:3},
+    {label:'MARA', data:[95,50,70,55,20,70],
+      borderColor:'#a855f7', backgroundColor:'#a855f720', borderWidth:2, pointRadius:3},
+  ]
+}
+
+const darkOpts = (yFmt='$', legend=false) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{
+    legend:{display:legend, labels:{color:'#7a90aa', boxWidth:12, font:{size:11}}},
+    tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}
+  },
+  scales:{
+    x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+    y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:11},
+      callback:yFmt==='$M'?v=>`$${v}M`:yFmt==='만BTC'?v=>`${v}만`:yFmt==='$B'?v=>`$${v}B`:v=>`$${v}`}}
+  }
+})
+
+/* ── 탭 콘텐츠 ── */
+function OverviewTab() {
+  const catalysts = [
+    {date:'2024.11',event:'Bitcoin $100,000 돌파 — MSTR ATH $473 기록',type:'pos'},
+    {date:'2025.08',event:'MicroStrategy → Strategy Inc 사명 변경 (BTC 정체성 강화)',type:'pos'},
+    {date:'2025.07',event:'주가 $457.20 — 52주 고점 기록',type:'pos'},
+    {date:'2025.11',event:'공매도 급증 — 단기 고점 경계',type:'risk'},
+    {date:'2026.02',event:'주가 $104.17 — 52주 저점 (Bitcoin 조정기)',type:'risk'},
+    {date:'2026.04',event:'818,334번째 BTC 매입 — 세계 최대 기업 보유 지속',type:'pos'},
+    {date:'2026.05.05',event:'Q1 2026 실적: 매출 $124.3M (+12%) / 순손실 $12.54B (BTC 평가 손실)',type:'pos'},
+    {date:'2026.05.10',event:'주가 $187.59 — 저점 대비 +80% 반등',type:'pos'},
+  ]
+  return <>
+    <WarnBox title="⚠️ RSI 과매수 접근 주의">
+      RSI 67~72 = 과매수(70) 경계선 접근 중. 1개월 +40% 급등 후 단기 조정 가능성. 분할 매수 또는 $155~170 진입 대기 권고.
+    </WarnBox>
+
+    <Card>
+      <SectionTitle sub="Strategy Inc (구 MicroStrategy) · NASDAQ: MSTR · 2026.05.10">기업 개요</SectionTitle>
+      <div style={{display:'flex',flexWrap:'wrap',marginBottom:16}}>
+        <Badge color={C.gold}>Bitcoin 트레저리 기업</Badge>
+        <Badge color={C.blue}>엔터프라이즈 소프트웨어</Badge>
+        <Badge color={C.orange}>레버리지 BTC 플레이</Badge>
+        <Badge color={C.purple}>대형주 ($60B+)</Badge>
+      </div>
+      {[
+        {label:'현재가',value:'$187.59',color:C.gold,sub:'2026.05.10 · 1개월 +40.34%'},
+        {label:'52주 고점',value:'$457.20',color:C.green,sub:'2025.07.16 기록'},
+        {label:'52주 저점',value:'$104.17',color:C.red,sub:'2026.02.05 기록'},
+        {label:'저점 대비 반등',value:'+80%',color:C.green,sub:'$104.17 → $187.59'},
+        {label:'1년 수익률',value:'-54.04%',color:C.red,sub:'고점 대비 (BTC 조정 영향)'},
+        {label:'RSI (14)',value:'67~72',color:C.gold,sub:'과매수(70) 경계 접근 중'},
+        {label:'200일 이동평균',value:'$138.80',color:C.green,sub:'현재가 상회 = 장기 상승 추세'},
+        {label:'애널리스트 컨센서스',value:'Strong Buy',color:C.green,sub:'14 Buy · 1 Hold · 0 Sell'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="2024~2026 주가 흐름 (BTC 가격과 고상관)">주가 흐름</SectionTitle>
+      <div style={{height:210}}>
+        <CJSChart height={210} config={{
+          type:'line', data:priceData,
+          options:{...darkOpts('$'), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:9}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`$${v}`},min:0,max:500},
+          }, plugins:{
+            legend:{display:false},
+            tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'},
+          }}
+        }}/>
+      </div>
+      <div style={{display:'flex',gap:16,justifyContent:'center',marginTop:10}}>
+        {[['ATH $457 (녹색)',C.green],['현재가 (금색)',C.gold],['저점 (빨강)',C.red]].map(([l,c])=>(
+          <div key={l} style={{display:'flex',alignItems:'center',gap:5}}>
+            <div style={{width:8,height:8,borderRadius:'50%',background:c}}/>
+            <span style={{color:C.muted,fontSize:11}}>{l}</span>
+          </div>
+        ))}
+      </div>
+      <InfoBox color={C.gold}>ATH($457) 대비 -59%, 저점($104) 대비 +80%. Bitcoin $78~82K 구간에서 MSTR 가치 복원 중. BTC $100K 재돌파 시 $280~360 저항선 테스트 예상.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="2024~2026 주요 이벤트">이벤트 타임라인</SectionTitle>
+      {catalysts.map((c,i) => (
+        <div key={i} style={{display:'flex',alignItems:'flex-start',gap:12,padding:'11px 0',borderBottom:i<catalysts.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{width:8,height:8,borderRadius:'50%',marginTop:5,flexShrink:0,
+            background:c.type==='risk'?C.red:C.gold,
+            boxShadow:`0 0 6px ${c.type==='risk'?C.red:C.gold}`}}/>
+          <div style={{flex:1}}>
+            <div style={{color:C.muted,fontSize:11,fontFamily:'monospace',marginBottom:2}}>{c.date}</div>
+            <div style={{color:c.type==='risk'?C.red:C.text,fontSize:13,fontWeight:600,lineHeight:1.4}}>{c.event}</div>
+          </div>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="3단 수익 구조">비즈니스 모델</SectionTitle>
+      {[
+        {icon:'₿',label:'Bitcoin 트레저리',desc:'818,334 BTC 보유 ($61.8B 원가) — 세계 최대 기업 보유량. BTC 가격 상승 = 직접 수혜',color:C.gold},
+        {icon:'📊',label:'엔터프라이즈 소프트웨어',desc:'AI 기반 비즈니스 인텔리전스 솔루션 — 연 ~$500M 규모 안정적 수익 기반',color:C.blue},
+        {icon:'🏦',label:'자본 시장 레버리지',desc:'ATM·STRC 우선주·전환사채로 BTC 매입 자금 조달 → BTC Yield(주당 BTC 증가율)로 주주 가치 창출',color:C.purple},
+      ].map((s,i) => (
+        <div key={i} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 0',borderBottom:i<2?`1px solid ${C.border}`:'none'}}>
+          <span style={{fontSize:26}}>{s.icon}</span>
+          <div>
+            <Badge color={s.color}>{s.label}</Badge>
+            <div style={{color:C.muted,fontSize:13,marginTop:5,lineHeight:1.4}}>{s.desc}</div>
+          </div>
+        </div>
+      ))}
+    </Card>
+  </>
+}
+
+function TechTab() {
+  const signals = [
+    {label:'현재가',value:'$187.59',signal:'🟡 단기 과매수 경계',color:C.gold,desc:'1개월 +40.34% — 가파른 반등'},
+    {label:'RSI (14)',value:'67~72',signal:'🟡 과매수 경계 접근',color:C.gold,desc:'70 이상 시 과매수 신호'},
+    {label:'200일 이동평균',value:'$138.80',signal:'🟢 상회 — 장기 상승 추세',color:C.green,desc:'현재가가 200MA 위 = 강세장'},
+    {label:'50일 이동평균',value:'$157.12',signal:'🟢 상회',color:C.green,desc:'중기 추세 상승 확인'},
+    {label:'5일 이동평균',value:'$178.62',signal:'🟢 상회',color:C.green,desc:'단기 모멘텀 강함'},
+    {label:'볼린저밴드',value:'상단 접근',signal:'🟡 상단 돌파 시 조정 가능',color:C.gold,desc:'밴드 상단 = 과매수 구간'},
+    {label:'MACD',value:'골든크로스',signal:'🟢 매수 신호',color:C.green,desc:'단기 MA > 장기 MA = 상승 모멘텀'},
+    {label:'공매도 비율',value:'사상 최고',signal:'🔴 대규모 숏 포지션',color:C.red,desc:'쇼트 스퀴즈 잠재력 vs 공매도 압력'},
+  ]
+  return <>
+    <WarnBox title="🟡 RSI 67~72 — 과매수 경계 구간">
+      5일·50일·200일 이동평균 모두 상회 = 기술적 강세. 단 RSI가 70에 근접하여 단기 조정 가능. $155~170 지지선 재테스트 시 우량 매수 기회.
+    </WarnBox>
+
+    <Card>
+      <SectionTitle sub="Morgan Stanley 기술적 분석 · 2026.05.10">핵심 기술 지표</SectionTitle>
+      {signals.map((s,i) => (
+        <div key={i} style={{padding:'12px 0',borderBottom:i<signals.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+            <div>
+              <span style={{color:C.muted,fontSize:13}}>{s.label}</span>
+              <div style={{color:C.gray,fontSize:11,marginTop:2}}>{s.desc}</div>
+            </div>
+            <span style={{color:s.color,fontWeight:900,fontSize:15}}>{s.value}</span>
+          </div>
+          <div style={{color:s.color,fontSize:12,fontWeight:700}}>{s.signal}</div>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="지지선 & 저항선 (2026.05 기준)">진입·청산 포인트</SectionTitle>
+      {[
+        {label:'애널리스트 평균 목표가', value:'$344~464', color:C.purple, sub:'Strong Buy 컨센서스'},
+        {label:'TD Cowen 목표가', value:'$395', color:C.green, sub:'Buy 레이팅 유지'},
+        {label:'2차 저항선', value:'$360', color:C.green, sub:'전고점 구간 / 기술적 저항'},
+        {label:'1차 저항선', value:'$230', color:C.gold, sub:'중기 조정 고점'},
+        {label:'현재가', value:'$187.59 ◀', color:C.gold, sub:'2026.05.10 기준'},
+        {label:'1차 지지선', value:'$166~170', color:C.blue, sub:'볼륨 지지 + 단기 MA'},
+        {label:'2차 지지선', value:'$157', color:C.blue, sub:'50일 이동평균'},
+        {label:'3차 지지선', value:'$139', color:C.blue, sub:'200일 이동평균'},
+        {label:'4차 지지선', value:'$125', color:C.blue, sub:'심리적 지지선'},
+        {label:'손절선', value:'$104 이탈', color:C.red, sub:'52주 저점 재하락 시 청산'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="하이킨아시 (Heikin-Ashi) 분석">추세 패턴</SectionTitle>
+      <div style={{background:'#f59e0b12',border:'1px solid #f59e0b40',borderRadius:10,padding:'14px'}}>
+        <div style={{color:C.gold,fontWeight:800,fontSize:14,marginBottom:8}}>🟡 단기 상승 추세 — 속도 감소 구간</div>
+        <div style={{color:'#fde68a',fontSize:13,lineHeight:1.7}}>
+          • 일봉: $104(저점) → $187 연속 양봉 반등 중 (강한 모멘텀)<br/>
+          • 주봉: W형 이중 바닥($104) 확인 후 상승 전환<br/>
+          • 패턴: 강한 반등 후 RSI 과매수 경계 → 눌림목 예상<br/>
+          • BTC $80K 안착 여부가 추세 지속의 핵심 변수
+        </div>
+      </div>
+      <InfoBox color={C.red}>쇼트 스퀴즈 잠재력: 사상 최고 공매도 잔고 + 주가 반등 = 급격한 쇼트 커버링 가능. 단기 급등 후 추격 매수는 위험.</InfoBox>
+    </Card>
+  </>
+}
+
+function BitcoinTab() {
+  return <>
+    <Card>
+      <SectionTitle sub="2026.04 기준 최신 데이터">비트코인 트레저리 현황</SectionTitle>
+      {[
+        {label:'총 BTC 보유량',value:'818,334 BTC',color:C.gold,sub:'세계 최대 기업 비트코인 보유'},
+        {label:'평균 매입가',value:'$75,537/BTC',color:C.text,sub:'총 원가 기준'},
+        {label:'총 원가 기준',value:'$61.81B',color:C.orange},
+        {label:'BTC 시장가치 (5/1)',value:'~$64.14B',color:C.green,sub:'BTC $78,374 기준'},
+        {label:'미실현 이익',value:'+$2.3B',color:C.green,sub:'BTC $78K → 원가 대비 소폭 이익'},
+        {label:'BTC 가격 손익분기',value:'~$75,537',color:C.gold,sub:'이하 시 미실현 손실 전환'},
+        {label:'Q1 2026 추가 매입',value:'89,600 BTC',color:C.gold,sub:'$5.5B 투입 — 역대 2위 분기 매입'},
+        {label:'BTC Yield (2026 YTD)',value:'+9.4%',color:C.green,sub:'주당 BTC 보유량 증가율 — 핵심 KPI'},
+        {label:'BTC $ Gain (4개월)',value:'+$5.0B',color:C.green,sub:'달러 기준 BTC 기여 이익'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.gold}>BTC Yield = 희석 후 주당 BTC 보유 증가율. 자본 조달 비용보다 BTC 수익이 높으면 주주 가치 창출 — MSTR의 핵심 투자 논리.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="분기별 BTC 누적 보유량 (만 BTC)">BTC 축적 현황</SectionTitle>
+      <div style={{height:220}}>
+        <CJSChart height={220} config={{
+          type:'bar', data:btcHoldingsData,
+          options:{...darkOpts('만BTC'), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`${v}만`}}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.gold}>Q4 2024 ($100K BTC 랠리 시기) 대규모 매입 — 22.6만 → 44.7만 BTC. Q1 2026에도 8.97만 BTC 추가 적극 매집.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="Bitcoin 가격과 MSTR 손익분기점">BTC 가격 시나리오</SectionTitle>
+      {[
+        {label:'BTC $150,000', value:'MSTR ~$580~650', color:C.green, sub:'Saylor 원래 목표가 구간'},
+        {label:'BTC $120,000', value:'MSTR ~$400~480', color:C.green, sub:'애널리스트 평균 목표 BTC 구간'},
+        {label:'BTC $100,000', value:'MSTR ~$280~360', color:C.gold, sub:'심리적 BTC 고점 재돌파'},
+        {label:'BTC $80,000 (현재)', value:'MSTR ~$180~200', color:C.gold, sub:'현재 BTC 가격 구간'},
+        {label:'BTC $75,537 (손익분기)', value:'MSTR ~$160~175', color:C.orange, sub:'원가 = BTC 미실현 손실 전환'},
+        {label:'BTC $60,000', value:'MSTR ~$110~130', color:C.red, sub:'BTC 조정 위험 구간'},
+        {label:'BTC $40,000', value:'MSTR ~$60~80', color:C.red, sub:'레버리지 압박 구간'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.red}>BTC 가격이 평균 매입가 $75,537 이하로 지속 시, 레버리지 구조(우선주 배당 11.5%)가 부담으로 작용. BTC $60K 이하는 재무 압박 구간.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="BTC Yield vs 희석 비용">레버리지 구조 분석</SectionTitle>
+      <div style={{display:'flex',flexDirection:'column',gap:0}}>
+        {[
+          {label:'STRC 우선주 배당 부담', value:'연 11.5%', color:C.red, desc:'우선 배당 의무 — BTC 수익률이 이를 상회해야 주주 가치 창출'},
+          {label:'2026 YTD BTC Yield', value:'+9.4%', color:C.gold, desc:'자본 조달 비용보다 낮아 단기 부담'},
+          {label:'2025 연간 BTC Yield', value:'+74.3%', color:C.green, desc:'BTC 폭등기 달성 — 반복 가능성 논란'},
+          {label:'STRC 시가총액', value:'$8.5B', color:C.purple, desc:'9개월 만에 최대 우선주 ETF 등극'},
+          {label:'2026 자본 조달 (YTD)', value:'$11.7B', color:C.gold, desc:'절반 보통주 ATM + 절반 STRC'},
+          {label:'허가된 주식 수', value:'10.33B주', color:C.red, desc:'기존 330M → 10.33B 확대 — 희석 리스크'},
+        ].map((r,i)=>(
+          <div key={i} style={{padding:'12px 0',borderBottom:i<5?`1px solid ${C.border}`:'none'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+              <span style={{color:C.muted,fontSize:13}}>{r.label}</span>
+              <span style={{color:r.color,fontWeight:900,fontSize:15}}>{r.value}</span>
+            </div>
+            <div style={{color:C.gray,fontSize:12}}>{r.desc}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  </>
+}
+
+function FinancialTab() {
+  return <>
+    <Card>
+      <SectionTitle sub="Goldman Sachs 펀더멘털 분석 · Q1 2026">핵심 재무 지표</SectionTitle>
+      {[
+        {label:'시가총액',value:'~$60B+',color:C.text,sub:'주가 $187.59 기준 (대형주)'},
+        {label:'소프트웨어 P/S',value:'~120x',color:C.red,sub:'$60B ÷ 연 $500M — BTC 가치 포함'},
+        {label:'P/BTC',value:'~$73,000/BTC',color:C.gold,sub:'시총 ÷ 보유 BTC 수량 환산'},
+        {label:'Q1 2026 매출',value:'$124.3M',color:C.green,sub:'+11.9% YoY (소프트웨어)'},
+        {label:'Q1 2026 순손실',value:'-$12.54B',color:C.red,sub:'BTC 공정가치 하락 — 비현금 손실'},
+        {label:'희석 EPS',value:'-$38.25',color:C.red,sub:'주당 손실 (회계 기준)'},
+        {label:'2026 YTD 자본 조달',value:'$11.7B',color:C.gold,sub:'BTC 매입 재원'},
+        {label:'STRC 우선주 시총',value:'$8.5B',color:C.purple,sub:'세계 최대 우선주 ETF'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.gold}>핵심 인사이트: MSTR의 순손실(-$12.54B)은 BTC 공정가치 회계 처리상 비현금 손실. 소프트웨어 사업 실제 현금 창출 능력과 무관. BTC 가격 반등 시 이익 전환.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="소프트웨어 매출 추이 ($M) · 분기별">소프트웨어 사업 실적</SectionTitle>
+      <div style={{height:200}}>
+        <CJSChart height={200} config={{
+          type:'bar', data:softwareRevData,
+          options:{...darkOpts('$M'), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`$${v}M`},min:100,max:135}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.cyan}>소프트웨어 매출 완만한 성장세 유지. Q1 2026 $124.3M (+11.9% YoY) — AI 분석 기능 강화 효과. 연간 ~$500M 안정 기반.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="Q1 2026 자본 조달 구성 ($B)">자본 조달 현황</SectionTitle>
+      <div style={{height:200}}>
+        <CJSChart height={200} config={{
+          type:'bar', data:capitalData,
+          options:{...darkOpts('$B', true), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`$${v}B`}}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.purple}>2026 Q1에만 $7.37B 조달 — 역대급 속도. 전환사채 발행 중단, ATM + STRC 이원화 구조 전환. 희석 속도 가속화 우려.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="주식 희석 구조 분석">희석 위험 시각화</SectionTitle>
+      <div style={{height:200,display:'flex',justifyContent:'center'}}>
+        <div style={{width:220,height:200}}>
+          <CJSChart height={200} config={{
+            type:'doughnut', data:dilutionData,
+            options:{cutout:'58%',plugins:{
+              legend:{display:true,position:'bottom',labels:{color:'#7a90aa',boxWidth:10,font:{size:10}}},
+              tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9',callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}M주`}}
+            }}
+          }}/>
+        </div>
+      </div>
+      <InfoBox color={C.red}>허가 주식 10.33B주 vs 현재 희석 주식 ~328M = 잠재적 30배 이상 희석 가능. ATM 프로그램 잔여 $29B+ 실행 가능. 장기 희석 위험 최대 리스크.</InfoBox>
+    </Card>
+  </>
+}
+
+function SentimentTab() {
+  const opinions = [
+    {src:'TD Cowen (애널리스트)', stance:'강세', color:C.green, opinion:'"Buy, 목표가 $395. Bitcoin 트레저리 전략의 최우선 대장주. ATM 실행력 + BTC Yield 메트릭이 주주 가치 창출의 핵심."'},
+    {src:'마이클 세일러 (Executive Chairman)', stance:'강세', color:C.green, opinion:'"BTC Yield 9.4% YTD 달성. $21/42 플랜(21M BTC 목표) 달성을 위해 자본 조달 지속. Bitcoin은 디지털 자본재."'},
+    {src:'Bernstein (애널리스트)', stance:'강세', color:C.green, opinion:'"MSTR은 BTC에 레버리지 베팅하는 가장 효율적인 상장사 수단. 기관 투자자들의 BTC 노출도 확보 선호 수단."'},
+    {src:'Seeking Alpha 분석가', stance:'강세', color:C.green, opinion:'"BTC $100K 재돌파 시 MSTR $300~400 가능. 소프트웨어 사업 자체도 연 $500M 기반으로 안정적 현금 확보."'},
+    {src:'r/wallstreetbets', stance:'강세', color:C.gold, opinion:'"MSTR은 BTC ETF보다 훨씬 좋은 레버리지 플레이. 세일러가 절대 팔지 않으니 공급 줄고 희소성 증가."'},
+    {src:'r/investing 중립 의견', stance:'중립', color:C.gold, opinion:'"소프트웨어 사업은 AI 경쟁 심화로 성장성 의문. BTC 보유 논리는 이해하지만 희석 속도가 너무 빠르다."'},
+    {src:'24/7 Wall St. (공매도 분석)', stance:'약세', color:C.orange, opinion:'"공매도 잔고 사상 최고. 희석 vs BTC Yield의 순 효과가 실제로 주주 이익인지 회의적. 자본 조달 비용 > BTC 수익률 구간 존재."'},
+    {src:'공매도 커뮤니티', stance:'약세', color:C.red, opinion:'"허가 주식 10.33B주 = 현재 유통 주식 대비 32배 희석 가능. STRC 11.5% 배당이 BTC 수익률 초과 시 구조적 손실."'},
+    {src:'비판적 분석가 (Ponzi 논리)', stance:'약세', color:C.red, opinion:'"ATM으로 주식 발행 → BTC 매입 → 주가 상승 → 다시 ATM… 순환 구조가 BTC 가격 하락 시 역회전 위험."'},
+  ]
+  return <>
+    <CautionBox title="🔴 사상 최고 공매도 잔고">
+      MSTR 공매도 비율 사상 최고 기록. 쇼트 스퀴즈(Short Squeeze) 잠재력 vs 지속적 매도 압력. 변동성 극단적으로 높은 구간.
+    </CautionBox>
+
+    <Card>
+      <SectionTitle sub="월가 애널리스트 컨센서스">기관 의견</SectionTitle>
+      {[
+        {label:'커버리지 애널리스트 수', value:'14~21명', color:C.text},
+        {label:'컨센서스 레이팅', value:'Strong Buy', color:C.green},
+        {label:'평균 목표주가', value:'$344~$464', color:C.green, sub:'소스마다 상이 (BTC 시나리오 의존)'},
+        {label:'TD Cowen 목표가', value:'$395', color:C.green, sub:'Buy 레이팅'},
+        {label:'최고 목표주가', value:'$705', color:C.purple, sub:'낙관적 BTC 시나리오'},
+        {label:'최저 목표주가', value:'$185', color:C.red, sub:'보수적 BTC 시나리오'},
+        {label:'중간값', value:'$322.50', color:C.gold},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.gold}>목표가 범위($185~$705)가 극단적으로 넓음 = BTC 가격 전망에 따라 밸류에이션이 크게 달라지는 구조. Bitcoin 불확실성 = MSTR 불확실성.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="투자자 커뮤니티 의견 종합">소셜 & 기관 센티먼트</SectionTitle>
+      {opinions.map((o,i) => (
+        <div key={i} style={{padding:'13px 0',borderBottom:i<opinions.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+            <span style={{color:C.text,fontSize:13,fontWeight:700,flex:1,paddingRight:8}}>{o.src}</span>
+            <Badge color={o.color}>{o.stance}</Badge>
+          </div>
+          <div style={{color:C.muted,fontSize:13,lineHeight:1.6}}>{o.opinion}</div>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="동종 기업 비교 (BTC 관련주)">경쟁사 레이더</SectionTitle>
+      <div style={{height:280}}>
+        <CJSChart height={280} config={{
+          type:'radar', data:radarData,
+          options:{plugins:{
+            legend:{display:true,labels:{color:'#7a90aa',boxWidth:10,font:{size:11}}},
+            tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}
+          },scales:{r:{grid:{color:'#1e2d45'},angleLines:{color:'#1e2d45'},pointLabels:{color:'#7a90aa',font:{size:11}},ticks:{color:'#7a90aa',backdropColor:'transparent'},suggestedMin:0,suggestedMax:100}}}
+        }}/>
+      </div>
+      <InfoBox color={C.gold}>MSTR = BTC 노출도·레버리지 최고, 희석 위험 최고. COIN = 균형형. MARA = BTC 채굴 집중. 리스크 성향에 따라 선택.</InfoBox>
+    </Card>
+  </>
+}
+
+function ConclusionTab() {
+  return <>
+    <Card style={{border:`2px solid ${C.gold}`}}>
+      <SectionTitle>종합 투자 의견</SectionTitle>
+      <div style={{display:'flex',gap:4,marginBottom:16}}>
+        {['강한 매도','매도','중립','매수','강한 매수'].map((label,i) => (
+          <div key={i} style={{flex:1,textAlign:'center',padding:'10px 4px',borderRadius:8,
+            background:i===3?C.gold+'30':'#1e2d45',
+            border:`2px solid ${i===3?C.gold:'#1e2d4500'}`,
+          }}>
+            <div style={{color:i===3?C.gold:C.muted,fontSize:10,fontWeight:i===3?900:400,lineHeight:1.3}}>{label}</div>
+            {i===3 && <div style={{color:C.gold,fontSize:16,marginTop:4}}>◉</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{color:C.gold,fontSize:18,fontWeight:900,marginBottom:12}}>조건부 매수 — RSI 과매수 주의, 분할 진입</div>
+      <div style={{color:C.muted,fontSize:14,lineHeight:1.7}}>
+        장기 BTC 강세론자라면 전략적 보유 적합. 단, RSI 67~72 = 과매수 경계 접근, 1개월 +40% 급등 후 단기 조정 가능성. 현재가($187.59) 전량 매수보다 $155~170 분할 진입 권고. Bitcoin $100K 재돌파가 $280~395 달성의 핵심 트리거.
+      </div>
+    </Card>
+
+    <Card>
+      <SectionTitle>🐂 Bull Case (상승 근거)</SectionTitle>
+      {[
+        'BTC 818,334개 세계 최대 기업 보유 — BTC 가격 상승 = 직접 수혜',
+        '5일·50일·200일 이동평균 전부 하회 중 = 강한 장기 기술적 상승 추세',
+        '애널리스트 14 Buy / 1 Hold — Strong Buy 컨센서스, 평균 목표 $344~464',
+        'BTC Yield 2026 YTD 9.4% — BTC 매입이 주당 BTC 보유 증가 → 주주 가치 창출',
+        '사상 최고 공매도 잔고 → 쇼트 스퀴즈 잠재력 (BTC 급등 시 폭발적 상승 가능)',
+        'STRC $8.5B 우선주 = 기관 수요 증명 + 추가 BTC 매입 재원 확보',
+        'BTC $100K 재돌파 시 $300~400 구간 복귀 시나리오 (TD Cowen $395)',
+      ].map((r,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:i<6?`1px solid ${C.border}`:'none'}}>
+          <span style={{color:C.green,fontSize:16,flexShrink:0}}>✓</span>
+          <span style={{color:C.muted,fontSize:13,lineHeight:1.5}}>{r}</span>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle>🐻 Bear Case (하락 근거)</SectionTitle>
+      {[
+        'RSI 67~72 — 과매수 경계, 1개월 +40% 급등 후 단기 조정 가능성',
+        '허가 주식 10.33B주 — 현 유통주식 대비 32배 잠재 희석',
+        'STRC 배당 11.5% — BTC 수익률 < 배당 구간 시 구조적 손실',
+        '공매도 사상 최고 = 기관의 구조적 하락 베팅 (단순 트레이딩 아님)',
+        'BTC 가격 조정 시 레버리지 구조 역효과 — ATH 대비 -77% 선례',
+        'Q1 2026 순손실 -$12.54B = 회계 충격 지속 (비현금이나 심리적 부담)',
+        '소프트웨어 AI 경쟁 심화 (Salesforce, Microsoft 등) — 핵심 사업 위협',
+      ].map((r,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:i<6?`1px solid ${C.border}`:'none'}}>
+          <span style={{color:C.red,fontSize:16,flexShrink:0}}>✗</span>
+          <span style={{color:C.muted,fontSize:13,lineHeight:1.5}}>{r}</span>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle>실행 계획 (Action Plan)</SectionTitle>
+      {[
+        {label:'관망 구간 (현재)', value:'$185~200', color:C.gold, sub:'RSI 과매수 — 추격 매수 자제'},
+        {label:'1차 분할 매수', value:'$165~175', color:C.blue, sub:'50일 MA 부근 조정 시 · 포트 2%'},
+        {label:'2차 분할 매수', value:'$140~155', color:C.blue, sub:'200일 MA 재테스트 시 · 포트 2%'},
+        {label:'3차 매수 (추가)', value:'$110~130', color:C.blue, sub:'공황 조정 시 적극 매집 · 포트 1%'},
+        {label:'총 포지션 한도', value:'포트의 5%', color:C.gold, sub:'BTC 변동성 = 극단적 리스크 관리'},
+        {label:'손절선', value:'$104 이탈', color:C.red, sub:'52주 저점 재하락 시 전량 청산'},
+        {label:'1차 익절', value:'$250~280', color:C.green, sub:'33% 청산 — 기술적 저항선'},
+        {label:'2차 익절', value:'$350~400', color:C.green, sub:'33% 청산 — BTC $100K 재돌파 시'},
+        {label:'3차 익절', value:'$450+', color:C.purple, sub:'나머지 — BTC $130K 이상 구간'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.cyan}>핵심 모니터링: ① BTC 가격 $75,537 손익분기 유지 여부 ② BTC Yield vs STRC 배당 스프레드 ③ 공매도 잔고 감소 여부 (쇼트 스퀴즈 신호) ④ BTC $90K·$100K 저항선 돌파 ⑤ Q2 2026 소프트웨어 실적</InfoBox>
+    </Card>
+
+    <div style={{borderTop:`1px solid ${C.border}`,padding:'16px',textAlign:'center',marginTop:8}}>
+      <p style={{color:C.gray,fontSize:11,margin:0,lineHeight:1.7}}>
+        ⚠️ 교육 목적 분석 · 투자 권고 아님<br/>
+        분석 기준일: 2026년 5월 11일 · 현재가: $187.59 (5/10 기준)<br/>
+        Morgan Stanley TA + Goldman Sachs FA + JPMorgan Earnings Framework
+      </p>
+    </div>
+  </>
+}
+
+/* ── 메인 ── */
+function App() {
+  const [tab, setTab] = useState('overview')
+  const tabs = [
+    {id:'overview', label:'📊 개요'},
+    {id:'tech',     label:'📈 기술적'},
+    {id:'bitcoin',  label:'₿ 비트코인'},
+    {id:'fund',     label:'💰 재무'},
+    {id:'sent',     label:'💬 센티먼트'},
+    {id:'conclude', label:'🎯 결론'},
+  ]
+  return (
+    <div style={{background:C.darkBg,minHeight:'100vh',color:C.text}}>
+      {/* 헤더 */}
+      <div style={{background:'linear-gradient(180deg,#1a1200 0%,#0a0f1e 100%)',padding:'20px 16px 22px'}}>
+        <a href="https://disntm90.github.io/disntm90/" style={{display:'inline-flex',alignItems:'center',gap:6,color:'#7a90aa',fontSize:12,textDecoration:'none',marginBottom:14,padding:'5px 10px',background:'#1e2d45',borderRadius:6}}>← 목록으로</a>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+          <div style={{background:C.gold+'20',border:`2px solid ${C.gold}`,borderRadius:10,padding:'6px 14px'}}>
+            <span style={{color:C.gold,fontWeight:900,fontSize:22,letterSpacing:1}}>MSTR</span>
+          </div>
+          <div>
+            <div style={{fontWeight:800,fontSize:17,lineHeight:1.2}}>Strategy Inc</div>
+            <div style={{color:C.muted,fontSize:12,marginTop:3}}>Bitcoin 트레저리 · 엔터프라이즈 소프트웨어 · NASDAQ</div>
+          </div>
+        </div>
+        <div style={{display:'flex',flexWrap:'wrap',marginBottom:16}}>
+          <Badge color={C.gold}>818,334 BTC 보유 🟡</Badge>
+          <Badge color={C.gold}>RSI 과매수 경계 (67~72)</Badge>
+          <Badge color={C.red}>희석 위험 (10.33B주 허가)</Badge>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+          {[
+            {label:'현재가', value:'$187.59', sub:'↑ +40% (1개월)', color:C.gold},
+            {label:'52주 고점', value:'$457.20', sub:'', color:C.green},
+            {label:'52주 저점', value:'$104.17', sub:'', color:C.red},
+            {label:'BTC 보유', value:'818K개', sub:'세계 1위', color:C.gold},
+            {label:'목표주가', value:'$344~464', sub:'컨센서스', color:C.green},
+            {label:'BTC Yield', value:'+9.4%', sub:'2026 YTD', color:C.green},
+          ].map((s,i) => (
+            <div key={i} style={{background:C.cardBg,border:`1px solid ${C.border}`,borderRadius:12,padding:'11px 8px',textAlign:'center'}}>
+              <div style={{color:s.color,fontSize:i===3?14:18,fontWeight:900,lineHeight:1}}>{s.value}</div>
+              <div style={{color:C.muted,fontSize:10,marginTop:4}}>{s.label}</div>
+              {s.sub && <div style={{color:s.color+'bb',fontSize:10,marginTop:2}}>{s.sub}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 탭바 */}
+      <div style={{borderBottom:`1px solid ${C.border}`,background:C.cardBg,overflowX:'auto',whiteSpace:'nowrap',WebkitOverflowScrolling:'touch'}}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            display:'inline-block',background:'none',
+            color:tab===t.id?C.gold:C.muted,
+            border:'none',borderBottom:tab===t.id?`3px solid ${C.gold}`:'3px solid transparent',
+            padding:'13px 16px',fontSize:12,fontWeight:700,cursor:'pointer',
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* 콘텐츠 */}
+      <div style={{padding:'16px',maxWidth:600,margin:'0 auto'}}>
+        {tab==='overview' && <OverviewTab/>}
+        {tab==='tech'     && <TechTab/>}
+        {tab==='bitcoin'  && <BitcoinTab/>}
+        {tab==='fund'     && <FinancialTab/>}
+        {tab==='sent'     && <SentimentTab/>}
+        {tab==='conclude' && <ConclusionTab/>}
+      </div>
+    </div>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>)
+</script>
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OPEN 분석 — 2026.05.11</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#0a0f1e;font-family:system-ui,-apple-system,sans-serif;color:#f1f5f9}
+    h1,h2{margin:0}
+    button{font-family:inherit}
+    canvas{display:block}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useRef, useEffect } = React
+
+const C = {
+  teal:'#14b8a6', red:'#ef4444', green:'#22c55e',
+  blue:'#3b82f6', gray:'#6b7280',
+  darkBg:'#0a0f1e', cardBg:'#141b2d', border:'#1e2d45',
+  text:'#f1f5f9', muted:'#7a90aa', cyan:'#06b6d4',
+  orange:'#f97316', purple:'#a855f7', gold:'#f59e0b',
+}
+
+function CJSChart({ config, height=220 }) {
+  const ref = useRef(null), inst = useRef(null)
+  useEffect(() => {
+    if (inst.current) inst.current.destroy()
+    inst.current = new Chart(ref.current, config)
+    return () => inst.current?.destroy()
+  }, [])
+  return <canvas ref={ref} style={{width:'100%',maxHeight:height}} height={height}/>
+}
+
+const Card = ({children,style={}}) => (
+  <div style={{background:C.cardBg,border:`1px solid ${C.border}`,borderRadius:16,padding:'20px 16px',marginBottom:14,...style}}>
+    {children}
+  </div>
+)
+const Badge = ({children,color=C.blue}) => (
+  <span style={{background:color+'20',color,border:`1px solid ${color}44`,borderRadius:6,padding:'3px 10px',fontSize:12,fontWeight:700,display:'inline-block',marginRight:4,marginBottom:4}}>
+    {children}
+  </span>
+)
+const SectionTitle = ({children,sub}) => (
+  <div style={{marginBottom:16}}>
+    <h2 style={{color:C.text,fontSize:17,fontWeight:800,margin:0,lineHeight:1.3}}>{children}</h2>
+    {sub && <p style={{color:C.muted,fontSize:12,margin:'5px 0 0',lineHeight:1.5}}>{sub}</p>}
+  </div>
+)
+const Row = ({label,value,color=C.text,sub}) => (
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'12px 0',borderBottom:`1px solid ${C.border}`}}>
+    <div>
+      <div style={{color:C.muted,fontSize:13}}>{label}</div>
+      {sub && <div style={{color:C.gray,fontSize:11,marginTop:2}}>{sub}</div>}
+    </div>
+    <span style={{color,fontWeight:800,fontSize:15,textAlign:'right',marginLeft:8}}>{value}</span>
+  </div>
+)
+const InfoBox = ({children,color=C.blue}) => (
+  <div style={{background:color+'15',border:`1px solid ${color}40`,borderRadius:10,padding:'12px 14px',marginTop:12}}>
+    <p style={{color,fontSize:13,margin:0,lineHeight:1.6,fontWeight:500}}>{children}</p>
+  </div>
+)
+const BullBox = ({children,title}) => (
+  <div style={{background:'#14b8a618',border:'2px solid #14b8a6',borderRadius:12,padding:'14px 16px',marginBottom:14}}>
+    <div style={{color:'#14b8a6',fontWeight:900,fontSize:14,marginBottom:4}}>{title||'🟢 긍정 신호'}</div>
+    <p style={{color:'#99f6e4',fontSize:13,margin:0,lineHeight:1.6}}>{children}</p>
+  </div>
+)
+const WarnBox = ({children,title}) => (
+  <div style={{background:'#f59e0b18',border:'2px solid #f59e0b',borderRadius:12,padding:'14px 16px',marginBottom:14}}>
+    <div style={{color:'#f59e0b',fontWeight:900,fontSize:14,marginBottom:4}}>{title||'⚠️ 주의'}</div>
+    <p style={{color:'#fcd34d',fontSize:13,margin:0,lineHeight:1.6}}>{children}</p>
+  </div>
+)
+
+/* ── 차트 데이터 ── */
+const priceData = {
+  labels:["'24 Q3","'24 Q4","'25 Q1","'25 Q2","'25 Q3","'25 Q4 (ATH)","'26 Q1","'26 Apr","5/11"],
+  datasets:[{
+    label:'주가 ($)',
+    data:[0.9, 0.8, 1.5, 4.0, 7.5, 10.87, 6.8, 5.5, 4.85],
+    borderColor:'#14b8a6', backgroundColor:'#14b8a620',
+    fill:true, tension:0.35, pointRadius:3, borderWidth:2.5,
+    pointBackgroundColor:(ctx)=>{
+      const i=ctx.dataIndex
+      if(i===5) return '#22c55e'
+      if(i===8) return '#14b8a6'
+      return '#14b8a6'
+    }
+  }]
+}
+
+const revenueData = {
+  labels:["Q1'25","Q2'25(E)","Q3'25(E)","Q4'25(E)","Q1'26","Q2'26(E)"],
+  datasets:[{
+    label:'매출 ($M)',
+    data:[1154, 1100, 950, 890, 720, 900],
+    backgroundColor:(ctx)=>{
+      const i=ctx.dataIndex
+      if(i===5) return '#14b8a650'
+      return i===4?'#14b8a680':'#3b82f680'
+    },
+    borderColor:(ctx)=>{const i=ctx.dataIndex; return i>=4?'#14b8a6':'#3b82f6'},
+    borderWidth:1.5, borderRadius:6,
+  }]
+}
+
+const cmData = {
+  labels:["Q3'25","Q4'25(E)","Q1'26","Q2'26(E)"],
+  datasets:[{
+    label:'Contribution Margin (%)',
+    data:[1.0, 2.8, 4.4, 6.0],
+    backgroundColor:['#ef444470','#f59e0b70','#14b8a680','#22c55e50'],
+    borderColor:['#ef4444','#f59e0b','#14b8a6','#22c55e'],
+    borderWidth:1.5, borderRadius:6,
+  }]
+}
+
+const inventoryData = {
+  labels:['Q3 2025','Q1 2026'],
+  datasets:[{
+    label:'노후 재고 비율 (%)',
+    data:[51, 10],
+    backgroundColor:['#ef444480','#22c55e80'],
+    borderColor:['#ef4444','#22c55e'],
+    borderWidth:1.5, borderRadius:8,
+  }]
+}
+
+const radarData = {
+  labels:['성장 잠재력','운영 개선','자금 여력','주택 시황','흑자 전환','AI 기술력'],
+  datasets:[
+    {label:'OPEN', data:[75,85,60,40,65,80],
+      borderColor:'#14b8a6', backgroundColor:'#14b8a620', borderWidth:2, pointRadius:3},
+    {label:'RDFN (Redfin)', data:[55,50,55,40,50,65],
+      borderColor:'#a855f7', backgroundColor:'#a855f720', borderWidth:2, pointRadius:3},
+    {label:'Z (Zillow)', data:[65,60,80,45,60,70],
+      borderColor:'#f59e0b', backgroundColor:'#f59e0b20', borderWidth:2, pointRadius:3},
+  ]
+}
+
+const darkOpts = (yFmt='$', legend=false) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{
+    legend:{display:legend, labels:{color:'#7a90aa', boxWidth:12, font:{size:11}}},
+    tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}
+  },
+  scales:{
+    x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+    y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:11},
+      callback:yFmt==='$M'?v=>`$${v}M`:yFmt==='%'?v=>`${v}%`:v=>`$${v}`}}
+  }
+})
+
+/* ── 탭 콘텐츠 ── */
+function OverviewTab() {
+  const catalysts = [
+    {date:'2025 상반기',event:'Opendoor 2.0 전략 — AI 기반 가격 책정·운영 효율화 착수',type:'pos'},
+    {date:'2025 Q3',event:'노후 재고 51% 급증 — 수익성 악화 위기',type:'risk'},
+    {date:'2025 Q4',event:'매입 +46% QoQ — 재고 회전율 개선 시작 (Opendoor 2.0 효과)',type:'pos'},
+    {date:'2026.02.19',event:'Q4 2025 실적: "기계가 작동하고 있다" — 이사회 승인',type:'pos'},
+    {date:'2026.04.21',event:'주가 +11% — AI 주택 스택 재조명',type:'pos'},
+    {date:'2026.05.07',event:'Q1 2026: 매출 $720M, 기여마진 4.4% (+3.4pp), 매입 +45% QoQ',type:'pos'},
+    {date:'2026.05.08',event:'"2026년 말 조정 순이익 흑자 전환" 가이던스 발표',type:'pos'},
+    {date:'2026.05.12',event:'CEO Kasra Nejatian, 자사주 10만주 매입 ($487,800) — 강한 자신감',type:'pos'},
+  ]
+  return <>
+    <BullBox title="🟢 CEO 내부자 매수 신호 (Insider Buy)">
+      CEO Kasra Nejatian가 2026.05.12 직접 $487,800 자사주 매입. 경영진의 강한 확신 신호 — 단기 주가 하락을 기회로 본 것으로 해석.
+    </BullBox>
+
+    <Card>
+      <SectionTitle sub="Opendoor Technologies · NASDAQ: OPEN · 2026.05.11">기업 개요</SectionTitle>
+      <div style={{display:'flex',flexWrap:'wrap',marginBottom:16}}>
+        <Badge color={C.teal}>iBuying (직접 주택 매매)</Badge>
+        <Badge color={C.blue}>AI 가격 책정</Badge>
+        <Badge color={C.orange}>주택 시장 의존형</Badge>
+        <Badge color={C.purple}>흑자 전환 로드맵</Badge>
+      </div>
+      {[
+        {label:'현재가',value:'$4.85',color:C.teal,sub:'2026.05.11 · ATH 대비 -55%'},
+        {label:'52주 고점',value:'$10.87',color:C.green,sub:'2025 Q4 기록'},
+        {label:'52주 저점',value:'$0.508',color:C.red,sub:'2025 초 상장폐지 우려 구간'},
+        {label:'저점 대비 반등',value:'+855%',color:C.green,sub:'$0.508 → $4.85'},
+        {label:'ATH 대비 하락',value:'-55%',color:C.red,sub:'$10.87 → $4.85'},
+        {label:'시가총액',value:'~$4.14B',color:C.text},
+        {label:'RSI (14)',value:'58~59',color:C.teal,sub:'중립 — 과매수 아님'},
+        {label:'200일 이동평균',value:'~$4.94',color:C.gold,sub:'현재가 부근 — 경계 구간'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="2024~2026 주가 흐름 (주택 시장 회복세 반영)">주가 흐름</SectionTitle>
+      <div style={{height:210}}>
+        <CJSChart height={210} config={{
+          type:'line', data:priceData,
+          options:{...darkOpts('$'), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:9}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`$${v}`},min:0,max:12},
+          }, plugins:{
+            legend:{display:false},
+            tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'},
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.teal}>ATH $10.87(Q4 2025) 이후 -55% 조정 중. 2025 연간 +320% 급등 후 되돌림 구간. CEO 내부자 매수($4.88)가 현재가 부근 = 단기 바닥권 시사.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="2025~2026 주요 이벤트">이벤트 타임라인</SectionTitle>
+      {catalysts.map((c,i) => (
+        <div key={i} style={{display:'flex',alignItems:'flex-start',gap:12,padding:'11px 0',borderBottom:i<catalysts.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{width:8,height:8,borderRadius:'50%',marginTop:5,flexShrink:0,
+            background:c.type==='risk'?C.red:C.teal,
+            boxShadow:`0 0 6px ${c.type==='risk'?C.red:C.teal}`}}/>
+          <div style={{flex:1}}>
+            <div style={{color:C.muted,fontSize:11,fontFamily:'monospace',marginBottom:2}}>{c.date}</div>
+            <div style={{color:c.type==='risk'?C.red:C.text,fontSize:13,fontWeight:600,lineHeight:1.4}}>{c.event}</div>
+          </div>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="iBuying 2.0 + AI 가격 책정">비즈니스 모델</SectionTitle>
+      {[
+        {icon:'🏠',label:'iBuying (직접 매입)',desc:'주택 소유자로부터 즉시 매입 → AI 가격 책정 → 리스팅/재판매. 주택 유동성 공급자',color:C.teal},
+        {icon:'🤖',label:'AI 가격 엔진',desc:'수만 개 변수로 매입가·재판매가 자동 산출. 노후 재고 감소 = AI 정확도 향상 증거',color:C.blue},
+        {icon:'💳',label:'Cash Plus & 추가 서비스',desc:'Cash Plus가 주간 거래량의 35% 달성. 모기지·에스크로 번들 → 수수료 수익',color:C.purple},
+      ].map((s,i) => (
+        <div key={i} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 0',borderBottom:i<2?`1px solid ${C.border}`:'none'}}>
+          <span style={{fontSize:26}}>{s.icon}</span>
+          <div>
+            <Badge color={s.color}>{s.label}</Badge>
+            <div style={{color:C.muted,fontSize:13,marginTop:5,lineHeight:1.4}}>{s.desc}</div>
+          </div>
+        </div>
+      ))}
+    </Card>
+  </>
+}
+
+function TechTab() {
+  const signals = [
+    {label:'현재가',value:'$4.85',signal:'🟡 200일 MA 하회 경계',color:C.gold,desc:'200일 MA ~$4.94 부근'},
+    {label:'RSI (14)',value:'58~59',signal:'🟢 중립 — 과매수 아님',color:C.green,desc:'70 미만 = 추가 상승 여력'},
+    {label:'200일 이동평균',value:'~$4.94',signal:'🟡 현재가 하회',color:C.gold,desc:'경계 구간 — 명확한 상향 돌파 필요'},
+    {label:'50일 이동평균',value:'$5.34',signal:'🔴 현재가 하회',color:C.red,desc:'중기 추세 회복 필요'},
+    {label:'5일 이동평균',value:'$5.49',signal:'🔴 현재가 하회',color:C.red,desc:'단기 하방 모멘텀'},
+    {label:'MACD',value:'데드크로스',signal:'🔴 단기 매도 신호',color:C.red,desc:'단기 하락 모멘텀 지속 중'},
+    {label:'내부자 매수',value:'CEO $487.8K',signal:'🟢 강한 내부자 확신',color:C.green,desc:'CEO 10만주 직접 매입 (5/12)'},
+    {label:'공매도 비율',value:'높음',signal:'🔴 쇼트 스퀴즈 vs 압력',color:C.red,desc:'단기 변동성 원인'},
+  ]
+  return <>
+    <WarnBox title="🟡 단기 하방 모멘텀 — 기술적 약세 구간">
+      현재가가 5일·50일·200일 이동평균 모두 하회. 단기 기술적으로는 약세. 단, RSI 중립(58~59) + CEO 내부자 매수 = 과매도 아님. $4.50~4.20 구간이 전략적 진입 기회.
+    </WarnBox>
+
+    <Card>
+      <SectionTitle sub="Morgan Stanley 기술적 분석 · 2026.05.11">핵심 기술 지표</SectionTitle>
+      {signals.map((s,i) => (
+        <div key={i} style={{padding:'12px 0',borderBottom:i<signals.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+            <div>
+              <span style={{color:C.muted,fontSize:13}}>{s.label}</span>
+              <div style={{color:C.gray,fontSize:11,marginTop:2}}>{s.desc}</div>
+            </div>
+            <span style={{color:s.color,fontWeight:900,fontSize:15}}>{s.value}</span>
+          </div>
+          <div style={{color:s.color,fontSize:12,fontWeight:700}}>{s.signal}</div>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="지지선 & 저항선 (2026.05 기준)">진입·청산 포인트</SectionTitle>
+      {[
+        {label:'애널리스트 최고 목표가', value:'$8.00', color:C.green, sub:'낙관적 시나리오'},
+        {label:'평균 목표가 (일부 집계)', value:'$5.33', color:C.teal, sub:'회복 시나리오'},
+        {label:'1차 저항선', value:'$5.34', color:C.gold, sub:'50일 이동평균'},
+        {label:'2차 저항선', value:'$6.00', color:C.gold, sub:'심리적 저항'},
+        {label:'현재가', value:'$4.85 ◀', color:C.teal, sub:'2026.05.11 기준'},
+        {label:'200일 이동평균', value:'~$4.94', color:C.gold, sub:'경계 구간 — 상향 돌파 필요'},
+        {label:'CEO 매입가', value:'~$4.88', color:C.teal, sub:'내부자 지지선 역할 기대'},
+        {label:'1차 지지선', value:'$4.20~4.50', color:C.blue, sub:'전략적 매수 구간'},
+        {label:'2차 지지선', value:'$3.50', color:C.blue, sub:'추가 조정 시 분할 매수'},
+        {label:'손절선', value:'$2.80 이탈', color:C.red, sub:'구조적 하락 시 청산'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="하이킨아시 (Heikin-Ashi) 분석">추세 패턴</SectionTitle>
+      <div style={{background:'#f59e0b12',border:'1px solid #f59e0b40',borderRadius:10,padding:'14px'}}>
+        <div style={{color:C.gold,fontWeight:800,fontSize:14,marginBottom:8}}>🟡 단기 하락 → 중기 전환 모색 구간</div>
+        <div style={{color:'#fde68a',fontSize:13,lineHeight:1.7}}>
+          • 일봉: $10.87 고점 → $4.85 연속 하락 (조정 지속)<br/>
+          • 주봉: 상승 추세선 이탈 후 지지 탐색 중<br/>
+          • 패턴: 고점 대비 -55% 조정 = Fibonacci 0.618 되돌림 구간<br/>
+          • CEO 내부자 매수 = 바닥권 신호로 해석 가능
+        </div>
+      </div>
+      <InfoBox color={C.teal}>쇼트 스퀴즈 잠재력: 높은 공매도 잔고 + CEO 내부자 매수 + Q2 EBITDA 가이던스 = 실적 서프라이즈 시 급반등 가능.</InfoBox>
+    </Card>
+  </>
+}
+
+function IBuyingTab() {
+  return <>
+    <BullBox title="🟢 Opendoor 2.0 — 운영 턴어라운드 진행 중">
+      노후 재고(Aged Inventory) 51% → 10% 감소. 매입 건수 +45% QoQ. 기여마진 +3.4pp 개선. AI 가격 책정 정확도 검증 완료.
+    </BullBox>
+
+    <Card>
+      <SectionTitle sub="2026.05 기준 핵심 운영 지표">iBuying 운영 현황</SectionTitle>
+      {[
+        {label:'Q1 2026 매입 계약 건수',value:'역대 최고',color:C.green,sub:'2022년 이후 최대 분기 매입량'},
+        {label:'Q1 2026 매입 증가율',value:'+45% QoQ',color:C.green,sub:'전분기 대비 — 공격적 확장'},
+        {label:'Q4 2025 매입 증가율',value:'+46% QoQ',color:C.green,sub:'연속 고성장 — 가속화 추세'},
+        {label:'노후 재고 비율',value:'10%',color:C.green,sub:'Q3 2025 51% → Q1 2026 10% — 정상화'},
+        {label:'Cash Plus 비중',value:'주간 35%',color:C.teal,sub:'즉시 현금 거래 옵션 비중'},
+        {label:'평균 보유 기간',value:'단축 중',color:C.green,sub:'Q4 2025 대비 -23% 감소'},
+        {label:'현금 보유',value:'$999M',color:C.teal,sub:'충분한 운영 유동성'},
+        {label:'재고 (집)',value:'$1.14B',color:C.text},
+        {label:'비소구 부채',value:'$1.14B',color:C.text,sub:'재고 대응 레버리지 (재무 위험 낮음)'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.teal}>비소구(Non-Recourse) 부채 = 재고에만 담보, 회사 전체 부채 아님. 주택 가격 하락 시 손실이 재고에 한정 — 시스템 리스크 낮은 구조.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="기여마진 개선 추이 & Q2 가이던스">기여마진 (Contribution Margin) 회복</SectionTitle>
+      <div style={{height:220}}>
+        <CJSChart height={220} config={{
+          type:'bar', data:cmData,
+          options:{...darkOpts('%'), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`${v}%`},min:0,max:8}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.green}>Q3 2025 1.0% → Q1 2026 4.4% (+ 3.4pp) = 핵심 운영 지표 급반등. Q2 2026 목표 5~7% 달성 시 흑자 전환 가시화.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="Q3 2025 vs Q1 2026 비교">노후 재고 정상화</SectionTitle>
+      <div style={{height:200}}>
+        <CJSChart height={200} config={{
+          type:'bar', data:inventoryData,
+          options:{...darkOpts('%'), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`${v}%`},min:0,max:60}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.green}>노후 재고 51% → 10% = AI 가격 책정 정확도 개선 + 매각 속도 정상화 증거. 재고 부실화 위험 대폭 감소.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="Q2 2026 가이던스 vs 실적 경로">흑자 전환 로드맵</SectionTitle>
+      {[
+        {label:'Q2 2026 매출 가이던스', value:'~$900M (+25% QoQ)', color:C.teal, sub:'본격 매출 반등 신호'},
+        {label:'Q2 2026 기여마진 목표', value:'중간값 5~7%', color:C.green, sub:'지속 개선 추세'},
+        {label:'Q2 2026 조정 EBITDA', value:'손익분기 목표', color:C.green, sub:'12개월 선행 기준'},
+        {label:'2026 말 목표', value:'조정 순이익 흑자', color:C.purple, sub:'12개월 선행 기준'},
+        {label:'주택 시장 가정', value:'현 모기지 금리 유지', color:C.gold, sub:'주택 시장 회복 없이도 달성 목표'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.teal}>핵심 차별점: 주택 시장 회복 가정 없이도 흑자 전환 목표. 모기지 금리 인하 시 추가 상승 여력 생성 = 옵션 효과.</InfoBox>
+    </Card>
+  </>
+}
+
+function FinancialTab() {
+  return <>
+    <Card>
+      <SectionTitle sub="Goldman Sachs 펀더멘털 분석 · Q1 2026">핵심 재무 지표</SectionTitle>
+      {[
+        {label:'시가총액',value:'~$4.14B',color:C.text,sub:'주가 $4.85 기준'},
+        {label:'P/S 비율 (연간)',value:'~1.4x',color:C.green,sub:'$4.14B ÷ 연$2.88B — 저평가 가능'},
+        {label:'Q1 2026 매출',value:'$720M',color:C.orange,sub:'-37.6% YoY ($1.154B → $720M)'},
+        {label:'Q1 2026 순손실',value:'-$173M',color:C.red},
+        {label:'총 현금',value:'$999M',color:C.teal,sub:'운영 유동성 충분'},
+        {label:'총 재고 (집)',value:'$1.14B',color:C.text},
+        {label:'비소구 부채',value:'$1.14B',color:C.text,sub:'재고 대응 — 회사 전체 보증 아님'},
+        {label:'Q1 2026 총 이익률',value:'10.0%',color:C.teal,sub:'기여마진 4.4% 포함'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.teal}>P/S ~1.4x = 동종 온라인 부동산 기업 대비 저렴. 흑자 전환 이후 멀티플 재평가 기대. 단, 매출 YoY 감소는 단기 투자자 우려 요인.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="분기 매출 추이 + Q2 2026 가이던스">매출 & 전망</SectionTitle>
+      <div style={{height:230}}>
+        <CJSChart height={230} config={{
+          type:'bar', data:revenueData,
+          options:{...darkOpts('$M'), scales:{
+            x:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',font:{size:10}}},
+            y:{grid:{color:'#1e2d4560'},ticks:{color:'#7a90aa',callback:v=>`$${v}M`}}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.teal}>Q2 2026 가이던스 ~$900M (+25% QoQ) = 매출 반등 전환점. 파랑=과거 추정, 청록=최신 실적/가이던스.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="동종 기업 비교">경쟁사 레이더</SectionTitle>
+      <div style={{height:280}}>
+        <CJSChart height={280} config={{
+          type:'radar', data:radarData,
+          options:{plugins:{
+            legend:{display:true,labels:{color:'#7a90aa',boxWidth:10,font:{size:11}}},
+            tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}
+          },scales:{r:{grid:{color:'#1e2d45'},angleLines:{color:'#1e2d45'},pointLabels:{color:'#7a90aa',font:{size:11}},ticks:{color:'#7a90aa',backdropColor:'transparent'},suggestedMin:0,suggestedMax:100}}}
+        }}/>
+      </div>
+      <InfoBox color={C.teal}>OPEN = 운영 개선 가장 두드러짐. Zillow = 자금력 우위. Redfin = 균형형. 흑자 전환 시 밸류에이션 갭 해소 기대.</InfoBox>
+    </Card>
+  </>
+}
+
+function SentimentTab() {
+  const opinions = [
+    {src:'CEO Kasra Nejatian (내부자)', stance:'강세', color:C.green, opinion:'"자사주 10만주 $487,800 직접 매입 (5/12). 흑자 전환 로드맵에 대한 경영진의 실질적 베팅. iBuying 2.0 모델 확신."'},
+    {src:'RIS Media (5/8)', stance:'강세', color:C.green, opinion:'"기계가 작동하고 있다(The Machine Is Working). AI 가격 책정과 운영 효율화가 실제로 효과를 내고 있음. 2026 흑자 전환 목표 달성 가능."'},
+    {src:'Tradepal AI', stance:'강세', color:C.green, opinion:'"Opendoor는 2026년 가장 과소평가된 컴백 종목 중 하나. AI 주택 스택 + 흑자 전환 가이던스 = 시장이 아직 반영하지 못한 가치."'},
+    {src:'IndexBox (4/21)', stance:'강세', color:C.teal, opinion:'"4월 +11% 급등 — AI 주도 주택 플랫폼으로의 재조명. 노후 재고 정상화와 매입량 급증이 핵심 촉매."'},
+    {src:'Reddit 소셜 센티먼트', stance:'강세', color:C.teal, opinion:'"Q1 실적 후 급락 = 단기 홀더 쉐이크아웃. 장기 보유자들은 CEO 내부자 매수와 흑자 전환 가이던스를 신뢰 신호로 해석."'},
+    {src:'Simply Wall St', stance:'중립', color:C.gold, opinion:'"Q1 실적 발표 전 투자자 분위기 신중. 고금리·높은 집값·낮은 주택 수요가 iBuying 매출에 직접 부담. 모기지 금리 변화가 핵심 변수."'},
+    {src:'Motley Fool (12/2025)', stance:'중립', color:C.gold, opinion:'"2025년 +320% 급등 후 2026 재투자 여부 논란. 주택 시장 악화 위험을 감안하면 현재 밸류에이션은 선반영 수준."'},
+    {src:'WallStreetZen (애널리스트)', stance:'약세', color:C.red, opinion:'"1년 목표주가 $1.70. 현재 $4.85 = 65% 하락 잠재. 주택 수요 회복 없으면 매출·손익 지속 악화 가능."'},
+    {src:'Benzinga 컨센서스', stance:'약세', color:C.red, opinion:'"평균 목표가 $2.36 (일부 집계). 매출 -37.6% YoY는 구조적 문제 시사. 공매도 잔고 높음 — 기관의 부정적 시각 반영."'},
+  ]
+  return <>
+    <BullBox title="🟢 CEO 내부자 매수 — 시장 역발상 신호">
+      CEO Kasra Nejatian의 $487,800 자사주 매입은 경영진이 현재 주가를 저평가로 판단한다는 강력한 신호. 단, 애널리스트 컨센서스는 보수적 — 양면을 함께 검토 필요.
+    </BullBox>
+
+    <Card>
+      <SectionTitle sub="월가 애널리스트 컨센서스">기관 의견</SectionTitle>
+      {[
+        {label:'컨센서스 레이팅', value:'Hold / 혼조', color:C.gold, sub:'TipRanks: 1 Buy · 2 Hold · 1 Sell'},
+        {label:'평균 목표주가 (일부)', value:'$2.36~5.33', color:C.text, sub:'소스별 차이 큼 — 주택 시황 가정 의존'},
+        {label:'낙관적 목표가', value:'$8.00', color:C.green, sub:'흑자 전환 성공 시나리오'},
+        {label:'비관적 목표가', value:'$1.70', color:C.red, sub:'주택 시장 악화 시나리오'},
+        {label:'CEO 내부자 매수', value:'$487.8K', color:C.teal, sub:'5/12 100,000주 직접 매입'},
+        {label:'공매도 비율', value:'높음', color:C.red, sub:'쇼트 스퀴즈 잠재력 내재'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.gold}>목표가 범위 $1.70~$8.00 = 주택 시황 가정에 따라 밸류에이션이 크게 달라짐. 모기지 금리 인하가 게임 체인저.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="커뮤니티 & 기관 의견 종합">소셜 & 기관 센티먼트</SectionTitle>
+      {opinions.map((o,i) => (
+        <div key={i} style={{padding:'13px 0',borderBottom:i<opinions.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+            <span style={{color:C.text,fontSize:13,fontWeight:700,flex:1,paddingRight:8}}>{o.src}</span>
+            <Badge color={o.color}>{o.stance}</Badge>
+          </div>
+          <div style={{color:C.muted,fontSize:13,lineHeight:1.6}}>{o.opinion}</div>
+        </div>
+      ))}
+    </Card>
+  </>
+}
+
+function ConclusionTab() {
+  return <>
+    <Card style={{border:`2px solid ${C.teal}`}}>
+      <SectionTitle>종합 투자 의견</SectionTitle>
+      <div style={{display:'flex',gap:4,marginBottom:16}}>
+        {['강한 매도','매도','중립','매수','강한 매수'].map((label,i) => (
+          <div key={i} style={{flex:1,textAlign:'center',padding:'10px 4px',borderRadius:8,
+            background:i===2?C.gold+'30':'#1e2d45',
+            border:`2px solid ${i===2?C.gold:'#1e2d4500'}`,
+          }}>
+            <div style={{color:i===2?C.gold:C.muted,fontSize:10,fontWeight:i===2?900:400,lineHeight:1.3}}>{label}</div>
+            {i===2 && <div style={{color:C.gold,fontSize:16,marginTop:4}}>◉</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{color:C.gold,fontSize:18,fontWeight:900,marginBottom:12}}>중립 — 운영 개선 vs 기술적 약세 대치 구간</div>
+      <div style={{color:C.muted,fontSize:14,lineHeight:1.7}}>
+        Opendoor 2.0 운영 턴어라운드 + CEO 내부자 매수는 긍정적이나, 단기 기술적 지표(5일·50일 MA 하회)는 약세. $4.20~4.50 추가 조정 시 분할 매수 권고. Q2 2026 EBITDA 흑자 전환 확인 후 적극 매수로 업그레이드 가능.
+      </div>
+    </Card>
+
+    <Card>
+      <SectionTitle>🐂 Bull Case (상승 근거)</SectionTitle>
+      {[
+        'CEO 내부자 매수 $487.8K — 경영진의 명시적 저평가 판단 신호',
+        '기여마진 Q3 1% → Q1 4.4% (+3.4pp) — iBuying 2.0 AI 효과 검증',
+        '노후 재고 51% → 10% — 재고 건전화 = 미래 손실 리스크 대폭 감소',
+        '매입 건수 +45% QoQ — 2022년 이후 최고치 = 공격적 확장 재개',
+        'Q2 2026 EBITDA 손익분기 + 연말 순이익 흑자 전환 목표 — 구체적 로드맵',
+        'P/S ~1.4x — 동종 온라인 부동산 대비 저평가 수준',
+        '모기지 금리 인하 시 강력한 레버리지 효과 — 주택 수요 폭증 수혜',
+      ].map((r,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:i<6?`1px solid ${C.border}`:'none'}}>
+          <span style={{color:C.green,fontSize:16,flexShrink:0}}>✓</span>
+          <span style={{color:C.muted,fontSize:13,lineHeight:1.5}}>{r}</span>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle>🐻 Bear Case (하락 근거)</SectionTitle>
+      {[
+        '5일·50일·200일 MA 모두 하회 — 단기 기술적 약세 지속',
+        'Q1 2026 매출 -37.6% YoY ($1.154B → $720M) — 외형 축소',
+        '순손실 -$173M — 아직 수익화 미완',
+        '애널리스트 비관적 — 일부 목표가 $1.70 (현재가 대비 -65%)',
+        '고금리 지속 + 주택 거래량 위축 — iBuying 수요 직접 타격',
+        'ATH $10.87 대비 -55% — 추세 하락 구간',
+        '공매도 잔고 높음 — 기관 구조적 하락 베팅 지속',
+      ].map((r,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:i<6?`1px solid ${C.border}`:'none'}}>
+          <span style={{color:C.red,fontSize:16,flexShrink:0}}>✗</span>
+          <span style={{color:C.muted,fontSize:13,lineHeight:1.5}}>{r}</span>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle>실행 계획 (Action Plan)</SectionTitle>
+      {[
+        {label:'현재 포지션 (현재)', value:'관망', color:C.gold, sub:'MA 하회 — 즉시 진입 자제'},
+        {label:'1차 분할 매수', value:'$4.20~4.50', color:C.blue, sub:'CEO 매입가 부근 지지 확인 후 · 포트 1.5%'},
+        {label:'2차 분할 매수', value:'$3.50~3.80', color:C.blue, sub:'추가 조정 시 · 포트 1.5%'},
+        {label:'3차 매수 (추가)', value:'$2.80~3.20', color:C.blue, sub:'공황 조정 시 적극 매집 · 포트 1%'},
+        {label:'총 포지션 한도', value:'포트의 4%', color:C.gold, sub:'주택 시장 불확실성 = 리스크 관리'},
+        {label:'손절선', value:'$2.80 이탈', color:C.red, sub:'구조적 하락 확인 시 전량 청산'},
+        {label:'업그레이드 트리거', value:'Q2 EBITDA 달성', color:C.teal, sub:'달성 시 적극 매수로 전환'},
+        {label:'1차 익절', value:'$7.00~8.00', color:C.green, sub:'50% 청산 — ATH 복귀 초입'},
+        {label:'2차 익절', value:'$10.00+', color:C.purple, sub:'모기지 금리 인하 + 흑자 전환 시'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.cyan}>핵심 모니터링: ① Q2 2026 EBITDA 손익분기 달성 여부 ② 모기지 금리 변화 (인하 시 강력 촉매) ③ 분기 매입 건수 증가 추세 ④ 기여마진 5~7% 달성 ⑤ CEO 추가 내부자 매수 여부</InfoBox>
+    </Card>
+
+    <div style={{borderTop:`1px solid ${C.border}`,padding:'16px',textAlign:'center',marginTop:8}}>
+      <p style={{color:C.gray,fontSize:11,margin:0,lineHeight:1.7}}>
+        ⚠️ 교육 목적 분석 · 투자 권고 아님<br/>
+        분석 기준일: 2026년 5월 11일 · 현재가: $4.85<br/>
+        Morgan Stanley TA + Goldman Sachs FA + JPMorgan Earnings Framework
+      </p>
+    </div>
+  </>
+}
+
+/* ── 메인 ── */
+function App() {
+  const [tab, setTab] = useState('overview')
+  const tabs = [
+    {id:'overview', label:'📊 개요'},
+    {id:'tech',     label:'📈 기술적'},
+    {id:'ibuying',  label:'🏠 iBuying'},
+    {id:'fund',     label:'💰 재무'},
+    {id:'sent',     label:'💬 센티먼트'},
+    {id:'conclude', label:'🎯 결론'},
+  ]
+  return (
+    <div style={{background:C.darkBg,minHeight:'100vh',color:C.text}}>
+      {/* 헤더 */}
+      <div style={{background:'linear-gradient(180deg,#001a18 0%,#0a0f1e 100%)',padding:'20px 16px 22px'}}>
+        <a href="https://disntm90.github.io/disntm90/" style={{display:'inline-flex',alignItems:'center',gap:6,color:'#7a90aa',fontSize:12,textDecoration:'none',marginBottom:14,padding:'5px 10px',background:'#1e2d45',borderRadius:6}}>← 목록으로</a>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+          <div style={{background:C.teal+'20',border:`2px solid ${C.teal}`,borderRadius:10,padding:'6px 14px'}}>
+            <span style={{color:C.teal,fontWeight:900,fontSize:22,letterSpacing:1}}>OPEN</span>
+          </div>
+          <div>
+            <div style={{fontWeight:800,fontSize:17,lineHeight:1.2}}>Opendoor Technologies</div>
+            <div style={{color:C.muted,fontSize:12,marginTop:3}}>iBuying · AI 주택 플랫폼 · NASDAQ</div>
+          </div>
+        </div>
+        <div style={{display:'flex',flexWrap:'wrap',marginBottom:16}}>
+          <Badge color={C.green}>CEO 내부자 매수 🟢</Badge>
+          <Badge color={C.teal}>EBITDA 흑자 전환 목표</Badge>
+          <Badge color={C.red}>MA 하회 (단기 약세)</Badge>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+          {[
+            {label:'현재가', value:'$4.85', sub:'ATH -55%', color:C.teal},
+            {label:'52주 고점', value:'$10.87', sub:'', color:C.green},
+            {label:'52주 저점', value:'$0.508', sub:'', color:C.red},
+            {label:'Q1 매입', value:'+45% QoQ', sub:'2022 이후 최고', color:C.green},
+            {label:'기여마진', value:'4.4%', sub:'+3.4pp QoQ', color:C.teal},
+            {label:'현금', value:'$999M', sub:'충분한 유동성', color:C.teal},
+          ].map((s,i) => (
+            <div key={i} style={{background:C.cardBg,border:`1px solid ${C.border}`,borderRadius:12,padding:'11px 8px',textAlign:'center'}}>
+              <div style={{color:s.color,fontSize:i===3||i===4?13:18,fontWeight:900,lineHeight:1}}>{s.value}</div>
+              <div style={{color:C.muted,fontSize:10,marginTop:4}}>{s.label}</div>
+              {s.sub && <div style={{color:s.color+'bb',fontSize:10,marginTop:2}}>{s.sub}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 탭바 */}
+      <div style={{borderBottom:`1px solid ${C.border}`,background:C.cardBg,overflowX:'auto',whiteSpace:'nowrap',WebkitOverflowScrolling:'touch'}}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            display:'inline-block',background:'none',
+            color:tab===t.id?C.teal:C.muted,
+            border:'none',borderBottom:tab===t.id?`3px solid ${C.teal}`:'3px solid transparent',
+            padding:'13px 16px',fontSize:12,fontWeight:700,cursor:'pointer',
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* 콘텐츠 */}
+      <div style={{padding:'16px',maxWidth:600,margin:'0 auto'}}>
+        {tab==='overview' && <OverviewTab/>}
+        {tab==='tech'     && <TechTab/>}
+        {tab==='ibuying'  && <IBuyingTab/>}
+        {tab==='fund'     && <FinancialTab/>}
+        {tab==='sent'     && <SentimentTab/>}
+        {tab==='conclude' && <ConclusionTab/>}
+      </div>
+    </div>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>)
+</script>
+</body>
+</html>

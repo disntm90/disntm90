@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>주식 분석 인덱스 · disntm90</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;font-family:system-ui,-apple-system,sans-serif;color:#f1f5f9;min-height:100vh}
+
+    header{background:linear-gradient(180deg,#0d1f3d 0%,#0a0f1e 100%);padding:28px 20px 24px}
+    h1{font-size:21px;font-weight:900;line-height:1.2}
+    .subtitle{color:#7a90aa;font-size:13px;margin-top:6px}
+
+    #list{padding:16px;max-width:600px;margin:0 auto}
+
+    .stats{display:flex;gap:10px;margin-bottom:20px}
+    .stat{background:#141b2d;border:1px solid #1e2d45;border-radius:10px;padding:10px 14px;flex:1;text-align:center}
+    .stat-val{font-size:18px;font-weight:900;color:#f1f5f9}
+    .stat-label{font-size:11px;color:#7a90aa;margin-top:3px}
+
+    .header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .section-label{font-size:13px;font-weight:700;color:#7a90aa}
+
+    .card{
+      display:block;background:#141b2d;border:1px solid #1e2d45;border-radius:16px;
+      padding:18px 16px;margin-bottom:12px;text-decoration:none;color:inherit;
+      transition:border-color .15s,transform .15s;
+    }
+    .card:hover{border-color:#06b6d480;transform:translateY(-1px)}
+    .card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .ticker{font-size:22px;font-weight:900;letter-spacing:1px}
+    .date-chip{background:#1e2d45;border-radius:8px;padding:4px 10px;font-size:12px;color:#7a90aa;font-family:monospace;white-space:nowrap}
+    .card-bottom{display:flex;justify-content:space-between;align-items:center}
+    .card-label{color:#7a90aa;font-size:13px}
+    .view-btn{
+      background:transparent;border:1px solid #1e2d45;border-radius:8px;
+      color:#7a90aa;padding:6px 14px;font-size:12px;font-weight:700;
+      cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s;
+    }
+    .card:hover .view-btn{border-color:#06b6d4;color:#06b6d4}
+
+    .refresh-btn{
+      display:inline-flex;align-items:center;gap:5px;
+      background:transparent;border:1px solid #1e2d45;border-radius:8px;
+      color:#7a90aa;padding:7px 13px;font-size:12px;font-weight:700;
+      cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s;
+    }
+    .refresh-btn:hover{border-color:#06b6d4;color:#06b6d4}
+
+    .center{text-align:center;padding:60px 20px}
+    .spinner{
+      width:32px;height:32px;border:3px solid #1e2d45;border-top-color:#06b6d4;
+      border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{color:#7a90aa;font-size:14px}
+    .error-text{color:#ef4444;font-size:14px;line-height:1.7}
+
+    footer{border-top:1px solid #1e2d45;text-align:center;padding:20px;color:#6b7280;font-size:11px;line-height:1.8;margin-top:8px}
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+    <div style="background:#06b6d420;border:2px solid #06b6d4;border-radius:10px;padding:8px 14px;font-size:20px">📊</div>
+    <div>
+      <h1>주식 분석 인덱스</h1>
+      <p class="subtitle">분석 종목 목록 · GitHub Pages 자동 동기화</p>
+    </div>
+  </div>
+</header>
+
+<div id="list">
+  <div class="center">
+    <div class="spinner"></div>
+    <div class="loading-text">분석 목록 불러오는 중…</div>
+  </div>
+</div>
+
+<footer>
+  ⚠️ 교육 목적 분석 · 투자 권고 아님<br>
+  신규 종목 분석 시 자동으로 목록에 추가됩니다
+</footer>
+
+<script>
+const OWNER = 'disntm90';
+const REPO  = 'disntm90';
+const BASE  = 'https://disntm90.github.io/disntm90/';
+const API   = `https://api.github.com/repos/${OWNER}/${REPO}/contents/?ref=gh-pages`;
+const CACHE_KEY = 'idx_v1';
+const CACHE_TTL = 5 * 60 * 1000;
+
+// {ticker}-{YYYYMMDD}.html 또는 {ticker}-{YYYYMMDD}-v2.html
+const FILE_RE = /^([a-zA-Z]+)-(\d{8})(-v\d+)?\.html$/;
+
+const PALETTE = ['#06b6d4','#22c55e','#f59e0b','#a855f7','#f97316','#3b82f6','#ec4899'];
+const tickerColor = t => PALETTE[
+  [...t].reduce((s,c) => s + c.charCodeAt(0), 0) % PALETTE.length
+];
+
+function fmtDate(d) {
+  return `${d.slice(0,4)}년 ${+d.slice(4,6)}월 ${+d.slice(6,8)}일`;
+}
+
+function processFiles(files) {
+  return files
+    .filter(f => f.type === 'file' && FILE_RE.test(f.name))
+    .map(f => {
+      const [, ticker, date, ver = ''] = FILE_RE.exec(f.name);
+      return { ticker: ticker.toUpperCase(), date, ver, filename: f.name };
+    })
+    .sort((a, b) =>
+      a.date !== b.date ? b.date.localeCompare(a.date) : a.ticker.localeCompare(b.ticker)
+    );
+}
+
+function render(items) {
+  const el = document.getElementById('list');
+
+  if (!items.length) {
+    el.innerHTML = '<div class="center"><div class="loading-text">분석된 종목이 없습니다.</div></div>';
+    return;
+  }
+
+  const uniqTickers = new Set(items.map(i => i.ticker)).size;
+  const latestDate  = items[0] ? fmtDate(items[0].date) : '-';
+
+  const stats = `
+    <div class="stats">
+      <div class="stat"><div class="stat-val">${items.length}</div><div class="stat-label">총 분석 수</div></div>
+      <div class="stat"><div class="stat-val">${uniqTickers}</div><div class="stat-label">종목 수</div></div>
+      <div class="stat" style="flex:2"><div class="stat-val" style="font-size:14px;line-height:1.3">${latestDate}</div><div class="stat-label">최근 분석</div></div>
+    </div>`;
+
+  const headerRow = `
+    <div class="header-row">
+      <span class="section-label">전체 ${items.length}건 · 최신순</span>
+      <button class="refresh-btn" onclick="load(true)">↺ 새로고침</button>
+    </div>`;
+
+  const cards = items.map(d => {
+    const color = tickerColor(d.ticker);
+    const verTag = d.ver
+      ? `<span style="color:#7a90aa;font-size:13px;font-weight:400">${d.ver}</span>`
+      : '';
+    return `
+      <a href="${BASE}${d.filename}" class="card" target="_blank" rel="noopener noreferrer">
+        <div class="card-top">
+          <span class="ticker" style="color:${color}">${d.ticker}${verTag}</span>
+          <span class="date-chip">${fmtDate(d.date)}</span>
+        </div>
+        <div class="card-bottom">
+          <span class="card-label">📈 인터랙티브 분석 대시보드</span>
+          <button class="view-btn">분석 보기 →</button>
+        </div>
+      </a>`;
+  }).join('');
+
+  el.innerHTML = stats + headerRow + cards;
+}
+
+async function load(force = false) {
+  const el = document.getElementById('list');
+
+  if (!force) {
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { data, ts } = JSON.parse(cached);
+        if (Date.now() - ts < CACHE_TTL) { render(data); return; }
+      }
+    } catch (_) {}
+  }
+
+  el.innerHTML = '<div class="center"><div class="spinner"></div><div class="loading-text">목록 불러오는 중…</div></div>';
+
+  try {
+    const res = await fetch(API, {
+      headers: { Accept: 'application/vnd.github.v3+json' }
+    });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const files = await res.json();
+    const data  = processFiles(files);
+    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch (_) {}
+    render(data);
+  } catch (err) {
+    el.innerHTML = `
+      <div class="center">
+        <div class="error-text">⚠️ 목록 로딩 실패<br>
+          <small style="color:#7a90aa">${err.message}</small>
+        </div>
+        <br>
+        <button class="refresh-btn" style="margin:0 auto" onclick="load(true)">↺ 다시 시도</button>
+      </div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

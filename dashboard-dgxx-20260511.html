@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DGXX 분석 — 2026.05.11</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#0a0f1e;font-family:system-ui,-apple-system,sans-serif;color:#f1f5f9}
+    h1,h2{margin:0}
+    button{font-family:inherit}
+    canvas{display:block}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useRef, useEffect } = React
+
+const C = {
+  green:'#22c55e', red:'#ef4444', yellow:'#f59e0b',
+  blue:'#3b82f6', gray:'#6b7280',
+  darkBg:'#0a0f1e', cardBg:'#141b2d', border:'#1e2d45',
+  text:'#f1f5f9', muted:'#7a90aa', cyan:'#06b6d4',
+  orange:'#f97316', purple:'#a855f7',
+}
+
+function CJSChart({ config, height=220 }) {
+  const ref = useRef(null), inst = useRef(null)
+  useEffect(() => {
+    if (inst.current) inst.current.destroy()
+    inst.current = new Chart(ref.current, config)
+    return () => inst.current?.destroy()
+  }, [])
+  return <canvas ref={ref} style={{width:'100%',maxHeight:height}} height={height}/>
+}
+
+const Card = ({children,style={}}) => (
+  <div style={{background:C.cardBg,border:`1px solid ${C.border}`,borderRadius:16,padding:'20px 16px',marginBottom:14,...style}}>
+    {children}
+  </div>
+)
+const Badge = ({children,color=C.blue}) => (
+  <span style={{background:color+'20',color,border:`1px solid ${color}44`,borderRadius:6,padding:'3px 10px',fontSize:12,fontWeight:700,display:'inline-block'}}>
+    {children}
+  </span>
+)
+const SectionTitle = ({children,sub}) => (
+  <div style={{marginBottom:16}}>
+    <h2 style={{color:C.text,fontSize:17,fontWeight:800,margin:0,lineHeight:1.3}}>{children}</h2>
+    {sub && <p style={{color:C.muted,fontSize:12,margin:'5px 0 0',lineHeight:1.5}}>{sub}</p>}
+  </div>
+)
+const Row = ({label,value,color=C.text,sub}) => (
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'12px 0',borderBottom:`1px solid ${C.border}`}}>
+    <div>
+      <div style={{color:C.muted,fontSize:13}}>{label}</div>
+      {sub && <div style={{color:C.gray,fontSize:11,marginTop:2}}>{sub}</div>}
+    </div>
+    <span style={{color,fontWeight:800,fontSize:15,textAlign:'right',marginLeft:8}}>{value}</span>
+  </div>
+)
+const InfoBox = ({children,color=C.blue}) => (
+  <div style={{background:color+'15',border:`1px solid ${color}40`,borderRadius:10,padding:'12px 14px',marginTop:12}}>
+    <p style={{color,fontSize:13,margin:0,lineHeight:1.6,fontWeight:500}}>{children}</p>
+  </div>
+)
+const WarnBox = ({children}) => (
+  <div style={{background:'#ef444420',border:'2px solid #ef4444',borderRadius:12,padding:'14px 16px',marginBottom:14}}>
+    <div style={{color:'#ef4444',fontWeight:900,fontSize:14,marginBottom:4}}>⚠️ 과매수 경고 (Overbought Alert)</div>
+    <p style={{color:'#fca5a5',fontSize:13,margin:0,lineHeight:1.6}}>{children}</p>
+  </div>
+)
+
+/* ── 데이터 ── */
+const priceData = {
+  labels:["'25 Q3","'25 Q4","'26 Q1 저","'26 Apr","'26 May 초","현재"],
+  datasets:[{
+    label:'주가 ($)', data:[2.1,1.8,1.16,2.30,5.50,6.63],
+    borderColor:'#06b6d4', backgroundColor:'#06b6d425',
+    fill:true, tension:0.35, pointRadius:4, borderWidth:2.5,
+  }]
+}
+
+const revenueData = {
+  labels:['FY2023','FY2024','FY2025','FY2026E'],
+  datasets:[
+    {label:'매출 ($M)', data:[38.5,37.0,34.2,54.5], backgroundColor:'#22c55e80', borderColor:'#22c55e', borderWidth:1.5, borderRadius:6},
+    {label:'순손실 ($M)', data:[-18.0,-22.0,-28.4,-15.0], backgroundColor:'#ef444480', borderColor:'#ef4444', borderWidth:1.5, borderRadius:6},
+  ]
+}
+
+const dealData = {
+  labels:['현재 시가총액','Cerebras 계약 (기본)','Cerebras 계약 (갱신 포함)'],
+  datasets:[{
+    data:[450,1100,2500],
+    backgroundColor:['#3b82f6','#06b6d4','#22c55e'],
+    borderWidth:0,
+  }]
+}
+
+const radarData = {
+  labels:['성장 잠재력','재무 안정성','기술 경쟁력','계약 안정성','희석 리스크','실행 역량'],
+  datasets:[
+    {label:'DGXX', data:[90,20,70,75,30,55],
+      borderColor:'#06b6d4', backgroundColor:'#06b6d425', borderWidth:2, pointRadius:3},
+    {label:'IREN', data:[75,65,80,80,70,85],
+      borderColor:'#f97316', backgroundColor:'#f9731620', borderWidth:2, pointRadius:3},
+    {label:'CORZ', data:[70,60,75,90,65,90],
+      borderColor:'#a855f7', backgroundColor:'#a855f720', borderWidth:2, pointRadius:3},
+  ]
+}
+
+const earningsData = {
+  labels:['Q1 25','Q2 25','Q3 25','Q4 25'],
+  datasets:[
+    {label:'EPS 예상', data:[-0.08,-0.07,-0.09,-0.11], backgroundColor:'#3b82f680', borderRadius:4},
+    {label:'EPS 실제', data:[-0.09,-0.08,-0.10,-0.33], backgroundColor:'#ef444480', borderRadius:4},
+  ]
+}
+
+const darkOpts = (yFmt='$', legend=false) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{
+    legend:{display:legend, labels:{color:'#7a90aa', boxWidth:12, font:{size:11}}},
+    tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}
+  },
+  scales:{
+    x:{grid:{color:'#1e2d4580'},ticks:{color:'#7a90aa',font:{size:11}}},
+    y:{grid:{color:'#1e2d4580'},ticks:{color:'#7a90aa',font:{size:11},
+      callback:yFmt==='$M'?v=>`$${v}M`:yFmt==='$'?v=>`$${v}`:v=>v}}
+  }
+})
+
+/* ── 탭 내용 ── */
+function OverviewTab() {
+  return <>
+    <WarnBox>RSI 86 — 주봉 기준 강한 과매수. YTD 저점 대비 +190% 급등 후 단기 조정 리스크 높음. 현재가($6.63) 신규 진입보다 $5.50~5.70 조정 후 매수 권고.</WarnBox>
+
+    <Card>
+      <SectionTitle sub="Digi Power X Inc. · NASDAQ: DGXX">기업 개요</SectionTitle>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:16}}>
+        <Badge color={C.cyan}>AI 데이터센터</Badge>
+        <Badge color={C.orange}>에너지 인프라</Badge>
+        <Badge color={C.yellow}>BTC 채굴</Badge>
+        <Badge color={C.red}>소형주 (Micro-cap)</Badge>
+      </div>
+      {[
+        {label:'현재가',value:'$6.63',color:C.cyan},
+        {label:'52주 저점',value:'$1.16',color:C.red},
+        {label:'52주 고점',value:'$6.78',color:C.green},
+        {label:'시가총액',value:'$450.8M',color:C.text},
+        {label:'YTD 수익률',value:'+190%',color:C.green,sub:'저점($2.30) 대비'},
+        {label:'RSI (14)',value:'86 ⚠️',color:C.red,sub:'70 초과 = 과매수 위험'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="2025 Q3 ~ 현재">주가 흐름</SectionTitle>
+      <div style={{height:200}}>
+        <CJSChart height={200} config={{
+          type:'line', data:priceData,
+          options:{...darkOpts('$'), scales:{
+            x:{grid:{color:'#1e2d4580'},ticks:{color:'#7a90aa',font:{size:10}}},
+            y:{grid:{color:'#1e2d4580'},ticks:{color:'#7a90aa',callback:v=>`$${v}`},min:0,max:8}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.orange}>빨간 점 = RSI 86 과매수 구간 진입. $6.78 저항선(52주 고점) 돌파 여부가 관건.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="핵심 딜 vs 현재 시가총액">Cerebras 계약 가치 비교</SectionTitle>
+      <div style={{height:200,display:'flex',justifyContent:'center'}}>
+        <div style={{width:200,height:200}}>
+          <CJSChart height={200} config={{
+            type:'doughnut', data:dealData,
+            options:{cutout:'55%',plugins:{
+              legend:{display:true,position:'bottom',labels:{color:'#7a90aa',boxWidth:10,font:{size:10}}},
+              tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9',callbacks:{label:ctx=>`${ctx.label}: $${ctx.raw}M`}}
+            }}
+          }}/>
+        </div>
+      </div>
+      <InfoBox color={C.green}>Cerebras 갱신 포함 $2.5B = 현재 시총($450M)의 5.5배. 딜 실현 시 극단적 저평가.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="10년 $1.1B → $2.5B 포함">Cerebras 딜 타임라인</SectionTitle>
+      {[
+        {date:'2026.05',event:'Cerebras AI 코로케이션 계약 체결',type:'pos'},
+        {date:'2026.12.15',event:'Phase 1 (15MW) Ready-for-Service 목표',type:'pos'},
+        {date:'2027 Q1',event:'전체 40MW 풀 가동 목표',type:'pos'},
+        {date:'2027~',event:'400MW 파이프라인 추가 개발',type:'pos'},
+        {date:'2028+',event:'GPU-as-a-Service 연 $282M 런레이트 목표',type:'pos'},
+      ].map((c,i) => (
+        <div key={i} style={{display:'flex',alignItems:'flex-start',gap:12,padding:'11px 0',borderBottom:i<4?`1px solid ${C.border}`:'none'}}>
+          <div style={{width:8,height:8,borderRadius:'50%',marginTop:5,flexShrink:0,background:C.green,boxShadow:`0 0 6px ${C.green}`}}/>
+          <div style={{flex:1}}>
+            <div style={{color:C.muted,fontSize:11,fontFamily:'monospace',marginBottom:2}}>{c.date}</div>
+            <div style={{color:C.text,fontSize:14,fontWeight:600,lineHeight:1.4}}>{c.event}</div>
+          </div>
+        </div>
+      ))}
+    </Card>
+  </>
+}
+
+function TechTab() {
+  const signals = [
+    {label:'RSI (14)',value:'86',signal:'🔴 강한 과매수',color:C.red,desc:'70 초과 = 과매수 경계'},
+    {label:'52주 저점 대비',value:'+472%',signal:'🔴 과열 구간',color:C.red,desc:'$1.16 → $6.63'},
+    {label:'YTD 저점 대비',value:'+190%',signal:'⚠️ 단기 급등',color:C.yellow,desc:'$2.30 → $6.63'},
+    {label:'52주 고점까지',value:'-$0.15',signal:'🟡 고점 근접',color:C.yellow,desc:'$6.78 벽 돌파 필요'},
+    {label:'추세 (주봉)',value:'상승',signal:'🟢 상승 추세 유지',color:C.green,desc:'연속 양봉'},
+    {label:'거래량',value:'급증',signal:'🟢 강한 모멘텀',color:C.green,desc:'Cerebras 딜 이후'},
+  ]
+  return <>
+    <WarnBox>주봉 하이킨아시 연속 양봉 + RSI 86 = 과매수. 기술적으로 현재 진입은 불리. $5.50~5.70 지지선 재확인 후 진입 권고.</WarnBox>
+
+    <Card>
+      <SectionTitle sub="Morgan Stanley 기술적 분석">핵심 기술 지표</SectionTitle>
+      {signals.map((s,i) => (
+        <div key={i} style={{padding:'12px 0',borderBottom:i<signals.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+            <div>
+              <span style={{color:C.muted,fontSize:13}}>{s.label}</span>
+              <div style={{color:C.gray,fontSize:11,marginTop:2}}>{s.desc}</div>
+            </div>
+            <span style={{color:s.color,fontWeight:900,fontSize:15}}>{s.value}</span>
+          </div>
+          <div style={{color:s.color,fontSize:12,fontWeight:700}}>{s.signal}</div>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="지지선 & 저항선">진입·청산 포인트</SectionTitle>
+      {[
+        {label:'2차 저항선 (목표)', value:'$9.00~12.00', color:C.purple, sub:'400MW 파이프라인 실현 시'},
+        {label:'1차 저항선 (목표)', value:'$7.00', color:C.green, sub:'애널리스트 최대 목표가'},
+        {label:'현재가', value:'$6.63 ◀', color:C.cyan, sub:'2026.05.11 기준'},
+        {label:'52주 고점 (벽)', value:'$6.78', color:C.yellow, sub:'돌파 시 새 모멘텀'},
+        {label:'1차 지지선 (매수구간)', value:'$5.50~5.70', color:C.blue, sub:'최근 딥 반등 확인'},
+        {label:'2차 지지선 (조정 매수)', value:'$4.50~5.00', color:C.blue, sub:'강한 조정 시'},
+        {label:'손절선', value:'$3.00', color:C.red, sub:'이탈 시 전량 청산'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="하이킨아시 (Heikin-Ashi) 신호">추세 & 패턴</SectionTitle>
+      <div style={{background:'#ef444415',border:'1px solid #ef444440',borderRadius:10,padding:'14px'}}>
+        <div style={{color:C.red,fontWeight:800,fontSize:14,marginBottom:8}}>🔴 과매수 구간 — 조정 대기</div>
+        <div style={{color:'#fca5a5',fontSize:13,lineHeight:1.7}}>
+          • 일봉: 연속 양봉 7~8일 지속 → 단기 과열<br/>
+          • 주봉: 연속 양봉 3~4주 → 추세 강하나 피로도 누적<br/>
+          • 다음 조정 목표: $5.50~5.70 (1차 지지선)<br/>
+          • RSI 70 이하 복귀 후 재진입 신호 탐색
+        </div>
+      </div>
+      <InfoBox color={C.cyan}>기술적 패턴: 파라볼릭 랠리(Parabolic Rally) 후 깃발형 조정(Bull Flag) 형성 중. 조정 후 $7+ 재시도 가능.</InfoBox>
+    </Card>
+  </>
+}
+
+function FundamentalTab() {
+  return <>
+    <Card>
+      <SectionTitle sub="Goldman Sachs 펀더멘털 분석">핵심 재무 지표</SectionTitle>
+      {[
+        {label:'PER (주가수익비율)', value:'N/A', color:C.gray, sub:'적자 기업 — 산출 불가'},
+        {label:'Forward PER', value:'N/A', color:C.gray, sub:'2026E EPS: -$0.18 (적자)'},
+        {label:'P/S (현재)', value:'13.2x', color:C.yellow, sub:'시총$450M ÷ 매출$34M'},
+        {label:'Forward P/S', value:'8.3x', color:C.green, sub:'시총$450M ÷ 예상매출$54.5M'},
+        {label:'시가총액', value:'$450.8M', color:C.text},
+        {label:'TTM 매출', value:'$34.2M', color:C.text},
+        {label:'순손실 (2025)', value:'-$28.4M', color:C.red},
+        {label:'Adj. EBITDA (2025)', value:'-$3.2M', color:C.orange, sub:'손실 축소 중'},
+        {label:'현금 소각률', value:'연 ~$28M', color:C.red, sub:'추가 조달 필요'},
+        {label:'ATM 희석 규모', value:'$175M', color:C.red, sub:'시총 대비 39% 잠재 희석'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.yellow}>PER 기준 투자 가치: 적자 기업으로 전통적 PER 평가 불가. Forward P/S 8.3x는 AI 인프라 성장주 대비 합리적 수준. Cerebras 가동(2027 Q1) 시 연 $110M+ 매출 → P/S 4.1x로 급락 = 성장 실현 시 저평가.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="연간 매출 & 손실 ($M)">재무 성과 추이</SectionTitle>
+      <div style={{height:230}}>
+        <CJSChart height={230} config={{
+          type:'bar', data:revenueData,
+          options:{...darkOpts('$M', true), scales:{
+            x:{grid:{color:'#1e2d4580'},ticks:{color:'#7a90aa',font:{size:11}}},
+            y:{grid:{color:'#1e2d4580'},ticks:{color:'#7a90aa',callback:v=>`$${v}M`}}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.green}>2026E 매출 $54.5M (+59% YoY) — Cerebras 가동 전 기존 채굴·전력 매출만으로도 성장 기대.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="분기별 EPS 예상 vs 실제">실적 서프라이즈</SectionTitle>
+      <div style={{height:200}}>
+        <CJSChart height={200} config={{
+          type:'bar', data:earningsData,
+          options:{...darkOpts('$', true), scales:{
+            x:{grid:{color:'#1e2d4580'},ticks:{color:'#7a90aa',font:{size:11}}},
+            y:{grid:{color:'#1e2d4580'},ticks:{color:'#7a90aa',callback:v=>`$${v}`}}
+          }}
+        }}/>
+      </div>
+      <InfoBox color={C.red}>Q4 2025: EPS -$0.33 (예상 -$0.11 대비 -200% 미스). 실행 역량 의문 제기됨.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="사업 부문별 현황">매출 구조 (추정)</SectionTitle>
+      {[
+        {label:'암호화폐 채굴', value:'~60%', color:C.yellow, sub:'BTC 직접 채굴'},
+        {label:'전력·전기 판매', value:'~25%', color:C.blue, sub:'잉여 전력 매각'},
+        {label:'코로케이션 서비스', value:'~15%', color:C.green, sub:'AI/HPC → 급성장 중'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.cyan}>Cerebras 계약 가동 후 코로케이션 비중 60~70%로 역전 예상 → 고마진 사업 전환.</InfoBox>
+    </Card>
+  </>
+}
+
+function SentimentTab() {
+  const opinions = [
+    {src:'Stocktwits 커뮤니티', stance:'강세', color:C.green, opinion:'"Cerebras IPO 연계 플레이. $2.5B 잠재 계약 vs $450M 시총 — 밸류에이션 갭이 너무 크다. 딜 실현되면 10배 종목."'},
+    {src:'Invezz 분석가', stance:'강세', color:C.green, opinion:'"Digi Power X가 이미 부지·변전소·계통 연계를 확보한 점이 핵심. 경쟁사가 2~3년 걸릴 인허가를 이미 통과. 구조적 해자."'},
+    {src:'ts2.space 애널리스트', stance:'강세', color:C.green, opinion:'"Alabama Power와의 계통 연계 완료 = 실질적 진입 장벽. 전력 부족 시대에 그리드 연결 완료 기업은 희소가치."'},
+    {src:'TipRanks 컨센서스', stance:'강세', color:C.green, opinion:'"Strong Buy. 목표주가 최대 $7.00. 단 커런트 레벨에선 업사이드 5.6%만 남은 상황."'},
+    {src:'StockInvest', stance:'중립', color:C.yellow, opinion:'"긍정 신호 다수 존재하지만 매수 후보로 보기에는 부족. 현 수준에서는 홀드(Hold) 권고. 추가 조정 후 재진입 고려."'},
+    {src:'TimothySykes', stance:'중립', color:C.yellow, opinion:'"DGXX는 전형적인 페니스탁 모멘텀 플레이. 추세 추종 트레이더용. 장기 투자자에겐 리스크 과대. 규율 있는 트레이더에겐 기회."'},
+    {src:'StocksToTrade', stance:'중립', color:C.yellow, opinion:'"소형주 모멘텀의 교과서 사례. RSI 과열로 숨 고르기 필요. 조정 시 지지선 $5.50 지켜지는지가 핵심."'},
+    {src:'투자 커뮤니티 공통 우려', stance:'약세', color:C.red, opinion:'"ATM $175M은 시총($450M) 대비 39% 잠재 희석. 주가 오를 때마다 물량 출회. 상한선 구조적 형성 우려."'},
+    {src:'리스크 분석', stance:'약세', color:C.red, opinion:'"Cerebras는 비상장. IPO 지연·취소 시 계약 조건 변경 가능. 딜이 DGXX의 전부인 만큼 단일 이벤트 의존도 과도."'},
+    {src:'Q4 실적 반응', stance:'약세', color:C.red, opinion:'"Q4 EPS -$0.33 (예상 -$0.11). 실행 역량에 의문. 화려한 딜보다 분기 실적 실행력이 중요하다는 지적 많음."'},
+  ]
+  return <>
+    <Card>
+      <SectionTitle sub="애널리스트 컨센서스">기관 의견</SectionTitle>
+      {[
+        {label:'애널리스트 수', value:'2명', color:C.text},
+        {label:'컨센서스 레이팅', value:'Strong Buy', color:C.green},
+        {label:'최대 목표주가', value:'$7.00', color:C.green, sub:'현재가 대비 +5.6%'},
+        {label:'현재 업사이드', value:'+5.6%', color:C.yellow, sub:'고점 근접으로 여유 제한적'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.yellow}>애널리스트 커버리지 2명 — 매우 적음. 소형주 특성상 기관 분석 부족. 독립적 판단 필수.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="X · Reddit · Stocktwits 현업 의견 10선">소셜 센티먼트</SectionTitle>
+      {opinions.map((o,i) => (
+        <div key={i} style={{padding:'14px 0',borderBottom:i<opinions.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+            <span style={{color:C.text,fontSize:13,fontWeight:700}}>{o.src}</span>
+            <Badge color={o.color}>{o.stance}</Badge>
+          </div>
+          <div style={{color:C.muted,fontSize:13,lineHeight:1.6}}>{o.opinion}</div>
+        </div>
+      ))}
+    </Card>
+  </>
+}
+
+function CompareTab() {
+  const peers = [
+    {ticker:'DGXX',name:'Digi Power X',ps:'13.2x',mkt:'$450M',특징:'AI 코로케이션 신규 진입',color:C.cyan},
+    {ticker:'CORZ',name:'Core Scientific',ps:'N/A',mkt:'~$2.5B',특징:'AI 코로케이션 선도',color:C.orange},
+    {ticker:'IREN',name:'Iris Energy',ps:'~6x',mkt:'~$1.8B',특징:'BTC→AI 전환 성공 사례',color:C.purple},
+    {ticker:'MARA',name:'Marathon Digital',ps:'~8x',mkt:'~$4.5B',특징:'대형 BTC 채굴 대장',color:C.yellow},
+    {ticker:'HUT',name:'Hut 8 Mining',ps:'~5x',mkt:'~$800M',특징:'BTC+AI 하이브리드',color:C.green},
+    {ticker:'WULF',name:'TeraWulf',ps:'~7x',mkt:'~$600M',특징:'원자력 기반 그린 채굴',color:C.blue},
+  ]
+  const snsPeers = [
+    {ticker:'IREN',reason:'DGXX의 롤모델. BTC→AI 전환 성공. X에서 항상 함께 언급'},
+    {ticker:'CORZ',reason:'AI 코로케이션 시장 선도. 하이퍼스케일러 직계약 사례'},
+    {ticker:'CIFR',reason:'채굴→AI 전환 기대주로 Reddit 자주 등장'},
+    {ticker:'BE',reason:'데이터센터 전력 솔루션. AI 인프라 전력 섹터 연동'},
+    {ticker:'GEV',reason:'AI 전력 인프라 수혜. 83GW 가스터빈 백로그'},
+  ]
+  return <>
+    <Card>
+      <SectionTitle sub="6개 항목 정성 평가">DGXX vs 경쟁사 레이더</SectionTitle>
+      <div style={{height:280}}>
+        <CJSChart height={280} config={{
+          type:'radar', data:radarData,
+          options:{plugins:{legend:{display:true,labels:{color:'#7a90aa',boxWidth:10,font:{size:11}}},tooltip:{backgroundColor:'#0a0f1e',borderColor:'#1e2d45',borderWidth:1,titleColor:'#7a90aa',bodyColor:'#f1f5f9'}},scales:{r:{grid:{color:'#1e2d45'},angleLines:{color:'#1e2d45'},pointLabels:{color:'#7a90aa',font:{size:11}},ticks:{color:'#7a90aa',backdropColor:'transparent'},suggestedMin:0,suggestedMax:100}}}
+        }}/>
+      </div>
+      <InfoBox color={C.cyan}>DGXX: 성장 잠재력 업계 최고 수준이나 재무 안정성·실행 역량 취약. 딜 실현 시 빠르게 격차 좁힐 수 있음.</InfoBox>
+    </Card>
+
+    <Card>
+      <SectionTitle sub="동종 BTC 채굴 → AI 전환 기업">경쟁사 비교</SectionTitle>
+      {peers.map((p,i) => (
+        <div key={i} style={{padding:'13px 0',borderBottom:i<peers.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <span style={{color:p.color,fontWeight:900,fontSize:15,minWidth:50}}>{p.ticker}</span>
+              <span style={{color:C.muted,fontSize:12}}>{p.name}</span>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{color:C.text,fontSize:13,fontWeight:700}}>P/S: {p.ps}</div>
+              <div style={{color:C.muted,fontSize:11}}>시총 {p.mkt}</div>
+            </div>
+          </div>
+          <div style={{color:C.gray,fontSize:12,marginTop:2}}>{p.특징}</div>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle sub="X · Reddit 동반 언급 종목">자주 함께 언급되는 종목</SectionTitle>
+      {snsPeers.map((p,i) => (
+        <div key={i} style={{padding:'11px 0',borderBottom:i<snsPeers.length-1?`1px solid ${C.border}`:'none'}}>
+          <div style={{color:C.cyan,fontWeight:800,fontSize:14,marginBottom:4}}>{p.ticker}</div>
+          <div style={{color:C.muted,fontSize:13,lineHeight:1.5}}>{p.reason}</div>
+        </div>
+      ))}
+    </Card>
+  </>
+}
+
+function ConclusionTab() {
+  return <>
+    <Card style={{border:`2px solid ${C.yellow}`}}>
+      <SectionTitle>종합 투자 의견</SectionTitle>
+      <div style={{display:'flex',gap:4,marginBottom:16}}>
+        {['강한 매도','매도','중립','매수','강한 매수'].map((label,i) => (
+          <div key={i} style={{flex:1,textAlign:'center',padding:'10px 4px',borderRadius:8,
+            background:i===3?C.blue+'30':'#1e2d45',
+            border:`2px solid ${i===3?C.blue:'#1e2d4500'}`,
+          }}>
+            <div style={{color:i===3?C.blue:C.muted,fontSize:10,fontWeight:i===3?900:400,lineHeight:1.3}}>{label}</div>
+            {i===3 && <div style={{color:C.blue,fontSize:16,marginTop:4}}>◉</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{color:C.yellow,fontSize:18,fontWeight:900,marginBottom:12}}>조건부 매수 — 조정 후 진입</div>
+      <div style={{color:C.muted,fontSize:14,lineHeight:1.7}}>
+        Cerebras $2.5B 계약은 게임 체인저. 단 RSI 86 과매수 + ATM 희석 구조로 현재가 즉시 진입 비권고. $5.50~5.70 조정 후 분할 매수.
+      </div>
+    </Card>
+
+    <Card>
+      <SectionTitle>🐂 Bull Case (상승 근거)</SectionTitle>
+      {[
+        'Cerebras $2.5B 계약 = 현 시총($450M)의 5.5배 잠재 가치',
+        '부지·변전소·계통 연계 완비 = 경쟁사 2~3년 리드',
+        'Forward P/S 8.3x → 가동 후 4.1x로 급락 (성장 실현 시 저평가)',
+        'AI 전력 부족 구조적 심화 → 자체 전력망 보유 기업 희소가치',
+        'Cerebras IPO 임박 시 DGXX 재조명 + 400MW 파이프라인 옵션',
+      ].map((r,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'11px 0',borderBottom:i<4?`1px solid ${C.border}`:'none'}}>
+          <span style={{color:C.green,fontSize:16,flexShrink:0}}>✓</span>
+          <span style={{color:C.muted,fontSize:14,lineHeight:1.5}}>{r}</span>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle>🐻 Bear Case (하락 근거)</SectionTitle>
+      {[
+        'RSI 86 과매수 + YTD +190% 급등 → 단기 조정 압력 상당',
+        'ATM $175M 희석 = 시총 대비 39% 잠재 물량 (지속적 상한선 압박)',
+        'Q4 2025 EPS 대폭 미스(-200%) → 실행 역량 의문',
+        '수익화 2026 말 이전까지 AI 실제 매출 = $0',
+        'Cerebras 비상장 → IPO 지연·취소 시 계약 리스크',
+      ].map((r,i) => (
+        <div key={i} style={{display:'flex',gap:12,padding:'11px 0',borderBottom:i<4?`1px solid ${C.border}`:'none'}}>
+          <span style={{color:C.red,fontSize:16,flexShrink:0}}>✗</span>
+          <span style={{color:C.muted,fontSize:14,lineHeight:1.5}}>{r}</span>
+        </div>
+      ))}
+    </Card>
+
+    <Card>
+      <SectionTitle>실행 계획 (Action Plan)</SectionTitle>
+      {[
+        {label:'1차 매수', value:'$5.50~5.70', color:C.green, sub:'RSI 냉각 + 지지 확인 후 · 포트 1.5%'},
+        {label:'2차 추가 매수', value:'$4.50~5.00', color:C.blue, sub:'조정 심화 시 · 포트 1.5%'},
+        {label:'총 포지션 한도', value:'포트의 3%', color:C.yellow, sub:'소액 투기적 포지션'},
+        {label:'손절선', value:'$3.00 이탈', color:C.red, sub:'전량 청산 — Cerebras 딜 훼손 시'},
+        {label:'1차 익절', value:'$7.00', color:C.green, sub:'50% 청산 — 애널리스트 목표가'},
+        {label:'2차 익절', value:'$9.00~12.00', color:C.purple, sub:'나머지 청산 — 2027 Q1 가동 후'},
+      ].map((r,i) => <Row key={i} {...r}/>)}
+      <InfoBox color={C.orange}>핵심 모니터링: ① Cerebras Phase 1 공사 진척 ② ATM 발행 공시 ③ 추가 AI 고객 계약 ④ Cerebras IPO 일정</InfoBox>
+    </Card>
+
+    <div style={{borderTop:`1px solid ${C.border}`,padding:'16px',textAlign:'center',marginTop:8}}>
+      <p style={{color:C.gray,fontSize:11,margin:0,lineHeight:1.7}}>
+        ⚠️ 교육 목적 분석 · 투자 권고 아님<br/>
+        분석 기준일: 2026년 5월 11일 · 현재가: $6.63<br/>
+        Morgan Stanley TA + Goldman Sachs FA + JPMorgan Earnings Framework
+      </p>
+    </div>
+  </>
+}
+
+/* ── 메인 ── */
+function App() {
+  const [tab, setTab] = useState('overview')
+  const tabs = [
+    {id:'overview', label:'📊 개요'},
+    {id:'tech',     label:'📈 기술적'},
+    {id:'fund',     label:'💰 재무'},
+    {id:'sent',     label:'💬 센티먼트'},
+    {id:'compare',  label:'🆚 비교'},
+    {id:'conclude', label:'🎯 결론'},
+  ]
+  return (
+    <div style={{background:C.darkBg,minHeight:'100vh',color:C.text}}>
+      {/* 헤더 */}
+      <div style={{background:'linear-gradient(180deg,#0d1f3d 0%,#0a0f1e 100%)',padding:'20px 16px 22px'}}>
+        <a href="https://disntm90.github.io/disntm90/" style={{display:'inline-flex',alignItems:'center',gap:6,color:'#7a90aa',fontSize:12,textDecoration:'none',marginBottom:14,padding:'5px 10px',background:'#1e2d45',borderRadius:6}}>← 목록으로</a>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+          <div style={{background:C.cyan+'20',border:`2px solid ${C.cyan}`,borderRadius:10,padding:'6px 14px'}}>
+            <span style={{color:C.cyan,fontWeight:900,fontSize:22,letterSpacing:1}}>DGXX</span>
+          </div>
+          <div>
+            <div style={{fontWeight:800,fontSize:17,lineHeight:1.2}}>Digi Power X Inc.</div>
+            <div style={{color:C.muted,fontSize:12,marginTop:3}}>AI 데이터센터 · 에너지 인프라 · NASDAQ</div>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:18}}>
+          <Badge color={C.red}>RSI 86 ⚠️ 과매수</Badge>
+          <Badge color={C.green}>Cerebras $1.1B 딜</Badge>
+          <Badge color={C.yellow}>소형주 투기적</Badge>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+          {[
+            {label:'현재가', value:'$6.63', sub:'2026.05.11', color:C.cyan},
+            {label:'52주 저점', value:'$1.16', sub:'', color:C.red},
+            {label:'52주 고점', value:'$6.78', sub:'', color:C.green},
+            {label:'YTD 수익', value:'+190%', sub:'저점 대비', color:C.green},
+            {label:'시가총액', value:'$450M', sub:'', color:C.text},
+            {label:'목표주가', value:'$7.00', sub:'+5.6%', color:C.yellow},
+          ].map((s,i) => (
+            <div key={i} style={{background:C.cardBg,border:`1px solid ${C.border}`,borderRadius:12,padding:'11px 8px',textAlign:'center'}}>
+              <div style={{color:s.color,fontSize:18,fontWeight:900,lineHeight:1}}>{s.value}</div>
+              <div style={{color:C.muted,fontSize:10,marginTop:4}}>{s.label}</div>
+              {s.sub && <div style={{color:s.color+'bb',fontSize:10,marginTop:2}}>{s.sub}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 탭바 */}
+      <div style={{borderBottom:`1px solid ${C.border}`,background:C.cardBg,overflowX:'auto',whiteSpace:'nowrap',WebkitOverflowScrolling:'touch'}}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            display:'inline-block',background:'none',
+            color:tab===t.id?C.cyan:C.muted,
+            border:'none',borderBottom:tab===t.id?`3px solid ${C.cyan}`:'3px solid transparent',
+            padding:'13px 16px',fontSize:12,fontWeight:700,cursor:'pointer',
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* 콘텐츠 */}
+      <div style={{padding:'16px',maxWidth:600,margin:'0 auto'}}>
+        {tab==='overview' && <OverviewTab/>}
+        {tab==='tech'     && <TechTab/>}
+        {tab==='fund'     && <FundamentalTab/>}
+        {tab==='sent'     && <SentimentTab/>}
+        {tab==='compare'  && <CompareTab/>}
+        {tab==='conclude' && <ConclusionTab/>}
+      </div>
+    </div>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>)
+</script>
+</body>
+</html>
