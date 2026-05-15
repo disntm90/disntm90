@@ -285,11 +285,10 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
     """
     DB에서 불량 코드 목록을 조회한다.
 
-    세션이 없거나 만료됐으면 재로그인 1회 시도 후 재조회.
+    파일 생성 요청마다 새로 로그인 → getData 를 실행해
+    상위 서버의 최신 데이터가 항상 반영되도록 한다.
     반환값: 성공 시 DataFrame, 실패 시 None
     """
-    global _bdq_session_active
-
     try:
         import bigdataquery as bdq
     except ImportError:
@@ -301,10 +300,14 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
         logger.error("BDQ_USER 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.")
         return None
 
-    logger.info(f"getData 호출: user_name='{user}'")  # 실제 전달값 확인용
+    # 파일 생성마다 새로 로그인해 세션을 갱신 → 최신 데이터 보장
+    logger.info("DB 조회 전 재로그인 (최신 데이터 반영)")
+    if not _bdq_login():
+        logger.error("로그인 실패로 DB 조회를 중단합니다.")
+        return None
+
+    logger.info(f"getData 호출: user_name='{user}'")
     try:
-        # user_name 파라미터는 bigdataquery의 권한 체크에 필요
-        # 로그인은 앱 시작 시 main.py lifespan에서 한 번만 실행됨
         df = bdq.getData(param=_BDQ_QUERY, user_name=user)
     except Exception as exc:
         logger.error(f"DB 조회 실패: {exc}")
@@ -314,7 +317,7 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
         logger.warning("조회된 데이터가 없습니다.")
         return None
 
-    return df.copy()   # 원본 df가 외부에서 변경되지 않도록 복사본 반환
+    return df.copy()
 
 
 # ──────────────────────────────────────────────────────────────────
