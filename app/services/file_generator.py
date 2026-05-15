@@ -349,26 +349,22 @@ def _validate_xml(path: Path, *, expected_root: str, min_items: int = 1) -> tupl
 # YieldConvDef.xml 생성
 # ──────────────────────────────────────────────────────────────────
 
-def generate_yield_condef(triggered_by: str = "scheduler", df: "pd.DataFrame | None" = None) -> dict:
+def generate_yield_condef(triggered_by: str = "scheduler") -> dict:
     """
     YieldConvDef.xml 을 생성한다.
 
-    df 인자를 받으면 DB 재조회 없이 그 데이터를 사용한다.
-    (generate_all_files 에서 DB 조회를 1회로 공유할 때 활용)
-
+    호출될 때마다 DB를 새로 조회해 최신 데이터를 반영한다.
     반환: {"file_type", "filename", "status", ("error" or "message")}
     """
     filename = "YieldConvDef.xml"
-    GENERATED_DIR.mkdir(parents=True, exist_ok=True)  # 출력 폴더가 없으면 생성
+    GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
-    # df가 없으면 직접 조회
-    if df is None:
-        df = _fetch_scrap_data()
+    df = _fetch_scrap_data()
     if df is None:
         return {"file_type": "YieldConvDef", "filename": filename,
                 "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
 
-    df = df.copy()  # 공유 df 원본을 건드리지 않도록 복사
+    df = df.copy()
 
     # ── 정렬 우선순위 설정 ────────────────────────────────────────
     # code_type 접두사로 정렬 그룹을 부여한다.
@@ -453,10 +449,11 @@ def _ensure_template() -> str:
     return TEMPLATE_FILE.read_text(encoding="utf-8")
 
 
-def generate_reject_mapfile(triggered_by: str = "scheduler", df: "pd.DataFrame | None" = None) -> dict:
+def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
     """
     RejectMapFile.xml 을 생성한다.
 
+    호출될 때마다 DB를 새로 조회해 최신 데이터를 반영한다.
     생성 과정:
       1. primecode.csv 로 code_type → prime_code 매핑 로드
       2. DB 데이터에 prime_code 컬럼 추가
@@ -468,10 +465,9 @@ def generate_reject_mapfile(triggered_by: str = "scheduler", df: "pd.DataFrame |
     filename = "RejectMapFile.xml"
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
-    prime_map = _load_primecode_map()    # primecode.csv 로드
+    prime_map = _load_primecode_map()
 
-    if df is None:
-        df = _fetch_scrap_data()
+    df = _fetch_scrap_data()
     if df is None:
         return {"file_type": "RejectMapFile", "filename": filename,
                 "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
@@ -527,15 +523,11 @@ def generate_all_files(triggered_by: str = "scheduler") -> list[dict]:
     """
     YieldConvDef 와 RejectMapFile 을 한 번에 생성한다.
 
-    DB 조회를 1회만 수행해 두 생성 함수에 공유한다.
-    조회 실패 시 두 파일 모두 failed 로 기록하고 즉시 반환한다.
+    각 파일 생성 함수가 독립적으로 DB를 조회해 최신 데이터를 반영한다.
     결과는 GenerateLog 테이블에 기록된다.
     """
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
-    shared_df = _fetch_scrap_data()   # DB 조회는 여기서 단 1회
-
-    # 생성 대상 (file_type, 파일명, 생성 함수)
     generators = [
         ("YieldConvDef",  "YieldConvDef.xml",  generate_yield_condef),
         ("RejectMapFile", "RejectMapFile.xml",  generate_reject_mapfile),
@@ -545,17 +537,7 @@ def generate_all_files(triggered_by: str = "scheduler") -> list[dict]:
     db = SessionLocal()
     try:
         for file_type, filename, fn in generators:
-            if shared_df is None:
-                # DB 조회 자체가 실패한 경우 — 각 파일 개별 재시도 없이 바로 실패 처리
-                result = {
-                    "file_type": file_type,
-                    "filename":  filename,
-                    "status":    "failed",
-                    "error":     "DB 조회 실패 또는 데이터 없음",
-                }
-            else:
-                # 공유 df를 전달해 DB 재조회를 방지
-                result = fn(triggered_by=triggered_by, df=shared_df)
+            result = fn(triggered_by=triggered_by)
 
             # GenerateLog 테이블에 결과 기록
             status  = result["status"]
