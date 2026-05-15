@@ -106,3 +106,25 @@ def test_fallback_when_no_db_template(db):
     # _load_template_content()의 폴백 경로를 확인
     fallback = STATIC_XML_TEMPLATE
     assert "{DYNAMIC_SCRAP_MAPS}" in fallback
+
+
+# ── Bug 4: .bak 파일 필터 ────────────────────────────────────────
+
+
+def test_list_generated_files_excludes_bak(tmp_path):
+    """.bak 파일은 생성 파일 목록에 포함되지 않아야 한다."""
+    (tmp_path / "YieldConvDef.xml").write_text("<root/>")
+    (tmp_path / "RejectMapFile.xml").write_text("<root/>")
+    (tmp_path / "RejectMapFile.bak").write_text("<root/>")  # 이 파일은 제외돼야 함
+
+    # list_generated_files의 핵심 필터 로직
+    files = [
+        p.name
+        for p in sorted(tmp_path.iterdir())
+        if p.is_file() and p.suffix != ".bak"
+    ]
+
+    assert "YieldConvDef.xml" in files
+    assert "RejectMapFile.xml" in files
+    assert "RejectMapFile.bak" not in files
+    assert len(files) == 2

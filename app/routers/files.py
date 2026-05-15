@@ -51,7 +51,7 @@ def list_generated_files():
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
     files = []
     for p in sorted(GENERATED_DIR.iterdir()):
-        if p.is_file():
+        if p.is_file() and p.suffix != ".bak":
             stat = p.stat()
             files.append({
                 "name":        p.name,
