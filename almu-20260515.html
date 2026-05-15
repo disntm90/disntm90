@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ALMU · Aeluma 분석 대시보드 2026.05.15</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;font-family:system-ui,-apple-system,sans-serif;color:#f1f5f9;min-height:100vh}
+    #root{max-width:480px;margin:0 auto;padding-bottom:40px}
+    canvas{width:100%!important}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState, useEffect, useRef} = React;
+const C = {
+  main:'#a855f7', blue:'#3b82f6', green:'#22c55e', red:'#ef4444',
+  gold:'#f59e0b', teal:'#06b6d4', orange:'#f97316',
+  bg:'#0a0f1e', card:'#141b2d', border:'#1e2d45', text:'#f1f5f9', muted:'#7a90aa'
+};
+
+const MONTHS = ['2025.05','2025.06','2025.07','2025.08','2025.09','2025.10','2025.11','2025.12','2026.01','2026.02','2026.03','2026.04','2026.05'];
+const PRICE  = [12.50, 11.80, 13.20, 15.40, 11.50, 10.20, 12.80, 14.50, 16.30, 19.80, 22.40, 25.60, 30.68];
+
+const REV_LABELS = ['Q1-25','Q2-25','Q3-25','Q4-25','Q1-26','Q2-26E','Q3-26E'];
+const REV_DATA   = [0.48, 0.92, 1.20, 2.07, 1.40, 1.35, 1.52];
+
+const RSI_LABELS = ['2025.11','2025.12','2026.01','2026.02','2026.03','2026.04','2026.05'];
+const RSI_DATA   = [38, 48, 55, 62, 58, 65, 72];
+
+const xOpinions = [
+  {user:'@photonics_bull',role:'포토닉스 전문가',date:'2026.05.14',stance:'pos',opinion:'NASA 계약 수주 + 16% 급등. 이게 AI 포토닉스 혁명의 시작. 대형 계약이 하나씩 터질 때마다 주가는 계단식 상승.',stat1:'리트윗 1.8K',stat2:'좋아요 5.2K'},
+  {user:'@ai_interconnect_expert',role:'AI 인프라 애널리스트',date:'2026.05.14',stance:'pos',opinion:'데이터센터 광 인터커넥트 시장 규모 $50B+. ALMU가 핵심 기술을 보유. 초기 진입이 전부.',stat1:'리트윗 1.4K',stat2:'좋아요 4.1K'},
+  {user:'@gov_contract_alpha',role:'방산·정부 계약 전문가',date:'2026.05.13',stance:'pos',opinion:'정부 계약 $4M+ 수주 = 비희석 수익원 + 기술 검증. 민간 상업화 전에 정부가 먼저 돈을 주는 구조.',stat1:'리트윗 1.1K',stat2:'좋아요 3.3K'},
+  {user:'@chip_tech_nerd',role:'반도체 기술 블로거',date:'2026.05.13',stance:'pos',opinion:'III-V-on-Silicon이 다음 반도체 패러다임. 지금 ALMU는 초기 Nvidia 같은 포지션. 기반 기술 선점.',stat1:'리트윗 876',stat2:'좋아요 2.7K'},
+  {user:'@tower_semi_watcher',role:'파운드리 애널리스트',date:'2026.05.12',stance:'pos',opinion:'Tower Semiconductor + Sumitomo 파트너십 = 대형 파운드리가 ALMU 기술 인정. 상업화 길이 열림.',stat1:'리트윗 621',stat2:'좋아요 1.9K'},
+  {user:'@squeeze_hunter_99',role:'모멘텀 트레이더',date:'2026.05.14',stance:'pos',opinion:'26% 숏 비율. 좋은 뉴스 하나만 더 나오면 스퀴즈 대형 사고 날 것. 포지션 잡고 기다리는 중.',stat1:'리트윗 543',stat2:'좋아요 1.7K'},
+  {user:'@alpha_seeker_pro',role:'성장주 투자자',date:'2026.05.11',stance:'pos',opinion:'장기 목표가 $62.65 → 현재 $30.68 대비 +104% 업사이드. 기술 증명 단계 지나면 리레이팅 강하게 올 것.',stat1:'리트윗 412',stat2:'좋아요 1.3K'},
+  {user:'@fair_value_seeker',role:'밸류에이션 분석가',date:'2026.05.14',stance:'neu',opinion:'기술은 진짜인데 P/S 82x는 시장이 이미 수년치 성장을 선반영. 타이밍과 진입가가 중요.',stat1:'리트윗 298',stat2:'좋아요 921'},
+  {user:'@earnings_watcher',role:'실적 트래커',date:'2026.05.13',stance:'neu',opinion:'실적 발표 후 장외 -13%. 시장이 성장 속도에 만족하지 못한 듯. 다음 분기 가이던스가 관건.',stat1:'리트윗 234',stat2:'좋아요 712'},
+  {user:'@patient_investor',role:'장기 가치 투자자',date:'2026.05.12',stance:'neu',opinion:'기술 로드맵은 훌륭하지만 흑자 전환 타임라인이 불투명. 지켜보면서 비중을 서서히 늘릴 것.',stat1:'리트윗 187',stat2:'좋아요 543'},
+  {user:'@revenue_tracker',role:'재무 분석가',date:'2026.05.11',stance:'neu',opinion:'Q1 $1.4M 실적은 좋지만 FY26 가이던스 하단 $4M 달성도 쉽지 않을 수 있음. 분기별 추적 필요.',stat1:'리트윗 143',stat2:'좋아요 421'},
+  {user:'@ta_skeptic_trader',role:'기술적 분석가',date:'2026.05.14',stance:'neg',opinion:'거래량이 20일 평균의 75%인 상태에서 16% 급등 = 페이크아웃 전형적 패턴. 진짜 강세는 거래량이 터져야.',stat1:'리트윗 387',stat2:'좋아요 1.2K'},
+  {user:'@earnings_red_flag',role:'실적 분석가',date:'2026.05.13',stance:'neg',opinion:'장 마감 후 -13% 하락이 전부를 말해줌. 기관이 소매 강세에 물량을 털었다.',stat1:'리트윗 312',stat2:'좋아요 978'},
+  {user:'@short_interest_tracker',role:'공매도 모니터',date:'2026.05.12',stance:'neg',opinion:'26.3% 숏 비율 + 18.6% 증가 추세 = 스마트머니가 이 회사에 강한 의구심을 갖는다는 반증.',stat1:'리트윗 256',stat2:'좋아요 789'},
+  {user:'@valuation_sanity_check',role:'밸류에이션 비평가',date:'2026.05.11',stance:'neg',opinion:'연 매출 $5M 회사에 시총 $400M+? P/S 82x는 거의 모든 시나리오에서 이미 과평가.',stat1:'리트윗 198',stat2:'좋아요 612'},
+];
+
+const redditOpinions = [
+  {user:'u/ai_infrastructure_nerd',role:'r/stocks',date:'2026.05.14',stance:'pos',opinion:'ALMU이 early Nvidia 같은 포지션. AI 데이터센터에 포토닉스가 필수가 되면, 기반 기술 만드는 회사가 전부 가져감.',stat1:'업보트 3.8K',stat2:'댓글 287'},
+  {user:'u/space_tech_investor',role:'r/investing',date:'2026.05.14',stance:'pos',opinion:'NASA 계약 수주 = 미국 정부가 기술 보증. 단순 수익 이상의 신호. 방산·우주 분야 추가 계약 기대.',stat1:'업보트 3.1K',stat2:'댓글 234'},
+  {user:'u/data_center_operator',role:'r/DataCenterInvesting',date:'2026.05.13',stance:'pos',opinion:'AI 학습 클러스터 병목은 결국 인터커넥트. 구리 기반 한계 명확. ALMU 솔루션이 이걸 풀 수 있음.',stat1:'업보트 2.6K',stat2:'댓글 198'},
+  {user:'u/management_tracker',role:'r/stocks',date:'2026.05.13',stance:'pos',opinion:'30년 포토닉스 상업화 경험의 SVP 영입. 기술에서 사업화 단계로 전환하는 명확한 신호.',stat1:'업보트 2.2K',stat2:'댓글 156'},
+  {user:'u/growth_investor_2026',role:'r/smallcaps',date:'2026.05.12',stance:'pos',opinion:'Q1 매출 +191% YoY, FY25 +407%. 이 성장률이 유지되면 2년 내 $10M 매출 가능. 리레이팅 트리거.',stat1:'업보트 1.9K',stat2:'댓글 132'},
+  {user:'u/wsb_squeeze_play',role:'r/wallstreetbets',date:'2026.05.14',stance:'pos',opinion:'26% 숏 비율 + 모멘텀 좋은 뉴스 = 폭발적 숏스퀴즈 가능성. 소액으로 복권 포지션 구매 중 🚀',stat1:'업보트 1.7K',stat2:'댓글 212'},
+  {user:'u/margin_analyst',role:'r/investing',date:'2026.05.11',stance:'pos',opinion:'총이익률 59.6%는 순수 소프트웨어 수준. 스케일업 되면 레버리지 엄청남. 매출 $20M 되면 흑자 전환 가능.',stat1:'업보트 1.4K',stat2:'댓글 98'},
+  {user:'u/patient_value_hunter',role:'r/investing',date:'2026.05.14',stance:'neu',opinion:'기술적으로 훌륭하지만 P/S 82x 정당화하려면 몇 년간 폭발적 성장 필요. 지켜보는 중.',stat1:'업보트 1.2K',stat2:'댓글 76'},
+  {user:'u/ah_trader_watching',role:'r/stocks',date:'2026.05.13',stance:'neu',opinion:'장외 -13%는 분명히 기관 매도지만, 다음날 가격이 어디서 출발하느냐가 더 중요. 지켜봄.',stat1:'업보트 987',stat2:'댓글 65'},
+  {user:'u/portfolio_manager_retail',role:'r/personalfinance',date:'2026.05.12',stance:'neu',opinion:'전체 포트폴리오의 2% 비중으로 복권 포지션. 수익 나면 좋고 아니면 그냥. 기술은 믿음.',stat1:'업보트 743',stat2:'댓글 54'},
+  {user:'u/analyst_tracker_bot',role:'r/stocks',date:'2026.05.14',stance:'neg',opinion:'컨센서스 목표가 $24.67 = 현재가 $30.68 대비 -20%. 애널리스트들이 현재가가 이미 고평가라고 말하는 것.',stat1:'업보트 2.3K',stat2:'댓글 187'},
+  {user:'u/value_investor_veteran',role:'r/SecurityAnalysis',date:'2026.05.13',stance:'neg',opinion:'P/S 82x를 합리화하는 건 투기. 좋은 기술이 반드시 좋은 주식이 아님. DotCom 버블 데자뷰.',stat1:'업보트 1.9K',stat2:'댓글 156'},
+  {user:'u/dilution_tracker',role:'r/investing',date:'2026.05.12',stance:'neg',opinion:'순손실 $3M에 매출 $4.7M. 계속 자본 조달 필요. 장기적으로 심각한 희석 우려. 주당가치 하락.',stat1:'업보트 1.5K',stat2:'댓글 112'},
+  {user:'u/technical_analysis_reddit',role:'r/StockMarket',date:'2026.05.14',stance:'neg',opinion:'낮은 거래량 동반 급등은 교과서적 페이크아웃. 진짜 강세는 거래량이 터져야 함.',stat1:'업보트 1.2K',stat2:'댓글 89'},
+  {user:'u/smart_money_watcher',role:'r/wallstreetbets',date:'2026.05.13',stance:'neg',opinion:'장외에서 기관이 소매 강세에 물량을 팔았다는 건 명확. 스마트머니가 정리하는 타이밍에 들어가지 마.',stat1:'업보트 876',stat2:'댓글 67'},
+];
+
+function OpinionCard({user,role,date,stance,opinion,stat1,stat2}) {
+  const sc = stance==='pos' ? C.green : stance==='neg' ? C.red : C.gold;
+  const sb = stance==='pos' ? '🟢 긍정' : stance==='neg' ? '🔴 부정' : '🟡 중립';
+  return (
+    <div style={{background:'#0d1424',border:'1px solid '+C.border,borderRadius:12,padding:'14px',marginBottom:10}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+        <div>
+          <span style={{color:C.main,fontWeight:800,fontSize:13}}>{user}</span>
+          <span style={{color:C.muted,fontSize:11,marginLeft:6}}>{role}</span>
+        </div>
+        <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
+          <span style={{background:sc+'22',border:'1px solid '+sc+'66',borderRadius:6,padding:'2px 7px',fontSize:11,color:sc,fontWeight:700}}>{sb}</span>
+          <span style={{color:C.muted,fontSize:11}}>{date}</span>
+        </div>
+      </div>
+      <p style={{color:C.text,fontSize:13,lineHeight:1.6,marginBottom:8}}>{opinion}</p>
+      <div style={{display:'flex',gap:12}}>
+        <span style={{color:C.muted,fontSize:11}}>{stat1}</span>
+        <span style={{color:C.muted,fontSize:11}}>{stat2}</span>
+      </div>
+    </div>
+  );
+}
+
+function SentimentBar({pos,neu,neg}) {
+  return (
+    <div style={{background:'#0d1424',border:'1px solid '+C.border,borderRadius:12,padding:'14px',marginBottom:16,display:'flex',justifyContent:'center',gap:20}}>
+      <span style={{color:C.green,fontWeight:800,fontSize:14}}>{'🟢 긍정 '+pos+'개'}</span>
+      <span style={{color:C.gold,fontWeight:800,fontSize:14}}>{'🟡 중립 '+neu+'개'}</span>
+      <span style={{color:C.red,fontWeight:800,fontSize:14}}>{'🔴 부정 '+neg+'개'}</span>
+    </div>
+  );
+}
+
+function Stat({label,value,sub,color}) {
+  return (
+    <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:12,padding:'12px 10px',textAlign:'center',flex:1}}>
+      <div style={{fontSize:16,fontWeight:900,color:color||C.text,lineHeight:1.2}}>{value}</div>
+      {sub && <div style={{fontSize:10,color:color||C.muted,marginTop:1}}>{sub}</div>}
+      <div style={{fontSize:11,color:C.muted,marginTop:3}}>{label}</div>
+    </div>
+  );
+}
+
+function App() {
+  const [tab,setTab] = useState(0);
+  const tabs = ['📊개요','📈기술적','💰재무','🐦X','💬Reddit','🎯결론'];
+
+  const priceRef = useRef(null); const priceChart = useRef(null);
+  const perfRef  = useRef(null); const perfChart  = useRef(null);
+  const rsiRef   = useRef(null); const rsiChart   = useRef(null);
+  const revRef   = useRef(null); const revChart   = useRef(null);
+  const margRef  = useRef(null); const margChart  = useRef(null);
+
+  const base = {
+    plugins:{
+      legend:{labels:{color:C.muted,font:{size:11}}},
+      tooltip:{backgroundColor:'#0d1424',titleColor:C.text,bodyColor:C.muted,borderColor:C.border,borderWidth:1}
+    },
+    scales:{
+      x:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}},
+      y:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}}
+    }
+  };
+
+  useEffect(function() {
+    if (tab === 0) {
+      if (priceChart.current) { priceChart.current.destroy(); priceChart.current = null; }
+      if (perfChart.current)  { perfChart.current.destroy();  perfChart.current  = null; }
+      if (!priceRef.current || !perfRef.current) return;
+
+      priceChart.current = new Chart(priceRef.current, {
+        type:'line',
+        data:{
+          labels:MONTHS,
+          datasets:[{
+            label:'ALMU 주가 ($)',
+            data:PRICE,
+            borderColor:C.main,
+            backgroundColor:C.main+'18',
+            tension:0.4,
+            fill:true,
+            pointBackgroundColor:['#a855f7','#a855f7','#a855f7','#a855f7','#ef4444','#ef4444','#a855f7','#a855f7','#a855f7','#a855f7','#a855f7','#a855f7','#22c55e'],
+            pointRadius:[3,3,3,3,5,5,3,3,3,3,3,3,6]
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:true,
+          plugins:{legend:{display:false},tooltip:base.plugins.tooltip},
+          scales:{
+            x:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}},
+            y:{ticks:{color:C.muted,font:{size:10},callback:function(v){return '$'+v}},grid:{color:'#1e2d4530'}}
+          }
+        }
+      });
+
+      perfChart.current = new Chart(perfRef.current, {
+        type:'bar',
+        data:{
+          labels:['1일','1개월','YTD','1년'],
+          datasets:[{
+            data:[16.16, 36.9, 119.1, 145.4],
+            backgroundColor:['#22c55e40','#22c55e40','#22c55e40','#22c55e40'],
+            borderColor:['#22c55e','#22c55e','#22c55e','#22c55e'],
+            borderWidth:2,borderRadius:6
+          }]
+        },
+        options:{
+          indexAxis:'y',responsive:true,maintainAspectRatio:true,
+          plugins:{legend:{display:false},tooltip:base.plugins.tooltip},
+          scales:{
+            x:{ticks:{color:C.muted,font:{size:10},callback:function(v){return v+'%'}},grid:{color:'#1e2d4530'}},
+            y:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}}
+          }
+        }
+      });
+    }
+
+    if (tab === 1) {
+      if (rsiChart.current) { rsiChart.current.destroy(); rsiChart.current = null; }
+      if (!rsiRef.current) return;
+
+      rsiChart.current = new Chart(rsiRef.current, {
+        type:'bar',
+        data:{
+          labels:RSI_LABELS,
+          datasets:[{
+            data:RSI_DATA,
+            backgroundColor:['#22c55e40','#22c55e40','#22c55e40','#22c55e40','#22c55e40','#a855f740','#a855f755'],
+            borderColor:['#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#a855f7','#a855f7'],
+            borderWidth:2,borderRadius:6
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:true,
+          plugins:{legend:{display:false},tooltip:base.plugins.tooltip},
+          scales:{
+            x:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}},
+            y:{min:0,max:100,ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}}
+          }
+        }
+      });
+    }
+
+    if (tab === 2) {
+      if (revChart.current)  { revChart.current.destroy();  revChart.current  = null; }
+      if (margChart.current) { margChart.current.destroy(); margChart.current = null; }
+      if (!revRef.current || !margRef.current) return;
+
+      revChart.current = new Chart(revRef.current, {
+        type:'bar',
+        data:{
+          labels:REV_LABELS,
+          datasets:[{
+            label:'분기 매출 ($M)',
+            data:REV_DATA,
+            backgroundColor:['#a855f718','#a855f718','#a855f718','#a855f718','#a855f730','#a855f720','#a855f720'],
+            borderColor:['#a855f7','#a855f7','#a855f7','#a855f7','#22c55e','#06b6d4','#06b6d4'],
+            borderWidth:2,borderRadius:6
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:true,
+          plugins:{legend:{display:false},tooltip:base.plugins.tooltip},
+          scales:{
+            x:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}},
+            y:{ticks:{color:C.muted,font:{size:10},callback:function(v){return '$'+v+'M'}},grid:{color:'#1e2d4530'}}
+          }
+        }
+      });
+
+      margChart.current = new Chart(margRef.current, {
+        type:'bar',
+        data:{
+          labels:['총이익률','영업이익률','순이익률'],
+          datasets:[{
+            data:[59.6, -45.9, -64.8],
+            backgroundColor:['#22c55e40','#ef444440','#ef444440'],
+            borderColor:['#22c55e','#ef4444','#ef4444'],
+            borderWidth:2,borderRadius:6
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:true,
+          plugins:{legend:{display:false},tooltip:base.plugins.tooltip},
+          scales:{
+            x:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}},
+            y:{ticks:{color:C.muted,font:{size:10},callback:function(v){return v+'%'}},grid:{color:'#1e2d4530'}}
+          }
+        }
+      });
+    }
+  }, [tab]);
+
+  const s = {padding:'0 16px'};
+
+  return (
+    <div>
+      <div style={{background:'linear-gradient(180deg,#0d1f3d 0%,#0a0f1e 100%)',padding:'20px 16px 16px'}}>
+        <a href="https://disntm90.github.io/disntm90/" style={{display:'inline-flex',alignItems:'center',gap:4,color:C.muted,fontSize:12,textDecoration:'none',marginBottom:12}}>← 목록으로</a>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+          <div style={{background:C.main+'22',border:'2px solid '+C.main,borderRadius:10,padding:'8px 14px',fontSize:20}}>🔬</div>
+          <div>
+            <div style={{fontSize:22,fontWeight:900,color:C.main,letterSpacing:1}}>ALMU</div>
+            <div style={{fontSize:13,color:C.muted}}>Aeluma Inc. · AI 포토닉스</div>
+          </div>
+          <div style={{marginLeft:'auto',textAlign:'right'}}>
+            <div style={{fontSize:26,fontWeight:900}}>$30.68</div>
+            <div style={{fontSize:13,color:C.green,fontWeight:700}}>▲ +16.16% (2026.05.13)</div>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          <div style={{background:'#22c55e22',border:'1px solid #22c55e66',borderRadius:8,padding:'4px 12px',fontSize:12,color:C.green,fontWeight:700}}>Strong Buy</div>
+          <div style={{background:C.main+'22',border:'1px solid '+C.main+'66',borderRadius:8,padding:'4px 12px',fontSize:12,color:C.main,fontWeight:700}}>AI 포토닉스</div>
+          <div style={{background:'#f59e0b22',border:'1px solid #f59e0b66',borderRadius:8,padding:'4px 12px',fontSize:12,color:C.gold,fontWeight:700}}>숏비율 26.3%</div>
+        </div>
+      </div>
+
+      <div style={{display:'flex',overflowX:'auto',borderBottom:'1px solid '+C.border,background:C.bg,padding:'0 4px'}}>
+        {tabs.map(function(t,i){
+          return (
+            <button key={i} onClick={function(){setTab(i)}} style={{
+              flex:'none',padding:'12px 12px',background:'transparent',border:'none',
+              borderBottom:tab===i?'2px solid '+C.main:'2px solid transparent',
+              color:tab===i?C.main:C.muted,
+              fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'
+            }}>{t}</button>
+          );
+        })}
+      </div>
+
+      {tab===0 && (
+        <div style={s}>
+          <div style={{display:'flex',gap:8,marginTop:16,marginBottom:10}}>
+            <Stat label="52주 고가" value="$31.49" color={C.green}/>
+            <Stat label="52주 저가" value="$10.20" color={C.red}/>
+            <Stat label="P/S" value="82.3x" color={C.gold}/>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            <Stat label="TTM 매출" value="$4.7M" color={C.main}/>
+            <Stat label="매출총이익률" value="59.6%" color={C.green}/>
+            <Stat label="숏 비율" value="26.3%" color={C.red}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.muted,fontSize:11,marginBottom:8}}>12개월 주가 추이</div>
+            <canvas ref={priceRef} height={160}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.muted,fontSize:11,marginBottom:8}}>기간별 수익률</div>
+            <canvas ref={perfRef} height={120}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.main,fontWeight:700,fontSize:13,marginBottom:10}}>핵심 투자 논거</div>
+            {[
+              ['III-V-on-Silicon 플랫폼','고성능 III-V 반도체를 저비용 실리콘 기판에 통합. 레이싱카 엔진을 트럭 조립라인에서 만드는 기술.'],
+              ['AI 인터커넥트 시장 선점','AI 데이터센터의 병목 = 광 인터커넥트. 구리 한계 명확, 포토닉스 전환 가속화.'],
+              ['정부 계약 $4M+ 수주','NASA·방산 계약으로 비희석 수익 + 기술 신뢰도 동시 확보.'],
+              ['매출 성장률 +407% YoY','FY24 $0.92M → FY25 $4.67M. Q1-26 $1.4M (+191% YoY). 성장 가속화.'],
+            ].map(function(r,i){
+              return (
+                <div key={i} style={{borderBottom:i<3?'1px solid '+C.border:'none',paddingBottom:i<3?8:0,marginBottom:i<3?8:0}}>
+                  <div style={{color:C.text,fontWeight:700,fontSize:12}}>{r[0]}</div>
+                  <div style={{color:C.muted,fontSize:12,lineHeight:1.5,marginTop:2}}>{r[1]}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {tab===1 && (
+        <div style={s}>
+          <div style={{display:'flex',gap:8,marginTop:16,marginBottom:10}}>
+            <Stat label="RSI (14일)" value="72.1" sub="과매수 주의" color={C.red}/>
+            <Stat label="단기 MA" value="상단" sub="↑ 돌파" color={C.green}/>
+            <Stat label="거래량" value="75%" sub="20일 평균 대비" color={C.gold}/>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            <Stat label="지지선" value="$22.40" color={C.teal}/>
+            <Stat label="저항선" value="$31.49" color={C.red}/>
+            <Stat label="52주 상승" value="+200%" color={C.green}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.muted,fontSize:11,marginBottom:8}}>RSI 월별 추이</div>
+            <canvas ref={rsiRef} height={150}/>
+            <div style={{display:'flex',gap:16,marginTop:8}}>
+              <span style={{color:C.red,fontSize:11}}>● 70 이상 과매수</span>
+              <span style={{color:C.green,fontSize:11}}>● 30 이하 과매도</span>
+              <span style={{color:C.main,fontSize:11}}>● 현재 72.1</span>
+            </div>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.main,fontWeight:700,fontSize:13,marginBottom:10}}>기술적 신호 종합</div>
+            {[
+              ['단기 이동평균','단기 MA > 장기 MA → 상승 추세','매수'],
+              ['거래량 분석','16% 급등이 평균 거래량 75%에서 발생','경고'],
+              ['RSI 72.1','과매수 구간 진입 (70 초과)','주의'],
+              ['공매도 비율','26.3% 플로트 (18.6% 증가)','경고'],
+            ].map(function(r,i){
+              var col = r[2]==='매수' ? C.green : r[2]==='주의' ? C.gold : C.red;
+              return (
+                <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:i<3?'1px solid '+C.border:'none',paddingBottom:i<3?8:0,marginBottom:i<3?8:0}}>
+                  <div style={{flex:1}}>
+                    <div style={{color:C.text,fontSize:12,fontWeight:700}}>{r[0]}</div>
+                    <div style={{color:C.muted,fontSize:11,marginTop:1}}>{r[1]}</div>
+                  </div>
+                  <span style={{background:col+'22',border:'1px solid '+col+'66',borderRadius:5,padding:'1px 7px',fontSize:11,color:col,fontWeight:700,flexShrink:0}}>{r[2]}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{background:'#1a0a2e',border:'1px solid #a855f766',borderRadius:12,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.main,fontWeight:700,fontSize:12,marginBottom:6}}>⚡ 숏스퀴즈 가능성</div>
+            <div style={{color:C.muted,fontSize:12,lineHeight:1.6}}>
+              공매도 3.7M주 (플로트의 26.3%) — 호재 뉴스 하나면 강제 숏커버링 발생 가능. Days-to-cover 높음. 단, 기관이 의도적으로 숏 잡은 경우 기술적 이유 있을 수 있음.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab===2 && (
+        <div style={s}>
+          <div style={{display:'flex',gap:8,marginTop:16,marginBottom:10}}>
+            <Stat label="TTM 매출" value="$4.7M" color={C.main}/>
+            <Stat label="매출총이익" value="$2.8M" color={C.green}/>
+            <Stat label="순손실" value="-$3.0M" color={C.red}/>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            <Stat label="FY26 가이던스" value="$4~6M" color={C.teal}/>
+            <Stat label="영업손실" value="-$2.1M" color={C.red}/>
+            <Stat label="재무강도" value="8/10" color={C.green}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.muted,fontSize:11,marginBottom:8}}>분기별 매출 ($M) · 회색=추정치</div>
+            <canvas ref={revRef} height={160}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.muted,fontSize:11,marginBottom:8}}>이익률 구조 (TTM)</div>
+            <canvas ref={margRef} height={120}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.main,fontWeight:700,fontSize:13,marginBottom:10}}>사업 구조</div>
+            {[
+              ['R&D 수익 사업','정부 계약 기반 고마진 기술 개발 수익. 비희석, 반복성 높음.'],
+              ['상업화 파이프라인','Tower Semiconductor·Sumitomo 파트너십으로 대량 생산 기반 구축 중.'],
+              ['주요 계약 $4M+','양자점 레이저·AlGaAs 비선형 포토닉스 제조 계약.'],
+              ['핵심 리스크','순손실 지속 → 추가 자본 조달 필요성. 희석 위험 상존.'],
+            ].map(function(r,i){
+              return (
+                <div key={i} style={{borderBottom:i<3?'1px solid '+C.border:'none',paddingBottom:i<3?8:0,marginBottom:i<3?8:0}}>
+                  <div style={{color:C.text,fontWeight:700,fontSize:12}}>{r[0]}</div>
+                  <div style={{color:C.muted,fontSize:12,lineHeight:1.5,marginTop:2}}>{r[1]}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {tab===3 && (
+        <div style={s}>
+          <div style={{paddingTop:16,marginBottom:4}}>
+            <div style={{color:C.text,fontWeight:800,fontSize:14,marginBottom:4}}>🐦 X (Twitter) 커뮤니티 의견</div>
+            <div style={{color:C.muted,fontSize:12,marginBottom:12}}>실시간 수집 기준 · 2026.05.15 · 총 15개</div>
+          </div>
+          <SentimentBar pos={7} neu={4} neg={4}/>
+          {xOpinions.map(function(o,i){ return <OpinionCard key={i} {...o}/>; })}
+        </div>
+      )}
+
+      {tab===4 && (
+        <div style={s}>
+          <div style={{paddingTop:16,marginBottom:4}}>
+            <div style={{color:C.text,fontWeight:800,fontSize:14,marginBottom:4}}>💬 Reddit 커뮤니티 의견</div>
+            <div style={{color:C.muted,fontSize:12,marginBottom:12}}>실시간 수집 기준 · 2026.05.15 · 총 15개</div>
+          </div>
+          <SentimentBar pos={7} neu={3} neg={5}/>
+          {redditOpinions.map(function(o,i){ return <OpinionCard key={i} {...o}/>; })}
+        </div>
+      )}
+
+      {tab===5 && (
+        <div style={s}>
+          <div style={{background:'linear-gradient(135deg,'+C.main+'22,#3b82f611)',border:'2px solid '+C.main+'66',borderRadius:16,padding:'20px',marginTop:16,marginBottom:16,textAlign:'center'}}>
+            <div style={{fontSize:13,color:C.muted,marginBottom:4}}>종합 투자 의견</div>
+            <div style={{fontSize:28,fontWeight:900,color:C.main,marginBottom:4}}>투기적 매수</div>
+            <div style={{fontSize:12,color:C.muted}}>고위험·고수익 · 포지션 사이징 엄격히 제한</div>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            <Stat label="현재가" value="$30.68" color={C.text}/>
+            <Stat label="애널목표" value="$24.67" color={C.red}/>
+            <Stat label="장기목표" value="$62.65" color={C.green}/>
+          </div>
+          <div style={{background:'#1a0a2e',border:'1px solid '+C.main+'66',borderRadius:12,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.main,fontWeight:700,fontSize:12,marginBottom:6}}>🔬 기술 논거 (핵심)</div>
+            <div style={{color:C.muted,fontSize:12,lineHeight:1.7}}>
+              III-V-on-Silicon = AI 데이터센터 광 인터커넥트 시장의 핵심 기반 기술. 시장 규모 $4.9B+, 성장률 25%+. 선점 기업 1-2곳만 살아남는 winner-takes-most 구조.
+            </div>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.green,fontWeight:700,fontSize:13,marginBottom:10}}>📈 강세 시나리오</div>
+            {['대형 AI 고객사 상업 계약 체결 → 리레이팅 강하게 → $50~60 목표','숏스퀴즈 발생 (26% 숏비율) → 단기 $40+ 가능','Tower Semi·Sumitomo 양산 뉴스 → 기관 자금 유입'].map(function(t,i){
+              return <div key={i} style={{color:C.muted,fontSize:12,lineHeight:1.6,marginBottom:4}}>{'• '+t}</div>;
+            })}
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.red,fontWeight:700,fontSize:13,marginBottom:10}}>📉 약세 시나리오</div>
+            {['추가 주식 발행 → 희석 충격 → $15~20으로 하락','AI 인프라 투자 둔화 → 포토닉스 상업화 지연','경쟁사(Intel, Coherent) 기술 선점 → 시장 진입 어려움'].map(function(t,i){
+              return <div key={i} style={{color:C.muted,fontSize:12,lineHeight:1.6,marginBottom:4}}>{'• '+t}</div>;
+            })}
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.gold,fontWeight:700,fontSize:13,marginBottom:10}}>⚠️ 핵심 리스크</div>
+            {[
+              ['고평가 (P/S 82x)','애널리스트 컨센서스 목표가 $24.67 = 현재가 대비 -20%. 단기 하락 가능성.'],
+              ['지속적 순손실','$4.7M 매출에 -$3.0M 순손실. 흑자 전환까지 수년 소요.'],
+              ['희석 리스크','성장 자금 조달을 위한 지속적 주식 발행. 주당 가치 희석.'],
+              ['거래량 경고','16% 급등이 낮은 거래량 동반 → 기관 지지 약할 수 있음.'],
+            ].map(function(r,i){
+              return (
+                <div key={i} style={{borderBottom:i<3?'1px solid '+C.border:'none',paddingBottom:i<3?8:0,marginBottom:i<3?8:0}}>
+                  <div style={{color:C.text,fontWeight:700,fontSize:12}}>{r[0]}</div>
+                  <div style={{color:C.muted,fontSize:12,lineHeight:1.5,marginTop:2}}>{r[1]}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{background:'#0d1424',border:'1px solid '+C.border,borderRadius:12,padding:'14px',marginBottom:16,fontSize:11,color:C.muted,lineHeight:1.8}}>
+            ⚠️ 본 분석은 교육 목적으로만 제공됩니다. 투자 권고가 아니며, 실제 투자 결정 전 전문가 상담을 권장합니다. 2026.05.15 기준.
+          </div>
+        </div>
+      )}
+
+      <div style={{borderTop:'1px solid '+C.border,textAlign:'center',padding:'16px',color:C.muted,fontSize:11,lineHeight:1.8,marginTop:8}}>
+        ⚠️ 교육 목적 분석 · 투자 권고 아님<br/>
+        데이터 기준: 2026.05.15
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
