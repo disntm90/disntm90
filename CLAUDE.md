@@ -1,5 +1,35 @@
 # CLAUDE.md
 
+## Session Start
+
+At the start of every session, run the superpowers session-start hook if it has not already run:
+
+```bash
+~/.claude/plugins/obra-superpowers/hooks/session-start
+```
+
+Then acknowledge these installed skills are available via the Skill tool:
+
+| Skill | Trigger |
+|-------|---------|
+| `deep-research` | "deep research", "research report", "analyze trends" |
+| `ui-ux-pro-max` | UI/UX work, landing pages, design systems |
+| `tdd` | test-driven development requests |
+| `sc:brainstorm` | brainstorming, ideation |
+| `sc:research` | research tasks |
+| `planning-with-files` | multi-step tasks, implementation plans |
+| `architecture-design` | system design, architecture decisions |
+| `bug-detective` | debugging, error investigation |
+| `git-workflow` | git operations, branch strategy |
+| `verification-loop` | verification before completion |
+| `expression-skill` | structured reports, summaries |
+| `writing-anti-ai` | humanize AI-generated text |
+| `ml-paper-writing` | ML paper drafting |
+| `results-analysis` | experiment analysis |
+
+context7 MCP connects automatically. Use it for library/framework documentation lookups.
+tdd-guard runs automatically on every Write/Edit tool call.
+
 ## Core Rules
 
 Read existing files before writing. Don't re-read unless changed.
