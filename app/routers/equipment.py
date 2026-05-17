@@ -136,6 +136,8 @@ def update_equipment(equipment_id: int, data: EquipmentUpdate, db: Session = Dep
     for field, value in data.model_dump(exclude_none=True).items():
         if field == "ftp_pass" and value == "":
             continue  # 빈 문자열이면 기존 비밀번호 유지
+        if field == "group_name" and value == "":
+            continue  # 빈 문자열이면 기존 그룹명 유지 (null로 처리)
         setattr(eq, field, value)
     eq.updated_at = datetime.now()
     db.commit()
