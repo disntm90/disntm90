@@ -57,6 +57,7 @@ def _serialize(e: Equipment) -> dict:
         "use_sftp":          e.use_sftp,
         "is_active":         e.is_active,
         "description":       e.description,
+        "group_name":        e.group_name,
         "created_at":        e.created_at.strftime("%Y-%m-%d %H:%M"),
         # 헬스체크 결과 — last_ping_at이 None이면 "미점검" 상태
         "last_ping_at":      e.last_ping_at.strftime("%Y-%m-%d %H:%M:%S") if e.last_ping_at else None,
@@ -72,11 +73,12 @@ class EquipmentCreate(BaseModel):
     """설비 추가 시 클라이언트가 보내는 JSON 형식"""
     name:        str
     ip:          str
-    port:        int  = 21
-    ftp_user:    str  = ""
-    ftp_pass:    str  = ""
-    use_sftp:    bool = False
-    description: str  = ""
+    port:        int        = 21
+    ftp_user:    str        = ""
+    ftp_pass:    str        = ""
+    use_sftp:    bool       = False
+    description: str        = ""
+    group_name:  str | None = None
 
 
 class EquipmentUpdate(BaseModel):
@@ -89,6 +91,7 @@ class EquipmentUpdate(BaseModel):
     use_sftp:    bool | None = None
     is_active:   bool | None = None
     description: str | None  = None
+    group_name:  str | None  = None
 
 
 # ── 라우터 핸들러 ─────────────────────────────────────────────────
