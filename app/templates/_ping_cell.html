@@ -1,0 +1,8 @@
+{% if e.last_ping_status == 'ok' %}
+  <span class="badge bg-success">정상</span>
+  {% if e.last_ping_ms is not none %}<small class="text-muted ms-1">{{ e.last_ping_ms }}ms</small>{% endif %}
+{% elif e.last_ping_status == 'failed' %}
+  <span class="badge bg-danger" title="{{ e.last_ping_message }}">실패</span>
+{% else %}
+  <span class="badge bg-secondary">미확인</span>
+{% endif %}

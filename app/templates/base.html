@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}설비 배포 대시보드{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/">⚙ 설비 배포 대시보드</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="/">대시보드</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if active_page == 'equipment' %}active{% endif %}" href="/equipment">설비 관리</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if active_page == 'templates' %}active{% endif %}" href="/templates">파일 포맷 관리</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if active_page == 'logs' %}active{% endif %}" href="/logs">배포 로그</a>
+        </li>
+      </ul>
+      <span class="navbar-text text-light" id="schedulerStatus"></span>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid mt-4 px-4">
+  {% block content %}{% endblock %}
+</div>
+
+<script src="/static/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/htmx.min.js"></script>
+<script src="/static/js/app.js"></script>
+{% block scripts %}{% endblock %}
+
+<script>
+  fetch('/api/scheduler/status')
+    .then(r => r.json())
+    .then(d => {
+      const el = document.getElementById('schedulerStatus');
+      if (d.running) {
+        el.innerHTML = `<small>다음 배포: ${d.next_run || '-'}</small>`;
+      }
+    }).catch(() => {});
+</script>
+</body>
+</html>

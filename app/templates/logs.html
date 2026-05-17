@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}배포 로그 - 설비 배포 대시보드{% endblock %}
+
+{% block content %}
+<h4 class="mb-4">배포 로그</h4>
+
+<ul class="nav nav-tabs mb-3" id="logTabs">
+  <li class="nav-item">
+    <button class="nav-link active" onclick="showTab('deploy')">배포 로그</button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link" onclick="showTab('generate')">파일 생성 로그</button>
+  </li>
+</ul>
+
+<!-- 배포 로그 -->
+<div id="tabDeploy">
+  <div class="row g-2 mb-3">
+    <div class="col-md-3">
+      <select class="form-select form-select-sm" id="filterStatus" onchange="loadDeployLogs()">
+        <option value="">전체 상태</option>
+        <option value="success">성공</option>
+        <option value="failed">실패</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select class="form-select form-select-sm" id="filterLimit" onchange="loadDeployLogs()">
+        <option value="100">최근 100건</option>
+        <option value="200">최근 200건</option>
+        <option value="500">최근 500건</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-outline-secondary btn-sm" onclick="loadDeployLogs()">새로고침</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>설비명</th>
+              <th>IP</th>
+              <th>파일 타입</th>
+              <th>상태</th>
+              <th>메시지</th>
+              <th>배포 시각</th>
+              <th>실행 주체</th>
+            </tr>
+          </thead>
+          <tbody id="deployLogTable">
+            <tr><td colspan="7" class="text-center text-muted py-4">로딩 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 파일 생성 로그 -->
+<div id="tabGenerate" style="display:none">
+  <div class="mb-3">
+    <button class="btn btn-outline-secondary btn-sm" onclick="loadGenerateLogs()">새로고침</button>
+  </div>
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>파일 타입</th>
+              <th>파일명</th>
+              <th>상태</th>
+              <th>메시지</th>
+              <th>생성 시각</th>
+              <th>실행 주체</th>
+            </tr>
+          </thead>
+          <tbody id="generateLogTable">
+            <tr><td colspan="6" class="text-center text-muted py-4">로딩 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function showTab(tab) {
+    document.getElementById('tabDeploy').style.display = tab === 'deploy' ? '' : 'none';
+    document.getElementById('tabGenerate').style.display = tab === 'generate' ? '' : 'none';
+    document.querySelectorAll('#logTabs .nav-link').forEach((el, i) => {
+      el.classList.toggle('active', (i === 0 && tab === 'deploy') || (i === 1 && tab === 'generate'));
+    });
+    if (tab === 'generate') loadGenerateLogs();
+  }
+
+  function statusBadge(status) {
+    if (status === 'success') return '<span class="badge bg-success">성공</span>';
+    if (status === 'failed') return '<span class="badge bg-danger">실패</span>';
+    return `<span class="badge bg-secondary">${status}</span>`;
+  }
+
+  function triggerBadge(t) {
+    return t === 'scheduler'
+      ? '<span class="badge bg-info text-dark">스케줄</span>'
+      : '<span class="badge bg-warning text-dark">수동</span>';
+  }
+
+  function loadDeployLogs() {
+    const status = document.getElementById('filterStatus').value;
+    const limit = document.getElementById('filterLimit').value;
+    let url = `/api/logs/deploy?limit=${limit}`;
+    if (status) url += `&status=${status}`;
+
+    fetch(url)
+      .then(r => r.json())
+      .then(logs => {
+        if (logs.length === 0) {
+          document.getElementById('deployLogTable').innerHTML =
+            '<tr><td colspan="7" class="text-center text-muted py-4">로그가 없습니다.</td></tr>';
+          return;
+        }
+        document.getElementById('deployLogTable').innerHTML = logs.map(l => `
+          <tr class="${l.status === 'failed' ? 'table-danger' : ''}">
+            <td class="fw-semibold">${l.equipment_name}</td>
+            <td><code>${l.equipment_ip}</code></td>
+            <td><span class="badge bg-primary">${l.file_type}</span></td>
+            <td>${statusBadge(l.status)}</td>
+            <td><small>${l.message}</small></td>
+            <td><small>${l.deployed_at}</small></td>
+            <td>${triggerBadge(l.triggered_by)}</td>
+          </tr>`).join('');
+      })
+      .catch(() => {
+        document.getElementById('deployLogTable').innerHTML =
+          '<tr><td colspan="7" class="text-center text-danger py-4">로그 조회 실패</td></tr>';
+      });
+  }
+
+  function loadGenerateLogs() {
+    fetch('/api/logs/generate?limit=100')
+      .then(r => r.json())
+      .then(logs => {
+        if (logs.length === 0) {
+          document.getElementById('generateLogTable').innerHTML =
+            '<tr><td colspan="6" class="text-center text-muted py-4">로그가 없습니다.</td></tr>';
+          return;
+        }
+        document.getElementById('generateLogTable').innerHTML = logs.map(l => `
+          <tr class="${l.status === 'failed' ? 'table-danger' : ''}">
+            <td><span class="badge bg-primary">${l.file_type}</span></td>
+            <td><code>${l.filename}</code></td>
+            <td>${statusBadge(l.status)}</td>
+            <td><small>${l.message}</small></td>
+            <td><small>${l.generated_at}</small></td>
+            <td>${triggerBadge(l.triggered_by)}</td>
+          </tr>`).join('');
+      });
+  }
+
+  loadDeployLogs();
+</script>
+{% endblock %}

@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+{% block title %}대시보드 - 설비 배포 대시보드{% endblock %}
+
+{% block content %}
+
+<!-- 테스트 모드 카드 -->
+<div class="card border-warning mb-4">
+  <div class="card-header d-flex align-items-center gap-2">
+    <span class="badge bg-warning text-dark">테스트 모드</span>
+    <span class="text-muted small">설비 IP 없이 파일 생성만 확인</span>
+  </div>
+  <div class="card-body">
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <button class="btn btn-outline-secondary btn-sm" onclick="checkDb()">DB 연결 확인</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('YieldConvDef')">YieldConvDef 생성</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('RejectMapFile')">RejectMapFile 생성</button>
+      <button class="btn btn-primary btn-sm" onclick="testGenerate('ALL')">전체 생성</button>
+    </div>
+    <div id="dbCheckResult"></div>
+
+    <div class="table-responsive mt-3">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>파일명</th>
+            <th>크기</th>
+            <th>생성시각</th>
+            <th>미리보기</th>
+          </tr>
+        </thead>
+        <tbody id="generatedFilesTable">
+          <tr><td colspan="4" class="text-center text-muted py-3">생성된 파일이 없습니다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 운영 모드 카드 -->
+<div class="card border-primary mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary">운영 모드</span>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary btn-sm" onclick="refreshStatus()">새로고침</button>
+      <button class="btn btn-outline-success btn-sm" onclick="runHealthCheckQuick()">설비 헬스체크</button>
+      <button class="btn btn-warning btn-sm" onclick="runGenerate()">파일 재생성</button>
+      <button class="btn btn-primary btn-sm" onclick="runDeploy()">전체 배포</button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="card border-0 bg-light mb-3">
+      <div class="card-body py-2">
+        <div class="row text-center small">
+          <div class="col">
+            <div class="fw-bold" id="healthTotal">-</div>
+            <div class="text-muted">설비</div>
+          </div>
+          <div class="col">
+            <div class="fw-bold text-success" id="healthOk">-</div>
+            <div class="text-muted">정상</div>
+          </div>
+          <div class="col">
+            <div class="fw-bold text-danger" id="healthFailed">-</div>
+            <div class="text-muted">연결실패</div>
+          </div>
+          <div class="col">
+            <div class="fw-bold text-secondary" id="healthUnknown">-</div>
+            <div class="text-muted">미확인</div>
+          </div>
+          <div class="col-md-3 text-end">
+            <small class="text-muted" id="nextHealthRun"></small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4" id="summaryCards">
+      <div class="col-md-3">
+        <div class="card text-center border-0 bg-secondary bg-opacity-10">
+          <div class="card-body">
+            <h2 class="mb-0 fw-bold" id="totalCount">-</h2>
+            <small class="text-muted">전체 설비</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-0 bg-success bg-opacity-10">
+          <div class="card-body">
+            <h2 class="mb-0 fw-bold text-success" id="successCount">-</h2>
+            <small class="text-muted">성공</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-0 bg-danger bg-opacity-10">
+          <div class="card-body">
+            <h2 class="mb-0 fw-bold text-danger" id="failedCount">-</h2>
+            <small class="text-muted">실패</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-0 bg-warning bg-opacity-10">
+          <div class="card-body">
+            <h2 class="mb-0 fw-bold text-warning" id="pendingCount">-</h2>
+            <small class="text-muted">미배포</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="equipmentCardGrid" class="mb-4"></div>
+
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">파일 생성 현황 (오늘)</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>파일명</th>
+                <th>상태</th>
+                <th>메시지</th>
+                <th>생성 시각</th>
+              </tr>
+            </thead>
+            <tbody id="generateTable">
+              <tr><td colspan="4" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header fw-semibold">설비별 배포 현황 (오늘)</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>설비명</th>
+                <th>IP</th>
+                <th>YieldConvDef</th>
+                <th>RejectMapFile</th>
+                <th>작업</th>
+              </tr>
+            </thead>
+            <tbody id="deployTable">
+              <tr><td colspan="5" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 파일 미리보기 모달 -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewModalTitle">파일 미리보기</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <pre id="previewContent" style="max-height:500px; overflow-y:auto; white-space:pre-wrap; word-break:break-all;"></pre>
+        <div id="previewTruncated" class="text-muted small mt-2" style="display:none;">... (이하 생략)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 알림 -->
+<div id="alertArea" class="position-fixed bottom-0 end-0 p-3" style="z-index:1100; min-width:300px"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const active_page = 'dashboard';
+
+  function _pingBorderClass(status) {
+    if (status === 'ok') return 'border-success';
+    if (status === 'failed') return 'border-danger';
+    return 'border-secondary';
+  }
+
+  function _pingLabel(status) {
+    if (status === 'ok') return '<span class="text-success small">● 정상</span>';
+    if (status === 'failed') return '<span class="text-danger small">✗ 실패</span>';
+    return '<span class="text-secondary small">○ 미확인</span>';
+  }
+
+  function _deployLabel(ycd, rmf) {
+    const y = (ycd && ycd.status) || 'pending';
+    const r = (rmf && rmf.status) || 'pending';
+    if (y === 'success' && r === 'success')
+      return '<span class="badge bg-success">✓ 완료</span>';
+    if (y === 'failed' || r === 'failed')
+      return '<span class="badge bg-danger">✗ 실패</span>';
+    if (y === 'success' || r === 'success')
+      return '<span class="badge bg-warning text-dark">△ 일부</span>';
+    return '<span class="badge bg-secondary">— 미배포</span>';
+  }
+
+  function renderEquipmentCards(equipmentStatus) {
+    const grid = document.getElementById('equipmentCardGrid');
+    if (!equipmentStatus || equipmentStatus.length === 0) {
+      grid.innerHTML = '';
+      return;
+    }
+
+    const groups = {};
+    equipmentStatus.forEach(e => {
+      const key = e.group_name || '기타';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(e);
+    });
+
+    const sortedKeys = Object.keys(groups).sort((a, b) => {
+      if (a === '기타') return 1;
+      if (b === '기타') return -1;
+      return a.localeCompare(b, 'ko');
+    });
+
+    grid.innerHTML = sortedKeys.map(group => `
+      <div class="mb-3">
+        <div class="text-muted small fw-semibold mb-2 border-bottom pb-1">${esc(group)}</div>
+        <div class="row g-2">
+          ${groups[group].map(e => `
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+              <div class="card h-100 border-2 ${_pingBorderClass(e.last_ping_status)}">
+                <div class="card-body p-2 text-center">
+                  <div class="fw-semibold small text-truncate" title="${esc(e.name)}">${esc(e.name)}</div>
+                  <div class="mt-1">${_pingLabel(e.last_ping_status)}</div>
+                  <div class="mt-1">${_deployLabel(e.file_YieldConvDef, e.file_RejectMapFile)}</div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function statusBadge(info) {
+    if (!info || !info.status || info.status === 'pending') {
+      return '<span class="badge bg-secondary">미배포</span>';
+    }
+    if (info.status === 'success') {
+      return `<span class="badge bg-success">성공</span><br><small class="text-muted">${esc(info.deployed_at)}</small>`;
+    }
+    return `<span class="badge bg-danger" title="${esc(info.message)}">실패</span><br><small class="text-muted">${esc(info.deployed_at)}</small>`;
+  }
+
+  function genBadge(status) {
+    if (status === 'success') return '<span class="badge bg-success">성공</span>';
+    if (status === 'failed') return '<span class="badge bg-danger">실패</span>';
+    return '<span class="badge bg-secondary">-</span>';
+  }
+
+  function showAlert(msg, type = 'info') {
+    const id = 'alert-' + Date.now();
+    const el = document.createElement('div');
+    el.id = id;
+    el.className = `alert alert-${type} alert-dismissible fade show shadow`;
+    el.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    document.getElementById('alertArea').appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+  }
+
+  function checkDb() {
+    const resultEl = document.getElementById('dbCheckResult');
+    resultEl.innerHTML = '<span class="text-muted small">확인 중...</span>';
+    fetch('/api/test/db-check', {method: 'POST'})
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          resultEl.innerHTML = `<span class="text-success fw-semibold">&#10003; ${d.message}</span>`;
+        } else {
+          resultEl.innerHTML = `<span class="text-danger fw-semibold">&#10007; ${d.message}</span>`;
+        }
+      })
+      .catch(() => {
+        resultEl.innerHTML = '<span class="text-danger fw-semibold">&#10007; 요청 실패</span>';
+      });
+  }
+
+  function testGenerate(fileType) {
+    showAlert(`파일 생성 중 (${fileType})...`, 'info');
+    fetch('/api/test/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({file_type: fileType})
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          showAlert('파일 생성 완료', 'success');
+        } else {
+          showAlert('일부 파일 생성 실패', 'warning');
+        }
+        loadGeneratedFiles();
+      })
+      .catch(() => showAlert('파일 생성 요청 실패', 'danger'));
+  }
+
+  function loadGeneratedFiles() {
+    fetch('/api/files/generated')
+      .then(r => r.json())
+      .then(data => {
+        const tbody = document.getElementById('generatedFilesTable');
+        if (!data.files || data.files.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">생성된 파일이 없습니다.</td></tr>';
+          return;
+        }
+        const files = data.files
+          .sort((a, b) => b.modified_at.localeCompare(a.modified_at))
+          .slice(0, 4);
+        tbody.innerHTML = files.map(f => `
+          <tr>
+            <td><code>${esc(f.name)}</code></td>
+            <td>${f.size.toLocaleString()} B</td>
+            <td>${esc(f.modified_at)}</td>
+            <td class="d-flex gap-1">
+              <button class="btn btn-outline-secondary btn-sm" data-file="${esc(f.name)}" onclick="previewFile(this.dataset.file)">미리보기</button>
+              <a class="btn btn-outline-primary btn-sm" href="/api/files/download/${encodeURIComponent(f.name)}" download="${esc(f.name)}">다운로드</a>
+            </td>
+          </tr>`).join('');
+      })
+      .catch(() => showAlert('파일 목록 조회 실패', 'danger'));
+  }
+
+  function previewFile(filename) {
+    fetch(`/api/files/generated/${encodeURIComponent(filename)}`)
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('previewModalTitle').textContent = d.filename;
+        document.getElementById('previewContent').textContent = d.content;
+        const truncEl = document.getElementById('previewTruncated');
+        truncEl.style.display = d.truncated ? '' : 'none';
+        new bootstrap.Modal(document.getElementById('previewModal')).show();
+      })
+      .catch(() => showAlert('파일 미리보기 실패', 'danger'));
+  }
+
+  function refreshStatus() {
+    fetch('/api/deploy/status/today')
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('totalCount').textContent = data.summary.total;
+        document.getElementById('successCount').textContent = data.summary.success;
+        document.getElementById('failedCount').textContent = data.summary.failed;
+        document.getElementById('pendingCount').textContent = data.summary.pending;
+
+        const genRows = data.generate_logs.length === 0
+          ? '<tr><td colspan="4" class="text-center text-muted py-3">오늘 생성 이력이 없습니다.</td></tr>'
+          : data.generate_logs.slice(0, 6).map(g => `
+              <tr>
+                <td><code>${esc(g.filename)}</code></td>
+                <td>${genBadge(g.status)}</td>
+                <td><small>${esc(g.message)}</small></td>
+                <td><small>${esc(g.generated_at)}</small></td>
+              </tr>`).join('');
+        document.getElementById('generateTable').innerHTML = genRows;
+
+        const depRows = data.equipment_status.length === 0
+          ? '<tr><td colspan="5" class="text-center text-muted py-3">등록된 설비가 없습니다.</td></tr>'
+          : data.equipment_status.map(e => `
+              <tr>
+                <td>${esc(e.name)}</td>
+                <td><code>${esc(e.ip)}</code></td>
+                <td>${statusBadge(e.file_YieldConvDef)}</td>
+                <td>${statusBadge(e.file_RejectMapFile)}</td>
+                <td>
+                  <button class="btn btn-outline-primary btn-sm" data-id="${e.id}" data-name="${esc(e.name)}" onclick="deployOne(this.dataset.id, this.dataset.name)">
+                    재배포
+                  </button>
+                </td>
+              </tr>`).join('');
+        document.getElementById('deployTable').innerHTML = depRows;
+        renderEquipmentCards(data.equipment_status);
+      })
+      .catch(() => showAlert('상태 조회 실패', 'danger'));
+  }
+
+  function runGenerate() {
+    if (!confirm('파일을 재생성하시겠습니까?')) return;
+    fetch('/api/deploy/generate?triggered_by=manual', {method: 'POST'})
+      .then(r => r.json())
+      .then(d => { showAlert(d.message, 'warning'); setTimeout(refreshStatus, 3000); })
+      .catch(() => showAlert('파일 생성 요청 실패', 'danger'));
+  }
+
+  function runDeploy() {
+    if (!confirm('모든 활성 설비에 즉시 배포하시겠습니까?')) return;
+    fetch('/api/deploy/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({triggered_by: 'manual'})
+    })
+      .then(r => r.json())
+      .then(d => { showAlert(d.message, 'primary'); setTimeout(refreshStatus, 5000); })
+      .catch(() => showAlert('배포 요청 실패', 'danger'));
+  }
+
+  function deployOne(equipmentId, name) {
+    if (!confirm(`'${name}' 설비에 즉시 배포하시겠습니까?`)) return;
+    fetch('/api/deploy/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({equipment_ids: [parseInt(equipmentId, 10)], triggered_by: 'manual'})
+    })
+      .then(r => r.json())
+      .then(d => { showAlert(d.message, 'primary'); setTimeout(refreshStatus, 5000); })
+      .catch(() => showAlert('배포 요청 실패', 'danger'));
+  }
+
+  function refreshHealth() {
+    fetch('/api/equipment/health-status')
+      .then(r => r.json())
+      .then(d => {
+        const s = d.summary || {};
+        document.getElementById('healthTotal').textContent = s.total ?? '-';
+        document.getElementById('healthOk').textContent = s.ok ?? '-';
+        document.getElementById('healthFailed').textContent = s.failed ?? '-';
+        document.getElementById('healthUnknown').textContent = s.unknown ?? '-';
+      })
+      .catch(() => {});
+
+    fetch('/api/scheduler/status')
+      .then(r => r.json())
+      .then(d => {
+        const el = document.getElementById('nextHealthRun');
+        if (d.next_health_run) {
+          el.textContent = `다음 헬스체크: ${d.next_health_run}`;
+        }
+      }).catch(() => {});
+  }
+
+  function runHealthCheckQuick() {
+    showAlert('설비 헬스체크 진행 중...', 'info');
+    fetch('/api/equipment/health-check', {method: 'POST'})
+      .then(r => r.json())
+      .then(d => {
+        const s = d.summary || {};
+        showAlert(`헬스체크 완료 — 정상 ${s.ok}/${s.total}, 실패 ${s.failed}`, s.failed ? 'warning' : 'success');
+        refreshHealth();
+      })
+      .catch(() => showAlert('헬스체크 실패', 'danger'));
+  }
+
+  loadGeneratedFiles();
+  refreshStatus();
+  refreshHealth();
+  setInterval(refreshStatus, 30000);
+  setInterval(refreshHealth, 60000);
+</script>
+{% endblock %}
