@@ -37,6 +37,7 @@ class Equipment(Base):
     last_ping_status:  Mapped[str]  = mapped_column(String(20), default="unknown")        # ok / failed / unknown
     last_ping_message: Mapped[str]  = mapped_column(Text, default="")                    # 점검 결과 메시지
     last_ping_ms:      Mapped[int | None] = mapped_column(Integer, nullable=True)         # 응답 속도(ms)
+    group_name:        Mapped[str | None] = mapped_column(String(50), nullable=True)   # 라인/그룹명 (예: A라인)
 
     # 이 설비와 연결된 배포 로그 목록 (1:N 관계)
     deploy_logs: Mapped[list["DeployLog"]] = relationship("DeployLog", back_populates="equipment")

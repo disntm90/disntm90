@@ -55,6 +55,7 @@ _LIGHTWEIGHT_MIGRATIONS = {
         ("last_ping_status",  "VARCHAR(20) NOT NULL DEFAULT 'unknown'"),   # ok / failed / unknown
         ("last_ping_message", "TEXT NOT NULL DEFAULT ''"),                 # 점검 결과 메시지
         ("last_ping_ms",      "INTEGER"),                                  # 응답 시간(ms)
+        ("group_name",        "VARCHAR(50)"),                              # 라인/그룹명 (예: A라인)
     ],
 }
 
