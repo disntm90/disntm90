@@ -36,3 +36,30 @@ def test_serialize_group_name_none_when_not_set(db):
     db.refresh(eq)
     result = _serialize(eq)
     assert result["group_name"] is None
+
+
+def test_today_status_includes_group_name_and_ping(db):
+    from app.routers.deploy import today_status
+    eq = Equipment(
+        name="테스트-E1", ip="192.168.1.5",
+        group_name="E라인", last_ping_status="ok",
+    )
+    db.add(eq)
+    db.commit()
+
+    result = today_status(db=db)
+    entry = next(e for e in result["equipment_status"] if e["name"] == "테스트-E1")
+    assert entry["group_name"] == "E라인"
+    assert entry["last_ping_status"] == "ok"
+
+
+def test_today_status_group_name_fallback_to_other(db):
+    from app.routers.deploy import today_status
+    eq = Equipment(name="테스트-F1", ip="192.168.1.6")
+    db.add(eq)
+    db.commit()
+
+    result = today_status(db=db)
+    entry = next(e for e in result["equipment_status"] if e["name"] == "테스트-F1")
+    assert entry["group_name"] == "기타"
+    assert entry["last_ping_status"] == "unknown"

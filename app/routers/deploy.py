@@ -113,9 +113,11 @@ def today_status(db: Session = Depends(get_db)):
     for eq in equipment_list:
         eq_logs = deploy_map.get(eq.id, {})
         equipment_status.append({
-            "id":                eq.id,
-            "name":              eq.name,
-            "ip":                eq.ip,
+            "id":                 eq.id,
+            "name":               eq.name,
+            "ip":                 eq.ip,
+            "group_name":         eq.group_name or "기타",
+            "last_ping_status":   eq.last_ping_status or "unknown",
             # 배포 이력 없으면 pending 상태로 표시
             "file_YieldConvDef":  eq_logs.get("YieldConvDef",  {"status": "pending"}),
             "file_RejectMapFile": eq_logs.get("RejectMapFile", {"status": "pending"}),
