@@ -111,6 +111,8 @@
       </div>
     </div>
 
+    <div id="equipmentCardGrid" class="mb-4"></div>
+
     <div class="card mb-3">
       <div class="card-header fw-semibold">파일 생성 현황 (오늘)</div>
       <div class="card-body p-0">
@@ -179,6 +181,70 @@
 {% block scripts %}
 <script>
   const active_page = 'dashboard';
+
+  function _pingBorderClass(status) {
+    if (status === 'ok') return 'border-success';
+    if (status === 'failed') return 'border-danger';
+    return 'border-secondary';
+  }
+
+  function _pingLabel(status) {
+    if (status === 'ok') return '<span class="text-success small">● 정상</span>';
+    if (status === 'failed') return '<span class="text-danger small">✗ 실패</span>';
+    return '<span class="text-secondary small">○ 미확인</span>';
+  }
+
+  function _deployLabel(ycd, rmf) {
+    const y = (ycd && ycd.status) || 'pending';
+    const r = (rmf && rmf.status) || 'pending';
+    if (y === 'success' && r === 'success')
+      return '<span class="badge bg-success">✓ 완료</span>';
+    if (y === 'failed' || r === 'failed')
+      return '<span class="badge bg-danger">✗ 실패</span>';
+    if (y === 'success' || r === 'success')
+      return '<span class="badge bg-warning text-dark">△ 일부</span>';
+    return '<span class="badge bg-secondary">— 미배포</span>';
+  }
+
+  function renderEquipmentCards(equipmentStatus) {
+    const grid = document.getElementById('equipmentCardGrid');
+    if (!equipmentStatus || equipmentStatus.length === 0) {
+      grid.innerHTML = '';
+      return;
+    }
+
+    const groups = {};
+    equipmentStatus.forEach(e => {
+      const key = e.group_name || '기타';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(e);
+    });
+
+    const sortedKeys = Object.keys(groups).sort((a, b) => {
+      if (a === '기타') return 1;
+      if (b === '기타') return -1;
+      return a.localeCompare(b, 'ko');
+    });
+
+    grid.innerHTML = sortedKeys.map(group => `
+      <div class="mb-3">
+        <div class="text-muted small fw-semibold mb-2 border-bottom pb-1">${esc(group)}</div>
+        <div class="row g-2">
+          ${groups[group].map(e => `
+            <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+              <div class="card h-100 border-2 ${_pingBorderClass(e.last_ping_status)}">
+                <div class="card-body p-2 text-center">
+                  <div class="fw-semibold small text-truncate" title="${esc(e.name)}">${esc(e.name)}</div>
+                  <div class="mt-1">${_pingLabel(e.last_ping_status)}</div>
+                  <div class="mt-1">${_deployLabel(e.file_YieldConvDef, e.file_RejectMapFile)}</div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
 
   function esc(s) {
     if (s == null) return '';
@@ -323,6 +389,7 @@
                 </td>
               </tr>`).join('');
         document.getElementById('deployTable').innerHTML = depRows;
+        renderEquipmentCards(data.equipment_status);
       })
       .catch(() => showAlert('상태 조회 실패', 'danger'));
   }
