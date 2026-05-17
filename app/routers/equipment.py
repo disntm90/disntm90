@@ -139,6 +139,9 @@ def update_equipment(equipment_id: int, data: EquipmentUpdate, db: Session = Dep
         if field == "group_name" and value == "":
             continue  # 빈 문자열이면 기존 그룹명 유지 (null로 처리)
         setattr(eq, field, value)
+    # group_name이 명시적으로 null로 설정된 경우 클리어
+    if "group_name" in data.model_fields_set and data.group_name is None:
+        eq.group_name = None
     eq.updated_at = datetime.now()
     db.commit()
     return {"message": f"설비 '{eq.name}' 이(가) 수정되었습니다."}

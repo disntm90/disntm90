@@ -419,7 +419,7 @@
     fetch('/api/deploy/run', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({equipment_ids: [equipmentId], triggered_by: 'manual'})
+      body: JSON.stringify({equipment_ids: [parseInt(equipmentId, 10)], triggered_by: 'manual'})
     })
       .then(r => r.json())
       .then(d => { showAlert(d.message, 'primary'); setTimeout(refreshStatus, 5000); })
