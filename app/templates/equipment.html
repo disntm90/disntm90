@@ -78,7 +78,11 @@
               <label class="form-check-label" for="f_sftp">SFTP 사용</label>
             </div>
           </div>
-          <div class="col-12">
+          <div class="col-md-6">
+            <label class="form-label">라인/그룹 <span class="text-muted small">(선택)</span></label>
+            <input type="text" class="form-control" id="f_group" placeholder="예: A라인">
+          </div>
+          <div class="col-md-6">
             <label class="form-label">설명 (선택)</label>
             <input type="text" class="form-control" id="f_desc" placeholder="설비 설명">
           </div>
@@ -110,7 +114,7 @@
   function openAddModal() {
     document.getElementById('modalTitle').textContent = '설비 추가';
     document.getElementById('editId').value = '';
-    ['f_name','f_ip','f_user','f_pass','f_desc'].forEach(id => document.getElementById(id).value = '');
+    ['f_name','f_ip','f_user','f_pass','f_desc','f_group'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('f_port').value = 21;
     document.getElementById('f_sftp').checked = false;
     modal.show();
@@ -131,6 +135,7 @@
         document.getElementById('f_pass').value = '';
         document.getElementById('f_sftp').checked = e.use_sftp;
         document.getElementById('f_desc').value = e.description;
+        document.getElementById('f_group').value = e.group_name || '';
         modal.show();
       });
   }
@@ -145,6 +150,7 @@
       ftp_pass: document.getElementById('f_pass').value,
       use_sftp: document.getElementById('f_sftp').checked,
       description: document.getElementById('f_desc').value.trim(),
+      group_name: document.getElementById('f_group').value.trim() || null,
     };
 
     if (!payload.name || !payload.ip) {
