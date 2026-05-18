@@ -317,6 +317,8 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
         logger.warning("조회된 데이터가 없습니다.")
         return None
 
+    logger.info(f"getData 완료: {len(df)}행 조회 (table='{_BDQ_TABLE}')")
+
     return df.copy()
 
 
