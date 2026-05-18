@@ -46,10 +46,9 @@ OUTPUT_FILES = [
 
 # ── bigdataquery SQL ──────────────────────────────────────────────
 # ICOS 벤더 기준의 불량 코드 목록 조회
-_BDQ_TABLE = "mos_tsp_smi.gpm_tp_be_mng_sbl_scrap_code"
-_BDQ_QUERY = f"""
+_BDQ_QUERY = """
     SELECT code_type, code_id
-    FROM {_BDQ_TABLE}
+    FROM mos_tsp_smi.gpm_tp_be_mng_sbl_scrap_code
     WHERE vendor_name = 'ICOS'
 """
 
@@ -301,7 +300,7 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
         logger.error("BDQ_USER 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.")
         return None
 
-    logger.info(f"getData 호출: user_name='{user}', table='{_BDQ_TABLE}', condition='vendor_name=ICOS'")
+    logger.info(f"getData 호출: user_name='{user}'")
     try:
         df = bdq.getData(param=_BDQ_QUERY, user_name=user)
     except Exception as exc:
@@ -402,7 +401,7 @@ def generate_yield_condef(triggered_by: str = "scheduler") -> dict:
         return {"file_type": "YieldConvDef", "filename": filename,
                 "status": "failed", "error": validation_msg}
 
-    logger.info(f"YieldConvDef 생성 완료: {output_path} ({len(df)}개 항목, table={_BDQ_TABLE}, {validation_msg})")
+    logger.info(f"YieldConvDef 생성 완료: {output_path} ({len(df)}개 항목, {validation_msg})")
     return {"file_type": "YieldConvDef", "filename": filename,
             "status": "success", "message": validation_msg}
 
@@ -524,7 +523,7 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
         return {"file_type": "RejectMapFile", "filename": filename,
                 "status": "failed", "error": validation_msg}
 
-    logger.info(f"RejectMapFile 생성 완료: {output_path} ({len(df)}개 항목, table={_BDQ_TABLE}, {validation_msg})")
+    logger.info(f"RejectMapFile 생성 완료: {output_path} ({len(df)}개 항목, {validation_msg})")
     return {"file_type": "RejectMapFile", "filename": filename,
             "status": "success", "message": validation_msg}
 
