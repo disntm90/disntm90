@@ -1,11 +1,114 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="card">
-  <div class="card-header">
-    <h5 class="mb-0">📊 BDQ 쿼리 데이터</h5>
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-1">📊 BDQ 쿼리 데이터</h5>
+      <small class="text-muted">
+        Table: <code id="bdqTable">—</code>
+        · 조회 시각: <span id="bdqQueriedAt">—</span>
+      </small>
+    </div>
+    <button id="bdqRefreshBtn" class="btn btn-outline-primary btn-sm">🔄 새로고침</button>
   </div>
+
   <div class="card-body">
-    <div id="bdqPlaceholder">로딩 중...</div>
+    <div id="bdqError" class="alert alert-danger d-none"></div>
+
+    <div id="bdqSummary" class="row g-2 mb-3"></div>
+
+    <div id="bdqLoading" class="text-center py-4 d-none">
+      <div class="spinner-border text-primary"></div>
+      <div class="mt-2 text-muted">BDQ 조회 중...</div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm table-striped table-hover mb-0">
+        <thead>
+          <tr><th style="width:60px">#</th><th>code_type</th><th>code_id</th></tr>
+        </thead>
+        <tbody id="bdqRows"></tbody>
+      </table>
+    </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderSummary(data) {
+  const summaryEl = document.getElementById('bdqSummary');
+  const g = data.summary.groups;
+  const cards = [
+    { label: '전체',    value: data.summary.total, color: 'primary'   },
+    { label: 'BGA',     value: g.BGA       || 0,   color: 'info'      },
+    { label: '3D',      value: g['3D']     || 0,   color: 'info'      },
+    { label: 'BBI',     value: g.BBI       || 0,   color: 'info'      },
+    { label: 'TOPSMI',  value: g.TOPSMI    || 0,   color: 'info'      },
+    { label: '기타',    value: g['기타']   || 0,   color: 'secondary' },
+  ];
+  summaryEl.innerHTML = cards.map(c => `
+    <div class="col-6 col-md-2">
+      <div class="card text-bg-${c.color}">
+        <div class="card-body text-center py-2">
+          <div class="small">${esc(c.label)}</div>
+          <div class="h4 mb-0">${c.value}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderRows(rows) {
+  const rowsEl = document.getElementById('bdqRows');
+  if (!rows.length) {
+    rowsEl.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">데이터 없음</td></tr>';
+    return;
+  }
+  rowsEl.innerHTML = rows.map((r, i) => `
+    <tr><td>${i + 1}</td><td>${esc(r.code_type)}</td><td>${esc(r.code_id)}</td></tr>
+  `).join('');
+}
+
+async function loadBdqData() {
+  const errorEl   = document.getElementById('bdqError');
+  const loadingEl = document.getElementById('bdqLoading');
+  const refreshBtn = document.getElementById('bdqRefreshBtn');
+  const rowsEl    = document.getElementById('bdqRows');
+  const summaryEl = document.getElementById('bdqSummary');
+
+  errorEl.classList.add('d-none');
+  loadingEl.classList.remove('d-none');
+  refreshBtn.disabled = true;
+  rowsEl.innerHTML = '';
+  summaryEl.innerHTML = '';
+
+  try {
+    const res = await fetch('/api/bdq/query');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({detail: '알 수 없는 오류'}));
+      throw new Error(err.detail || '조회 실패');
+    }
+    const data = await res.json();
+    renderSummary(data);
+    renderRows(data.rows);
+    document.getElementById('bdqTable').textContent = data.table;
+    document.getElementById('bdqQueriedAt').textContent = data.queried_at;
+  } catch (e) {
+    errorEl.textContent = '❌ ' + e.message;
+    errorEl.classList.remove('d-none');
+  } finally {
+    loadingEl.classList.add('d-none');
+    refreshBtn.disabled = false;
+  }
+}
+
+document.getElementById('bdqRefreshBtn').addEventListener('click', loadBdqData);
+loadBdqData();
+</script>
 {% endblock %}
