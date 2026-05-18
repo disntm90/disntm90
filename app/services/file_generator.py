@@ -46,9 +46,10 @@ OUTPUT_FILES = [
 
 # ── bigdataquery SQL ──────────────────────────────────────────────
 # ICOS 벤더 기준의 불량 코드 목록 조회
-_BDQ_QUERY = """
+_BDQ_TABLE = "mos_tsp_smi.gpm_tp_be_mng_sbl_scrap_code"
+_BDQ_QUERY = f"""
     SELECT code_type, code_id
-    FROM mos_tsp_smi.gpm_tp_be_mng_sbl_scrap_code
+    FROM {_BDQ_TABLE}
     WHERE vendor_name = 'ICOS'
 """
 
@@ -285,8 +286,8 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
     """
     DB에서 불량 코드 목록을 조회한다.
 
-    호출될 때마다 bdq.getData()를 새로 실행해 상위 서버의 최신 데이터를 반영한다.
-    데이터를 캐싱하지 않으며, 로그인은 앱 시작 시 완료된 세션을 재사용한다.
+    호출될 때마다 재로그인 후 bdq.getData()를 실행해 상위 서버의 최신 데이터를 반영한다.
+    세션 만료로 인한 캐시 데이터 반환을 방지하기 위해 매 조회 전 로그인을 갱신한다.
     반환값: 성공 시 DataFrame, 실패 시 None
     """
     try:
@@ -300,7 +301,13 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
         logger.error("BDQ_USER 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.")
         return None
 
-    logger.info(f"getData 호출: user_name='{user}'")
+    # 매 조회 전 로그인 갱신 — 세션 만료 시 bigdataquery가 캐시 데이터를 반환하는 문제 방지
+    if not _bdq_login():
+        logger.error("bigdataquery 로그인 실패로 DB 조회를 중단합니다.")
+        return None
+
+    logger.info(f"getData 호출: user_name='{user}', table='{_BDQ_TABLE}', condition='vendor_name=ICOS'")
+    logger.debug(f"getData query:\n{_BDQ_QUERY.strip()}")
     try:
         df = bdq.getData(param=_BDQ_QUERY, user_name=user)
     except Exception as exc:
@@ -310,6 +317,8 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
     if df.empty:
         logger.warning("조회된 데이터가 없습니다.")
         return None
+
+    logger.info(f"getData 완료: {len(df)}행 조회 (table='{_BDQ_TABLE}')")
 
     return df.copy()
 
@@ -401,7 +410,7 @@ def generate_yield_condef(triggered_by: str = "scheduler") -> dict:
         return {"file_type": "YieldConvDef", "filename": filename,
                 "status": "failed", "error": validation_msg}
 
-    logger.info(f"YieldConvDef 생성 완료: {output_path} ({len(df)}개 항목, {validation_msg})")
+    logger.info(f"YieldConvDef 생성 완료: {output_path} ({len(df)}개 항목, table={_BDQ_TABLE}, {validation_msg})")
     return {"file_type": "YieldConvDef", "filename": filename,
             "status": "success", "message": validation_msg}
 
@@ -523,7 +532,7 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
         return {"file_type": "RejectMapFile", "filename": filename,
                 "status": "failed", "error": validation_msg}
 
-    logger.info(f"RejectMapFile 생성 완료: {output_path} ({len(df)}개 항목, {validation_msg})")
+    logger.info(f"RejectMapFile 생성 완료: {output_path} ({len(df)}개 항목, table={_BDQ_TABLE}, {validation_msg})")
     return {"file_type": "RejectMapFile", "filename": filename,
             "status": "success", "message": validation_msg}
 
