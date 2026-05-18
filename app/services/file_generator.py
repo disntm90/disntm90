@@ -286,8 +286,8 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
     """
     DB에서 불량 코드 목록을 조회한다.
 
-    호출될 때마다 bdq.getData()를 새로 실행해 상위 서버의 최신 데이터를 반영한다.
-    데이터를 캐싱하지 않으며, 로그인은 앱 시작 시 완료된 세션을 재사용한다.
+    호출될 때마다 재로그인 후 bdq.getData()를 실행해 상위 서버의 최신 데이터를 반영한다.
+    세션 만료로 인한 캐시 데이터 반환을 방지하기 위해 매 조회 전 로그인을 갱신한다.
     반환값: 성공 시 DataFrame, 실패 시 None
     """
     try:
@@ -299,6 +299,11 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
     user = os.getenv("BDQ_USER", "")
     if not user:
         logger.error("BDQ_USER 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.")
+        return None
+
+    # 매 조회 전 로그인 갱신 — 세션 만료 시 bigdataquery가 캐시 데이터를 반환하는 문제 방지
+    if not _bdq_login():
+        logger.error("bigdataquery 로그인 실패로 DB 조회를 중단합니다.")
         return None
 
     logger.info(f"getData 호출: user_name='{user}', table='{_BDQ_TABLE}', condition='vendor_name=ICOS'")
