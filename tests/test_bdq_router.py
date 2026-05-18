@@ -52,3 +52,21 @@ def test_query_raises_503_when_fetch_returns_none(monkeypatch):
         bdq.query_bdq_data()
     assert exc.value.status_code == 503
     assert "BDQ" in exc.value.detail
+
+
+def test_bdq_page_renders():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    client = TestClient(app)
+    res = client.get("/bdq")
+    assert res.status_code == 200
+    assert "쿼리 데이터" in res.text
+
+
+def test_nav_has_bdq_link():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    client = TestClient(app)
+    res = client.get("/")
+    assert res.status_code == 200
+    assert 'href="/bdq"' in res.text

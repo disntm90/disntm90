@@ -55,3 +55,12 @@ def query_bdq_data():
         "rows":       rows,
         "summary":    {"total": len(rows), "groups": groups},
     }
+
+
+@router.get("/bdq", response_class=HTMLResponse)
+def bdq_page(request: Request):
+    """쿼리 데이터 HTML 페이지를 렌더링한다."""
+    return templates.TemplateResponse(
+        "bdq.html",
+        {"request": request, "active_page": "bdq"},
+    )
