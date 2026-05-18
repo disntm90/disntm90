@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 # ── 보조 파일 경로 ────────────────────────────────────────────────
 PRIMECODE_CSV  = DATA_DIR / "primecode.csv"            # code_type → prime_code 매핑 테이블
 TEMPLATE_FILE  = DATA_DIR / "static_xml_template.txt"  # RejectMapFile 정적 뼈대
-DEFAULT_PRIMECODE = "9"   # primecode.csv에 없는 code_type에 적용할 기본값
+DEFAULT_PRIMECODE = "1"   # primecode.csv에 없는 code_type에 적용할 기본값
 
 # ── 배포 대상 파일 목록 (단일 소스) ──────────────────────────────
 # (파일타입, 파일명, 설비 내 배포 경로)
