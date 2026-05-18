@@ -307,6 +307,7 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
         return None
 
     logger.info(f"getData 호출: user_name='{user}', table='{_BDQ_TABLE}', condition='vendor_name=ICOS'")
+    logger.debug(f"getData query:\n{_BDQ_QUERY.strip()}")
     try:
         df = bdq.getData(param=_BDQ_QUERY, user_name=user)
     except Exception as exc:
