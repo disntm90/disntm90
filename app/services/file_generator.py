@@ -249,7 +249,9 @@ def _bdq_login() -> bool:
     .env의 BDQ_USER / BDQ_PASS 로 bigdataquery login() 자동 실행.
 
     sys.stdin을 StringIO로 교체해 login()이 읽는 순간 자격증명이 입력된다.
-    복원은 sys.__stdin__ (Python 시작 시 원본 stdin)을 사용한다.
+    login() 완료 후에는 빈 StringIO로 복원한다 — SSH/터미널 세션이 닫혀
+    원본 stdin 파이프가 끊긴 환경에서 [WinError 233]이 발생하는 것을 방지.
+    서버 프로세스는 대화형 stdin이 불필요하므로 빈 StringIO로 충분하다.
     """
     global _bdq_session_active
 
@@ -279,7 +281,9 @@ def _bdq_login() -> bool:
         return False
     finally:
         account_info.close()
-        sys.stdin = sys.__stdin__  # 원본 stdin으로 복원 (캡처 값 아닌 Python 시작 시 원본)
+        # 빈 StringIO로 복원 — 원본 stdin(sys.__stdin__)이 터미널 세션 종료로
+        # 파이프가 끊긴 경우 [WinError 233]을 유발하므로 사용하지 않는다.
+        sys.stdin = io.StringIO("")
 
 
 def _fetch_scrap_data() -> Optional[pd.DataFrame]:
