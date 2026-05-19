@@ -324,6 +324,12 @@ def _fetch_scrap_data() -> Optional[pd.DataFrame]:
 
     logger.info(f"getData 완료: {len(df)}행 조회 (table='{_BDQ_TABLE}')")
 
+    before = len(df)
+    df = df.drop_duplicates(subset=["code_type", "code_id"])
+    removed = before - len(df)
+    if removed:
+        logger.info(f"중복 제거: {removed}행 삭제 → {len(df)}행 남음")
+
     return df.copy()
 
 
