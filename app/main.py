@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.database import init_db
-from app.routers import equipment, file_templates, deploy, logs, files, bdq
+from app.routers import equipment, deploy, logs, files, bdq
 from app.services.scheduler import start_scheduler, stop_scheduler, get_scheduler_status
 
 # ── 로그 파일 디렉토리 사전 생성 ────────────────────────────────
@@ -71,7 +71,6 @@ templates = Jinja2Templates(directory="app/templates")
 
 # ── 라우터 등록 ──────────────────────────────────────────────────
 app.include_router(equipment.router)       # /equipment, /api/equipment/*
-app.include_router(file_templates.router)  # /templates, /api/templates/*
 app.include_router(deploy.router)          # /api/deploy/*
 app.include_router(logs.router)            # /logs, /api/logs/*
 app.include_router(files.router)           # /api/files/*, /api/test/*
