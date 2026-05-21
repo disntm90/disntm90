@@ -143,46 +143,28 @@
 <script>
   const active_page = 'dashboard';
 
-  function _pingBorderClass(status) {
-    if (status === 'ok') return 'border-success';
-    if (status === 'failed') return 'border-danger';
-    return 'border-secondary';
-  }
-
-  function _pingDot(status) {
-    if (status === 'ok') return '<span class="text-success" style="font-size:.7rem">●</span>';
-    if (status === 'failed') return '<span class="text-danger" style="font-size:.7rem">✗</span>';
-    return '<span class="text-secondary" style="font-size:.7rem">○</span>';
-  }
-
-  function _deployDot(ycd, rmf) {
-    const y = (ycd && ycd.status) || 'pending';
-    const r = (rmf && rmf.status) || 'pending';
-    if (y === 'success' && r === 'success')
-      return '<span class="badge bg-success" style="font-size:.65rem">✓</span>';
-    if (y === 'failed' || r === 'failed')
-      return '<span class="badge bg-danger" style="font-size:.65rem">✗</span>';
-    if (y === 'success' || r === 'success')
-      return '<span class="badge bg-warning text-dark" style="font-size:.65rem">△</span>';
-    return '<span class="badge bg-secondary" style="font-size:.65rem">—</span>';
+  function _pingStateClass(status) {
+    if (status === 'ok') return 'eq-ping-ok';
+    if (status === 'failed') return 'eq-ping-failed';
+    return 'eq-ping-unknown';
   }
 
   function _pingLabel(status) {
-    if (status === 'ok') return '<span class="text-success small">● 정상</span>';
-    if (status === 'failed') return '<span class="text-danger small">✗ 실패</span>';
-    return '<span class="text-secondary small">○ 미확인</span>';
+    if (status === 'ok') return '<span class="text-success">● 정상</span>';
+    if (status === 'failed') return '<span class="text-danger">✗ 실패</span>';
+    return '<span class="text-secondary">○ 미확인</span>';
   }
 
   function _deployLabel(ycd, rmf) {
     const y = (ycd && ycd.status) || 'pending';
     const r = (rmf && rmf.status) || 'pending';
     if (y === 'success' && r === 'success')
-      return '<span class="badge bg-success">✓ 완료</span>';
+      return '<span class="badge bg-success">완료</span>';
     if (y === 'failed' || r === 'failed')
-      return '<span class="badge bg-danger">✗ 실패</span>';
+      return '<span class="badge bg-danger">실패</span>';
     if (y === 'success' || r === 'success')
-      return '<span class="badge bg-warning text-dark">△ 일부</span>';
-    return '<span class="badge bg-secondary">— 미배포</span>';
+      return '<span class="badge bg-warning text-dark">일부</span>';
+    return '<span class="badge bg-secondary">미배포</span>';
   }
 
   function renderEquipmentCards(equipmentStatus) {
@@ -207,15 +189,14 @@
 
     grid.innerHTML = sortedKeys.map(group => `
       <div class="mb-2">
-        <div class="text-muted fw-semibold mb-1 border-bottom pb-1" style="font-size:.73rem;letter-spacing:.3px;">${esc(group)}</div>
-        <div class="eq-grid-row">
+        <div class="text-muted fw-semibold mb-1 border-bottom pb-1" style="font-size:.73rem;letter-spacing:.3px;">${esc(group)} <span class="text-secondary">(${groups[group].length})</span></div>
+        <div class="eq-grid">
           ${groups[group].map(e => `
-            <div class="eq-grid-item">
-              <div class="card h-100 eq-card ${_pingBorderClass(e.last_ping_status)}">
-                <div class="card-body p-1 text-center">
-                  <div class="eq-name text-truncate" title="${esc(e.name)}">${esc(e.name)}</div>
-                  <div class="eq-status">${_pingDot(e.last_ping_status)} ${_deployDot(e.file_YieldConvDef, e.file_RejectMapFile)}</div>
-                </div>
+            <div class="eq-card ${_pingStateClass(e.last_ping_status)}" title="${esc(e.name)}">
+              <div class="eq-name text-truncate">${esc(e.name)}</div>
+              <div class="eq-meta">
+                <span class="eq-ping">${_pingLabel(e.last_ping_status)}</span>
+                ${_deployLabel(e.file_YieldConvDef, e.file_RejectMapFile)}
               </div>
             </div>
           `).join('')}

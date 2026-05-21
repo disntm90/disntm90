@@ -182,42 +182,47 @@ tr.htmx-settling td { opacity: 1; transition: opacity .2s; }
 .stat-pill.sp-danger  .sp-num { color: #dc2626; }
 .stat-pill.sp-warning .sp-num { color: #d97706; }
 
-/* ── 설비 카드 그리드 (10개/행) ────────────────────────────── */
-.eq-grid-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.eq-grid-item {
-  flex: 0 0 calc(10% - 5px);
-  min-width: 75px;
-  max-width: 130px;
+/* ── 설비 카드 그리드 ──────────────────────────────────────── */
+/* auto-fill로 가로 폭에 따라 자동으로 카드 수가 결정된다
+   (FHD/QHD 모니터에서 한 줄에 10개 이상 들어감) */
+.eq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
 }
 .eq-card {
-  border-width: 2px !important;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-left: 3px solid var(--app-border);
+  border-radius: 6px;
+  padding: 6px 8px;
   transition: box-shadow .15s, transform .1s;
+  min-width: 0; /* grid 항목 텍스트 truncate 가능하게 */
 }
 .eq-card:hover {
-  box-shadow: 0 3px 8px rgba(15,23,42,0.1);
+  box-shadow: 0 2px 6px rgba(15,23,42,0.08);
   transform: translateY(-1px);
 }
-.eq-name {
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1.2;
-  max-width: 100%;
-}
-.eq-status {
-  font-size: 0.7rem;
-  margin-top: 2px;
-}
+.eq-card.eq-ping-ok      { border-left-color: #16a34a; }
+.eq-card.eq-ping-failed  { border-left-color: #dc2626; background: #fef2f2; }
+.eq-card.eq-ping-unknown { border-left-color: #cbd5e1; }
 
-@media (max-width: 1200px) {
-  .eq-grid-item { flex: 0 0 calc(12.5% - 5px); }
+.eq-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--app-text);
+  line-height: 1.2;
+  margin-bottom: 3px;
 }
-@media (max-width: 900px) {
-  .eq-grid-item { flex: 0 0 calc(16.66% - 5px); }
+.eq-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  gap: 4px;
 }
-@media (max-width: 600px) {
-  .eq-grid-item { flex: 0 0 calc(25% - 5px); }
+.eq-ping { line-height: 1; }
+.eq-meta .badge {
+  font-size: 0.65rem;
+  padding: 0.18em 0.45em;
 }
