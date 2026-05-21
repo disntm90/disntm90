@@ -309,30 +309,6 @@ def _load_primecode_map() -> dict:
     return {}
 
 
-def _load_template_content() -> str:
-    """
-    DB FileTemplate 테이블에서 RejectMapFile 템플릿을 읽는다.
-    행이 없거나 내용이 비어 있으면 STATIC_XML_TEMPLATE 상수로 폴백한다.
-    """
-    from app.models import FileTemplate
-
-    db = SessionLocal()
-    try:
-        t = db.query(FileTemplate).filter(
-            FileTemplate.file_type == "RejectMapFile",
-            FileTemplate.is_active == True,
-        ).first()
-        if t and t.content.strip():
-            logger.info("DB에서 RejectMapFile 템플릿 로드")
-            return t.content
-    except Exception as exc:
-        logger.error(f"DB 템플릿 조회 실패, 상수 폴백: {exc}")
-    finally:
-        db.close()
-
-    logger.warning("DB에 RejectMapFile 템플릿 없음 → STATIC_XML_TEMPLATE 사용")
-    return STATIC_XML_TEMPLATE
-
 
 def _xml_attr(val) -> str:
     """XML attribute value escape — &, <, >, " 를 엔티티로 변환."""
@@ -387,7 +363,7 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
     scrap_maps_xml = "\n".join(scrap_map_lines)
 
     # 정적 템플릿에 동적 부분 두 곳 삽입
-    template  = _load_template_content()
+    template  = STATIC_XML_TEMPLATE
     final_xml = (template
                  .replace("{DYNAMIC_SECONDARY_SCRAP_CODES}", secondary_xml)
                  .replace("{DYNAMIC_SCRAP_MAPS}", scrap_maps_xml))
