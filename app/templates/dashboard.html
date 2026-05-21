@@ -4,21 +4,21 @@
 {% block content %}
 
 <!-- 테스트 모드 카드 -->
-<div class="card border-warning mb-4">
+<div class="card border-warning mb-3">
   <div class="card-header d-flex align-items-center gap-2">
-    <span class="badge bg-warning text-dark">테스트 모드</span>
+    <span class="badge bg-warning text-dark">🧪 테스트 모드</span>
     <span class="text-muted small">설비 IP 없이 파일 생성만 확인</span>
   </div>
-  <div class="card-body">
-    <div class="d-flex flex-wrap gap-2 mb-3">
-      <button class="btn btn-outline-secondary btn-sm" onclick="checkDb()">DB 연결 확인</button>
-      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('YieldConvDef')">YieldConvDef 생성</button>
-      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('RejectMapFile')">RejectMapFile 생성</button>
-      <button class="btn btn-primary btn-sm" onclick="testGenerate('ALL')">전체 생성</button>
+  <div class="card-body py-2">
+    <div class="d-flex flex-wrap gap-2 mb-2">
+      <button class="btn btn-outline-secondary btn-sm" onclick="checkDb()">🔌 DB 연결 확인</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('YieldConvDef')">📄 YieldConvDef 생성</button>
+      <button class="btn btn-outline-primary btn-sm" onclick="testGenerate('RejectMapFile')">📄 RejectMapFile 생성</button>
+      <button class="btn btn-primary btn-sm" onclick="testGenerate('ALL')">⚡ 전체 생성</button>
     </div>
-    <div id="dbCheckResult"></div>
+    <div id="dbCheckResult" class="mb-1"></div>
 
-    <div class="table-responsive mt-3">
+    <div class="table-responsive">
       <table class="table table-sm table-hover mb-0">
         <thead class="table-light">
           <tr>
@@ -29,7 +29,7 @@
           </tr>
         </thead>
         <tbody id="generatedFilesTable">
-          <tr><td colspan="4" class="text-center text-muted py-3">생성된 파일이 없습니다.</td></tr>
+          <tr><td colspan="4" class="text-center text-muted py-2">생성된 파일이 없습니다.</td></tr>
         </tbody>
       </table>
     </div>
@@ -37,84 +37,44 @@
 </div>
 
 <!-- 운영 모드 카드 -->
-<div class="card border-primary mb-4">
+<div class="card border-primary mb-3">
   <div class="card-header d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center gap-2">
-      <span class="badge bg-primary">운영 모드</span>
+      <span class="badge bg-primary">⚙ 운영 모드</span>
     </div>
-    <div class="d-flex gap-2">
-      <button class="btn btn-outline-secondary btn-sm" onclick="refreshStatus()">새로고침</button>
-      <button class="btn btn-outline-success btn-sm" onclick="runHealthCheckQuick()">설비 헬스체크</button>
-      <button class="btn btn-warning btn-sm" onclick="runGenerate()">파일 재생성</button>
-      <button class="btn btn-primary btn-sm" onclick="runDeploy()">전체 배포</button>
+    <div class="d-flex gap-1">
+      <button class="btn btn-outline-secondary btn-sm" onclick="refreshStatus()">↻ 새로고침</button>
+      <button class="btn btn-outline-success btn-sm" onclick="runHealthCheckQuick()">❤ 헬스체크</button>
+      <button class="btn btn-warning btn-sm" onclick="runGenerate()">📄 파일 재생성</button>
+      <button class="btn btn-primary btn-sm" onclick="runDeploy()">🚀 전체 배포</button>
     </div>
   </div>
-  <div class="card-body">
-    <div class="card border-0 bg-light mb-3">
-      <div class="card-body py-2">
-        <div class="row text-center small">
-          <div class="col">
-            <div class="fw-bold" id="healthTotal">-</div>
-            <div class="text-muted">설비</div>
-          </div>
-          <div class="col">
-            <div class="fw-bold text-success" id="healthOk">-</div>
-            <div class="text-muted">정상</div>
-          </div>
-          <div class="col">
-            <div class="fw-bold text-danger" id="healthFailed">-</div>
-            <div class="text-muted">연결실패</div>
-          </div>
-          <div class="col">
-            <div class="fw-bold text-secondary" id="healthUnknown">-</div>
-            <div class="text-muted">미확인</div>
-          </div>
-          <div class="col-md-3 text-end">
-            <small class="text-muted" id="nextHealthRun"></small>
-          </div>
-        </div>
-      </div>
+  <div class="card-body py-2">
+
+    <!-- 헬스체크 요약 -->
+    <div class="health-bar d-flex align-items-center gap-3 mb-2 px-1">
+      <span class="hb-item"><span class="hb-num" id="healthTotal">-</span><span class="hb-lbl">설비</span></span>
+      <span class="hb-sep">|</span>
+      <span class="hb-item text-success"><span class="hb-num" id="healthOk">-</span><span class="hb-lbl">정상</span></span>
+      <span class="hb-item text-danger"><span class="hb-num" id="healthFailed">-</span><span class="hb-lbl">실패</span></span>
+      <span class="hb-item text-secondary"><span class="hb-num" id="healthUnknown">-</span><span class="hb-lbl">미확인</span></span>
+      <small class="text-muted ms-auto" id="nextHealthRun"></small>
     </div>
 
-    <div class="row g-3 mb-4" id="summaryCards">
-      <div class="col-md-3">
-        <div class="card text-center border-0 bg-secondary bg-opacity-10">
-          <div class="card-body">
-            <h2 class="mb-0 fw-bold" id="totalCount">-</h2>
-            <small class="text-muted">전체 설비</small>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card text-center border-0 bg-success bg-opacity-10">
-          <div class="card-body">
-            <h2 class="mb-0 fw-bold text-success" id="successCount">-</h2>
-            <small class="text-muted">성공</small>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card text-center border-0 bg-danger bg-opacity-10">
-          <div class="card-body">
-            <h2 class="mb-0 fw-bold text-danger" id="failedCount">-</h2>
-            <small class="text-muted">실패</small>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card text-center border-0 bg-warning bg-opacity-10">
-          <div class="card-body">
-            <h2 class="mb-0 fw-bold text-warning" id="pendingCount">-</h2>
-            <small class="text-muted">미배포</small>
-          </div>
-        </div>
-      </div>
+    <!-- 배포 요약 통계 (인라인 컴팩트) -->
+    <div class="stat-bar d-flex gap-3 mb-2 px-1 flex-wrap">
+      <span class="stat-pill"><span class="sp-num" id="totalCount">-</span><span class="sp-lbl">전체</span></span>
+      <span class="stat-pill sp-success"><span class="sp-num" id="successCount">-</span><span class="sp-lbl">성공</span></span>
+      <span class="stat-pill sp-danger"><span class="sp-num" id="failedCount">-</span><span class="sp-lbl">실패</span></span>
+      <span class="stat-pill sp-warning"><span class="sp-num" id="pendingCount">-</span><span class="sp-lbl">미배포</span></span>
     </div>
 
-    <div id="equipmentCardGrid" class="mb-4"></div>
+    <!-- 설비 카드 그리드 -->
+    <div id="equipmentCardGrid" class="mb-3"></div>
 
-    <div class="card mb-3">
-      <div class="card-header fw-semibold">파일 생성 현황 (오늘)</div>
+    <!-- 파일 생성 현황 -->
+    <div class="card mb-2">
+      <div class="card-header fw-semibold py-2">📁 파일 생성 현황 (오늘)</div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm table-hover mb-0">
@@ -127,15 +87,16 @@
               </tr>
             </thead>
             <tbody id="generateTable">
-              <tr><td colspan="4" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
+              <tr><td colspan="4" class="text-center text-muted py-2">데이터 로딩 중...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
+    <!-- 설비별 배포 현황 -->
     <div class="card">
-      <div class="card-header fw-semibold">설비별 배포 현황 (오늘)</div>
+      <div class="card-header fw-semibold py-2">🚀 설비별 배포 현황 (오늘)</div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm table-hover mb-0">
@@ -149,7 +110,7 @@
               </tr>
             </thead>
             <tbody id="deployTable">
-              <tr><td colspan="5" class="text-center text-muted py-3">데이터 로딩 중...</td></tr>
+              <tr><td colspan="5" class="text-center text-muted py-2">데이터 로딩 중...</td></tr>
             </tbody>
           </table>
         </div>
@@ -186,6 +147,24 @@
     if (status === 'ok') return 'border-success';
     if (status === 'failed') return 'border-danger';
     return 'border-secondary';
+  }
+
+  function _pingDot(status) {
+    if (status === 'ok') return '<span class="text-success" style="font-size:.7rem">●</span>';
+    if (status === 'failed') return '<span class="text-danger" style="font-size:.7rem">✗</span>';
+    return '<span class="text-secondary" style="font-size:.7rem">○</span>';
+  }
+
+  function _deployDot(ycd, rmf) {
+    const y = (ycd && ycd.status) || 'pending';
+    const r = (rmf && rmf.status) || 'pending';
+    if (y === 'success' && r === 'success')
+      return '<span class="badge bg-success" style="font-size:.65rem">✓</span>';
+    if (y === 'failed' || r === 'failed')
+      return '<span class="badge bg-danger" style="font-size:.65rem">✗</span>';
+    if (y === 'success' || r === 'success')
+      return '<span class="badge bg-warning text-dark" style="font-size:.65rem">△</span>';
+    return '<span class="badge bg-secondary" style="font-size:.65rem">—</span>';
   }
 
   function _pingLabel(status) {
@@ -227,16 +206,15 @@
     });
 
     grid.innerHTML = sortedKeys.map(group => `
-      <div class="mb-3">
-        <div class="text-muted small fw-semibold mb-2 border-bottom pb-1">${esc(group)}</div>
-        <div class="row g-2">
+      <div class="mb-2">
+        <div class="text-muted fw-semibold mb-1 border-bottom pb-1" style="font-size:.73rem;letter-spacing:.3px;">${esc(group)}</div>
+        <div class="eq-grid-row">
           ${groups[group].map(e => `
-            <div class="col-6 col-sm-4 col-md-3 col-xl-2">
-              <div class="card h-100 border-2 ${_pingBorderClass(e.last_ping_status)}">
-                <div class="card-body p-2 text-center">
-                  <div class="fw-semibold small text-truncate" title="${esc(e.name)}">${esc(e.name)}</div>
-                  <div class="mt-1">${_pingLabel(e.last_ping_status)}</div>
-                  <div class="mt-1">${_deployLabel(e.file_YieldConvDef, e.file_RejectMapFile)}</div>
+            <div class="eq-grid-item">
+              <div class="card h-100 eq-card ${_pingBorderClass(e.last_ping_status)}">
+                <div class="card-body p-1 text-center">
+                  <div class="eq-name text-truncate" title="${esc(e.name)}">${esc(e.name)}</div>
+                  <div class="eq-status">${_pingDot(e.last_ping_status)} ${_deployDot(e.file_YieldConvDef, e.file_RejectMapFile)}</div>
                 </div>
               </div>
             </div>
@@ -321,7 +299,7 @@
       .then(data => {
         const tbody = document.getElementById('generatedFilesTable');
         if (!data.files || data.files.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">생성된 파일이 없습니다.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-2">생성된 파일이 없습니다.</td></tr>';
           return;
         }
         const files = data.files
@@ -364,7 +342,7 @@
         document.getElementById('pendingCount').textContent = data.summary.pending;
 
         const genRows = data.generate_logs.length === 0
-          ? '<tr><td colspan="4" class="text-center text-muted py-3">오늘 생성 이력이 없습니다.</td></tr>'
+          ? '<tr><td colspan="4" class="text-center text-muted py-2">오늘 생성 이력이 없습니다.</td></tr>'
           : data.generate_logs.slice(0, 6).map(g => `
               <tr>
                 <td><code>${esc(g.filename)}</code></td>
@@ -375,7 +353,7 @@
         document.getElementById('generateTable').innerHTML = genRows;
 
         const depRows = data.equipment_status.length === 0
-          ? '<tr><td colspan="5" class="text-center text-muted py-3">등록된 설비가 없습니다.</td></tr>'
+          ? '<tr><td colspan="5" class="text-center text-muted py-2">등록된 설비가 없습니다.</td></tr>'
           : data.equipment_status.map(e => `
               <tr>
                 <td>${esc(e.name)}</td>

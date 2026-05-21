@@ -145,3 +145,79 @@ small, .small { color: var(--app-muted); }
 /* 부드러운 행 교체 */
 tr.htmx-swapping td { opacity: 0.4; transition: opacity .2s; }
 tr.htmx-settling td { opacity: 1; transition: opacity .2s; }
+
+/* ── 컴팩트 헬스바 ─────────────────────────────────────────── */
+.health-bar {
+  background: #f8fafc;
+  border: 1px solid var(--app-border);
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+}
+.hb-item { display: inline-flex; align-items: baseline; gap: 3px; }
+.hb-num  { font-weight: 700; font-size: 1rem; line-height: 1; }
+.hb-lbl  { color: var(--app-muted); font-size: 0.72rem; }
+.hb-sep  { color: var(--app-border); font-size: 1rem; }
+
+/* ── 컴팩트 배포 통계 필 ───────────────────────────────────── */
+.stat-bar { font-size: 0.8rem; }
+.stat-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  background: #f1f5f9;
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+.stat-pill.sp-success { background: #f0fdf4; }
+.stat-pill.sp-danger  { background: #fef2f2; }
+.stat-pill.sp-warning { background: #fffbeb; }
+.sp-num { font-weight: 700; font-size: 1.05rem; line-height: 1; }
+.sp-num-success { color: #16a34a; }
+.sp-num-danger  { color: #dc2626; }
+.sp-num-warning { color: #d97706; }
+.sp-lbl { color: var(--app-muted); font-size: 0.72rem; }
+
+.stat-pill.sp-success .sp-num { color: #16a34a; }
+.stat-pill.sp-danger  .sp-num { color: #dc2626; }
+.stat-pill.sp-warning .sp-num { color: #d97706; }
+
+/* ── 설비 카드 그리드 (10개/행) ────────────────────────────── */
+.eq-grid-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.eq-grid-item {
+  flex: 0 0 calc(10% - 5px);
+  min-width: 75px;
+  max-width: 130px;
+}
+.eq-card {
+  border-width: 2px !important;
+  transition: box-shadow .15s, transform .1s;
+}
+.eq-card:hover {
+  box-shadow: 0 3px 8px rgba(15,23,42,0.1);
+  transform: translateY(-1px);
+}
+.eq-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  max-width: 100%;
+}
+.eq-status {
+  font-size: 0.7rem;
+  margin-top: 2px;
+}
+
+@media (max-width: 1200px) {
+  .eq-grid-item { flex: 0 0 calc(12.5% - 5px); }
+}
+@media (max-width: 900px) {
+  .eq-grid-item { flex: 0 0 calc(16.66% - 5px); }
+}
+@media (max-width: 600px) {
+  .eq-grid-item { flex: 0 0 calc(25% - 5px); }
+}
