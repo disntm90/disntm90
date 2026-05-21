@@ -94,28 +94,33 @@
       </div>
     </div>
 
-    <!-- 설비별 배포 현황 -->
-    <div class="card">
-      <div class="card-header fw-semibold py-2">🚀 설비별 배포 현황 (오늘)</div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>설비명</th>
-                <th>IP</th>
-                <th>YieldConvDef</th>
-                <th>RejectMapFile</th>
-                <th>작업</th>
-              </tr>
-            </thead>
-            <tbody id="deployTable">
-              <tr><td colspan="5" class="text-center text-muted py-2">데이터 로딩 중...</td></tr>
-            </tbody>
-          </table>
+    <!-- 설비별 배포 현황 (펼치기 가능 — 카드에 핵심 정보 다 포함되어 있으므로 기본 접힘) -->
+    <details class="deploy-details">
+      <summary class="deploy-details-summary">
+        <span class="dd-arrow">▶</span>
+        설비별 상세 배포 현황 (시간 포함)
+      </summary>
+      <div class="card mt-2">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>설비명</th>
+                  <th>IP</th>
+                  <th>YieldConvDef</th>
+                  <th>RejectMapFile</th>
+                  <th>작업</th>
+                </tr>
+              </thead>
+              <tbody id="deployTable">
+                <tr><td colspan="5" class="text-center text-muted py-2">데이터 로딩 중...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+    </details>
   </div>
 </div>
 
@@ -188,14 +193,21 @@
     });
 
     grid.innerHTML = sortedKeys.map(group => `
-      <div class="mb-2">
-        <div class="text-muted fw-semibold mb-1 border-bottom pb-1" style="font-size:.73rem;letter-spacing:.3px;">${esc(group)} <span class="text-secondary">(${groups[group].length})</span></div>
+      <div class="eq-group mb-2">
+        <div class="eq-group-label">
+          ${esc(group)} <span class="eq-group-count">${groups[group].length}</span>
+        </div>
         <div class="eq-grid">
           ${groups[group].map(e => `
-            <div class="eq-card ${_pingStateClass(e.last_ping_status)}" title="${esc(e.name)}">
-              <div class="eq-name text-truncate">${esc(e.name)}</div>
-              <div class="eq-meta">
-                <span class="eq-ping">${_pingLabel(e.last_ping_status)}</span>
+            <div class="eq-card ${_pingStateClass(e.last_ping_status)}">
+              <div class="eq-card-top">
+                <span class="eq-name text-truncate" title="${esc(e.name)}">${esc(e.name)}</span>
+                <button class="eq-redeploy" data-id="${e.id}" data-name="${esc(e.name)}"
+                        onclick="deployOne(this.dataset.id, this.dataset.name)" title="재배포">↻</button>
+              </div>
+              <div class="eq-ip">${esc(e.ip)}</div>
+              <div class="eq-card-bottom">
+                <span class="eq-ping-label">${_pingLabel(e.last_ping_status)}</span>
                 ${_deployLabel(e.file_YieldConvDef, e.file_RejectMapFile)}
               </div>
             </div>

@@ -183,46 +183,129 @@ tr.htmx-settling td { opacity: 1; transition: opacity .2s; }
 .stat-pill.sp-warning .sp-num { color: #d97706; }
 
 /* ── 설비 카드 그리드 ──────────────────────────────────────── */
-/* auto-fill로 가로 폭에 따라 자동으로 카드 수가 결정된다
-   (FHD/QHD 모니터에서 한 줄에 10개 이상 들어감) */
+/* 카드 안에 설비명/IP/핑상태/배포상태/재배포 버튼이 모두 들어가므로
+   별도 배포현황 테이블 스크롤 없이 한 화면에서 전체 파악 가능 */
+.eq-group-label {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: var(--app-muted);
+  letter-spacing: 0.3px;
+  margin-bottom: 5px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--app-border);
+}
+.eq-group-count {
+  display: inline-block;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: 4px;
+}
+
 .eq-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 5px;
 }
+
 .eq-card {
   background: var(--app-surface);
   border: 1px solid var(--app-border);
-  border-left: 3px solid var(--app-border);
+  border-left: 3px solid #94a3b8;
   border-radius: 6px;
-  padding: 6px 8px;
+  padding: 5px 8px 6px;
   transition: box-shadow .15s, transform .1s;
-  min-width: 0; /* grid 항목 텍스트 truncate 가능하게 */
+  min-width: 0;
 }
 .eq-card:hover {
-  box-shadow: 0 2px 6px rgba(15,23,42,0.08);
+  box-shadow: 0 2px 8px rgba(15,23,42,0.10);
   transform: translateY(-1px);
 }
 .eq-card.eq-ping-ok      { border-left-color: #16a34a; }
-.eq-card.eq-ping-failed  { border-left-color: #dc2626; background: #fef2f2; }
-.eq-card.eq-ping-unknown { border-left-color: #cbd5e1; }
+.eq-card.eq-ping-failed  { border-left-color: #dc2626; background: #fff7f7; }
+.eq-card.eq-ping-unknown { border-left-color: #94a3b8; }
 
-.eq-name {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--app-text);
-  line-height: 1.2;
-  margin-bottom: 3px;
-}
-.eq-meta {
+.eq-card-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
   gap: 4px;
+  min-height: 18px;
 }
-.eq-ping { line-height: 1; }
-.eq-meta .badge {
-  font-size: 0.65rem;
+.eq-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--app-text);
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+}
+.eq-ip {
+  font-size: 0.68rem;
+  color: var(--app-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.2;
+  margin: 1px 0 3px;
+}
+.eq-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+}
+.eq-ping-label { line-height: 1; white-space: nowrap; }
+.eq-card-bottom .badge {
+  font-size: 0.63rem;
   padding: 0.18em 0.45em;
+  font-weight: 500;
+}
+
+.eq-redeploy {
+  background: none;
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  color: var(--app-muted);
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 1px 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color .15s, color .15s, border-color .15s;
+}
+.eq-redeploy:hover {
+  background-color: var(--app-accent);
+  border-color: var(--app-accent);
+  color: #fff;
+}
+
+/* ── 상세 배포 현황 (접힘) ─────────────────────────────────── */
+.deploy-details {
+  margin-top: 4px;
+}
+.deploy-details-summary {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  font-size: 0.78rem;
+  color: var(--app-muted);
+  padding: 5px 8px;
+  background: #f8fafc;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color .15s;
+}
+.deploy-details-summary:hover { background: #f1f5f9; }
+.deploy-details-summary::-webkit-details-marker { display: none; }
+.deploy-details[open] .dd-arrow { transform: rotate(90deg); }
+.dd-arrow {
+  display: inline-block;
+  font-size: 0.65rem;
+  transition: transform .15s;
 }
