@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SLNH · Soluna Holdings 분석 대시보드 2026.05.24</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;font-family:system-ui,-apple-system,sans-serif;color:#f1f5f9;min-height:100vh}
+    #root{max-width:480px;margin:0 auto;padding-bottom:40px}
+    canvas{width:100%!important}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState, useEffect, useRef} = React;
+const C = {
+  main:'#22c55e', blue:'#3b82f6', green:'#22c55e', red:'#ef4444',
+  gold:'#f59e0b', teal:'#06b6d4', purple:'#a855f7', orange:'#f97316',
+  bg:'#0a0f1e', card:'#141b2d', border:'#1e2d45', text:'#f1f5f9', muted:'#7a90aa'
+};
+
+const MONTHS = ['2025.05','2025.06','2025.07','2025.08','2025.09','2025.10','2025.11','2025.12','2026.01','2026.02','2026.03','2026.04','2026.05'];
+const PRICE  = [4.20, 3.10, 2.50, 1.80, 1.20, 0.90, 0.70, 0.65, 0.85, 1.05, 1.38, 1.80, 1.70];
+const REV_LABELS = ['Q1-25','Q2-25','Q3-25','Q4-25','Q1-26','Q2-26E','Q3-26E'];
+const REV_DATA   = [5.9, 6.5, 7.5, 8.2, 9.4, 13.0, 18.0];
+const Q1_BRK_LABELS = ['데이터 호스팅','암호화폐 채굴','기타'];
+const Q1_BRK_DATA   = [6.7, 2.2, 0.5];
+const RSI_LABELS = ['2025.11','2025.12','2026.01','2026.02','2026.03','2026.04','2026.05'];
+const RSI_DATA   = [28, 42, 55, 60, 58, 62, 42];
+
+const GLOSSARY_TERMS = [
+  {name:'RSI',eng:'Relative Strength Index',cat:'기술적',catColor:'#3b82f6',
+   desc:'주가가 너무 많이 올랐는지(과매수) 또는 너무 많이 내렸는지(과매도)를 0~100 숫자로 나타내는 지표입니다. 70 이상이면 과매수, 30 이하면 과매도로 판단합니다.',
+   context:'현재 SLNH RSI 약 42 — 중립~과매도 구간에 진입하며 기술적 반등 가능성이 높아지고 있습니다.'},
+  {name:'MACD',eng:'Moving Average Convergence Divergence',cat:'기술적',catColor:'#3b82f6',
+   desc:'두 이동평균선의 차이로 주가 추세와 모멘텀을 파악하는 지표입니다. 골든크로스(위로 교차)는 매수 신호, 데드크로스(아래로 교차)는 매도 신호입니다.',
+   context:'현재 SLNH MACD 3개월 기준 매도 신호 — 단기 모멘텀이 약화되어 추가 하락 압력이 있음을 시사합니다.'},
+  {name:'200일 이동평균',eng:'200-Day Moving Average',cat:'기술적',catColor:'#3b82f6',
+   desc:'200일간의 주가를 평균 낸 선으로, 장기 추세를 보여주는 기준선입니다. 주가가 이 선 위에 있으면 장기 상승 추세, 아래에 있으면 하락 추세로 판단합니다.',
+   context:'SLNH 200일 이동평균 $1.41 — 현재가 $1.70이 이 선 위에 있어 중기 상승 추세는 아직 유효합니다.'},
+  {name:'지지선 & 저항선',eng:'Support & Resistance',cat:'기술적',catColor:'#3b82f6',
+   desc:'지지선은 주가가 내려가다 멈추는 가격대(바닥), 저항선은 올라가다 막히는 가격대(천장)입니다. 트레이더들이 매수·매도 결정을 내리는 핵심 기준이 됩니다.',
+   context:'SLNH 지지선 $1.41 (200일 MA) / 저항선 $2.17 (5월 고점) — 현재 이 두 가격 사이에서 등락 중입니다.'},
+  {name:'Adjusted EBITDA',eng:'Adjusted Earnings Before Interest, Taxes, Depreciation & Amortization',cat:'재무',catColor:'#22c55e',
+   desc:'회사가 순수 사업 운영으로 얼마나 돈을 버는지 측정하는 지표입니다. 이자·세금·감가상각비·일회성 비용을 제외해 사업 본연의 수익성을 판단합니다.',
+   context:'SLNH Q1-26 Adj EBITDA -$2.1M (47% 개선) — 아직 적자이지만 손익분기점에 빠르게 접근 중입니다.'},
+  {name:'FCF',eng:'Free Cash Flow (잉여현금흐름)',cat:'재무',catColor:'#22c55e',
+   desc:'회사가 사업 활동 후 실제로 남은 현금입니다. 영업으로 번 돈에서 투자 비용을 뺀 금액으로, 마이너스면 현금이 회사 밖으로 빠져나가고 있다는 의미입니다.',
+   context:'SLNH FCF -$16.8M/분기 — 분기마다 현금이 소진되고 있어 중기적으로 추가 자본 조달 가능성이 있습니다.'},
+  {name:'컨버터블 노트',eng:'Convertible Note (전환 사채)',cat:'재무',catColor:'#22c55e',
+   desc:'처음에는 돈을 빌리는 채권이지만, 나중에 주식으로 전환할 수 있는 금융 상품입니다. 금리가 낮아 자금 조달에 유리하지만, 주식 전환 시 기존 주주 지분이 희석됩니다.',
+   context:'SLNH Dorothy 1A 인수에 $12M 무담보 컨버터블 노트 사용 — 향후 주식 전환 시 희석 리스크가 발생합니다.'},
+  {name:'YoY',eng:'Year-over-Year (전년 동기 대비)',cat:'실적',catColor:'#f97316',
+   desc:'올해 실적을 작년 같은 시기와 비교하는 방식입니다. \'YoY +58%\'라면 작년 같은 분기보다 58% 성장했다는 뜻입니다. 계절성을 제거한 순수한 성장률을 봅니다.',
+   context:'SLNH Q1-26 매출 YoY +58% ($5.9M→$9.4M) — 4분기 연속 성장이 뒷받침하는 탄탄한 성장 트렌드입니다.'},
+  {name:'QoQ 순차 성장',eng:'Quarter-over-Quarter Sequential Growth',cat:'실적',catColor:'#f97316',
+   desc:'직전 분기와 비교해 성장했는지 보는 지표입니다. 분기마다 꾸준히 성장하는지 추적하는 데 사용하며, 일시적 급성장이 아닌 지속 가능성을 확인합니다.',
+   context:'SLNH Q1-26은 4분기 연속 QoQ 매출 성장 — 일회성 아닌 구조적 성장 모멘텀이 확인되고 있습니다.'},
+  {name:'리세일 오버행',eng:'Resale Overhang',cat:'시장',catColor:'#a855f7',
+   desc:'기존 주주들이 보유 주식을 시장에 팔 수 있도록 등록된 물량입니다. 언제든 팔 수 있는 대량 매도 대기 물량이 주가 상승의 천장 역할을 합니다.',
+   context:'SLNH 약 29M주 리세일 SEC 등록 — 일 평균 거래량 대비 수십일치 물량 대기 중인 최대 단기 리스크입니다.'},
+  {name:'공매도 비율',eng:'Short Interest',cat:'시장',catColor:'#a855f7',
+   desc:'주식을 빌려 팔고 나중에 낮은 가격에 사서 갚는 방식으로 하락에 베팅하는 것입니다. 비율이 높으면 시장이 하락을 예상하는 것이지만, 반대로 숏스퀴즈가 발생하면 폭발적 상승이 나오기도 합니다.',
+   context:'SLNH 공매도 비율 16.05% (18.16M주) — 하락 베팅이 많지만 역으로 숏스퀴즈 가능성도 존재합니다.'},
+  {name:'수직통합',eng:'Vertical Integration',cat:'사업',catColor:'#a855f7',
+   desc:'원자재 생산부터 최종 서비스까지 공급망의 여러 단계를 한 회사가 직접 소유하는 전략입니다. 비용 절감, 공급 안정성 확보, 경쟁우위 강화에 효과적입니다.',
+   context:'SLNH는 Briscoe 풍력 인수로 전력 생산→BTC 채굴/AI 연산까지 수직통합을 달성했습니다.'},
+];
+
+const xOpinions = [
+  {user:'@renewable_energy_bull',role:'에너지 인프라 투자자',date:'2026.05.23',stance:'pos',opinion:'Briscoe 150MW 완전 통합 완료. 에너지 비용 수직화 = 장기 원가 경쟁력 확보. 타사가 따라오기 어려운 진짜 해자.',stat1:'리트윗 1.9K',stat2:'좋아요 5.8K'},
+  {user:'@ebitda_improve_watch',role:'재무 분석가',date:'2026.05.22',stance:'pos',opinion:'Q1 Adj EBITDA -$2.1M. Q4-25 대비 47% 개선. 이 속도면 2026년 말 흑자 전환 가시권. 방향이 중요.',stat1:'리트윗 1.5K',stat2:'좋아요 4.4K'},
+  {user:'@dorothy3_watcher',role:'AI 인프라 애널리스트',date:'2026.05.22',stance:'pos',opinion:'Dorothy 3 AI 캠퍼스 300 MW 계획 + Briscoe 전력 확보. 이 스케일이 실현되면 완전히 다른 회사가 됨.',stat1:'리트윗 1.2K',stat2:'좋아요 3.7K'},
+  {user:'@200ma_support_view',role:'기술적 분석가',date:'2026.05.24',stance:'pos',opinion:'$1.70에서 200일 MA $1.41까지 -17%. 이 선이 지켜지면 하방이 제한적. RSI 42 = 과매도 접근 = 반등 구간 진입.',stat1:'리트윗 876',stat2:'좋아요 2.7K'},
+  {user:'@long_term_slnh_hold',role:'성장주 투자자',date:'2026.05.23',stance:'pos',opinion:'$1.70 → 목표가 $5.00 = +194% 업사이드. 오버행은 단기 노이즈. 장기 사업 가치는 훼손 안 됨. 홀드.',stat1:'리트윗 721',stat2:'좋아요 2.2K'},
+  {user:'@kati2_progress',role:'운영 추적 애널리스트',date:'2026.05.22',stance:'pos',opinion:'Kati 2 AI HPC 확장 진행 중. 5월 월간 업데이트에서 가동 타임라인 확인. Q2부터 매출 기여 기대.',stat1:'리트윗 543',stat2:'좋아요 1.7K'},
+  {user:'@nasdaq_secure',role:'시장 구조 분석가',date:'2026.05.20',stance:'pos',opinion:'나스닥 컴플라이언스 유지 확정. 상장폐지 리스크 완전 제거. 기관 매수 자격 유효. 기반이 단단.',stat1:'리트윗 412',stat2:'좋아요 1.3K'},
+  {user:'@overhang_neutral_view',role:'멀티에셋 투자자',date:'2026.05.23',stance:'neu',opinion:'26.51M + 2.46M 리세일 오버행 = 단기 압박. 하지만 장기 사업 가치와 직접적 관련은 없음. 인내심 테스트.',stat1:'리트윗 298',stat2:'좋아요 923'},
+  {user:'@price_action_tracker',role:'단기 트레이더',date:'2026.05.24',stance:'neu',opinion:'$2.17 → $1.70 풀백 후 RSI 42. 중립~과매도 접근. 방향성 확인 전에는 무거운 포지션 유지 어려움.',stat1:'리트윗 243',stat2:'좋아요 754'},
+  {user:'@monthly_update_read',role:'펀더멘탈 투자자',date:'2026.05.22',stance:'neu',opinion:'5월 월간 업데이트 내용은 긍정적. Dorothy 운영 정상화, Kati 진행 순조. 시장 반응은 오버행이 눌러서 차가움.',stat1:'리트윗 187',stat2:'좋아요 581'},
+  {user:'@debt_level_watch',role:'채권 분석가',date:'2026.05.21',stance:'neu',opinion:'Dorothy 1A $12M + Briscoe $53M = 레버리지 급증. 재무 건전성 지표 추적이 필수. 지금은 기다리는 중.',stat1:'리트윗 143',stat2:'좋아요 443'},
+  {user:'@resale_ceiling',role:'리스크 매니저',date:'2026.05.24',stance:'neg',opinion:'29M주 리세일 등록 = 상승할 때마다 팔자 물량이 쏟아지는 구조. 오버행이 해소되기 전까지는 상승 한계 명확.',stat1:'리트윗 534',stat2:'좋아요 1.7K'},
+  {user:'@loss_deep',role:'수익성 비평가',date:'2026.05.22',stance:'neg',opinion:'Q1 순손실 -$17.9M. Adj EBITDA 개선은 좋지만 GAAP 손실이 너무 큼. 희석 없이 성장 지속 불가.',stat1:'리트윗 412',stat2:'좋아요 1.3K'},
+  {user:'@macd_sell_signal',role:'기술적 분석가',date:'2026.05.24',stance:'neg',opinion:'MACD 매도 신호 + 단기 이평선 위 = 단기 추가 하락 가능. $1.41 200일 MA 테스트 가능성 배제 못함.',stat1:'리트윗 312',stat2:'좋아요 978'},
+  {user:'@cash_burn_alarm',role:'현금흐름 분석가',date:'2026.05.23',stance:'neg',opinion:'FCF -$16.8M/분기 + 인수 $69.5M. 현금 $76M에서 빠르게 소진. 연내 추가 자본 조달 거의 확실시.',stat1:'리트윗 243',stat2:'좋아요 756'},
+];
+
+const redditOpinions = [
+  {user:'u/wind_farm_moat',role:'r/RenewableEnergy',date:'2026.05.23',stance:'pos',opinion:'Briscoe 완전 통합 — 에너지 비용 직접 통제. BTC 마이닝에서 전력이 원가의 70%. 이걸 직접 소유하는 것의 의미를 업계 밖에서는 모름.',stat1:'업보트 3.9K',stat2:'댓글 267'},
+  {user:'u/ebitda_trend_bull',role:'r/stocks',date:'2026.05.22',stance:'pos',opinion:'Adj EBITDA 47% QoQ 개선. 이 트렌드가 2분기 더 지속되면 흑자 전환. 방향성이 맞다.',stat1:'업보트 3.2K',stat2:'댓글 218'},
+  {user:'u/pullback_gift',role:'r/wallstreetbets',date:'2026.05.24',stance:'pos',opinion:'$2.17 → $1.70 = 좋은 재진입 포인트. 펀더멘탈 변한 것 없음. 오버행 이슈는 시간이 해결함.',stat1:'업보트 2.8K',stat2:'댓글 198'},
+  {user:'u/dorothy3_long',role:'r/investing',date:'2026.05.22',stance:'pos',opinion:'Dorothy 3 AI 캠퍼스 300MW + 4.3 GW 파이프라인. 1~2년 뒤 완전히 다른 회사가 될 것. 지금은 씨앗 단계.',stat1:'업보트 2.4K',stat2:'댓글 167'},
+  {user:'u/200ma_floor_holder',role:'r/StockMarket',date:'2026.05.24',stance:'pos',opinion:'200일 MA $1.41 = 명확한 지지선. 이 선 위에 있는 한 상승 추세 구조 유효. RSI 42도 기술적으로 매력적.',stat1:'업보트 2.1K',stat2:'댓글 143'},
+  {user:'u/renewable_ai_dual',role:'r/Bitcoin',date:'2026.05.23',stance:'pos',opinion:'재생에너지 + AI HPC = 2026 최강 두 가지 테마 동시에. 이 교차점에 있는 거의 유일한 소형주.',stat1:'업보트 1.8K',stat2:'댓글 121'},
+  {user:'u/nasdaq_safe',role:'r/smallcaps',date:'2026.05.20',stance:'pos',opinion:'나스닥 컴플라이언스 = 기관 매수 자격 확보. ETF 편입 가능성도 열림. 수급 구조 개선 기대.',stat1:'업보트 1.5K',stat2:'댓글 98'},
+  {user:'u/overhang_patience',role:'r/investing',date:'2026.05.23',stance:'neu',opinion:'리세일 오버행은 실질적 위협이지만 대부분 이미 가격에 반영됨. 물량이 소화되면 상승 재개 가능.',stat1:'업보트 1.3K',stat2:'댓글 87'},
+  {user:'u/monthly_update_mixed',role:'r/stocks',date:'2026.05.22',stance:'neu',opinion:'5월 업데이트 내용은 긍정적인데 주가 반응이 차가움. 오버행이 모든 호재를 씹어먹고 있는 상황.',stat1:'업보트 1.1K',stat2:'댓글 76'},
+  {user:'u/wait_for_200ma_test',role:'r/StockMarket',date:'2026.05.24',stance:'neu',opinion:'RSI 42, 200일 MA 테스트 가능성 있음. $1.41 지지 확인 후 포지션 추가할 계획. 서두르지 않음.',stat1:'업보트 876',stat2:'댓글 65'},
+  {user:'u/29m_overhang_math',role:'r/SecurityAnalysis',date:'2026.05.23',stance:'neg',opinion:'26.51M + 2.46M = ~29M주 리세일 대기. 일 평균 거래량이 수백만주 수준이면 수십일치 매도 물량. 구조적 압박.',stat1:'업보트 2.6K',stat2:'댓글 198'},
+  {user:'u/loss_unsustainable',role:'r/investing',date:'2026.05.22',stance:'neg',opinion:'Q1 순손실 -$17.9M. 연간 -$70M+ 손실 경로. 자본 조달 없이 지속 불가. 희석은 필연적.',stat1:'업보트 2.2K',stat2:'댓글 167'},
+  {user:'u/macd_confirms_down',role:'r/StockMarket',date:'2026.05.24',stance:'neg',opinion:'MACD 매도 신호 + 단기 이평선 아래. $1.41 테스트 가능성. 기술적으로 아직 바닥 확인 안 됨.',stat1:'업보트 1.8K',stat2:'댓글 132'},
+  {user:'u/cash_burn_clock',role:'r/ValueInvesting',date:'2026.05.23',stance:'neg',opinion:'FCF -$16.8M/분기에 인수 두 건($53M+$16.5M). 현금 빠르게 소진. 연내 추가 조달 거의 확실.',stat1:'업보트 1.4K',stat2:'댓글 112'},
+  {user:'u/post_peak_caution',role:'r/wallstreetbets',date:'2026.05.24',stance:'neg',opinion:'$2.35 고점에서 $1.70까지 -28%. 이런 풀백은 더 갈 수도 있음. 섣부른 저점 매수보다 지지선 확인이 먼저.',stat1:'업보트 1.1K',stat2:'댓글 89'},
+];
+
+function OpinionCard({user,role,date,stance,opinion,stat1,stat2}) {
+  const sc = stance==='pos' ? C.green : stance==='neg' ? C.red : C.gold;
+  const sb = stance==='pos' ? '🟢 긍정' : stance==='neg' ? '🔴 부정' : '🟡 중립';
+  return (
+    <div style={{background:'#0d1424',border:'1px solid '+C.border,borderRadius:12,padding:'14px',marginBottom:10}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+        <div>
+          <span style={{color:C.main,fontWeight:800,fontSize:13}}>{user}</span>
+          <span style={{color:C.muted,fontSize:11,marginLeft:6}}>{role}</span>
+        </div>
+        <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
+          <span style={{background:sc+'22',border:'1px solid '+sc+'66',borderRadius:6,padding:'2px 7px',fontSize:11,color:sc,fontWeight:700}}>{sb}</span>
+          <span style={{color:C.muted,fontSize:11}}>{date}</span>
+        </div>
+      </div>
+      <p style={{color:C.text,fontSize:13,lineHeight:1.6,marginBottom:8}}>{opinion}</p>
+      <div style={{display:'flex',gap:12}}>
+        <span style={{color:C.muted,fontSize:11}}>{stat1}</span>
+        <span style={{color:C.muted,fontSize:11}}>{stat2}</span>
+      </div>
+    </div>
+  );
+}
+
+function SentimentBar({pos,neu,neg}) {
+  return (
+    <div style={{background:'#0d1424',border:'1px solid '+C.border,borderRadius:12,padding:'14px',marginBottom:16,display:'flex',justifyContent:'center',gap:20}}>
+      <span style={{color:C.green,fontWeight:800,fontSize:14}}>{'🟢 긍정 '+pos+'개'}</span>
+      <span style={{color:C.gold,fontWeight:800,fontSize:14}}>{'🟡 중립 '+neu+'개'}</span>
+      <span style={{color:C.red,fontWeight:800,fontSize:14}}>{'🔴 부정 '+neg+'개'}</span>
+    </div>
+  );
+}
+
+function Stat({label,value,sub,color}) {
+  return (
+    <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:12,padding:'12px 10px',textAlign:'center',flex:1}}>
+      <div style={{fontSize:15,fontWeight:900,color:color||C.text,lineHeight:1.2}}>{value}</div>
+      {sub && <div style={{fontSize:10,color:color||C.muted,marginTop:1}}>{sub}</div>}
+      <div style={{fontSize:11,color:C.muted,marginTop:3}}>{label}</div>
+    </div>
+  );
+}
+
+function GlossaryTab() {
+  const [filter, setFilter] = useState('전체');
+  const cats = ['전체','기술적','재무','실적','시장','사업'];
+  const filtered = filter === '전체' ? GLOSSARY_TERMS : GLOSSARY_TERMS.filter(function(t){ return t.cat === filter; });
+  return (
+    <div style={{padding:'0 16px'}}>
+      <div style={{paddingTop:16,marginBottom:12}}>
+        <div style={{color:C.text,fontWeight:800,fontSize:14,marginBottom:4}}>📖 용어 설명</div>
+        <div style={{color:C.muted,fontSize:12,marginBottom:12}}>이 분석에서 사용된 주요 용어 · {GLOSSARY_TERMS.length}개</div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:4}}>
+          {cats.map(function(cat){
+            var active = filter === cat;
+            return (
+              <button key={cat} onClick={function(){ setFilter(cat); }} style={{
+                background: active ? C.main+'33' : 'transparent',
+                border: '1px solid ' + (active ? C.main : C.border),
+                borderRadius:8, padding:'5px 12px',
+                color: active ? C.main : C.muted,
+                fontSize:12, fontWeight:700,
+                cursor:'pointer', fontFamily:'inherit'
+              }}>{cat}</button>
+            );
+          })}
+        </div>
+      </div>
+      {filtered.map(function(term, i) {
+        return (
+          <div key={i} style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'16px',marginBottom:12}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+              <div>
+                <div style={{fontSize:15,fontWeight:900,color:C.text}}>{term.name}</div>
+                <div style={{fontSize:11,color:C.muted,marginTop:2}}>{term.eng}</div>
+              </div>
+              <span style={{
+                background:term.catColor+'22',
+                border:'1px solid '+term.catColor+'66',
+                borderRadius:6,padding:'3px 9px',
+                fontSize:11,color:term.catColor,fontWeight:700,
+                flexShrink:0,marginLeft:8
+              }}>{term.cat}</span>
+            </div>
+            <p style={{color:C.muted,fontSize:13,lineHeight:1.7,marginBottom:10}}>{term.desc}</p>
+            <div style={{background:'#0d1424',borderLeft:'3px solid '+term.catColor,borderRadius:'0 8px 8px 0',padding:'8px 12px'}}>
+              <span style={{color:term.catColor,fontSize:11,fontWeight:700}}>이 분석에서: </span>
+              <span style={{color:C.text,fontSize:12}}>{term.context}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function App() {
+  const [tab, setTab] = useState(0);
+  const tabs = ['📊개요','📈기술적','💰재무','🐦X','💬Reddit','🎯결론','📖용어'];
+
+  const priceRef = useRef(null); const priceChart = useRef(null);
+  const perfRef  = useRef(null); const perfChart  = useRef(null);
+  const rsiRef   = useRef(null); const rsiChart   = useRef(null);
+  const revRef   = useRef(null); const revChart   = useRef(null);
+  const brkRef   = useRef(null); const brkChart   = useRef(null);
+
+  const base = {
+    plugins:{
+      legend:{labels:{color:C.muted,font:{size:11}}},
+      tooltip:{backgroundColor:'#0d1424',titleColor:C.text,bodyColor:C.muted,borderColor:C.border,borderWidth:1}
+    },
+    scales:{
+      x:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}},
+      y:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}}
+    }
+  };
+
+  useEffect(function() {
+    if (tab === 0) {
+      if (priceChart.current) { priceChart.current.destroy(); priceChart.current = null; }
+      if (perfChart.current)  { perfChart.current.destroy();  perfChart.current  = null; }
+      if (!priceRef.current || !perfRef.current) return;
+      priceChart.current = new Chart(priceRef.current, {
+        type:'line',
+        data:{
+          labels:MONTHS,
+          datasets:[{
+            label:'SLNH 주가 ($)',
+            data:PRICE,
+            borderColor:C.main,
+            backgroundColor:C.main+'18',
+            tension:0.4, fill:true,
+            pointBackgroundColor:['#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#ef4444','#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#f59e0b'],
+            pointRadius:[3,3,3,3,3,3,5,3,3,3,3,3,6]
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:true,
+          plugins:{legend:{display:false},tooltip:base.plugins.tooltip},
+          scales:{
+            x:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}},
+            y:{ticks:{color:C.muted,font:{size:10},callback:function(v){return '$'+v}},grid:{color:'#1e2d4530'}}
+          }
+        }
+      });
+      perfChart.current = new Chart(perfRef.current, {
+        type:'bar',
+        data:{
+          labels:['1개월','3개월','YTD','1년'],
+          datasets:[{
+            data:[-5.6, 21.4, 161.5, -59.5],
+            backgroundColor:['#ef444440','#22c55e40','#22c55e40','#ef444440'],
+            borderColor:['#ef4444','#22c55e','#22c55e','#ef4444'],
+            borderWidth:2, borderRadius:6
+          }]
+        },
+        options:{
+          indexAxis:'y', responsive:true, maintainAspectRatio:true,
+          plugins:{legend:{display:false},tooltip:base.plugins.tooltip},
+          scales:{
+            x:{ticks:{color:C.muted,font:{size:10},callback:function(v){return v+'%'}},grid:{color:'#1e2d4530'}},
+            y:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}}
+          }
+        }
+      });
+    }
+    if (tab === 1) {
+      if (rsiChart.current) { rsiChart.current.destroy(); rsiChart.current = null; }
+      if (!rsiRef.current) return;
+      rsiChart.current = new Chart(rsiRef.current, {
+        type:'bar',
+        data:{
+          labels:RSI_LABELS,
+          datasets:[{
+            data:RSI_DATA,
+            backgroundColor:['#22c55e30','#22c55e40','#22c55e40','#22c55e40','#22c55e40','#f9731640','#f59e0b50'],
+            borderColor:['#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#f97316','#f59e0b'],
+            borderWidth:2, borderRadius:6
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:true,
+          plugins:{legend:{display:false},tooltip:base.plugins.tooltip},
+          scales:{
+            x:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}},
+            y:{min:0,max:100,ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}}
+          }
+        }
+      });
+    }
+    if (tab === 2) {
+      if (revChart.current) { revChart.current.destroy(); revChart.current = null; }
+      if (brkChart.current) { brkChart.current.destroy(); brkChart.current = null; }
+      if (!revRef.current || !brkRef.current) return;
+      revChart.current = new Chart(revRef.current, {
+        type:'bar',
+        data:{
+          labels:REV_LABELS,
+          datasets:[{
+            label:'분기 매출 ($M)',
+            data:REV_DATA,
+            backgroundColor:['#22c55e18','#22c55e18','#22c55e18','#22c55e18','#22c55e40','#06b6d420','#06b6d420'],
+            borderColor:['#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#06b6d4','#06b6d4'],
+            borderWidth:2, borderRadius:6
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:true,
+          plugins:{legend:{display:false},tooltip:base.plugins.tooltip},
+          scales:{
+            x:{ticks:{color:C.muted,font:{size:10}},grid:{color:'#1e2d4530'}},
+            y:{ticks:{color:C.muted,font:{size:10},callback:function(v){return '$'+v+'M'}},grid:{color:'#1e2d4530'}}
+          }
+        }
+      });
+      brkChart.current = new Chart(brkRef.current, {
+        type:'doughnut',
+        data:{
+          labels:Q1_BRK_LABELS,
+          datasets:[{
+            data:Q1_BRK_DATA,
+            backgroundColor:['#22c55e55','#f9731655','#a855f755'],
+            borderColor:['#22c55e','#f97316','#a855f7'],
+            borderWidth:2
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:true,
+          plugins:{legend:{labels:{color:C.muted,font:{size:11}}},tooltip:base.plugins.tooltip}
+        }
+      });
+    }
+  }, [tab]);
+
+  const s = {padding:'0 16px'};
+
+  return (
+    <div>
+      <div style={{background:'linear-gradient(180deg,#0d1f3d 0%,#0a0f1e 100%)',padding:'20px 16px 16px'}}>
+        <a href="https://disntm90.github.io/disntm90/" style={{display:'inline-flex',alignItems:'center',gap:4,color:C.muted,fontSize:12,textDecoration:'none',marginBottom:12}}>← 목록으로</a>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+          <div style={{background:C.main+'22',border:'2px solid '+C.main,borderRadius:10,padding:'8px 14px',fontSize:20}}>💨</div>
+          <div>
+            <div style={{fontSize:22,fontWeight:900,color:C.main,letterSpacing:1}}>SLNH</div>
+            <div style={{fontSize:13,color:C.muted}}>Soluna Holdings · BTC+AI+풍력</div>
+          </div>
+          <div style={{marginLeft:'auto',textAlign:'right'}}>
+            <div style={{fontSize:26,fontWeight:900}}>$1.70</div>
+            <div style={{fontSize:13,color:C.red,fontWeight:700}}>▼ -21.7% (5/14 고점 대비)</div>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+          <div style={{background:C.green+'22',border:'1px solid '+C.green+'66',borderRadius:8,padding:'4px 10px',fontSize:11,color:C.green,fontWeight:700}}>매수</div>
+          <div style={{background:C.teal+'22',border:'1px solid '+C.teal+'66',borderRadius:8,padding:'4px 10px',fontSize:11,color:C.teal,fontWeight:700}}>Q1 +58% YoY</div>
+          <div style={{background:C.orange+'22',border:'1px solid '+C.orange+'66',borderRadius:8,padding:'4px 10px',fontSize:11,color:C.orange,fontWeight:700}}>Briscoe 완료</div>
+          <div style={{background:C.red+'22',border:'1px solid '+C.red+'66',borderRadius:8,padding:'4px 10px',fontSize:11,color:C.red,fontWeight:700}}>오버행 29M주</div>
+        </div>
+      </div>
+
+      <div style={{display:'flex',overflowX:'auto',borderBottom:'1px solid '+C.border,background:C.bg,padding:'0 4px'}}>
+        {tabs.map(function(t,i){
+          return (
+            <button key={i} onClick={function(){setTab(i);}} style={{
+              flex:'none',padding:'11px 11px',background:'transparent',border:'none',
+              borderBottom:tab===i?'2px solid '+C.main:'2px solid transparent',
+              color:tab===i?C.main:C.muted,
+              fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'
+            }}>{t}</button>
+          );
+        })}
+      </div>
+
+      {tab===0 && (
+        <div style={s}>
+          <div style={{background:'#0d2818',border:'1px solid #22c55e44',borderRadius:12,padding:'12px 14px',marginTop:16,marginBottom:14}}>
+            <div style={{color:C.green,fontWeight:700,fontSize:12,marginBottom:6}}>🆕 2026.05.24 최신 업데이트</div>
+            <div style={{color:C.muted,fontSize:12,lineHeight:1.7}}>
+              현재가 $1.70 (5/14 고점 $2.17 대비 -21.7%) · 29M주 리세일 오버행 SEC 등록 확인 · Q1 Adj EBITDA -$2.1M (47% 개선) · Briscoe 150MW 완전 통합 · Kati 2 AI 확장 진행 중 · 5월 월간 업데이트 발표
+            </div>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:10}}>
+            <Stat label="현재가" value="$1.70" sub="52주 $0.42~$5.14" color={C.text}/>
+            <Stat label="목표주가" value="$5.00" sub="+194% 업사이드" color={C.green}/>
+            <Stat label="Q1 매출" value="$9.4M" sub="+58% YoY" color={C.teal}/>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            <Stat label="200일 MA" value="$1.41" sub="↑유지" color={C.green}/>
+            <Stat label="공매도" value="16.05%" sub="18.16M주" color={C.red}/>
+            <Stat label="리세일 오버행" value="~29M주" sub="최대 리스크" color={C.red}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.muted,fontSize:11,marginBottom:8}}>12개월 주가 추이</div>
+            <canvas ref={priceRef} height={160}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.muted,fontSize:11,marginBottom:8}}>기간별 수익률</div>
+            <canvas ref={perfRef} height={120}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.main,fontWeight:700,fontSize:13,marginBottom:10}}>주요 운영 이정표</div>
+            {[
+              ['Briscoe Wind 150MW 완전 통합','$53M · 에너지 수직통합 완료. 연간 EBITDA $6~11M, 매출 $20~24.4M 예상.'],
+              ['Dorothy 1A 100% 인수','$16.5M · 2026.04.15 완료. Dorothy 3 AI 캠퍼스 기반 확보.'],
+              ['Q1 4분기 연속 순차 성장','매출 $8.2M→$9.4M QoQ. Adj EBITDA 손실 47% 개선.'],
+              ['Kati 2 AI HPC 확장 진행','AI 데이터센터 수요 대응. 17MW+ 호스팅 용량 돌파.'],
+            ].map(function(r,i){
+              return (
+                <div key={i} style={{borderBottom:i<3?'1px solid '+C.border:'none',paddingBottom:i<3?8:0,marginBottom:i<3?8:0}}>
+                  <div style={{color:C.text,fontWeight:700,fontSize:12}}>{r[0]}</div>
+                  <div style={{color:C.muted,fontSize:12,lineHeight:1.5,marginTop:2}}>{r[1]}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {tab===1 && (
+        <div style={s}>
+          <div style={{display:'flex',gap:8,marginTop:16,marginBottom:10}}>
+            <Stat label="RSI (14일)" value="~42" sub="중립~과매도" color={C.gold}/>
+            <Stat label="200일 MA" value="$1.41" sub="↑유지" color={C.green}/>
+            <Stat label="MACD" value="매도" sub="3개월 신호" color={C.red}/>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            <Stat label="지지선" value="$1.41" color={C.teal}/>
+            <Stat label="저항선" value="$2.17" color={C.red}/>
+            <Stat label="고점 대비" value="-21.7%" color={C.red}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.muted,fontSize:11,marginBottom:8}}>RSI 월별 추이 (현재 ~42, 과매도 접근)</div>
+            <canvas ref={rsiRef} height={150}/>
+            <div style={{display:'flex',gap:12,marginTop:8,flexWrap:'wrap'}}>
+              <span style={{color:C.red,fontSize:11}}>● 70+ 과매수</span>
+              <span style={{color:C.green,fontSize:11}}>● 30- 과매도</span>
+              <span style={{color:C.gold,fontSize:11}}>● 현재 ~42</span>
+            </div>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.main,fontWeight:700,fontSize:13,marginBottom:10}}>기술적 신호 종합</div>
+            {[
+              ['RSI ~42','과매도 접근 — 기술적 반등 가능성 상승','주목'],
+              ['200일 MA','$1.41 위 유지 — 중기 상승 추세 유효','매수'],
+              ['MACD','3개월 MA 매도 신호 — 단기 모멘텀 약화','주의'],
+              ['고점 대비 -21.7%','$2.17 → $1.70 조정 — 오버행 영향','중립'],
+            ].map(function(r,i){
+              var col = r[2]==='매수' ? C.green : r[2]==='주목' ? C.teal : r[2]==='중립' ? C.gold : C.red;
+              return (
+                <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:i<3?'1px solid '+C.border:'none',paddingBottom:i<3?8:0,marginBottom:i<3?8:0}}>
+                  <div style={{flex:1}}>
+                    <div style={{color:C.text,fontSize:12,fontWeight:700}}>{r[0]}</div>
+                    <div style={{color:C.muted,fontSize:11,marginTop:1}}>{r[1]}</div>
+                  </div>
+                  <span style={{background:col+'22',border:'1px solid '+col+'66',borderRadius:5,padding:'1px 7px',fontSize:11,color:col,fontWeight:700,flexShrink:0}}>{r[2]}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{background:'#0d2818',border:'1px solid #22c55e44',borderRadius:12,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.green,fontWeight:700,fontSize:12,marginBottom:6}}>📍 현재 포지셔닝</div>
+            <div style={{color:C.muted,fontSize:12,lineHeight:1.7}}>
+              $2.17 고점 이후 조정 중. RSI ~42 = 기술적으로 매력적인 구간 진입. 핵심은 $1.41 (200일 MA) 지지 여부. 이 선이 지켜지면 하방 제한적, 이탈 시 추가 하락 가능.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab===2 && (
+        <div style={s}>
+          <div style={{display:'flex',gap:8,marginTop:16,marginBottom:10}}>
+            <Stat label="Q1-26 매출" value="$9.4M" sub="+58% YoY" color={C.green}/>
+            <Stat label="Adj EBITDA" value="-$2.1M" sub="47% 개선" color={C.gold}/>
+            <Stat label="Q1 순손실" value="-$17.9M" color={C.red}/>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            <Stat label="Briscoe 연매출" value="$20~24M" sub="예상" color={C.teal}/>
+            <Stat label="Briscoe EBITDA" value="$6~11M" sub="Year-1" color={C.gold}/>
+            <Stat label="FCF" value="-$16.8M" sub="/분기" color={C.red}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.muted,fontSize:11,marginBottom:8}}>분기별 매출 ($M) · 파란색=추정 (Briscoe 포함)</div>
+            <canvas ref={revRef} height={160}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.muted,fontSize:11,marginBottom:8}}>Q1-26 매출 구성 ($9.4M)</div>
+            <canvas ref={brkRef} height={150}/>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.main,fontWeight:700,fontSize:13,marginBottom:10}}>재무 핵심 요약</div>
+            {[
+              ['수직통합 재무 임팩트','Briscoe Year-1 EBITDA $6~11M → Q3-26부터 전체 매출에 $5~6M/분기 기여.'],
+              ['Adj EBITDA 개선 트렌드','Q4-25 -$4.0M → Q1-26 -$2.1M (47% 개선). 흑자 전환 경로 진행 중.'],
+              ['FCF 부담','-$16.8M/분기 + 인수 $69.5M → 연내 추가 자본 조달 가능성 높음.'],
+              ['재무 강도','Current Ratio ~1.9 = 단기 유동성 양호. 현금 $76M (인수 전 기준).'],
+            ].map(function(r,i){
+              return (
+                <div key={i} style={{borderBottom:i<3?'1px solid '+C.border:'none',paddingBottom:i<3?8:0,marginBottom:i<3?8:0}}>
+                  <div style={{color:C.text,fontWeight:700,fontSize:12}}>{r[0]}</div>
+                  <div style={{color:C.muted,fontSize:12,lineHeight:1.5,marginTop:2}}>{r[1]}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {tab===3 && (
+        <div style={s}>
+          <div style={{paddingTop:16,marginBottom:4}}>
+            <div style={{color:C.text,fontWeight:800,fontSize:14,marginBottom:4}}>🐦 X (Twitter) 커뮤니티 의견</div>
+            <div style={{color:C.muted,fontSize:12,marginBottom:12}}>실시간 수집 기준 · 2026.05.24 · 총 15개</div>
+          </div>
+          <SentimentBar pos={7} neu={4} neg={4}/>
+          {xOpinions.map(function(o,i){ return <OpinionCard key={i} {...o}/>; })}
+        </div>
+      )}
+
+      {tab===4 && (
+        <div style={s}>
+          <div style={{paddingTop:16,marginBottom:4}}>
+            <div style={{color:C.text,fontWeight:800,fontSize:14,marginBottom:4}}>💬 Reddit 커뮤니티 의견</div>
+            <div style={{color:C.muted,fontSize:12,marginBottom:12}}>실시간 수집 기준 · 2026.05.24 · 총 15개</div>
+          </div>
+          <SentimentBar pos={7} neu={3} neg={5}/>
+          {redditOpinions.map(function(o,i){ return <OpinionCard key={i} {...o}/>; })}
+        </div>
+      )}
+
+      {tab===5 && (
+        <div style={s}>
+          <div style={{background:'linear-gradient(135deg,'+C.main+'22,'+C.teal+'11)',border:'2px solid '+C.main+'66',borderRadius:16,padding:'20px',marginTop:16,marginBottom:16,textAlign:'center'}}>
+            <div style={{fontSize:13,color:C.muted,marginBottom:4}}>종합 투자 의견 (2026.05.24)</div>
+            <div style={{fontSize:36,fontWeight:900,color:C.main,marginBottom:4}}>매 수</div>
+            <div style={{fontSize:12,color:C.muted}}>RSI 과매도 접근 + 200일 MA 지지 · 오버행 단기 리스크 주의</div>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            <Stat label="현재가" value="$1.70" color={C.text}/>
+            <Stat label="목표가" value="$5.00" color={C.green}/>
+            <Stat label="업사이드" value="+194%" color={C.green}/>
+          </div>
+          <div style={{background:'#0d2818',border:'1px solid #22c55e44',borderRadius:12,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.green,fontWeight:700,fontSize:12,marginBottom:6}}>📌 5/19 대비 핵심 변화</div>
+            <div style={{color:C.muted,fontSize:12,lineHeight:1.7}}>
+              (-) 주가 $1.91 → $1.70 (추가 하락 -11.0%) · 2.46M주 신규 리세일 등록 (총 ~29M주 확정) · MACD 매도 신호 지속<br/>
+              (+) RSI ~42 = 과매도 접근 = 기술적 반등 매력 증가 · Kati 2 진행 순조 · 5월 월간 업데이트 긍정적
+            </div>
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.green,fontWeight:700,fontSize:13,marginBottom:10}}>📈 강세 시나리오</div>
+            {['$1.41 지지선 확인 + RSI 과매도 반등 → 단기 $2.0~2.5 목표','Briscoe EBITDA 실현 + Kati 2 가동 → 리레이팅 → $3~5','오버행 소화 완료 + AI HPC 대형 고객 계약 → $5+ 목표가 달성'].map(function(t,i){
+              return <div key={i} style={{color:C.muted,fontSize:12,lineHeight:1.6,marginBottom:4}}>{'• '+t}</div>;
+            })}
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.red,fontWeight:700,fontSize:13,marginBottom:10}}>📉 약세 시나리오</div>
+            {['$1.41 지지선 이탈 → $1.0~1.2 재테스트 가능','29M주 오버행 일시 출회 → 수급 충격 → 단기 급락','추가 주식 발행(자금 조달) → 희석 → 주가 압박'].map(function(t,i){
+              return <div key={i} style={{color:C.muted,fontSize:12,lineHeight:1.6,marginBottom:4}}>{'• '+t}</div>;
+            })}
+          </div>
+          <div style={{background:C.card,border:'1px solid '+C.border,borderRadius:14,padding:'14px',marginBottom:16}}>
+            <div style={{color:C.gold,fontWeight:700,fontSize:13,marginBottom:10}}>⚠️ 핵심 리스크 (업데이트)</div>
+            {[
+              ['리세일 오버행 ~29M주 (최우선)','SEC에 등록된 26.51M+2.46M주 = 상시 매도 가능. 모든 상승이 출구로 활용될 수 있음.'],
+              ['순손실 -$17.9M (분기)','FCF -$16.8M + 대규모 인수 = 자본 소진 가속. 연내 추가 조달 가능성.'],
+              ['MACD 매도 신호 지속','단기 모멘텀 약화. $1.41 지지선 이탈 시 추가 하락 가능.'],
+              ['BTC 가격 의존성','채굴 수익 BTC 연동. BTC 약세 = 수익 악화 + 투자 심리 동반 하락.'],
+            ].map(function(r,i){
+              return (
+                <div key={i} style={{borderBottom:i<3?'1px solid '+C.border:'none',paddingBottom:i<3?8:0,marginBottom:i<3?8:0}}>
+                  <div style={{color:C.text,fontWeight:700,fontSize:12}}>{r[0]}</div>
+                  <div style={{color:C.muted,fontSize:12,lineHeight:1.5,marginTop:2}}>{r[1]}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{background:'#0d1424',border:'1px solid '+C.border,borderRadius:12,padding:'14px',marginBottom:16,fontSize:11,color:C.muted,lineHeight:1.8}}>
+            ⚠️ 본 분석은 교육 목적으로만 제공됩니다. 투자 권고가 아니며, 실제 투자 결정 전 전문가 상담을 권장합니다. 2026.05.24 기준.
+          </div>
+        </div>
+      )}
+
+      {tab===6 && <GlossaryTab/>}
+
+      <div style={{borderTop:'1px solid '+C.border,textAlign:'center',padding:'16px',color:C.muted,fontSize:11,lineHeight:1.8,marginTop:8}}>
+        ⚠️ 교육 목적 분석 · 투자 권고 아님<br/>
+        데이터 기준: 2026.05.24
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
