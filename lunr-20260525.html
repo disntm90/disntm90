@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LUNR — Intuitive Machines 종목분석 (2026.05.25)</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px}
+    a{color:#0ea5e9;text-decoration:none}
+    .header{background:#0f172a;padding:16px;border-bottom:2px solid #0ea5e9}
+    .header-top{display:flex;align-items:flex-start;gap:10px}
+    .header-back{font-size:12px;color:#0ea5e9;white-space:nowrap;padding-top:3px}
+    .header-title{font-size:19px;font-weight:800;color:#fff}
+    .header-sub{font-size:12px;color:#94a3b8;margin-top:3px}
+    .tabs{display:flex;overflow-x:auto;background:#0f172a;border-bottom:1px solid #1e293b;padding:0 8px;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{padding:12px 13px;font-size:12px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;color:#64748b;transition:all .2s}
+    .tab.active{color:#0ea5e9;border-bottom-color:#0ea5e9;font-weight:600}
+    .tab:hover:not(.active){color:#e2e8f0}
+    .content{padding:16px;max-width:768px;margin:0 auto}
+    .card{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:14px;margin-bottom:12px}
+    .card-title{font-size:11px;font-weight:700;color:#475569;margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .stat-item{background:#1e293b;border-radius:8px;padding:10px}
+    .stat-label{font-size:11px;color:#64748b;margin-bottom:3px}
+    .stat-value{font-size:16px;font-weight:700}
+    .stat-sub{font-size:11px;color:#64748b;margin-top:2px}
+    .chart-wrap{position:relative;height:200px;margin-top:8px}
+    .info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #1e293b;font-size:13px}
+    .info-row:last-child{border-bottom:none}
+    .info-label{color:#94a3b8;flex-shrink:0;margin-right:8px}
+    .highlight-box{background:#0c1a2e;border:1px solid #1d4ed8;border-radius:8px;padding:12px;margin-bottom:12px}
+    .warning-box{background:#1c1408;border:1px solid #92400e;border-radius:8px;padding:12px;margin-bottom:12px}
+    .warning-title{font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:4px}
+    .catalyst-box{background:#081c15;border:1px solid #065f46;border-radius:8px;padding:12px;margin-bottom:12px}
+    .catalyst-title{font-size:12px;font-weight:700;color:#34d399;margin-bottom:4px}
+    .risk-item{padding:9px 12px;border-radius:6px;margin-bottom:8px;font-size:13px}
+    .risk-bull{background:#0a1f0a;border-left:3px solid #22c55e}
+    .risk-bear{background:#1c0a0a;border-left:3px solid #ef4444}
+    .opinion-card{background:#1e293b;border-radius:8px;padding:12px;margin-bottom:8px}
+    .opinion-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .opinion-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+    .opinion-meta{flex:1;min-width:0}
+    .opinion-name{font-size:12px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .opinion-text{font-size:13px;color:#cbd5e1;line-height:1.6}
+    .gloss-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+    .gloss-btn{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #1e293b;background:transparent;color:#64748b;transition:all .15s}
+    .gloss-btn.active{background:#0ea5e9;color:#fff;border-color:#0ea5e9}
+    .gloss-card{background:#1e293b;border-radius:8px;padding:14px;margin-bottom:10px}
+    .gloss-name{font-size:15px;font-weight:700;color:#e2e8f0}
+    .gloss-eng{font-size:11px;color:#64748b;margin-top:2px}
+    .gloss-desc{font-size:13px;color:#cbd5e1;line-height:1.6;margin-bottom:8px}
+    .gloss-context{font-size:12px;color:#7dd3fc;border-left:3px solid #0ea5e9;padding-left:8px;font-style:italic;line-height:1.5}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var {useState, useEffect, useRef} = React;
+var THEME = '#0ea5e9';
+
+/* ── DATA ───────────────────────────────────────────────── */
+
+var PRICE_LABELS = ['25.06','25.07','25.08','25.09','25.10','25.11','25.12','26.01','26.02','26.03','26.04','26.05'];
+var PRICE_DATA   = [7.78, 9.00, 11.00, 12.50, 14.00, 16.00, 13.50, 16.00, 17.50, 22.00, 29.00, 36.95];
+var PRICE_PT_BG  = ['#ef4444','#0ea5e9','#0ea5e9','#0ea5e9','#0ea5e9','#0ea5e9','#ef4444','#0ea5e9','#0ea5e9','#0ea5e9','#0ea5e9','#22c55e'];
+var PRICE_PT_R   = [6,3,3,3,3,3,4,3,3,3,3,6];
+
+var PERF_LABELS  = ['1개월','3개월','YTD','52주'];
+var PERF_LUNR    = [45, 68, 47, 169];
+var PERF_SPY     = [3, 8, 12, 25];
+var PERF_LUNR_BG = ['#0ea5e944','#0ea5e944','#0ea5e944','#0ea5e944'];
+var PERF_LUNR_BD = ['#0ea5e9','#0ea5e9','#0ea5e9','#0ea5e9'];
+var PERF_SPY_BG  = ['#64748b44','#64748b44','#64748b44','#64748b44'];
+var PERF_SPY_BD  = ['#64748b','#64748b','#64748b','#64748b'];
+
+var Q_LABELS   = ['Q1 25','Q2 25','Q3 25','Q4 25','Q1 26','Q2 26E'];
+var Q_REVENUE  = [62.2, 70.0, 82.0, 105.0, 186.7, 225.0];
+var Q_REV_BG   = ['#0ea5e944','#0ea5e944','#0ea5e944','#0ea5e966','#0ea5e9aa','#22c55e44'];
+var Q_REV_BD   = ['#0ea5e9','#0ea5e9','#0ea5e9','#0ea5e9','#0ea5e9','#22c55e'];
+
+var EBITDA_LABELS = ['Q3 25','Q4 25','Q1 26','Q2 26E','Q3 26E','Q4 26E'];
+var EBITDA_DATA   = [-8.5, -3.2, 2.7, 12.0, 22.0, 35.0];
+var EBITDA_BG     = ['#ef444444','#ef444444','#22c55eaa','#22c55e44','#22c55e44','#22c55e66'];
+var EBITDA_BD     = ['#ef4444','#ef4444','#22c55e','#22c55e','#22c55e','#22c55e'];
+
+var BACKLOG_LABELS = ['Q2 25','Q3 25','Q4 25','Q1 26'];
+var BACKLOG_DATA   = [120, 180, 280, 1100];
+var BACKLOG_BG     = ['#0ea5e944','#0ea5e944','#0ea5e966','#0ea5e9bb'];
+var BACKLOG_BD     = ['#0ea5e9','#0ea5e9','#0ea5e9','#0ea5e9'];
+
+var RSI_LABELS = ['4주전','3주전','2주전','1주전','현재'];
+var RSI_DATA   = [52, 55, 60, 64, 67];
+var RSI_BG     = ['#0ea5e966','#0ea5e966','#0ea5e977','#0ea5e988','#0ea5e9aa'];
+var RSI_BD     = ['#0ea5e9','#0ea5e9','#0ea5e9','#0ea5e9','#0ea5e9'];
+
+var MA_LABELS   = ['26.01','26.02','26.03','26.04','26.05'];
+var MA_PRICE    = [16.00, 17.50, 22.00, 29.00, 36.95];
+var MA_20       = [14.50, 15.00, 18.00, 23.00, 31.20];
+var MA_50       = [13.00, 13.50, 15.00, 19.00, 24.80];
+var MA_PX_PT_BG = ['#0ea5e9','#0ea5e9','#0ea5e9','#0ea5e9','#22c55e'];
+var MA_PX_PT_R  = [4,4,4,4,6];
+var MA_20_PT_BG = ['#f59e0b','#f59e0b','#f59e0b','#f59e0b','#f59e0b'];
+var MA_50_PT_BG = ['#a855f7','#a855f7','#a855f7','#a855f7','#a855f7'];
+var MA_3_PT_R   = [3,3,3,3,3];
+
+var X_OPINIONS = [
+  {id:1,  name:'@SpaceInvestor',   bull:true,  text:'$LUNR Q1 매출 $186.7M, YoY 3배! 백로그 $1.1B으로 400% 급증. Lanteris 인수로 진짜 우주 인프라 회사로 탈바꿈. 매수 의견 유지.'},
+  {id:2,  name:'@MoonBull2026',    bull:true,  text:'LTV (달 지형차량) 계약 $4.6B 규모. 낙찰만 되면 LUNR 완전히 다른 레벨. 현재 시총 $5.9B 대비 엄청난 업사이드.'},
+  {id:3,  name:'@SpacexIPO_Watch', bull:true,  text:'SpaceX IPO 기대감으로 우주 섹터 전반 상승 중. $LUNR도 수혜. 민간 우주 인프라의 시대 본격 개막.'},
+  {id:4,  name:'@DefenseAlpha',    bull:true,  text:'SDA 추적 위성 18기 수주 + Space Force Andromeda IDIQ + Golden Dome... $LUNR 민간 우주에서 국방 우주로 영역 확장. 국방부 예산 수혜.'},
+  {id:5,  name:'@GoonhillyBull',   bull:true,  text:'Goonhilly 인수 완료 시 44개 안테나 추가. 달·시스루나 통신 네트워크 구축. 장기적으로 SpaceX 스타링크와 다른 포지션의 우주 인프라.'},
+  {id:6,  name:'@NASAplay2026',    bull:true,  text:'NASA CLPS $180.4M 계약 확보 + IM-3 H2 2026 예정. 착륙 성공하면 주가 레벨업. 이번엔 12번 궤도 선회로 정밀 착륙 강화.'},
+  {id:7,  name:'@SpaceTrader77',   bull:true,  text:'$LUNR 2026 매출 가이던스 $900M~$1B. Adj. EBITDA 흑자 전환. 이 규모 매출 성장하는 스페이스 주식이 또 있나.'},
+  {id:8,  name:'@OrbitalFund',     bull:true,  text:'$175M 전략적 투자 유치 완료. 재무 구조 강화. Lanteris 통합 순조롭게 진행 중이라는 신호.'},
+  {id:9,  name:'@EarningsWatcher', bull:null,  text:'EPS -$0.18 vs 예상 -$0.07. 미스 폭 크다. Lanteris 통합 비용 예상보다 높은 듯. 수익성 전환 타임라인이 관건.'},
+  {id:10, name:'@SpaceSkeptic',    bull:null,  text:'IM-1, IM-2 모두 착지 후 전복. IM-3 실패하면 NASA와의 관계에 타격. 달 착륙 기술적 리스크 과소평가하면 안 됨.'},
+  {id:11, name:'@ValuationNerd',   bull:null,  text:'$LUNR 시총 $5.9B, 2026 예상 매출 $950M → P/S 6.2x. 성장주치고 그렇게 비싸지 않음. LTV 낙찰 시 P/S 급격히 낮아짐.'},
+  {id:12, name:'@LunarBear',       bull:false, text:'애널리스트 중간값 $23인데 현재 $37. 60% 이상 과도 상승. 단기 조정 임박 가능성. 숏 포지션 검토 중.'},
+  {id:13, name:'@SpaceDebt',       bull:false, text:'Lanteris 인수에 현금 $450M 쏟아부음. 부채 증가 + 주식 희석 + 통합 리스크. 재무 건전성 점검 필요.'},
+  {id:14, name:'@NASAcut_risk',    bull:false, text:'트럼프 행정부 NASA 예산 삭감 리스크. 연방 정부 지출 감축 기조 속에 CLPS 프로그램 축소 가능성 배제 못함.'},
+  {id:15, name:'@LTVrisks',        bull:null,  text:'LTV 계약 낙찰이 확정된 게 아님. 경쟁 입찰. 안 되면 주가 급락 가능. 단일 계약에 시총이 너무 많이 의존하는 구조.'},
+];
+
+var REDDIT_OPINIONS = [
+  {id:1,  sub:'r/space',            bull:true,  text:'LUNR은 단순 달 착륙 회사가 아님. Lanteris로 위성 제조 + Goonhilly로 지상국 + CLPS로 달 수송. 완전한 우주 수직통합 인프라 플랫폼.'},
+  {id:2,  sub:'r/investing',        bull:true,  text:'백로그 $1.1B, 매출 가이던스 $950M... 이 회사 1년 전 시총 $700M이었음. 진짜 급성장 중. LTV까지 따내면 시총 $15B 간다는 bull 케이스 있음.'},
+  {id:3,  sub:'r/stocks',           bull:true,  text:'LUNR Adj. EBITDA Q1에 처음 흑자 $2.7M. 작은 숫자지만 방향이 맞다. 운영 레버리지 붙으면 이익 급성장 가능.'},
+  {id:4,  sub:'r/wallstreetbets',   bull:true,  text:'SpaceX IPO 뜨면 우주 섹터 전체 리레이팅. $LUNR 그 수혜 최전선에 있음. 아직 늦지 않았다고 본다 🚀🌙'},
+  {id:5,  sub:'r/SecurityAnalysis', bull:true,  text:'수직통합 전략 평가: Lanteris(제조) + Nova-C(착륙) + Goonhilly(통신) + OMES(운영). 모든 우주 임무 value chain 커버. 모트 구축 중.'},
+  {id:6,  sub:'r/investing',        bull:true,  text:'국방부 SDA + Space Force + NASA + 상업 고객. 매출원 다각화 완성. 특정 고객 리스크 대폭 감소. 장기 보유 의사 있음.'},
+  {id:7,  sub:'r/SecurityAnalysis', bull:null,  text:'EPS 미스가 걸림돌. -$0.18 실제 vs -$0.07 추정. 통합 비용 + D&A 급증. 진짜 이익 체질로 전환되는 데 2~3분기 더 필요할 것.'},
+  {id:8,  sub:'r/stocks',           bull:null,  text:'애널 중간값 $23 vs 현재 $37. 낙관론자들은 LTV 반영하면 $50+ 가능하다지만 아직 낙찰도 아님. 이 프리미엄 정당한가?'},
+  {id:9,  sub:'r/investing',        bull:null,  text:'달 착륙 IM-1, IM-2 모두 실패(전복). 기술적 검증이 아직 부족함. IM-3도 실패 시 NASA와의 계약 관계 재검토될 수 있음.'},
+  {id:10, sub:'r/space',            bull:null,  text:'Goonhilly 인수 아직 영국 국가안보 심사 + FCC 승인 필요. Q3 마감 가정이지만 지연 가능. 불확실성 요인 여러 개 병존.'},
+  {id:11, sub:'r/wallstreetbets',   bull:false, text:'Reddit이 2월에 "Lanteris 인수 비싸게 사는 거 아닌가" 우려 제기. 주가가 그때 $17에서 지금 $37이 됐는데, 그 우려가 없어진 건 아님.'},
+  {id:12, sub:'r/investing',        bull:false, text:'NASA 예산 삭감 가능성. 현 행정부 기조. CLPS 프로그램 전액 보장 아님. 연방 지출 환경 변화 리스크.'},
+  {id:13, sub:'r/SecurityAnalysis', bull:false, text:'부채: $800M 인수에 현금 $450M + 주식 $350M. 이자 부담 + 주주 희석 동시. 잉여현금흐름 흑자 전환까지 2~3년은 걸릴 것.'},
+  {id:14, sub:'r/stocks',           bull:false, text:'공매도 비율 14.39%. 시장에서 숏 세력 적지 않음. 이들이 틀릴 수도 있지만, 이유 없는 숏은 없다. 리스크 파악 후 투자해야.'},
+  {id:15, sub:'r/investing',        bull:null,  text:'LUNR 홀더인데 $14 평단. 수익 좋음. LTV 발표 전까지 홀드. 낙찰 시 $50+ 기대, 미낙찰 시 $25 정도로 후퇴 예상.'},
+];
+
+var GLOSSARY_TERMS = [
+  {name:'CLPS', eng:'Commercial Lunar Payload Services — 달 화물 수송 서비스', cat:'사업', catColor:'#0ea5e9',
+   desc:'NASA가 민간 기업에게 달 표면에 과학 장비와 기술 실증 탑재체를 배달하도록 위탁하는 프로그램입니다. 민간 기업이 달 수송 서비스를 제공하고 NASA는 고객이 됩니다.',
+   context:'Intuitive Machines의 핵심 사업 — IM-1, IM-2, IM-3 등 Nova-C 착륙선이 CLPS 계약 기반. 최신 계약 $180.4M.'},
+  {name:'LTV', eng:'Lunar Terrain Vehicle — 달 지형 차량', cat:'사업', catColor:'#0ea5e9',
+   desc:'NASA 아르테미스 프로그램의 달 표면 이동수단으로, 우주인이 탑승해 달 남극 지역을 탐사하는 차량입니다. 지구의 로버(탐사차)와 비슷합니다.',
+   context:'총 규모 $4.6B의 차세대 대형 계약 — LUNR에게 낙찰 시 현재 시총($5.9B)을 상회하는 바이너리 이벤트.'},
+  {name:'수직통합', eng:'Vertical Integration', cat:'사업', catColor:'#0ea5e9',
+   desc:'우주 임무에 필요한 제조·발사·착륙·통신·운영 등 여러 단계를 한 회사가 직접 담당하는 구조입니다. 비용 절감과 통제력 강화에 유리합니다.',
+   context:'LUNR: Lanteris(위성 제조) + Nova-C(달 착륙) + Goonhilly(지상국·통신) + OMES(운영) — 우주 전 value chain 커버.'},
+  {name:'SDA', eng:'Space Development Agency — 우주개발청', cat:'시장', catColor:'#a855f7',
+   desc:'미국 국방부 산하 우주 인프라 구축 기관으로, 저궤도에 수백 개의 위성을 배치해 미사일 추적·군사 통신을 담당하는 위성망을 건설 중입니다.',
+   context:'LUNR 자회사 Lanteris가 SDA Tranche 3 추적 위성 18기 수주 — 국방 매출 다각화의 핵심.'},
+  {name:'IDIQ 계약', eng:'Indefinite Delivery / Indefinite Quantity', cat:'시장', catColor:'#a855f7',
+   desc:'정해진 물량과 납품 일정 없이 필요할 때마다 발주할 수 있는 정부 계약 방식입니다. 계약을 따내면 향후 수주 기회가 지속적으로 생깁니다.',
+   context:'LUNR이 US Space Force Andromeda IDIQ 선정 — 우주 영역 인식(SDA) 역량 납품 창구 확보.'},
+  {name:'Adj. EBITDA', eng:'Adjusted EBITDA', cat:'재무', catColor:'#22c55e',
+   desc:'이자·세금·감가상각 비용과 일회성 항목을 제외한 영업이익으로, 회사의 실제 현금 창출 능력을 보여주는 지표입니다.',
+   context:'Q1 2026 Adj. EBITDA +$2.7M — 창사 이래 첫 흑자. 방향성 전환 신호. 2026년 연간 흑자 가이던스.'},
+  {name:'백로그', eng:'Backlog — 수주잔고', cat:'실적', catColor:'#f97316',
+   desc:'고객으로부터 주문(계약)은 받았지만 아직 납품/인식하지 못한 미래 매출 총액입니다. 백로그가 클수록 향후 매출 가시성이 높습니다.',
+   context:'Q1 2026 $1.1B (전년比 +400%) — Q1 분기 매출($186.7M)의 약 6배. 2026 가이던스 $900M~$1B의 핵심 근거.'},
+  {name:'P/S 비율', eng:'Price-to-Sales Ratio', cat:'재무', catColor:'#22c55e',
+   desc:'시가총액을 연간 매출로 나눈 지표로, 이익이 없는 성장 초기 기업의 밸류에이션 평가에 활용됩니다.',
+   context:'현재 P/S 약 6.2x (시총 $5.9B / 2026E $950M). LTV 낙찰 시 매출 크게 늘어 P/S 급감 예상.'},
+  {name:'EPS 미스', eng:'EPS Miss', cat:'실적', catColor:'#f97316',
+   desc:'주당순이익(EPS) 실제치가 애널리스트 예상치보다 나빴을 때 "미스"라 합니다. 시장 기대를 하회했다는 뜻입니다.',
+   context:'Q1 2026 EPS -$0.18 vs 예상 -$0.07. Lanteris 통합 비용·감가상각 급증이 원인. 수익성 전환 지연 신호.'},
+  {name:'RSI', eng:'Relative Strength Index — 상대강도지수', cat:'기술적', catColor:'#3b82f6',
+   desc:'최근 가격 상승폭과 하락폭을 비교해 0~100으로 나타낸 지표입니다. 70 이상이면 과매수, 30 이하면 과매도로 봅니다.',
+   context:'현재 LUNR RSI 약 67 — 상승 추세 내 정상 범위. AXTI(73)보다 낮아 상대적으로 과열 덜함.'},
+  {name:'이동평균', eng:'Moving Average', cat:'기술적', catColor:'#3b82f6',
+   desc:'특정 기간 주가의 평균값을 연결한 선입니다. 20일/50일 이동평균 위에서 거래되면 상승 추세로 봅니다.',
+   context:'LUNR $36.95 > 20일MA $31.2 > 50일MA $24.8 — 강세 정배열. 기술적 추세는 긍정적.'},
+  {name:'공매도 비율', eng:'Short Interest', cat:'시장', catColor:'#a855f7',
+   desc:'전체 유통 주식 중 공매도(빌려서 팔고 나중에 되사는 거래)된 비율입니다. 높을수록 하락에 베팅하는 세력이 많습니다.',
+   context:'LUNR 공매도 14.39%(31.28M주). 상승 시 숏스퀴즈 잠재력 있으나, 기관 회의론 반영된 수치이기도 함.'},
+];
+
+/* ── REUSABLE COMPONENTS ─────────────────────────────────── */
+
+function SentimentBar(props) {
+  var b = props.bull; var n = props.neutral; var r = props.bear;
+  var t = b + n + r;
+  return (
+    <div>
+      <div style={{display:'flex',height:'8px',borderRadius:'4px',overflow:'hidden',marginBottom:'6px'}}>
+        <div style={{width:((b/t)*100)+'%',background:'#22c55e'}}/>
+        <div style={{width:((n/t)*100)+'%',background:'#475569'}}/>
+        <div style={{width:((r/t)*100)+'%',background:'#ef4444'}}/>
+      </div>
+      <div style={{display:'flex',gap:'14px',fontSize:'11px'}}>
+        <span style={{color:'#22c55e'}}>강세 {b}</span>
+        <span style={{color:'#475569'}}>중립 {n}</span>
+        <span style={{color:'#ef4444'}}>약세 {r}</span>
+      </div>
+    </div>
+  );
+}
+
+function OpinionCard(props) {
+  var op = props.op; var platform = props.platform;
+  var isBull = op.bull === true; var isBear = op.bull === false;
+  var badgeBg    = isBull ? '#0a1f0a' : isBear ? '#1c0a0a' : '#0f172a';
+  var badgeColor = isBull ? '#22c55e' : isBear ? '#ef4444' : '#64748b';
+  return (
+    <div className="opinion-card">
+      <div className="opinion-header">
+        <div className="opinion-avatar" style={{background:badgeBg,color:badgeColor,border:'1px solid '+badgeColor}}>
+          {platform==='X'?'X':'R'}
+        </div>
+        <div className="opinion-meta">
+          <div className="opinion-name">{op.name||op.sub}</div>
+        </div>
+        <span style={{background:badgeBg,color:badgeColor,fontSize:'11px',padding:'2px 7px',borderRadius:'4px',fontWeight:'600',flexShrink:0}}>
+          {isBull?'강세':isBear?'약세':'중립'}
+        </span>
+      </div>
+      <div className="opinion-text">{op.text}</div>
+    </div>
+  );
+}
+
+function GlossaryTab() {
+  var fs = useState('전체'); var filter = fs[0]; var setFilter = fs[1];
+  var cats = ['전체','기술적','재무','실적','시장','사업'];
+  var filtered = filter==='전체' ? GLOSSARY_TERMS : GLOSSARY_TERMS.filter(function(t){return t.cat===filter;});
+  return (
+    <div style={{paddingBottom:'16px'}}>
+      <div className="gloss-filter">
+        {cats.map(function(c){
+          return (
+            <button key={c} className={'gloss-btn'+(filter===c?' active':'')} onClick={function(){setFilter(c);}}>
+              {c}
+            </button>
+          );
+        })}
+      </div>
+      {filtered.map(function(t){
+        return (
+          <div key={t.eng} className="gloss-card">
+            <div style={{display:'flex',alignItems:'flex-start',gap:'8px',marginBottom:'8px'}}>
+              <div style={{flex:1}}>
+                <div className="gloss-name">{t.name}</div>
+                <div className="gloss-eng">{t.eng}</div>
+              </div>
+              <span style={{background:t.catColor+'22',color:t.catColor,padding:'3px 8px',borderRadius:'4px',fontSize:'11px',fontWeight:'700',flexShrink:0}}>
+                {t.cat}
+              </span>
+            </div>
+            <div className="gloss-desc">{t.desc}</div>
+            <div className="gloss-context">{t.context}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── OVERVIEW TAB ────────────────────────────────────────── */
+
+function OverviewTab() {
+  var priceRef = useRef(null); var perfRef = useRef(null);
+  var priceInst = useRef(null); var perfInst = useRef(null);
+
+  useEffect(function(){
+    if (priceInst.current) { priceInst.current.destroy(); priceInst.current = null; }
+    if (priceRef.current) {
+      priceInst.current = new Chart(priceRef.current, {
+        type:'line',
+        data:{labels:PRICE_LABELS, datasets:[{
+          label:'LUNR', data:PRICE_DATA, borderColor:THEME,
+          backgroundColor:THEME+'1a', fill:true, tension:0.4,
+          pointBackgroundColor:PRICE_PT_BG, pointRadius:PRICE_PT_R
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#1e293b'}},
+            y:{ticks:{color:'#475569',font:{size:10},callback:function(v){return '$'+v;}},grid:{color:'#1e293b'}}
+          }
+        }
+      });
+    }
+    if (perfInst.current) { perfInst.current.destroy(); perfInst.current = null; }
+    if (perfRef.current) {
+      perfInst.current = new Chart(perfRef.current, {
+        type:'bar',
+        data:{labels:PERF_LABELS, datasets:[
+          {label:'LUNR', data:PERF_LUNR, backgroundColor:PERF_LUNR_BG, borderColor:PERF_LUNR_BD, borderWidth:2},
+          {label:'S&P500', data:PERF_SPY, backgroundColor:PERF_SPY_BG, borderColor:PERF_SPY_BD, borderWidth:2}
+        ]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+          scales:{
+            x:{ticks:{color:'#475569',font:{size:11}},grid:{color:'#1e293b'}},
+            y:{ticks:{color:'#475569',font:{size:10},callback:function(v){return v+'%';}},grid:{color:'#1e293b'}}
+          }
+        }
+      });
+    }
+    return function(){
+      if (priceInst.current){priceInst.current.destroy();priceInst.current=null;}
+      if (perfInst.current){perfInst.current.destroy();perfInst.current=null;}
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className="catalyst-box">
+        <div className="catalyst-title">🚀 핵심 모멘텀: LTV 계약 $4.6B — 최대 촉매제 대기 중</div>
+        <div style={{fontSize:'12px',color:'#6ee7b7'}}>NASA 달 지형 차량(Lunar Terrain Vehicle) 계약 낙찰 시 현재 시총($5.9B)을 상회하는 단일 계약. 발표 시 주가 레벨업 기대. 낙찰 미확정 바이너리 이벤트.</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">핵심 지표</div>
+        <div className="stat-grid">
+          <div className="stat-item">
+            <div className="stat-label">현재가</div>
+            <div className="stat-value" style={{color:THEME}}>$36.95</div>
+            <div className="stat-sub">당일: $35.25 ~ $37.70</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-label">52주 범위</div>
+            <div className="stat-value" style={{fontSize:'13px',color:'#e2e8f0'}}>$7.78 ~ $38.55</div>
+            <div className="stat-sub">+169% (52주)</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-label">시가총액</div>
+            <div className="stat-value">$5.94B</div>
+            <div className="stat-sub">~160M 주 기준</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-label">RSI (14)</div>
+            <div className="stat-value" style={{color:'#f59e0b'}}>67</div>
+            <div className="stat-sub">상승 추세 (정상 범위)</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-label">Q1 26 매출</div>
+            <div className="stat-value" style={{color:'#22c55e'}}>$186.7M</div>
+            <div className="stat-sub">+3배 YoY (사상 최고)</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-label">백로그</div>
+            <div className="stat-value" style={{color:THEME}}>$1.1B</div>
+            <div className="stat-sub">+400% YoY</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">주가 추이 (52주, 월간)</div>
+        <div className="chart-wrap"><canvas ref={priceRef}/></div>
+        <div style={{fontSize:'11px',color:'#475569',marginTop:'6px'}}>빨간 점: 52주 저점($7.78, '25.06) / 초록 점: 현재가($36.95)</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">성과 비교 (LUNR vs S&P 500)</div>
+        <div className="chart-wrap"><canvas ref={perfRef}/></div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">기업 개요</div>
+        {[
+          ['기업명','Intuitive Machines, Inc. (Nasdaq: LUNR)'],
+          ['설립 / 본사','2013년 / 텍사스 휴스턴'],
+          ['핵심 사업','달 착륙·우주 인프라·위성 제조·지상국'],
+          ['주요 자회사','Lanteris Space Systems (위성 제조)'],
+          ['핵심 프로그램','CLPS·OMES·NSNS·SDA·Space Force'],
+          ['2026 매출 가이던스','$900M ~ $1B (+약 3.5x YoY)'],
+          ['Q2 26 신규 계약 예정','Goonhilly + COMSAT 인수 (Q3 마감 예정)'],
+          ['공매도 비율','14.39% (31.28M주)'],
+        ].map(function(r){
+          return (
+            <div key={r[0]} className="info-row">
+              <span className="info-label">{r[0]}</span>
+              <span style={{fontWeight:'600',textAlign:'right',fontSize:'13px',color:'#e2e8f0'}}>{r[1]}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── TECHNICAL TAB ───────────────────────────────────────── */
+
+function TechnicalTab() {
+  var rsiRef = useRef(null); var maRef = useRef(null);
+  var rsiInst = useRef(null); var maInst = useRef(null);
+
+  useEffect(function(){
+    if (rsiInst.current){rsiInst.current.destroy();rsiInst.current=null;}
+    if (rsiRef.current) {
+      rsiInst.current = new Chart(rsiRef.current, {
+        type:'bar',
+        data:{labels:RSI_LABELS, datasets:[{
+          label:'RSI', data:RSI_DATA,
+          backgroundColor:RSI_BG, borderColor:RSI_BD, borderWidth:2
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#475569',font:{size:11}},grid:{color:'#1e293b'}},
+            y:{min:0,max:100,ticks:{color:'#475569',font:{size:11}},grid:{color:'#1e293b'}}
+          }
+        }
+      });
+    }
+    if (maInst.current){maInst.current.destroy();maInst.current=null;}
+    if (maRef.current) {
+      maInst.current = new Chart(maRef.current, {
+        type:'line',
+        data:{labels:MA_LABELS, datasets:[
+          {
+            label:'주가', data:MA_PRICE, borderColor:THEME,
+            backgroundColor:'transparent', tension:0.3, borderWidth:2,
+            pointBackgroundColor:MA_PX_PT_BG, pointRadius:MA_PX_PT_R
+          },
+          {
+            label:'20일MA', data:MA_20, borderColor:'#f59e0b',
+            backgroundColor:'transparent', tension:0.3, borderWidth:1.5,
+            borderDash:[5,3], pointBackgroundColor:MA_20_PT_BG, pointRadius:MA_3_PT_R
+          },
+          {
+            label:'50일MA', data:MA_50, borderColor:'#a855f7',
+            backgroundColor:'transparent', tension:0.3, borderWidth:1.5,
+            borderDash:[5,3], pointBackgroundColor:MA_50_PT_BG, pointRadius:MA_3_PT_R
+          }
+        ]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+          scales:{
+            x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#1e293b'}},
+            y:{ticks:{color:'#475569',font:{size:10},callback:function(v){return '$'+v;}},grid:{color:'#1e293b'}}
+          }
+        }
+      });
+    }
+    return function(){
+      if (rsiInst.current){rsiInst.current.destroy();rsiInst.current=null;}
+      if (maInst.current){maInst.current.destroy();maInst.current=null;}
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-title">RSI 추이 (5주)</div>
+        <div className="chart-wrap"><canvas ref={rsiRef}/></div>
+        <div style={{display:'flex',gap:'10px',marginTop:'8px',fontSize:'11px'}}>
+          <span style={{color:'#ef4444'}}>■ 과매수 (70+)</span>
+          <span style={{color:THEME}}>■ 정상 구간</span>
+          <span style={{color:'#22c55e'}}>■ 과매도 (30-)</span>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">이동평균선 vs 주가 (5개월)</div>
+        <div className="chart-wrap"><canvas ref={maRef}/></div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">기술적 시그널 요약</div>
+        {[
+          {label:'RSI (14)',      value:'67',          note:'상승 추세 내 정상 (70 미만)',        color:'#0ea5e9'},
+          {label:'5일 MA',        value:'$35.80',      note:'강세 (현재가 대비 -3%)',              color:'#22c55e'},
+          {label:'20일 MA',       value:'$31.20',      note:'강세 (현재가 대비 -15%)',             color:'#22c55e'},
+          {label:'50일 MA',       value:'$24.80',      note:'강세 (현재가 대비 -33%)',             color:'#22c55e'},
+          {label:'MACD',          value:'매수',        note:'강한 상승 모멘텀',                    color:'#22c55e'},
+          {label:'52주 고점',      value:'$38.55',      note:'현재가 $36.95 — 고점 대비 -4%',     color:'#f59e0b'},
+          {label:'공매도',         value:'14.39%',      note:'31.28M주 — 숏스퀴즈 잠재력',        color:'#f59e0b'},
+          {label:'거래량',         value:'3.65M',       note:'이상 없음 (정상 범위)',               color:THEME},
+        ].map(function(item){
+          return (
+            <div key={item.label} className="info-row">
+              <span className="info-label">{item.label}</span>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:'700',color:item.color,fontSize:'13px'}}>{item.value}</div>
+                <div style={{fontSize:'11px',color:'#475569'}}>{item.note}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <div className="card-title">주요 지지선 & 저항선</div>
+        {[
+          {level:'저항', price:'$38.55', note:'52주 고점 (ATH)',                   color:'#ef4444'},
+          {level:'저항', price:'$38.26', note:'직전 고점 (2026.05.22)',             color:'#ef4444'},
+          {level:'현재', price:'$36.95', note:'현재가 (2026.05.25)',               color:THEME},
+          {level:'지지', price:'$35.25', note:'당일 저점 — 1차 지지',               color:'#22c55e'},
+          {level:'지지', price:'$31.20', note:'20일 이동평균선',                    color:'#22c55e'},
+          {level:'지지', price:'$24.80', note:'50일 이동평균선 (강력 중기 지지)',     color:'#22c55e'},
+        ].map(function(r){
+          return (
+            <div key={r.price} className="info-row">
+              <span style={{color:r.color,fontWeight:'700',fontSize:'12px',minWidth:'28px'}}>{r.level}</span>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:'700',color:'#e2e8f0',fontSize:'14px'}}>{r.price}</div>
+                <div style={{fontSize:'11px',color:'#475569'}}>{r.note}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── FINANCE TAB ─────────────────────────────────────────── */
+
+function FinanceTab() {
+  var revRef = useRef(null); var edRef = useRef(null); var blRef = useRef(null);
+  var revInst = useRef(null); var edInst = useRef(null); var blInst = useRef(null);
+
+  useEffect(function(){
+    if (revInst.current){revInst.current.destroy();revInst.current=null;}
+    if (edInst.current){edInst.current.destroy();edInst.current=null;}
+    if (blInst.current){blInst.current.destroy();blInst.current=null;}
+
+    if (revRef.current) {
+      revInst.current = new Chart(revRef.current, {
+        type:'bar',
+        data:{labels:Q_LABELS, datasets:[{
+          label:'분기 매출 ($M)', data:Q_REVENUE,
+          backgroundColor:Q_REV_BG, borderColor:Q_REV_BD, borderWidth:2
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#1e293b'}},
+            y:{ticks:{color:'#475569',font:{size:10},callback:function(v){return '$'+v+'M';}},grid:{color:'#1e293b'}}
+          }
+        }
+      });
+    }
+    if (edRef.current) {
+      edInst.current = new Chart(edRef.current, {
+        type:'bar',
+        data:{labels:EBITDA_LABELS, datasets:[{
+          label:'Adj. EBITDA ($M)', data:EBITDA_DATA,
+          backgroundColor:EBITDA_BG, borderColor:EBITDA_BD, borderWidth:2
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#1e293b'}},
+            y:{ticks:{color:'#475569',font:{size:10},callback:function(v){return '$'+v+'M';}},grid:{color:'#1e293b'}}
+          }
+        }
+      });
+    }
+    if (blRef.current) {
+      blInst.current = new Chart(blRef.current, {
+        type:'bar',
+        data:{labels:BACKLOG_LABELS, datasets:[{
+          label:'백로그 ($M)', data:BACKLOG_DATA,
+          backgroundColor:BACKLOG_BG, borderColor:BACKLOG_BD, borderWidth:2
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#475569',font:{size:11}},grid:{color:'#1e293b'}},
+            y:{ticks:{color:'#475569',font:{size:10},callback:function(v){return '$'+v+'M';}},grid:{color:'#1e293b'}}
+          }
+        }
+      });
+    }
+    return function(){
+      if (revInst.current){revInst.current.destroy();revInst.current=null;}
+      if (edInst.current){edInst.current.destroy();edInst.current=null;}
+      if (blInst.current){blInst.current.destroy();blInst.current=null;}
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-title">분기별 매출 ($M)</div>
+        <div className="chart-wrap"><canvas ref={revRef}/></div>
+        <div style={{fontSize:'11px',color:'#475569',marginTop:'6px'}}>Q2 26E 초록 = 추정치 ($225M)</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">Adj. EBITDA 추이 ($M)</div>
+        <div className="chart-wrap"><canvas ref={edRef}/></div>
+        <div style={{fontSize:'11px',color:'#475569',marginTop:'6px'}}>Q1 26 첫 흑자 전환 (+$2.7M) | 이후 분기 가속 예상</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">백로그 추이 ($M)</div>
+        <div className="chart-wrap"><canvas ref={blRef}/></div>
+        <div style={{fontSize:'11px',color:'#475569',marginTop:'6px'}}>Q1 26 $1.1B — 전년 동기 대비 +400% 급증</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">주요 재무 지표</div>
+        {[
+          ['Q1 26 매출',            '$186.7M',     '사상 최고, +3배 YoY (Lanteris 효과)'],
+          ['Q1 26 제품 매출',        '$141.6M',     'Lanteris 위성 제조 포함'],
+          ['Q1 26 서비스 매출',      '$45.1M',      'CLPS·OMES·NSNS'],
+          ['Q1 26 Adj. EBITDA',     '+$2.7M',      '첫 흑자 전환'],
+          ['Q1 26 GAAP 순손실',     '-$37.4M',     '-$0.25/주 (예상 -$0.07 미스)'],
+          ['2026 매출 가이던스',     '$900M~$1B',   '연간 +350% 이상 성장'],
+          ['백로그',                '$1.1B',       '+400% YoY, 분기 매출 6배'],
+          ['P/S (2026E)',           '~6.2x',       '시총 $5.9B / 가이던스 $950M'],
+          ['공매도 비율',           '14.39%',       '31.28M주 — 기관 회의론 반영'],
+          ['Q1 26 신규 수주',       '$428.9M',      'SDA Tranche 3 + CLPS $180.4M'],
+        ].map(function(r){
+          return (
+            <div key={r[0]} className="info-row">
+              <span className="info-label">{r[0]}</span>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:'700',fontSize:'13px',color:'#e2e8f0'}}>{r[1]}</div>
+                <div style={{fontSize:'11px',color:'#475569'}}>{r[2]}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── X TAB ───────────────────────────────────────────────── */
+
+function XTab() {
+  var bull    = X_OPINIONS.filter(function(o){return o.bull===true;}).length;
+  var bear    = X_OPINIONS.filter(function(o){return o.bull===false;}).length;
+  var neutral = X_OPINIONS.filter(function(o){return o.bull===null;}).length;
+  return (
+    <div>
+      <div className="card">
+        <div className="card-title">X (구 트위터) 커뮤니티 온도</div>
+        <SentimentBar bull={bull} neutral={neutral} bear={bear}/>
+        <div style={{fontSize:'12px',color:'#64748b',marginTop:'8px'}}>15개 의견 분석 | 업데이트: 2026.05.25</div>
+      </div>
+      <div className="highlight-box" style={{marginBottom:'12px'}}>
+        <div style={{fontSize:'12px',fontWeight:'700',color:'#7dd3fc',marginBottom:'4px'}}>주요 트렌드</div>
+        <div style={{fontSize:'12px',color:'#64748b'}}>SpaceX IPO 기대감 + SDA/국방 계약 + LTV 대형 촉매 기대로 강세 의견 우세. EPS 미스와 Lanteris 통합 비용, NASA 예산 불확실성에 대한 우려 병존.</div>
+      </div>
+      {X_OPINIONS.map(function(op){
+        return <OpinionCard key={op.id} op={op} platform="X"/>;
+      })}
+    </div>
+  );
+}
+
+/* ── REDDIT TAB ──────────────────────────────────────────── */
+
+function RedditTab() {
+  var bull    = REDDIT_OPINIONS.filter(function(o){return o.bull===true;}).length;
+  var bear    = REDDIT_OPINIONS.filter(function(o){return o.bull===false;}).length;
+  var neutral = REDDIT_OPINIONS.filter(function(o){return o.bull===null;}).length;
+  return (
+    <div>
+      <div className="card">
+        <div className="card-title">Reddit 커뮤니티 온도</div>
+        <SentimentBar bull={bull} neutral={neutral} bear={bear}/>
+        <div style={{fontSize:'12px',color:'#64748b',marginTop:'8px'}}>15개 의견 분석 | 업데이트: 2026.05.25</div>
+      </div>
+      <div className="highlight-box" style={{marginBottom:'12px'}}>
+        <div style={{fontSize:'12px',fontWeight:'700',color:'#7dd3fc',marginBottom:'4px'}}>주요 트렌드</div>
+        <div style={{fontSize:'12px',color:'#64748b'}}>수직통합 우주 플랫폼 논리에 공감. LTV 낙찰 기대감 강함. 달 착륙 기술 신뢰도 및 Lanteris 인수 후 통합 리스크에 대한 경계도 공존.</div>
+      </div>
+      {REDDIT_OPINIONS.map(function(op){
+        return <OpinionCard key={op.id} op={op} platform="Reddit"/>;
+      })}
+    </div>
+  );
+}
+
+/* ── CONCLUSION TAB ──────────────────────────────────────── */
+
+function ConclusionTab() {
+  return (
+    <div>
+      <div className="catalyst-box">
+        <div className="catalyst-title">🌙 핵심 촉매: LTV 계약 ($4.6B) — 낙찰 시 LUNR 밸류에이션 패러다임 변화</div>
+        <div style={{fontSize:'12px',color:'#6ee7b7'}}>NASA LTV 총 규모 $4.6B. 낙찰 시 현재 시총 $5.9B에 필적하는 계약. 2026~2028년에 걸쳐 단계적 매출 인식. 우주 인프라 포트폴리오 완성.</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">종합 투자 의견</div>
+        <div style={{textAlign:'center',padding:'16px 0'}}>
+          <div style={{fontSize:'28px',fontWeight:'800',color:'#0ea5e9'}}>조건부 매수</div>
+          <div style={{fontSize:'13px',color:'#64748b',marginTop:'6px'}}>Fair Value 추정: $35 ~ $45 (LTV 낙찰 시 $60+)</div>
+          <div style={{fontSize:'12px',color:'#475569',marginTop:'3px'}}>현재가 $36.95 | 애널리스트 중간값 $23 (일부 $50+)</div>
+          <div style={{marginTop:'12px',display:'flex',justifyContent:'center',gap:'8px',flexWrap:'wrap'}}>
+            <span style={{background:'#22c55e22',color:'#22c55e',padding:'3px 10px',borderRadius:'4px',fontSize:'12px'}}>매출 성장 ↑↑↑</span>
+            <span style={{background:'#f59e0b22',color:'#f59e0b',padding:'3px 10px',borderRadius:'4px',fontSize:'12px'}}>EPS 미스 ⚠</span>
+            <span style={{background:'#0ea5e922',color:'#0ea5e9',padding:'3px 10px',borderRadius:'4px',fontSize:'12px'}}>LTV 촉매 🎯</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title" style={{color:'#22c55e'}}>강세 요인 (Bull Case)</div>
+        {[
+          ['매출 3배 성장',        'Q1 $186.7M, 2026E $900M~$1B. 스페이스 섹터 최고 수준 성장률.'],
+          ['백로그 $1.1B (+400%)', '분기 매출 6배 수주 잔고. 2026~2027 매출 가시성 확보.'],
+          ['Adj. EBITDA 첫 흑자', 'Q1 +$2.7M. 방향 전환 신호. 운영 레버리지 본격 가동 초입.'],
+          ['수직통합 완성 단계',   'Lanteris(제조)+Nova-C(착륙)+Goonhilly(통신)+OMES(운영). 전 우주 value chain.'],
+          ['LTV 계약 $4.6B',      '낙찰 시 밸류에이션 패러다임 변화. 현재 시총 초과하는 단일 계약.'],
+          ['국방 포트폴리오 확장', 'SDA Tranche 3 위성 18기 + Andromeda IDIQ + Golden Dome. 국방 예산 안정성.'],
+          ['SpaceX IPO 기대감',   '우주 섹터 전체 리레이팅 효과. LUNR 직접 수혜 포지션.'],
+        ].map(function(r){
+          return (
+            <div key={r[0]} className="risk-item risk-bull">
+              <div style={{fontWeight:'700',fontSize:'12px',color:'#22c55e',marginBottom:'2px'}}>✓ {r[0]}</div>
+              <div style={{fontSize:'12px',color:'#94a3b8'}}>{r[1]}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <div className="card-title" style={{color:'#ef4444'}}>약세 요인 (Bear Case)</div>
+        {[
+          ['EPS 대폭 미스',       'Q1 EPS -$0.18 vs 예상 -$0.07. 통합 비용·D&A 급증. 수익성 전환 지연 우려.'],
+          ['애널리스트 중간값 $23', '현재 $36.95는 컨센서스 대비 60% 프리미엄. LTV 낙찰 기대 과도 반영 가능.'],
+          ['달 착륙 실패 리스크',  'IM-1, IM-2 모두 전복 착지. IM-3 실패 시 NASA 신뢰도·계약 관계 타격.'],
+          ['LTV 낙찰 불확실성',   '경쟁 입찰 미확정. 미낙찰 시 주가 급락 리스크 (현가에 일부 반영됨).'],
+          ['Lanteris 통합 부담',  '$800M 인수 ($450M 현금). 이자 비용 증가 + 통합 리스크 진행 중.'],
+          ['NASA 예산 리스크',    '연방 지출 감축 기조. CLPS 프로그램 예산 축소 가능성 상존.'],
+        ].map(function(r){
+          return (
+            <div key={r[0]} className="risk-item risk-bear">
+              <div style={{fontWeight:'700',fontSize:'12px',color:'#ef4444',marginBottom:'2px'}}>✗ {r[0]}</div>
+              <div style={{fontSize:'12px',color:'#94a3b8'}}>{r[1]}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <div className="card-title">시나리오별 목표주가</div>
+        {[
+          {scene:'Bull', price:'$60 ~ $80',  prob:'30%', note:'LTV 낙찰 확정 + IM-3 성공 + SDA 추가 수주',      color:'#22c55e'},
+          {scene:'Base', price:'$35 ~ $45',  prob:'45%', note:'현재 계약 집행 + EBITDA 흑자 확대 + LTV 미결',   color:THEME},
+          {scene:'Bear', price:'$20 ~ $28',  prob:'25%', note:'LTV 미낙찰 + IM-3 실패 + 통합 비용 예상 초과', color:'#ef4444'},
+        ].map(function(s){
+          return (
+            <div key={s.scene} className="info-row">
+              <div>
+                <div style={{fontWeight:'700',color:s.color,fontSize:'13px'}}>{s.scene} ({s.prob})</div>
+                <div style={{fontSize:'11px',color:'#475569',marginTop:'2px'}}>{s.note}</div>
+              </div>
+              <div style={{fontWeight:'800',color:s.color,fontSize:'15px',flexShrink:0}}>{s.price}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <div className="card-title">핵심 모니터링 포인트</div>
+        {[
+          'LTV 계약 낙찰 발표 (NASA — 가장 중요한 바이너리 이벤트)',
+          'IM-3 달 착륙 미션 성공 여부 (H2 2026 예정)',
+          'Q2 26 실적 (8월) — EPS 개선 추세 확인',
+          'Goonhilly / COMSAT 인수 마감 (Q3 2026 예상)',
+          '2026 Adj. EBITDA 연간 흑자 달성 여부',
+        ].map(function(item, i){
+          return (
+            <div key={i} style={{padding:'9px 0',borderBottom:'1px solid #1e293b',fontSize:'13px',display:'flex',alignItems:'flex-start',gap:'8px'}}>
+              <span style={{color:THEME,fontWeight:'700',minWidth:'18px'}}>{i+1}.</span>
+              <span style={{color:'#cbd5e1',lineHeight:'1.5'}}>{item}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── APP ─────────────────────────────────────────────────── */
+
+function App() {
+  var TABS = ['📊개요','📈기술적','💰재무','🐦X','💬Reddit','🎯결론','📖용어'];
+  var ts = useState('📊개요'); var tab = ts[0]; var setTab = ts[1];
+
+  function renderContent() {
+    if (tab==='📊개요')  return <OverviewTab/>;
+    if (tab==='📈기술적') return <TechnicalTab/>;
+    if (tab==='💰재무')   return <FinanceTab/>;
+    if (tab==='🐦X')     return <XTab/>;
+    if (tab==='💬Reddit') return <RedditTab/>;
+    if (tab==='🎯결론')   return <ConclusionTab/>;
+    if (tab==='📖용어')   return <GlossaryTab/>;
+    return null;
+  }
+
+  return (
+    <div>
+      <div className="header">
+        <div className="header-top">
+          <a href="https://disntm90.github.io/disntm90/" className="header-back">← 목록으로</a>
+          <div style={{flex:1}}>
+            <div className="header-title">LUNR — Intuitive Machines</div>
+            <div className="header-sub">우주 인프라 | 달 착륙·위성 제조·지상국 | 2026.05.25</div>
+          </div>
+          <div style={{textAlign:'right',flexShrink:0}}>
+            <div style={{background:'#0c2a3a',color:THEME,border:'1px solid #075985',borderRadius:'6px',padding:'4px 10px',fontSize:'12px',fontWeight:'700'}}>조건부 매수</div>
+            <div style={{fontSize:'11px',color:'#475569',marginTop:'4px'}}>FA: $35~45 (LTV 시 $60+)</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="tabs">
+        {TABS.map(function(t){
+          return (
+            <div key={t} className={'tab'+(tab===t?' active':'')} onClick={function(){setTab(t);}}>
+              {t}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="content" key={tab}>
+        {renderContent()}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
