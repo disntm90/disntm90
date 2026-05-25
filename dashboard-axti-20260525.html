@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AXTI — AXT Inc 종목분석 (2026.05.25)</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0f0f14;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px}
+    a{color:#6366f1;text-decoration:none}
+    .header{background:#1a1a2e;padding:16px;border-bottom:2px solid #6366f1}
+    .header-top{display:flex;align-items:flex-start;gap:10px}
+    .header-back{font-size:12px;color:#6366f1;white-space:nowrap;padding-top:3px}
+    .header-title{font-size:19px;font-weight:800;color:#fff}
+    .header-sub{font-size:12px;color:#94a3b8;margin-top:3px}
+    .tabs{display:flex;overflow-x:auto;background:#1a1a2e;border-bottom:1px solid #2d2d44;padding:0 8px;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{padding:12px 13px;font-size:12px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;color:#94a3b8;transition:all .2s}
+    .tab.active{color:#6366f1;border-bottom-color:#6366f1;font-weight:600}
+    .tab:hover:not(.active){color:#e2e8f0}
+    .content{padding:16px;max-width:768px;margin:0 auto}
+    .card{background:#1e1e2e;border:1px solid #2d2d44;border-radius:10px;padding:14px;margin-bottom:12px}
+    .card-title{font-size:11px;font-weight:700;color:#64748b;margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .stat-item{background:#252535;border-radius:8px;padding:10px}
+    .stat-label{font-size:11px;color:#64748b;margin-bottom:3px}
+    .stat-value{font-size:16px;font-weight:700}
+    .stat-sub{font-size:11px;color:#64748b;margin-top:2px}
+    .chart-wrap{position:relative;height:200px;margin-top:8px}
+    .info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #2d2d44;font-size:13px}
+    .info-row:last-child{border-bottom:none}
+    .info-label{color:#94a3b8;flex-shrink:0;margin-right:8px}
+    .highlight-box{background:#1a2640;border:1px solid #2d4a7a;border-radius:8px;padding:12px;margin-bottom:12px}
+    .warning-box{background:#1f1a0e;border:1px solid #b45309;border-radius:8px;padding:12px;margin-bottom:12px}
+    .warning-title{font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:4px}
+    .risk-item{padding:9px 12px;border-radius:6px;margin-bottom:8px;font-size:13px}
+    .risk-bull{background:#162316;border-left:3px solid #22c55e}
+    .risk-bear{background:#231616;border-left:3px solid #ef4444}
+    .opinion-card{background:#252535;border-radius:8px;padding:12px;margin-bottom:8px}
+    .opinion-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .opinion-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+    .opinion-meta{flex:1;min-width:0}
+    .opinion-name{font-size:12px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .opinion-text{font-size:13px;color:#cbd5e1;line-height:1.6}
+    .gloss-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+    .gloss-btn{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #2d2d44;background:transparent;color:#94a3b8;transition:all .15s}
+    .gloss-btn.active{background:#6366f1;color:#fff;border-color:#6366f1}
+    .gloss-card{background:#252535;border-radius:8px;padding:14px;margin-bottom:10px}
+    .gloss-header{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+    .gloss-name{font-size:15px;font-weight:700;color:#e2e8f0}
+    .gloss-eng{font-size:11px;color:#64748b;margin-top:2px}
+    .gloss-desc{font-size:13px;color:#cbd5e1;line-height:1.6;margin-bottom:8px}
+    .gloss-context{font-size:12px;color:#a5b4fc;border-left:3px solid #6366f1;padding-left:8px;font-style:italic;line-height:1.5}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState, useEffect, useRef} = React;
+const THEME = '#6366f1';
+
+/* ── STATIC DATA ─────────────────────────────────────────── */
+
+var PRICE_LABELS = ['25.06','25.07','25.08','25.09','25.10','25.11','25.12','26.01','26.02','26.03','26.04','26.05'];
+var PRICE_DATA   = [2.00, 3.50, 6.00, 9.50, 14.00, 20.00, 27.00, 35.00, 42.00, 52.00, 75.00, 139.56];
+var PRICE_PT_BG  = ['#6366f1','#6366f1','#6366f1','#6366f1','#6366f1','#6366f1','#6366f1','#6366f1','#6366f1','#6366f1','#6366f1','#22c55e'];
+var PRICE_PT_R   = [3,3,3,3,3,3,3,3,3,3,3,6];
+
+var PERF_LABELS  = ['1개월','3개월','YTD','52주'];
+var PERF_AXTI    = [115, 167, 417, 9621];
+var PERF_SOX     = [6, 12, 28, 45];
+var PERF_AXTI_BG = ['#6366f144','#6366f144','#6366f144','#6366f144'];
+var PERF_AXTI_BD = ['#6366f1','#6366f1','#6366f1','#6366f1'];
+var PERF_SOX_BG  = ['#94a3b844','#94a3b844','#94a3b844','#94a3b844'];
+var PERF_SOX_BD  = ['#94a3b8','#94a3b8','#94a3b8','#94a3b8'];
+
+var Q_LABELS     = ['Q1 25','Q2 25','Q3 25','Q4 25','Q1 26','Q2 26E'];
+var Q_REVENUE    = [19.4, 20.8, 22.5, 23.0, 26.9, 33.0];
+var Q_REV_BG     = ['#6366f144','#6366f144','#6366f144','#6366f166','#6366f1aa','#22c55e44'];
+var Q_REV_BD     = ['#6366f1','#6366f1','#6366f1','#6366f1','#6366f1','#22c55e'];
+var Q_MARGIN     = [-6.1, 5.0, 15.0, 21.5, 29.9, 35.0];
+var Q_MAR_PT_BG  = ['#ef4444','#f59e0b','#6366f1','#6366f1','#22c55e','#22c55e88'];
+var Q_MAR_PT_R   = [6,5,4,4,6,4];
+
+var CAP_LABELS   = ['Q1 26실적','Q2 26E','Q3 26E','Q4 26E(목표)','Q2 27E','Q4 27E(목표)'];
+var CAP_INP      = [16, 22, 28, 35, 55, 70];
+var CAP_BG       = ['#6366f1aa','#6366f166','#6366f144','#22c55e44','#22c55e44','#22c55e77'];
+var CAP_BD       = ['#6366f1','#6366f1','#6366f1','#22c55e','#22c55e','#22c55e'];
+
+var RSI_LABELS   = ['4주전','3주전','2주전','1주전','현재'];
+var RSI_DATA     = [48, 56, 63, 68, 73];
+var RSI_BG       = ['#6366f166','#6366f166','#6366f166','#6366f188','#ef444488'];
+var RSI_BD       = ['#6366f1','#6366f1','#6366f1','#6366f1','#ef4444'];
+
+var MA_LABELS    = ['26.01','26.02','26.03','26.04','26.05'];
+var MA_PRICE     = [35.0, 42.0, 52.0, 75.0, 139.56];
+var MA_20        = [22.0, 30.0, 40.0, 51.0, 60.6];
+var MA_50        = [15.0, 19.0, 25.0, 35.0, 45.8];
+var MA_PX_PT_BG  = ['#6366f1','#6366f1','#6366f1','#6366f1','#22c55e'];
+var MA_PX_PT_R   = [4,4,4,4,6];
+var MA_20_PT_BG  = ['#f59e0b','#f59e0b','#f59e0b','#f59e0b','#f59e0b'];
+var MA_50_PT_BG  = ['#22c55e','#22c55e','#22c55e','#22c55e','#22c55e'];
+var MA_345_PT_R  = [3,3,3,3,3];
+
+var X_OPINIONS = [
+  {id:1,  name:'@SemiInvestor',   bull:true,  text:'$AXTI 진짜 미쳤다... InP 기판 백로그 $100M 돌파에 Q2부터 흑자전환. AI 데이터센터 최대 직접 수혜주. 지금도 늦지 않았다.'},
+  {id:2,  name:'@AIChipTrader',   bull:true,  text:'Wedbush 목표가 $93인데 이미 $140. 모멘텀이 펀더멘탈을 압도하는 장세. 어닝이 주가를 따라잡을 수 있을지가 관건.'},
+  {id:3,  name:'@TechMomentum',   bull:true,  text:'인듐 포스파이드 공급 사실상 독점 포지션. Tongmei 수직통합으로 경쟁사 대비 원가 30%+ 저렴. $AXTI 중장기 강세 의견 유지.'},
+  {id:4,  name:'@DeepTechFund',   bull:true,  text:'$632.5M 공모 완료로 2026 캐파 2배, 2027 또 2배. 2027E 매출 $260M+ 가시화 시 현재 주가도 싸 보일 수 있음. 장기 매수.'},
+  {id:5,  name:'@PhotonicsBull',  bull:true,  text:'CPO(공동패키징광학) 2028~29 인플렉션 시 $AXTI 핵심 공급자. 지금이 사이클 초입 타이밍일 가능성. 조정 시 적극 매수.'},
+  {id:6,  name:'@SemicondPro',    bull:true,  text:'Q2 가이던스 EPS +$0.06~0.08. 거의 4년 만에 첫 흑자 전환! 턴어라운드 스토리 마침표 찍는 순간. 모멘텀 계속된다.'},
+  {id:7,  name:'@GlobalMacro88',  bull:true,  text:'EU·일본·영국·캐나다 InP 수출허가 확보 완료. 미국향은 심사 중. US 허가 확정 시 다음 레벨 업사이드 남아있음.'},
+  {id:8,  name:'@AI_datacenter',  bull:true,  text:'AI 데이터센터 광통신 속도 한계 넘으려면 InP 기판 필수. 실리콘 대체재 없음. $AXTI 공급자 파워 압도적.'},
+  {id:9,  name:'@ETFwatcher',     bull:null,  text:'$AXTI RSI 73... 과매수 구간. 단기 트레이더들은 익절 검토 타이밍. 일중 변동폭 $30은 강심장만 버틸 수 있음.'},
+  {id:10, name:'@ValueHunter',    bull:null,  text:'애널리스트 목표가 $73~93인데 주가 $140. Gap이 50%+. 모멘텀 장세에서 Gap 더 벌어질 수 있지만 결국 수렴한다.'},
+  {id:11, name:'@RiskMgr2026',    bull:null,  text:'$AXTI 오늘 하루 $116~147 레인지. 변동성 극심. 포지션 사이즈 관리 필수. 롱이든 숏이든 리스크 컨트롤 먼저.'},
+  {id:12, name:'@DilutionAlert',  bull:false, text:'공모 9.84M주 @ $64.25. 현재 $140에서 기관 +118% 수익. 매도 유인 강력. 오버행 출회 타이밍 주의 필요.'},
+  {id:13, name:'@ChinaRisk_Pro',  bull:false, text:'미국향 InP 수출허가 아직 pending. 허가 거부/지연 시 Q3 매출 시나리오 전면 수정. 가장 큰 단기 리스크.'},
+  {id:14, name:'@Quant_Alpha',    bull:false, text:'$AXTI 시총 $10.2B, 연매출 $107M. P/S ~95x. 아무리 성장 스토리라도 2027 Bull 시나리오까지 선반영된 가격.'},
+  {id:15, name:'@SemiBeat',       bull:true,  text:'Allworth Financial $AXTI 보유 확대 공시. 기관 수급 파라볼릭 상승 합류 중. 숏스퀴즈 잠재력도 여전히 상존.'},
+];
+
+var REDDIT_OPINIONS = [
+  {id:1,  sub:'r/investing',        bull:true,  text:'AXTI DD: 인듐 포스파이드 기판 = AI 시대의 "새 구리선". 공급망 병목이고 Tongmei가 전 세계 물량 상당수 담당. 지금 진입 부담스럽지만 2027 로드맵 보면 밸류 정당화 가능.'},
+  {id:2,  sub:'r/stocks',           bull:true,  text:'52주 저점 $1.45 → 현재 $140. $1,000 투자 시 지금 $96,000. 내 인생 최악의 판단은 $3에 팔았던 것. 이제 쳐다도 못 보겠음.'},
+  {id:3,  sub:'r/SecurityAnalysis', bull:true,  text:'AXTI 펀더멘탈 요약: Q1 매출 +39% YoY, 비GAAP 총마진 -6.1%→29.9%, Q2 첫 흑자. 이게 진짜 턴어라운드. 주가는 6개월 선행.'},
+  {id:4,  sub:'r/investing',        bull:true,  text:'$632.5M 공모 완료로 재무 리스크 사실상 제거. 캐파 확장 실행 자금 확보됨. 펀더멘탈 분석하면 매수 말고 다른 결론 나오기 어려움.'},
+  {id:5,  sub:'r/wallstreetbets',   bull:true,  text:'AXTI RSI 73이어도 AI 모멘텀 장세에서 더 갈 수 있음. 뇌동매수 아니고 백로그 $100M에 흑자전환. 실체 있는 상승임. 🚀'},
+  {id:6,  sub:'r/stocks',           bull:true,  text:'ETF 편입 루머 있고 기관 수급 계속 들어오는 중. 단기 조정은 매수 기회. 반도체 소재 슈퍼사이클 시작점일 수 있음.'},
+  {id:7,  sub:'r/investing',        bull:null,  text:'AXTI 포지션 잡고 싶은데 일 변동폭 $30이다... 눌림목 기다리는 중. $120 지지 확인되면 소량 진입 고려 중.'},
+  {id:8,  sub:'r/SecurityAnalysis', bull:null,  text:'밸류 계산: 2027 매출 $270M × P/S 38x = 시총 $10.3B ≈ 현재 $10.2B. 현재가가 이미 2027 Bull 시나리오를 100% 선반영한 상태.'},
+  {id:9,  sub:'r/investing',        bull:null,  text:'수출허가 변수가 너무 바이너리다. 미국향 허가 나오면 bull, 안 나오면 가이던스 미달 가능. 이 불확실성 안고 $140에 사기엔 부담.'},
+  {id:10, sub:'r/stocks',           bull:null,  text:'그냥 보고만 있는 중... $10 때 살걸 후회해봤자 이제 의미없음. 지금 들어가기엔 리스크 대비 리워드 애매한 구간.'},
+  {id:11, sub:'r/wallstreetbets',   bull:false, text:'공모가 $64.25에 산 기관들 락업 없음 → 수시 출회 가능. $140에 매도하면 +118% 차익. 이 물량 언제 쏟아질지가 문제.'},
+  {id:12, sub:'r/SecurityAnalysis', bull:false, text:'SA 기사: "탐욕의 시간은 지났다". 완벽한 실행 + 수출허가 순조로운 획득을 전제로 한 주가. 하나만 빗나가도 급락 가능.'},
+  {id:13, sub:'r/investing',        bull:false, text:'효율적 시장 관점: 애널리스트 전원 목표가 하회인데 주가가 50%+ 높음. 이건 버블이거나 시장이 아는데 애널이 모르는 것. 전자일 가능성 더 높음.'},
+  {id:14, sub:'r/stocks',           bull:false, text:'Tongmei는 중국 회사. 미중 관계, CCP 개입 리스크, 추가 수출통제 확대 가능성. 디스카운트 적용 당연한데 시장은 무시 중.'},
+  {id:15, sub:'r/investing',        bull:null,  text:'평단 $45 홀더. 수익 엄청 났는데 언제 팔아야 할지 모르겠음. 목표가 $93 이미 넘었고... 반은 팔고 반은 들고 가려고.'},
+];
+
+var GLOSSARY_TERMS = [
+  {name:'인듐 포스파이드', eng:'InP — Indium Phosphide', cat:'사업', catColor:'#a855f7',
+   desc:'빛을 전기 신호로 매우 빠르게 변환할 수 있는 반도체 기판 소재입니다. 초고속 광통신에 필수이며 실리콘으로는 대체하기 어렵습니다.',
+   context:'AXTI 핵심 제품 — AI 데이터센터 400G/800G 광통신 인프라에 필수 소재. 백로그 $100M+ 돌파.'},
+  {name:'CPO', eng:'Co-Packaged Optics — 공동패키징광학', cat:'사업', catColor:'#a855f7',
+   desc:'CPU·GPU와 광학 부품을 같은 패키지에 넣어 데이터 전송 속도를 획기적으로 높이는 차세대 기술입니다.',
+   context:'2028~29년 CPO 인플렉션 시 InP 수요가 한 단계 더 도약 예상 — AXTI 장기 성장 동력.'},
+  {name:'수직통합', eng:'Vertical Integration', cat:'사업', catColor:'#a855f7',
+   desc:'원재료 생산부터 최종 제품 출하까지 여러 단계를 한 회사가 직접 운영하는 방식입니다. 원가 절감과 품질 통제에 유리합니다.',
+   context:'Tongmei 중국 캠퍼스 내 원료-용광로-재활용 일괄 처리 → 경쟁사 대비 원가 30%+ 우위.'},
+  {name:'백로그', eng:'Backlog — 수주잔고', cat:'실적', catColor:'#f97316',
+   desc:'고객으로부터 주문은 받았지만 아직 납품하지 못한 수주 잔고입니다. 백로그가 클수록 향후 매출 가시성이 높습니다.',
+   context:'AXTI InP 백로그 $100M 돌파 — Q1 분기 매출($26.9M)의 약 3.7배. 향후 2~3분기 매출 선행 지표.'},
+  {name:'공모증자', eng:'Follow-on Public Offering', cat:'재무', catColor:'#22c55e',
+   desc:'이미 상장된 회사가 새 주식을 추가로 발행해 투자자에게 파는 방식으로 자금을 조달하는 것입니다.',
+   context:'AXTI 2026년 4월 8.56M주 @ $64.25 발행, $632.5M 조달. InP 캐파 확장 자금 확보.'},
+  {name:'희석', eng:'Share Dilution', cat:'재무', catColor:'#22c55e',
+   desc:'신주 발행으로 주식 수가 늘어나면 기존 주주의 지분 비율과 EPS(주당순이익)가 줄어드는 현상입니다.',
+   context:'이번 공모로 주식 수 ~63M→~73M(+15%). 공모 참여 기관들의 수시 매도 오버행 리스크.'},
+  {name:'P/S 비율', eng:'Price-to-Sales Ratio', cat:'재무', catColor:'#22c55e',
+   desc:'시가총액을 연간 매출로 나눈 값입니다. 이익이 없는 고성장주 밸류에이션을 평가할 때 자주 씁니다.',
+   context:'AXTI 현재 P/S ~95x. 2027E 매출 $270M 가정 시 약 38x로 축소 — 그래도 고밸류.'},
+  {name:'비GAAP EPS', eng:'Non-GAAP EPS', cat:'실적', catColor:'#f97316',
+   desc:'주식보상비용·일회성 항목을 제외하고 계산한 주당순이익으로, 실제 영업 현금창출 능력에 더 가깝습니다.',
+   context:'Q1 26 비GAAP EPS -$0.01 (예상 -$0.04 대비 어닝 서프라이즈). Q2 26E +$0.06~$0.08 첫 흑자 전환.'},
+  {name:'수출허가증', eng:'Export License / Permit', cat:'시장', catColor:'#6366f1',
+   desc:'특정 국가 정부가 민감 품목 해외 수출을 허가하는 공식 문서입니다. 없으면 수출이 불가합니다.',
+   context:'중국이 2025.2 InP를 수출통제 품목 지정. EU·일본·영국·캐나다 허가 확보, 미국향은 심사 중.'},
+  {name:'RSI', eng:'Relative Strength Index — 상대강도지수', cat:'기술적', catColor:'#3b82f6',
+   desc:'최근 가격 상승·하락폭을 비교해 0~100으로 나타낸 지표입니다. 70 이상이면 과매수, 30 이하면 과매도로 봅니다.',
+   context:'현재 AXTI RSI 73.2 — 과매수 구간. 단기 조정 가능성 높지만 강한 모멘텀 장세에서 80+도 가능.'},
+  {name:'이동평균', eng:'Moving Average (MA)', cat:'기술적', catColor:'#3b82f6',
+   desc:'특정 기간 주가의 평균값을 연결한 선입니다. 가격이 이동평균 위에서 거래되면 상승 추세로 해석합니다.',
+   context:'AXTI $139.56 > 20일MA $60.6 > 50일MA $45.8 — 모든 이동평균 위 거래. 강세 구조.'},
+  {name:'공매도 비율', eng:'Short Interest Ratio', cat:'시장', catColor:'#6366f1',
+   desc:'전체 유통 주식 중 공매도(빌려서 판 뒤 나중에 되사는 거래) 비율입니다. 높을수록 하락에 베팅하는 세력이 많습니다.',
+   context:'AXTI 공매도 11.86%(7.55M주). 주가 급등 시 숏스퀴즈(공매도 세력의 손절 매수)로 추가 상승 가능.'},
+];
+
+/* ── COMPONENTS ────────────────────────────────────────────── */
+
+function SentimentBar(props) {
+  var bull = props.bull; var neutral = props.neutral; var bear = props.bear;
+  var total = bull + neutral + bear;
+  return (
+    <div>
+      <div style={{display:'flex',height:'8px',borderRadius:'4px',overflow:'hidden',marginBottom:'6px'}}>
+        <div style={{width:((bull/total)*100)+'%',background:'#22c55e'}}/>
+        <div style={{width:((neutral/total)*100)+'%',background:'#64748b'}}/>
+        <div style={{width:((bear/total)*100)+'%',background:'#ef4444'}}/>
+      </div>
+      <div style={{display:'flex',gap:'14px',fontSize:'11px'}}>
+        <span style={{color:'#22c55e'}}>강세 {bull}</span>
+        <span style={{color:'#64748b'}}>중립 {neutral}</span>
+        <span style={{color:'#ef4444'}}>약세 {bear}</span>
+      </div>
+    </div>
+  );
+}
+
+function OpinionCard(props) {
+  var op = props.op; var platform = props.platform;
+  var isBull = op.bull === true; var isBear = op.bull === false;
+  var badgeBg    = isBull ? '#162316' : isBear ? '#231616' : '#1a1a2e';
+  var badgeColor = isBull ? '#22c55e' : isBear ? '#ef4444' : '#64748b';
+  var avatarBg   = isBull ? '#1a2816' : isBear ? '#281616' : '#1e1e2e';
+  return (
+    <div className="opinion-card">
+      <div className="opinion-header">
+        <div className="opinion-avatar" style={{background:avatarBg,color:badgeColor,border:'1px solid '+badgeColor}}>
+          {platform==='X' ? 'X' : 'R'}
+        </div>
+        <div className="opinion-meta">
+          <div className="opinion-name">{op.name || op.sub}</div>
+        </div>
+        <span style={{background:badgeBg,color:badgeColor,fontSize:'11px',padding:'2px 7px',borderRadius:'4px',fontWeight:'600',flexShrink:0}}>
+          {isBull ? '강세' : isBear ? '약세' : '중립'}
+        </span>
+      </div>
+      <div className="opinion-text">{op.text}</div>
+    </div>
+  );
+}
+
+function GlossaryTab() {
+  var filterState = useState('전체');
+  var filter = filterState[0]; var setFilter = filterState[1];
+  var cats = ['전체','기술적','재무','실적','시장','사업'];
+  var filtered = filter === '전체' ? GLOSSARY_TERMS : GLOSSARY_TERMS.filter(function(t){ return t.cat === filter; });
+  return (
+    <div style={{paddingBottom:'16px'}}>
+      <div className="gloss-filter">
+        {cats.map(function(c){
+          return (
+            <button key={c} className={'gloss-btn'+(filter===c?' active':'')} onClick={function(){setFilter(c);}}>
+              {c}
+            </button>
+          );
+        })}
+      </div>
+      {filtered.map(function(t){
+        return (
+          <div key={t.eng} className="gloss-card">
+            <div className="gloss-header">
+              <div style={{flex:1}}>
+                <div className="gloss-name">{t.name}</div>
+                <div className="gloss-eng">{t.eng}</div>
+              </div>
+              <span style={{background:t.catColor+'22',color:t.catColor,padding:'3px 8px',borderRadius:'4px',fontSize:'11px',fontWeight:'700',flexShrink:0}}>
+                {t.cat}
+              </span>
+            </div>
+            <div className="gloss-desc">{t.desc}</div>
+            <div className="gloss-context">{t.context}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── OVERVIEW TAB ────────────────────────────────────────── */
+
+function OverviewTab() {
+  var priceRef = useRef(null); var perfRef = useRef(null);
+  var priceInst = useRef(null); var perfInst = useRef(null);
+
+  useEffect(function(){
+    if (priceInst.current) { priceInst.current.destroy(); priceInst.current = null; }
+    if (priceRef.current) {
+      priceInst.current = new Chart(priceRef.current, {
+        type:'line',
+        data:{
+          labels: PRICE_LABELS,
+          datasets:[{
+            label:'AXTI',
+            data: PRICE_DATA,
+            borderColor: THEME,
+            backgroundColor: THEME+'22',
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: PRICE_PT_BG,
+            pointRadius: PRICE_PT_R
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'#2d2d44'}},
+            y:{ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v;}},grid:{color:'#2d2d44'}}
+          }
+        }
+      });
+    }
+    if (perfInst.current) { perfInst.current.destroy(); perfInst.current = null; }
+    if (perfRef.current) {
+      perfInst.current = new Chart(perfRef.current, {
+        type:'bar',
+        data:{
+          labels: PERF_LABELS,
+          datasets:[
+            {label:'AXTI', data:PERF_AXTI, backgroundColor:PERF_AXTI_BG, borderColor:PERF_AXTI_BD, borderWidth:2},
+            {label:'SOX',  data:PERF_SOX,  backgroundColor:PERF_SOX_BG,  borderColor:PERF_SOX_BD,  borderWidth:2}
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+          scales:{
+            x:{ticks:{color:'#64748b',font:{size:11}},grid:{color:'#2d2d44'}},
+            y:{ticks:{color:'#64748b',font:{size:10},callback:function(v){return v+'%';}},grid:{color:'#2d2d44'}}
+          }
+        }
+      });
+    }
+    return function(){
+      if (priceInst.current) { priceInst.current.destroy(); priceInst.current = null; }
+      if (perfInst.current)  { perfInst.current.destroy();  perfInst.current = null; }
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className="warning-box">
+        <div className="warning-title">⚠️ 주의: 과매수 구간 & 애널리스트 목표가 대비 +50% 이상 과도 상승</div>
+        <div style={{fontSize:'12px',color:'#d97706'}}>현재가 $139.56은 Wedbush $93, B. Riley $73, Northland $90 등 전체 커버리지 애널리스트 목표가를 50~90% 초과. RSI 73으로 단기 과매수 과열 상태. 신규 진입 시 리스크 관리 필수.</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">핵심 지표</div>
+        <div className="stat-grid">
+          <div className="stat-item">
+            <div className="stat-label">현재가</div>
+            <div className="stat-value" style={{color:'#6366f1'}}>$139.56</div>
+            <div className="stat-sub">당일: $116.01 ~ $146.77</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-label">52주 범위</div>
+            <div className="stat-value" style={{fontSize:'13px',color:'#e2e8f0'}}>$1.45 ~ $146.77</div>
+            <div className="stat-sub">+9,621% (1년)</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-label">시가총액</div>
+            <div className="stat-value">$10.2B</div>
+            <div className="stat-sub">~73M 주 기준</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-label">RSI (14)</div>
+            <div className="stat-value" style={{color:'#ef4444'}}>73.2</div>
+            <div className="stat-sub">과매수 (기준선 70)</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-label">Q1 26 매출</div>
+            <div className="stat-value" style={{color:'#22c55e'}}>$26.9M</div>
+            <div className="stat-sub">+39% YoY | +17% QoQ</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-label">InP 백로그</div>
+            <div className="stat-value" style={{color:'#6366f1'}}>$100M+</div>
+            <div className="stat-sub">분기 매출 3.7배</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">주가 추이 (52주, 월간)</div>
+        <div className="chart-wrap"><canvas ref={priceRef}/></div>
+        <div style={{fontSize:'11px',color:'#64748b',marginTop:'6px'}}>초록 점 = 현재가 ($139.56)</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">성과 비교 (AXTI vs SOX)</div>
+        <div className="chart-wrap"><canvas ref={perfRef}/></div>
+        <div style={{fontSize:'11px',color:'#64748b',marginTop:'6px'}}>* 52주 AXTI +9,621% vs SOX +45% — 규모 차이로 차트 스케일 제한</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">기업 개요</div>
+        {[
+          ['기업명','AXT Inc. (Nasdaq: AXTI)'],
+          ['설립 / 본사','1986년 / 캘리포니아 프리몬트'],
+          ['핵심 제품','InP·GaAs·Ge 반도체 기판'],
+          ['핵심 자회사','Beijing Tongmei Xtal (중국, 수직통합)'],
+          ['AI 테마','데이터센터 광통신 400G/800G 핵심 소재'],
+          ['공모 조달','$632.5M (2026.04, InP 캐파 확장)'],
+          ['Q2 26 첫 흑자','EPS +$0.06~$0.08 (4년 만)'],
+          ['수출허가 현황','EU·JP·UK·CA 확보 / 미국향 심사 중'],
+        ].map(function(r){
+          return (
+            <div key={r[0]} className="info-row">
+              <span className="info-label">{r[0]}</span>
+              <span style={{fontWeight:'600',textAlign:'right',fontSize:'13px',color:'#e2e8f0'}}>{r[1]}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── TECHNICAL TAB ───────────────────────────────────────── */
+
+function TechnicalTab() {
+  var rsiRef = useRef(null); var maRef = useRef(null);
+  var rsiInst = useRef(null); var maInst = useRef(null);
+
+  useEffect(function(){
+    if (rsiInst.current) { rsiInst.current.destroy(); rsiInst.current = null; }
+    if (rsiRef.current) {
+      rsiInst.current = new Chart(rsiRef.current, {
+        type:'bar',
+        data:{
+          labels: RSI_LABELS,
+          datasets:[{
+            label:'RSI',
+            data: RSI_DATA,
+            backgroundColor: RSI_BG,
+            borderColor: RSI_BD,
+            borderWidth: 2
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#64748b',font:{size:11}},grid:{color:'#2d2d44'}},
+            y:{min:0,max:100,ticks:{color:'#64748b',font:{size:11}},grid:{color:'#2d2d44'}}
+          }
+        }
+      });
+    }
+    if (maInst.current) { maInst.current.destroy(); maInst.current = null; }
+    if (maRef.current) {
+      maInst.current = new Chart(maRef.current, {
+        type:'line',
+        data:{
+          labels: MA_LABELS,
+          datasets:[
+            {
+              label:'주가', data:MA_PRICE, borderColor:'#6366f1',
+              backgroundColor:'transparent', tension:0.3, borderWidth:2,
+              pointBackgroundColor:MA_PX_PT_BG, pointRadius:MA_PX_PT_R
+            },
+            {
+              label:'20일MA', data:MA_20, borderColor:'#f59e0b',
+              backgroundColor:'transparent', tension:0.3, borderWidth:1.5,
+              borderDash:[5,3],
+              pointBackgroundColor:MA_20_PT_BG, pointRadius:MA_345_PT_R
+            },
+            {
+              label:'50일MA', data:MA_50, borderColor:'#22c55e',
+              backgroundColor:'transparent', tension:0.3, borderWidth:1.5,
+              borderDash:[5,3],
+              pointBackgroundColor:MA_50_PT_BG, pointRadius:MA_345_PT_R
+            }
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+          scales:{
+            x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'#2d2d44'}},
+            y:{ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v;}},grid:{color:'#2d2d44'}}
+          }
+        }
+      });
+    }
+    return function(){
+      if (rsiInst.current) { rsiInst.current.destroy(); rsiInst.current = null; }
+      if (maInst.current)  { maInst.current.destroy();  maInst.current = null; }
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-title">RSI 추이 (5주)</div>
+        <div className="chart-wrap"><canvas ref={rsiRef}/></div>
+        <div style={{display:'flex',gap:'10px',marginTop:'8px',fontSize:'11px'}}>
+          <span style={{color:'#ef4444'}}>■ 과매수 (70+)</span>
+          <span style={{color:'#6366f1'}}>■ 정상 구간</span>
+          <span style={{color:'#22c55e'}}>■ 과매도 (30-)</span>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">이동평균선 vs 주가 (5개월)</div>
+        <div className="chart-wrap"><canvas ref={maRef}/></div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">기술적 시그널 요약</div>
+        {[
+          {label:'RSI (14)',     value:'73.2',      note:'과매수 ─ 단기 조정 주의',       color:'#ef4444'},
+          {label:'5일 이동평균',  value:'$72.20',    note:'강세 (현재가 대비 -48%)',       color:'#22c55e'},
+          {label:'20일 이동평균', value:'$60.61',    note:'강세 (현재가 대비 -57%)',       color:'#22c55e'},
+          {label:'50일 이동평균', value:'$45.76',    note:'강세 (현재가 대비 -67%)',       color:'#22c55e'},
+          {label:'이동평균 신호',  value:'강한 매수', note:'12/12 매수 신호 (기관 집계)',    color:'#22c55e'},
+          {label:'공매도 비율',   value:'11.86%',    note:'7.55M주 ─ 숏스퀴즈 잠재력',    color:'#f59e0b'},
+          {label:'거래량',       value:'10.21M',    note:'평균 9.18M 대비 +11%',         color:'#6366f1'},
+          {label:'종합 기술적',   value:'강한 매수', note:'단, RSI 과열로 단기 리스크 병존', color:'#22c55e'},
+        ].map(function(item){
+          return (
+            <div key={item.label} className="info-row">
+              <span className="info-label">{item.label}</span>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:'700',color:item.color,fontSize:'13px'}}>{item.value}</div>
+                <div style={{fontSize:'11px',color:'#64748b'}}>{item.note}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <div className="card-title">주요 지지선 & 저항선</div>
+        {[
+          {level:'저항', price:'$146.77', note:'52주 고점 (2026.05.25 장중 ATH)', color:'#ef4444'},
+          {level:'저항', price:'$140.83', note:'전전거래일 종가 (2026.05.22)',     color:'#ef4444'},
+          {level:'현재', price:'$139.56', note:'현재가 (2026.05.25)',             color:'#6366f1'},
+          {level:'지지', price:'$116.01', note:'당일 저점 ─ 주요 단기 지지',       color:'#22c55e'},
+          {level:'지지', price:'$93.00',  note:'Wedbush 목표가 (심리적 지지)',     color:'#22c55e'},
+          {level:'지지', price:'$64.25',  note:'공모가 ─ 강력한 중기 지지선',       color:'#22c55e'},
+        ].map(function(r){
+          return (
+            <div key={r.price} className="info-row">
+              <span style={{color:r.color,fontWeight:'700',fontSize:'12px',minWidth:'28px'}}>{r.level}</span>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:'700',color:'#e2e8f0',fontSize:'14px'}}>{r.price}</div>
+                <div style={{fontSize:'11px',color:'#64748b'}}>{r.note}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── FINANCE TAB ─────────────────────────────────────────── */
+
+function FinanceTab() {
+  var revRef = useRef(null); var marginRef = useRef(null); var capRef = useRef(null);
+  var revInst = useRef(null); var marginInst = useRef(null); var capInst = useRef(null);
+
+  useEffect(function(){
+    if (revInst.current)    { revInst.current.destroy();    revInst.current = null; }
+    if (marginInst.current) { marginInst.current.destroy(); marginInst.current = null; }
+    if (capInst.current)    { capInst.current.destroy();    capInst.current = null; }
+
+    if (revRef.current) {
+      revInst.current = new Chart(revRef.current, {
+        type:'bar',
+        data:{labels:Q_LABELS, datasets:[{label:'매출 ($M)', data:Q_REVENUE, backgroundColor:Q_REV_BG, borderColor:Q_REV_BD, borderWidth:2}]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'#2d2d44'}},
+            y:{ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v+'M';}},grid:{color:'#2d2d44'}}
+          }
+        }
+      });
+    }
+    if (marginRef.current) {
+      marginInst.current = new Chart(marginRef.current, {
+        type:'line',
+        data:{labels:Q_LABELS, datasets:[{
+          label:'비GAAP 총마진 (%)', data:Q_MARGIN, borderColor:'#22c55e',
+          backgroundColor:'#22c55e22', fill:true, tension:0.4,
+          pointBackgroundColor:Q_MAR_PT_BG, pointRadius:Q_MAR_PT_R
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'#2d2d44'}},
+            y:{ticks:{color:'#64748b',font:{size:10},callback:function(v){return v+'%';}},grid:{color:'#2d2d44'}}
+          }
+        }
+      });
+    }
+    if (capRef.current) {
+      capInst.current = new Chart(capRef.current, {
+        type:'bar',
+        data:{labels:CAP_LABELS, datasets:[{label:'InP 분기 매출 추정 ($M)', data:CAP_INP, backgroundColor:CAP_BG, borderColor:CAP_BD, borderWidth:2}]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#2d2d44'}},
+            y:{ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v+'M';}},grid:{color:'#2d2d44'}}
+          }
+        }
+      });
+    }
+    return function(){
+      if (revInst.current)    { revInst.current.destroy();    revInst.current = null; }
+      if (marginInst.current) { marginInst.current.destroy(); marginInst.current = null; }
+      if (capInst.current)    { capInst.current.destroy();    capInst.current = null; }
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-title">분기별 매출 ($M)</div>
+        <div className="chart-wrap"><canvas ref={revRef}/></div>
+        <div style={{fontSize:'11px',color:'#64748b',marginTop:'6px'}}>Q2 26E 초록 = 추정치 ($33M)</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">비GAAP 총마진 추이 (%)</div>
+        <div className="chart-wrap"><canvas ref={marginRef}/></div>
+        <div style={{fontSize:'11px',color:'#64748b',marginTop:'6px'}}>Q1 25 -6.1% → Q1 26 +29.9% — 1년 만에 36%P 개선</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">InP 캐파 확장 로드맵 (분기 매출 추정)</div>
+        <div className="chart-wrap"><canvas ref={capRef}/></div>
+        <div style={{fontSize:'11px',color:'#64748b',marginTop:'6px'}}>초록 = 목표치 기반 추정 | 경영진 가이던스: 2026연말 $35M/qtr → 2027연말 $65-70M/qtr</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">주요 재무 지표</div>
+        {[
+          ['Q1 26 매출',            '$26.9M',        '+39% YoY, +17% QoQ'],
+          ['Q1 26 비GAAP 총마진',   '29.9%',         'Q1 25 -6.1% → 급격 개선'],
+          ['Q1 26 비GAAP 순손실',   '-$585K',        '거의 손익분기 (near B/E)'],
+          ['Q1 26 GAAP 순손실',     '-$1.6M',        '예상 -$0.04 EPS vs 실제 -$0.01'],
+          ['Q2 26 EPS 가이던스',    '+$0.06~$0.08',  '4년 만의 첫 흑자 전환'],
+          ['InP 백로그',            '$100M+',        '분기 매출의 3.7배'],
+          ['현금 + 공모',           '~$740M+',       '$41.8M 기존 + $632.5M 공모'],
+          ['부채비율 (D/E)',         '0.23',          '낮은 레버리지, 재무 건전'],
+          ['P/S (trailing)',        '~95x',          '2027E $270M 기준 ~38x'],
+          ['공매도 비율',           '11.86%',         '7.55M주, 숏스퀴즈 잠재력'],
+        ].map(function(r){
+          return (
+            <div key={r[0]} className="info-row">
+              <span className="info-label">{r[0]}</span>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:'700',fontSize:'13px',color:'#e2e8f0'}}>{r[1]}</div>
+                <div style={{fontSize:'11px',color:'#64748b'}}>{r[2]}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── X TAB ───────────────────────────────────────────────── */
+
+function XTab() {
+  var bull    = X_OPINIONS.filter(function(o){return o.bull===true;}).length;
+  var bear    = X_OPINIONS.filter(function(o){return o.bull===false;}).length;
+  var neutral = X_OPINIONS.filter(function(o){return o.bull===null;}).length;
+  return (
+    <div>
+      <div className="card">
+        <div className="card-title">X (구 트위터) 커뮤니티 온도</div>
+        <SentimentBar bull={bull} neutral={neutral} bear={bear}/>
+        <div style={{fontSize:'12px',color:'#94a3b8',marginTop:'8px'}}>15개 의견 분석 | 업데이트: 2026.05.25</div>
+      </div>
+      <div className="highlight-box" style={{marginBottom:'12px'}}>
+        <div style={{fontSize:'12px',fontWeight:'700',color:'#a5b4fc',marginBottom:'4px'}}>주요 트렌드</div>
+        <div style={{fontSize:'12px',color:'#94a3b8'}}>AI 광통신 수요 강세 + $632.5M 공모 완료 + Q2 첫 흑자 전망으로 강세 의견 우세. RSI 73 과매수 과열과 애널리스트 목표가 하회를 우려하는 신중론도 공존.</div>
+      </div>
+      {X_OPINIONS.map(function(op){
+        return <OpinionCard key={op.id} op={op} platform="X"/>;
+      })}
+    </div>
+  );
+}
+
+/* ── REDDIT TAB ──────────────────────────────────────────── */
+
+function RedditTab() {
+  var bull    = REDDIT_OPINIONS.filter(function(o){return o.bull===true;}).length;
+  var bear    = REDDIT_OPINIONS.filter(function(o){return o.bull===false;}).length;
+  var neutral = REDDIT_OPINIONS.filter(function(o){return o.bull===null;}).length;
+  return (
+    <div>
+      <div className="card">
+        <div className="card-title">Reddit 커뮤니티 온도</div>
+        <SentimentBar bull={bull} neutral={neutral} bear={bear}/>
+        <div style={{fontSize:'12px',color:'#94a3b8',marginTop:'8px'}}>15개 의견 분석 | 업데이트: 2026.05.25</div>
+      </div>
+      <div className="highlight-box" style={{marginBottom:'12px'}}>
+        <div style={{fontSize:'12px',fontWeight:'700',color:'#a5b4fc',marginBottom:'4px'}}>주요 트렌드</div>
+        <div style={{fontSize:'12px',color:'#94a3b8'}}>52주 +9,621% 수익 실현 아쉬움과 현 시점 진입 부담 혼재. 밸류에이션 논쟁 중심 — 2027 목표 선반영 여부 갑론을박. 공모 오버행·지정학 리스크 경계심 높음.</div>
+      </div>
+      {REDDIT_OPINIONS.map(function(op){
+        return <OpinionCard key={op.id} op={op} platform="Reddit"/>;
+      })}
+    </div>
+  );
+}
+
+/* ── CONCLUSION TAB ──────────────────────────────────────── */
+
+function ConclusionTab() {
+  return (
+    <div>
+      <div className="warning-box">
+        <div className="warning-title">⚠️ 투자 의견: 중립 (관망)</div>
+        <div style={{fontSize:'12px',color:'#d97706'}}>펀더멘탈 개선은 명확하나 현재가($139.56)는 2027년 Bull 시나리오를 선반영. 애널리스트 전원 목표가 하회, RSI 73 과매수. 신규 진입은 조정 후 재평가 권고.</div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">종합 투자 의견</div>
+        <div style={{textAlign:'center',padding:'16px 0'}}>
+          <div style={{fontSize:'30px',fontWeight:'800',color:'#f59e0b'}}>중립 (관망)</div>
+          <div style={{fontSize:'13px',color:'#94a3b8',marginTop:'6px'}}>Fair Value 추정: $100 ~ $120</div>
+          <div style={{fontSize:'12px',color:'#64748b',marginTop:'3px'}}>현재가 $139.56 | 목표 대비 -28% ~ -14%</div>
+          <div style={{marginTop:'12px',display:'flex',justifyContent:'center',gap:'8px',flexWrap:'wrap'}}>
+            <span style={{background:'#22c55e22',color:'#22c55e',padding:'3px 10px',borderRadius:'4px',fontSize:'12px'}}>펀더멘탈 ↑</span>
+            <span style={{background:'#ef444422',color:'#ef4444',padding:'3px 10px',borderRadius:'4px',fontSize:'12px'}}>밸류에이션 ↑↑</span>
+            <span style={{background:'#f59e0b22',color:'#f59e0b',padding:'3px 10px',borderRadius:'4px',fontSize:'12px'}}>모멘텀 ↑↑↑</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title" style={{color:'#22c55e'}}>강세 요인 (Bull Case)</div>
+        {[
+          ['AI 데이터센터 수요',   'InP 기판 독점적 공급 포지션. 실리콘 대체재 없음. 800G/1.6T 전환 직접 수혜.'],
+          ['Q2 첫 흑자 전환',     'EPS +$0.06~$0.08 가이던스 — 거의 4년 만의 첫 이익. 수익성 전환점 증명.'],
+          ['총마진 급개선',        '-6.1% → +29.9% (1년 만에 36%P 개선). Q2 35%+ 전망.'],
+          ['백로그 $100M+',       '분기 매출 3.7배 수주 확보. 향후 2~3분기 매출 가시성 높음.'],
+          ['$632.5M 공모 완료',   '캐파 확장 자금 확보. 2026·2027 각각 캐파 2배 실행 가능성 높음.'],
+          ['수직통합 원가 우위',   'Tongmei 자체 원료~생산~재활용 → 경쟁사 대비 원가 경쟁력 30%+.'],
+          ['CPO 2028~29 인플렉션', 'InP 수요 다음 레벨 도약 예정 — 현재 주가에 장기 옵션 가치 포함.'],
+        ].map(function(r){
+          return (
+            <div key={r[0]} className="risk-item risk-bull">
+              <div style={{fontWeight:'700',fontSize:'12px',color:'#22c55e',marginBottom:'2px'}}>✓ {r[0]}</div>
+              <div style={{fontSize:'12px',color:'#94a3b8'}}>{r[1]}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <div className="card-title" style={{color:'#ef4444'}}>약세 요인 (Bear Case)</div>
+        {[
+          ['밸류에이션 과도',     'P/S ~95x. 모든 애널리스트 목표가 하회. 2027 Bull 시나리오 이미 선반영.'],
+          ['RSI 73 과매수',      '기술적 과열 — 파라볼릭 이후 -20~30% 조정 선례 다수.'],
+          ['미국 수출허가 미확보', 'InP 미국향 허가 심사 중. 거부/지연 시 가이던스 전면 수정 리스크.'],
+          ['공모 오버행',        '9.84M주 @ $64.25 → $140에 매도 시 +118% 차익. 기관 물량 출회 리스크.'],
+          ['중국 지정학 리스크',  'Tongmei 중국 법인. CCP 개입·추가 수출통제·미중 갈등 리스크 상존.'],
+          ['실적 실현 불확실성',  '백로그 $100M이나 수출허가 지연 시 매출 인식 지연 가능.'],
+        ].map(function(r){
+          return (
+            <div key={r[0]} className="risk-item risk-bear">
+              <div style={{fontWeight:'700',fontSize:'12px',color:'#ef4444',marginBottom:'2px'}}>✗ {r[0]}</div>
+              <div style={{fontSize:'12px',color:'#94a3b8'}}>{r[1]}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <div className="card-title">시나리오별 목표주가</div>
+        {[
+          {scene:'Bull', price:'$180 ~ $200', prob:'25%', note:'미국 허가 확보 + Q2 어닝 서프라이즈 + CPO 모멘텀', color:'#22c55e'},
+          {scene:'Base', price:'$100 ~ $120', prob:'50%', note:'성장 지속 + 기술적 조정 후 재평가 수렴',           color:'#6366f1'},
+          {scene:'Bear', price:'$60 ~ $80',   prob:'25%', note:'미국 허가 거부 또는 지연 + 공모 오버행 출회',      color:'#ef4444'},
+        ].map(function(s){
+          return (
+            <div key={s.scene} className="info-row">
+              <div>
+                <div style={{fontWeight:'700',color:s.color,fontSize:'13px'}}>{s.scene} ({s.prob})</div>
+                <div style={{fontSize:'11px',color:'#64748b',marginTop:'2px'}}>{s.note}</div>
+              </div>
+              <div style={{fontWeight:'800',color:s.color,fontSize:'15px',flexShrink:0}}>{s.price}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <div className="card-title">핵심 모니터링 포인트</div>
+        {[
+          '미국향 InP 수출허가증 획득 여부 (가장 중요 ─ Binary 이벤트)',
+          'Q2 26 실적 (7월 말) ─ EPS $0.06~$0.08 달성 및 Q3 가이던스',
+          '2026년 내 InP 캐파 $35M/qtr 달성 일정',
+          '공모 참여 기관들의 매도 동향 (락업 없음 ─ 수시 출회 가능)',
+          'RSI 60 이하 냉각 시 재진입 타이밍 포착',
+        ].map(function(item, i){
+          return (
+            <div key={i} style={{padding:'9px 0',borderBottom:'1px solid #2d2d44',fontSize:'13px',display:'flex',alignItems:'flex-start',gap:'8px'}}>
+              <span style={{color:THEME,fontWeight:'700',minWidth:'18px'}}>{i+1}.</span>
+              <span style={{color:'#cbd5e1',lineHeight:'1.5'}}>{item}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── APP ─────────────────────────────────────────────────── */
+
+function App() {
+  var TABS = ['📊개요','📈기술적','💰재무','🐦X','💬Reddit','🎯결론','📖용어'];
+  var tabState = useState('📊개요');
+  var tab = tabState[0]; var setTab = tabState[1];
+
+  function renderContent() {
+    if (tab === '📊개요')  return <OverviewTab/>;
+    if (tab === '📈기술적') return <TechnicalTab/>;
+    if (tab === '💰재무')   return <FinanceTab/>;
+    if (tab === '🐦X')     return <XTab/>;
+    if (tab === '💬Reddit') return <RedditTab/>;
+    if (tab === '🎯결론')   return <ConclusionTab/>;
+    if (tab === '📖용어')   return <GlossaryTab/>;
+    return null;
+  }
+
+  return (
+    <div>
+      <div className="header">
+        <div className="header-top">
+          <a href="https://disntm90.github.io/disntm90/" className="header-back">← 목록으로</a>
+          <div style={{flex:1}}>
+            <div className="header-title">AXTI — AXT Inc.</div>
+            <div className="header-sub">반도체 기판 (InP·GaAs·Ge) | AI 광통신 소재 | 2026.05.25</div>
+          </div>
+          <div style={{textAlign:'right',flexShrink:0}}>
+            <div style={{background:'#1f1a0e',color:'#f59e0b',border:'1px solid #b45309',borderRadius:'6px',padding:'4px 10px',fontSize:'12px',fontWeight:'700'}}>중립 (관망)</div>
+            <div style={{fontSize:'11px',color:'#64748b',marginTop:'4px'}}>FA: $100~120</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="tabs">
+        {TABS.map(function(t){
+          return (
+            <div key={t} className={'tab'+(tab===t?' active':'')} onClick={function(){setTab(t);}}>
+              {t}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="content" key={tab}>
+        {renderContent()}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
