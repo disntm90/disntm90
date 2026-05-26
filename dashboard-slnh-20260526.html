@@ -84,7 +84,9 @@ body { background: #0f0f1a; color: #e2e8f0; font-family: -apple-system, BlinkMac
 <body>
 <div id="root"></div>
 <script type="text/babel">
-var { useState, useEffect, useRef } = React;
+var useState   = React.useState;
+var useEffect  = React.useEffect;
+var useRef     = React.useRef;
 
 var PRICE_LABELS = ['25.06','25.07','25.08','25.09','25.10','25.11','25.12','26.01','26.02','26.03','26.04','26.05'];
 var PRICE_DATA   = [1.50, 2.50, 5.14, 3.50, 2.00, 1.20, 0.80, 0.60, 0.415, 0.50, 1.28, 1.73];
@@ -167,7 +169,7 @@ var GLOSSARY_TERMS = [
   {term:'EBITDA', def:'이자·세금·감가상각 전 이익. 실질 영업 현금 창출 능력 지표', cat:'재무'},
   {term:'SEPA', def:'Standby Equity Purchase Agreement. 회사가 필요 시 투자자에게 주식 발행하는 조달 수단 (희석 우려)', cat:'재무'},
   {term:'컨버터블 노트', def:'만기에 주식으로 전환 가능한 채권. SEPA와 함께 SLNH 주요 자금조달 수단', cat:'재무'},
-  {term:'MW (메가와트)', def:'전력 단위. 1MW ≈ 1,000가구 전력. 데이터센터 규모 측정 기준', cat:'인프라'},
+  {term:'MW (메가와트)', def:'전력 단위. 1MW = 1,000가구 전력. 데이터센터 규모 측정 기준', cat:'인프라'},
   {term:'오버행', def:'미래에 시장에 출회될 수 있는 잠재 매도 물량. 주가 상승을 억제하는 요인', cat:'수급'},
   {term:'RSI', def:'Relative Strength Index. 0~100, 70 이상 과매수 / 30 이하 과매도 신호', cat:'기술적'},
   {term:'FCF', def:'자유현금흐름. 영업활동 현금흐름에서 자본지출 차감. 실질 현금 창출력', cat:'재무'},
@@ -281,10 +283,10 @@ function OverviewTab() {
 }
 
 function TechnicalTab() {
-  var rsiRef = useRef(null);
+  var rsiRef   = useRef(null);
   var rsiChart = useRef(null);
-  var maRef = useRef(null);
-  var maChart = useRef(null);
+  var maRef    = useRef(null);
+  var maChart  = useRef(null);
 
   useEffect(function() {
     if (rsiRef.current) {
@@ -310,9 +312,9 @@ function TechnicalTab() {
         data: {
           labels: MA_LABELS,
           datasets: [
-            { label: '주가',  data: MA_PRICE, borderColor: '#22c55e', backgroundColor: 'transparent', tension: 0.3, pointRadius: 3, pointBackgroundColor: '#22c55e' },
-            { label: '20일선', data: MA_20,   borderColor: '#fbbf24', backgroundColor: 'transparent', tension: 0.3, borderDash: [4,4], pointRadius: 0, pointBackgroundColor: '#fbbf24' },
-            { label: '50일선', data: MA_50,   borderColor: '#6366f1', backgroundColor: 'transparent', tension: 0.3, borderDash: [8,4], pointRadius: 0, pointBackgroundColor: '#6366f1' }
+            { label: '주가',   data: MA_PRICE, borderColor: '#22c55e', backgroundColor: 'transparent', tension: 0.3, pointRadius: 3, pointBackgroundColor: '#22c55e' },
+            { label: '20일선', data: MA_20,    borderColor: '#fbbf24', backgroundColor: 'transparent', tension: 0.3, borderDash: [4,4], pointRadius: 0, pointBackgroundColor: '#fbbf24' },
+            { label: '50일선', data: MA_50,    borderColor: '#6366f1', backgroundColor: 'transparent', tension: 0.3, borderDash: [8,4], pointRadius: 0, pointBackgroundColor: '#6366f1' }
           ]
         },
         options: {
@@ -366,7 +368,7 @@ function TechnicalTab() {
 }
 
 function FinancialTab() {
-  var revRef = useRef(null);
+  var revRef   = useRef(null);
   var revChart = useRef(null);
 
   useEffect(function() {
@@ -376,7 +378,7 @@ function FinancialTab() {
         data: {
           labels: Q_LABELS,
           datasets: [
-            { label: '매출 ($M)', data: Q_REVENUE, backgroundColor: 'rgba(34,197,94,0.6)', borderColor: '#22c55e', borderWidth: 1, yAxisID: 'y' },
+            { label: '매출 ($M)',       data: Q_REVENUE,   backgroundColor: 'rgba(34,197,94,0.6)', borderColor: '#22c55e', borderWidth: 1, yAxisID: 'y' },
             { label: 'Adj.EBITDA ($M)', data: EBITDA_DATA, backgroundColor: 'rgba(239,68,68,0.5)', borderColor: '#ef4444', borderWidth: 1, yAxisID: 'y2' }
           ]
         },
@@ -446,9 +448,12 @@ function FinancialTab() {
 }
 
 function TwitterTab() {
-  var bull = X_OPINIONS.filter(function(o){ return o.sentiment === 'bullish'; }).length;
-  var bear = X_OPINIONS.filter(function(o){ return o.sentiment === 'bearish'; }).length;
-  var neut = X_OPINIONS.filter(function(o){ return o.sentiment === 'neutral'; }).length;
+  var bull = 0; var bear = 0; var neut = 0;
+  for (var i = 0; i < X_OPINIONS.length; i++) {
+    if (X_OPINIONS[i].sentiment === 'bullish') bull++;
+    else if (X_OPINIONS[i].sentiment === 'bearish') bear++;
+    else neut++;
+  }
   return (
     <div>
       <div className="card">
@@ -477,14 +482,15 @@ function TwitterTab() {
 }
 
 function RedditTab() {
-  var highUpvote = REDDIT_OPINIONS.filter(function(o){ return o.upvotes >= 300; }).length;
+  var high = 0;
+  for (var i = 0; i < REDDIT_OPINIONS.length; i++) { if (REDDIT_OPINIONS[i].upvotes >= 300) high++; }
   return (
     <div>
       <div className="card">
         <h3>Reddit 커뮤니티 반응</h3>
         <div className="stat-grid">
           <div className="stat-item"><div className="stat-label">총 게시물</div><div className="stat-value">{REDDIT_OPINIONS.length}건</div></div>
-          <div className="stat-item"><div className="stat-label">300+ 업보트</div><div className="stat-value green">{highUpvote}건</div></div>
+          <div className="stat-item"><div className="stat-label">300+ 업보트</div><div className="stat-value green">{high}건</div></div>
           <div className="stat-item"><div className="stat-label">평균 업보트</div><div className="stat-value green">~290</div></div>
           <div className="stat-item"><div className="stat-label">전반 분위기</div><div className="stat-value green">긍정적</div></div>
         </div>
@@ -528,7 +534,7 @@ function ConclusionTab() {
         <div className="risk-item"><span className="risk-icon">⚠️</span><span className="risk-text">오버행 29M주 (~25.7%) — SEPA 컨버터블 희석으로 주가 상승 억제</span></div>
         <div className="risk-item"><span className="risk-icon">⚠️</span><span className="risk-text">공매도 16.05% — 단기 하방 압력 상존</span></div>
         <div className="risk-item"><span className="risk-icon">⚠️</span><span className="risk-text">EBITDA 여전히 적자 (-$2.1M) — 흑자전환 시기 불확실</span></div>
-        <div className="risk-item"><span className="risk-icon">❌</span><span className="risk-text">4.3 GW 파이프라인 → 실계약 전환률 미검증 — 과대평가 가능성</span></div>
+        <div className="risk-item"><span className="risk-icon">❌</span><span className="risk-text">4.3 GW 파이프라인 → 실계약 전환률 미검증</span></div>
         <div className="risk-item"><span className="risk-icon">❌</span><span className="risk-text">비트코인 가격 하락 시 채굴 수익 직접 타격</span></div>
       </div>
       <div className="card">
@@ -551,9 +557,14 @@ function ConclusionTab() {
 }
 
 function GlossaryTab() {
-  var [filter, setFilter] = useState('전체');
+  var filterState = useState('전체');
+  var filter    = filterState[0];
+  var setFilter = filterState[1];
   var cats = ['전체', '재무', '기술적', '채굴', '사업', '인프라', '수급', '투자'];
-  var terms = filter === '전체' ? GLOSSARY_TERMS : GLOSSARY_TERMS.filter(function(t){ return t.cat === filter; });
+  var terms = [];
+  for (var i = 0; i < GLOSSARY_TERMS.length; i++) {
+    if (filter === '전체' || GLOSSARY_TERMS[i].cat === filter) terms.push(GLOSSARY_TERMS[i]);
+  }
   return (
     <div>
       <div className="card">
@@ -577,11 +588,18 @@ function GlossaryTab() {
 }
 
 function MultibaggerTab() {
-  var radarRef = useRef(null);
+  var radarRef   = useRef(null);
   var radarChart = useRef(null);
-  var total = MB_DATA.reduce(function(a, b){ return a + b; }, 0);
-  var grade = total >= 6.5 ? '유망' : total >= 4 ? '보통' : '낮음';
+  var total = 0;
+  for (var i = 0; i < MB_DATA.length; i++) { total += MB_DATA[i]; }
+  var grade      = total >= 6.5 ? '유망' : total >= 4 ? '보통' : '낮음';
   var gradeColor = total >= 6.5 ? '#22c55e' : total >= 4 ? '#fbbf24' : '#ef4444';
+  var fullCount = 0; var halfCount = 0; var zeroCount = 0;
+  for (var j = 0; j < MB_DATA.length; j++) {
+    if (MB_DATA[j] === 1.0) fullCount++;
+    else if (MB_DATA[j] === 0.5) halfCount++;
+    else zeroCount++;
+  }
 
   useEffect(function() {
     if (radarRef.current) {
@@ -620,10 +638,6 @@ function MultibaggerTab() {
     };
   }, []);
 
-  var fullCount = MB_DATA.filter(function(d){ return d === 1.0; }).length;
-  var halfCount = MB_DATA.filter(function(d){ return d === 0.5; }).length;
-  var zeroCount = MB_DATA.filter(function(d){ return d === 0.0; }).length;
-
   return (
     <div>
       <div className="mb-score-big">
@@ -631,13 +645,11 @@ function MultibaggerTab() {
         <div className="mb-score-grade" style={{color: gradeColor}}>멀티배거 등급: {grade}</div>
         <div className="mb-score-desc">Anna Yartseva 연구 기반 (CAFE Working Paper 33)<br/>NYSE·NASDAQ 10배 이상 상승 464개 기업 공통 신호 분석</div>
       </div>
-
       <div className="card">
         <h3>멀티배거 레이더 차트</h3>
         <div className="chart-wrap tall"><canvas ref={radarRef}></canvas></div>
         <div style={{textAlign:'center', marginTop:'8px', fontSize:'0.72rem', color:'#64748b'}}>✅ = 1.0 &nbsp;&nbsp;⚠️ = 0.5 &nbsp;&nbsp;❌ = 0.0</div>
       </div>
-
       <div className="card">
         <h3>8개 체크리스트 상세</h3>
         {MB_ITEMS.map(function(item, i) {
@@ -657,7 +669,6 @@ function MultibaggerTab() {
           );
         })}
       </div>
-
       <div className="card">
         <h3>점수 요약</h3>
         <div className="row"><span className="row-label">✅ 충족 (1점씩)</span><span className="row-value green">{fullCount}개 · {fullCount}.0점</span></div>
@@ -668,7 +679,6 @@ function MultibaggerTab() {
           <span className="row-value" style={{color: gradeColor, fontWeight:800, fontSize:'0.95rem'}}>{total.toFixed(1)} / 8.0 ({grade})</span>
         </div>
       </div>
-
       <div className="warning-card">
         <h4>⚠️ 핵심 한계 주의사항</h4>
         <p>본 분석은 Anna Yartseva (2024) CAFE Working Paper 33의 10배 상승 주식 공통 패턴을 체크리스트화한 것입니다. 과거 패턴이 미래를 보장하지 않으며, 점수가 높더라도 투자 손실이 발생할 수 있습니다. SLNH는 5.5/8점으로 '보통' 등급이며, 자산효율 (❌)과 FCF (⚠️) 항목이 약점입니다. 투자 결정 전 전문 재무 조언을 구하세요.</p>
@@ -678,18 +688,19 @@ function MultibaggerTab() {
 }
 
 function App() {
-  var [tab, setTab] = useState('overview');
+  var tabState = useState('overview');
+  var tab    = tabState[0];
+  var setTab = tabState[1];
   var tabs = [
-    {id:'overview',     label:'📊개요'},
-    {id:'technical',    label:'📈기술적'},
-    {id:'financial',    label:'💰재무'},
-    {id:'twitter',      label:'🐦X'},
-    {id:'reddit',       label:'💬Reddit'},
-    {id:'conclusion',   label:'🎯결론'},
-    {id:'glossary',     label:'📖용어'},
-    {id:'multibagger',  label:'🔟멀티배거'}
+    {id:'overview',    label:'📊개요'},
+    {id:'technical',   label:'📈기술적'},
+    {id:'financial',   label:'💰재무'},
+    {id:'twitter',     label:'🐦X'},
+    {id:'reddit',      label:'💬Reddit'},
+    {id:'conclusion',  label:'🎯결론'},
+    {id:'glossary',    label:'📖용어'},
+    {id:'multibagger', label:'🔟멀티배거'}
   ];
-
   return (
     <div className="container">
       <div className="header">
