@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>SLNH 대시보드 — 2026.05.26</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0f0f1a;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+    a{color:#22c55e;text-decoration:none}
+    .container{max-width:760px;margin:0 auto;padding:12px}
+    .header{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #2d2d44}
+    .back-link{font-size:12px;color:#64748b;margin-bottom:8px;display:block}
+    .ticker{font-size:28px;font-weight:800;color:#22c55e}
+    .company{font-size:14px;color:#94a3b8;margin-bottom:8px}
+    .price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+    .price{font-size:36px;font-weight:700;color:#fff}
+    .up{color:#22c55e}.down{color:#ef4444}.neutral{color:#94a3b8}
+    .badges{display:flex;gap:8px;flex-wrap:wrap}
+    .badge{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+    .badge-buy{background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid #22c55e}
+    .badge-hold{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid #fbbf24}
+    .badge-neutral{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
+    .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+    .tab-btn{padding:6px 12px;border-radius:20px;border:1px solid #2d2d44;background:#1a1a2e;color:#94a3b8;font-size:12px;cursor:pointer;transition:all .2s}
+    .tab-btn.active{background:#22c55e;color:#0f0f1a;border-color:#22c55e;font-weight:700}
+    .card{background:#1a1a2e;border:1px solid #2d2d44;border-radius:10px;padding:14px;margin-bottom:10px}
+    .card-title{font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .stat-box{background:#0f0f1a;border-radius:8px;padding:10px;text-align:center}
+    .stat-label{font-size:11px;color:#64748b;margin-bottom:3px}
+    .stat-value{font-size:16px;font-weight:700;color:#e2e8f0}
+    .chart-wrap{position:relative;height:200px;margin-top:8px}
+    .chart-sm{position:relative;height:160px;margin-top:8px}
+    .chart-lg{position:relative;height:240px;margin-top:8px}
+    .item{padding:10px;background:#0f0f1a;border-radius:8px;margin-bottom:8px;border-left:3px solid #22c55e}
+    .item.bear{border-left-color:#ef4444}
+    .item-header{display:flex;justify-content:space-between;margin-bottom:4px}
+    .item-user{font-size:12px;font-weight:700;color:#22c55e}
+    .item-user.bear{color:#ef4444}
+    .item-date{font-size:11px;color:#64748b}
+    .item-text{font-size:13px;color:#cbd5e1;line-height:1.4}
+    .score-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .score-label{font-size:12px;color:#94a3b8;flex:1}
+    .score-bar-bg{flex:2;background:#2d2d44;border-radius:4px;height:8px;overflow:hidden}
+    .score-bar{height:8px;border-radius:4px}
+    .score-val{font-size:12px;font-weight:700;width:30px;text-align:right}
+    .risk-item{padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px;line-height:1.4}
+    .risk-high{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px}
+    .risk-med{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fde68a;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px}
+    .risk-low{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#86efac;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px}
+    .filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .filter-btn{padding:4px 10px;border-radius:14px;border:1px solid #2d2d44;background:#1a1a2e;color:#64748b;font-size:11px;cursor:pointer}
+    .filter-btn.active{background:#22c55e;color:#0f0f1a;border-color:#22c55e;font-weight:700}
+    .term-item{padding:10px;background:#0f0f1a;border-radius:8px;margin-bottom:6px}
+    .term-word{font-size:13px;font-weight:700;color:#22c55e;margin-bottom:3px}
+    .term-def{font-size:12px;color:#94a3b8;line-height:1.4}
+    .mb-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0f0f1a;border-radius:6px;margin-bottom:6px}
+    .mb-val{font-size:12px;font-weight:700;width:28px;text-align:right;color:#fbbf24}
+    .total-score{text-align:center;padding:14px;background:rgba(251,191,36,0.08);border-radius:10px;border:1px solid rgba(251,191,36,0.3);margin-bottom:12px}
+    .total-num{font-size:48px;font-weight:800;color:#fbbf24}
+    .total-denom{font-size:20px;color:#64748b}
+    @media(max-width:480px){.grid-2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+var PRICE_LABELS = ['25.06','25.07','25.08','25.09','25.10','25.11','25.12','26.01','26.02','26.03','26.04','26.05'];
+var PRICE_DATA   = [1.50,2.50,5.14,3.50,2.00,1.20,0.80,0.60,0.415,0.50,1.28,1.73];
+var PERF_LABELS  = ['3개월','6개월','1년','YTD'];
+var SLNH_PERF    = [147,-13,15,188];
+var SPY_PERF     = [8,5,18,6];
+var BG_SLNH = ['rgba(34,197,94,0.7)','rgba(239,68,68,0.7)','rgba(34,197,94,0.7)','rgba(34,197,94,0.7)'];
+var BD_SLNH = ['#22c55e','#ef4444','#22c55e','#22c55e'];
+var BG_SPY  = ['rgba(99,102,241,0.5)','rgba(99,102,241,0.5)','rgba(99,102,241,0.5)','rgba(99,102,241,0.5)'];
+var BD_SPY  = ['#6366f1','#6366f1','#6366f1','#6366f1'];
+var RSI_LABELS = ['25.09','25.11','26.01','26.03','26.05'];
+var RSI_DATA   = [72,55,48,28,40];
+var RSI_BG = ['rgba(239,68,68,0.7)','rgba(251,191,36,0.7)','rgba(251,191,36,0.7)','rgba(34,197,94,0.7)','rgba(251,191,36,0.7)'];
+var RSI_BD = ['#ef4444','#fbbf24','#fbbf24','#22c55e','#fbbf24'];
+var MA_LABELS = ['26.01','26.02','26.03','26.04','26.05'];
+var MA_PRICE  = [0.80,0.55,0.415,1.28,1.73];
+var MA_20     = [1.10,0.85,0.65,0.75,1.45];
+var MA_50     = [1.50,1.30,1.05,0.85,1.20];
+var Q_LABELS    = ['Q4 2024','Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026'];
+var Q_REVENUE   = [5.9,5.8,6.5,7.2,8.2,9.4];
+var EBITDA_DATA = [-6.0,-5.5,-5.0,-4.5,-4.0,-2.1];
+var MB_LABELS   = ['규모','밸류에이션','성장의질','자산효율','FCF','수요연계','고금리','진입시점'];
+var MB_DATA     = [1.0,1.0,0.5,0.0,0.5,1.0,0.5,1.0];
+
+var X_OPINIONS = [
+  {user:'@solunabull',text:'Briscoe Wind Farm 인수 완료 — 150MW 수직통합 전력+AI 컴퓨팅. 재생에너지 컴퓨팅의 Tesla.',sentiment:'bullish',date:'2026.05.22'},
+  {user:'@aipower_watch',text:'Q1 매출 +58% YoY $9.4M, 4분기 연속 순차 성장. Dorothy 프로젝트 전 실린더 점화.',sentiment:'bullish',date:'2026.05.18'},
+  {user:'@crypto_skeptic',text:'$9.4M 매출에 순손실 $17.9M. 그 수학은 안 맞는다. EBITDA 흑자 전까지는 비켜.',sentiment:'bearish',date:'2026.05.19'},
+  {user:'@greencompute_io',text:'나스닥 컴플라이언스 회복 + $53M 브리스코 딜 완료 + $86M 현금. 이번엔 실행력이 진짜.',sentiment:'bullish',date:'2026.05.14'},
+  {user:'@dilution_alert',text:'2.46M 주식 재판매 신고(5/19). 주식수 1년간 10배 증가. 포지션 사이징 필수.',sentiment:'bearish',date:'2026.05.19'},
+  {user:'@renewable_alpha',text:'브리스코 연간 $20-24M 매출 잠재력. 시총 $100M에 이건 매력적인 리스크/리워드.',sentiment:'bullish',date:'2026.05.20'}
+];
+
+var REDDIT_POSTS = [
+  {user:'u/slnh_deep_dive',sub:'r/pennystocks',text:'DCF 풀분석: 브리스코 EBITDA $6-11M 달성+Dorothy 3 확장 시 2026년말 $4-5 가능. 실행 리스크 대입.',upvotes:412,sentiment:'bullish',date:'2026.05.21'},
+  {user:'u/ai_power_plays',sub:'r/stocks',text:'4분기 연속 순차 매출 성장이 모두가 놓치는 핵심 데이터포인트. 비즈니스 모델 작동 중.',upvotes:287,sentiment:'bullish',date:'2026.05.18'},
+  {user:'u/dilution_tracker',sub:'r/wallstreetbets',text:'주식수 1년 10배. $0.40에 안 들어갔으면 이미 봉투 들고 있는 것. 희석 머신은 멈추지 않는다.',upvotes:156,sentiment:'bearish',date:'2026.05.20'},
+  {user:'u/renewable_compute',sub:'r/investing',text:'재생에너지를 AI 컴퓨팅과 진정으로 수직통합한 최초의 회사. 커테일드 전력 해자는 복제 불가.',upvotes:203,sentiment:'bullish',date:'2026.05.16'}
+];
+
+var GLOSSARY = [
+  {word:'Adj. EBITDA',def:'감가상각·이자·세금 제외 조정 영업이익. SLNH Q1 2026: -$2.1M (지속 개선 중)',cat:'재무'},
+  {word:'수직통합',def:'전력 생산(Briscoe Wind)부터 AI 컴퓨팅까지 자체 보유하는 비즈니스 모델',cat:'비즈니스'},
+  {word:'Project Dorothy',def:'솔루나의 재생에너지 연계 데이터센터 프로젝트. 1A·1B·2·3 단계 운영 중',cat:'비즈니스'},
+  {word:'Briscoe Wind Farm',def:'텍사스 150MW 풍력발전소. 2026년 4월 $5,300만 인수. 연간 $20-24M 매출 기대',cat:'비즈니스'},
+  {word:'커테일드 전력',def:'그리드 포화로 버려지는 잉여 재생에너지. SLNH의 초저가 전력 소스',cat:'기술'},
+  {word:'FCF',def:'자유현금흐름. 운영·투자 후 남는 순현금. SLNH는 아직 음수(투자 단계)',cat:'재무'},
+  {word:'RSI',def:'상대강도지수(0-100). 70↑ 과매수, 30↓ 과매도. 현재 ~40 (중립)',cat:'기술적'},
+  {word:'나스닥 컴플라이언스',def:'2026년 4월 $1.00 최저가 기준 재충족. 상장 유지 확정',cat:'뉴스'},
+  {word:'주식희석',def:'신주 발행으로 기존 주주 지분율 하락. SLNH 1년간 주식수 10배 증가',cat:'리스크'},
+  {word:'SBC(주식보상)',def:'비현금 인건비. Q1 G&A $18.5M 중 $10.2M이 SBC. 실제 현금 유출 제한',cat:'재무'},
+  {word:'시가총액',def:'주가 × 발행주식수. SLNH 현재 약 $100M',cat:'재무'},
+  {word:'데이터 호스팅',def:'AI·HPC 기업 대상 컴퓨팅 인프라 임대. Q1 $6.7M (전체 수익의 71%)',cat:'비즈니스'}
+];
+
+var MB_ITEMS = [
+  {label:'① 소형주 (Small Cap)',icon:'✅',score:1.0,note:'시가총액 ~$100M. 멀티배거 최적 구간'},
+  {label:'② 저밸류 (낮은 P/S)',icon:'✅',score:1.0,note:'P/S ~2.5x (브리스코 매출 포함 시 더 낮음)'},
+  {label:'③ 수익의 질',icon:'⚠️',score:0.5,note:'반복적 매출 성장(58% YoY) 但 아직 손실'},
+  {label:'④ 자산 효율성',icon:'❌',score:0.0,note:'총자산 $190M 대비 분기 매출 $9.4M. 초기단계'},
+  {label:'⑤ FCF 창출력',icon:'⚠️',score:0.5,note:'운영 현금 -$6.4M. 브리스코 가동 후 개선 예상'},
+  {label:'⑥ 구조적 수요',icon:'✅',score:1.0,note:'AI 전력 수요 급증 + 재생에너지 의무화 트렌드'},
+  {label:'⑦ 금리 환경',icon:'⚠️',score:0.5,note:'금리 하락 기대감. 자본집약적 사업 리스크 존재'},
+  {label:'⑧ 진입 시점',icon:'✅',score:1.0,note:'$0.415 저점 대비 +316%. 전고점($5.14) 하회 구간'}
+];
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+function PriceChart() {
+  var r = useRef(null); var cr = useRef(null);
+  makeChart(r, cr, {
+    type:'line',
+    data:{labels:PRICE_LABELS,datasets:[{label:'주가($)',data:PRICE_DATA,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.08)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#22c55e',tension:0.3,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2d2d44'},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'#2d2d44'},ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v;}}}}}
+  });
+  return React.createElement('div',{className:'chart-wrap'},React.createElement('canvas',{ref:r}));
+}
+
+function PerfChart() {
+  var r = useRef(null); var cr = useRef(null);
+  makeChart(r, cr, {
+    type:'bar',
+    data:{labels:PERF_LABELS,datasets:[{label:'SLNH',data:SLNH_PERF,backgroundColor:BG_SLNH,borderColor:BD_SLNH,borderWidth:1},{label:'SPY',data:SPY_PERF,backgroundColor:BG_SPY,borderColor:BD_SPY,borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},scales:{x:{grid:{color:'#2d2d44'},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'#2d2d44'},ticks:{color:'#64748b',font:{size:10},callback:function(v){return v+'%';}}}}}
+  });
+  return React.createElement('div',{className:'chart-sm'},React.createElement('canvas',{ref:r}));
+}
+
+function RSIChart() {
+  var r = useRef(null); var cr = useRef(null);
+  makeChart(r, cr, {
+    type:'bar',
+    data:{labels:RSI_LABELS,datasets:[{label:'RSI',data:RSI_DATA,backgroundColor:RSI_BG,borderColor:RSI_BD,borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2d2d44'},ticks:{color:'#64748b',font:{size:10}}},y:{min:0,max:100,grid:{color:'#2d2d44'},ticks:{color:'#64748b',font:{size:10}}}}}
+  });
+  return React.createElement('div',{className:'chart-sm'},React.createElement('canvas',{ref:r}));
+}
+
+function MAChart() {
+  var r = useRef(null); var cr = useRef(null);
+  makeChart(r, cr, {
+    type:'line',
+    data:{labels:MA_LABELS,datasets:[
+      {label:'주가',data:MA_PRICE,borderColor:'#22c55e',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#22c55e',tension:0.3},
+      {label:'MA20',data:MA_20,borderColor:'#fbbf24',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,tension:0.3},
+      {label:'MA50',data:MA_50,borderColor:'#6366f1',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,tension:0.3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{grid:{color:'#2d2d44'},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'#2d2d44'},ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v;}}}}}
+  });
+  return React.createElement('div',{className:'chart-wrap'},React.createElement('canvas',{ref:r}));
+}
+
+function RevenueChart() {
+  var r = useRef(null); var cr = useRef(null);
+  makeChart(r, cr, {
+    type:'bar',
+    data:{labels:Q_LABELS,datasets:[
+      {label:'매출($M)',data:Q_REVENUE,backgroundColor:'rgba(34,197,94,0.6)',borderColor:'#22c55e',borderWidth:1},
+      {label:'EBITDA($M)',data:EBITDA_DATA,backgroundColor:'rgba(239,68,68,0.5)',borderColor:'#ef4444',borderWidth:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{grid:{color:'#2d2d44'},ticks:{color:'#64748b',font:{size:9}}},y:{grid:{color:'#2d2d44'},ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v+'M';}}}}}
+  });
+  return React.createElement('div',{className:'chart-wrap'},React.createElement('canvas',{ref:r}));
+}
+
+function RadarChart() {
+  var r = useRef(null); var cr = useRef(null);
+  makeChart(r, cr, {
+    type:'radar',
+    data:{labels:MB_LABELS,datasets:[{label:'SLNH',data:MB_DATA,backgroundColor:'rgba(251,191,36,0.15)',borderColor:'#fbbf24',borderWidth:2,pointBackgroundColor:'#fbbf24',pointRadius:4,pointBorderColor:'#fbbf24'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{min:0,max:1,ticks:{stepSize:0.5,color:'#64748b',backdropColor:'transparent',font:{size:9}},grid:{color:'#2d2d44'},angleLines:{color:'#2d2d44'},pointLabels:{color:'#94a3b8',font:{size:10}}}}}
+  });
+  return React.createElement('div',{className:'chart-lg'},React.createElement('canvas',{ref:r}));
+}
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function OverviewTab() {
+  return e('div', null,
+    e('div',{className:'card'},e('div',{className:'card-title'},'12개월 주가 추이'),e(PriceChart)),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'핵심 지표'),
+      e('div',{className:'grid-2'},
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'현재 주가'),e('div',{className:'stat-value'},'$1.73')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'목표 주가'),e('div',{className:'stat-value up'},'$5.00')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'52주 고/저'),e('div',{className:'stat-value',style:{fontSize:'13px'}},'$5.14 / $0.415')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'시가총액'),e('div',{className:'stat-value'},'~$100M')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'Q1 매출'),e('div',{className:'stat-value up'},'$9.4M')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'YoY 성장'),e('div',{className:'stat-value up'},'+58%'))
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'최신 뉴스'),
+      e('div',{className:'item'},
+        e('div',{className:'item-header'},e('span',{className:'item-user'},'브리스코 윈드팜 인수 완료'),e('span',{className:'item-date'},'2026.04')),
+        e('div',{className:'item-text'},'텍사스 150MW 풍력발전소 $5,300만에 인수. 연간 $20-24M 매출 기대. AI 컴퓨팅 전력 수직통합 완성.')
+      ),
+      e('div',{className:'item'},
+        e('div',{className:'item-header'},e('span',{className:'item-user'},'Q1 2026 실적 발표'),e('span',{className:'item-date'},'2026.05.18')),
+        e('div',{className:'item-text'},'매출 $9.4M (+58% YoY). 4분기 연속 순차 성장. 데이터 호스팅 $6.7M. 순손실 $17.9M (비현금 SBC $10.2M 포함).')
+      ),
+      e('div',{className:'item'},
+        e('div',{className:'item-header'},e('span',{className:'item-user'},'나스닥 컴플라이언스 회복'),e('span',{className:'item-date'},'2026.04.29')),
+        e('div',{className:'item-text'},'$1.00 최저가 기준 재충족 (4/14-4/29). 나스닥 상장 유지 확정.')
+      )
+    )
+  );
+}
+
+function TechnicalTab() {
+  return e('div', null,
+    e('div',{className:'card'},e('div',{className:'card-title'},'이동평균선'),e(MAChart)),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'RSI 추이'),
+      e(RSIChart),
+      e('div',{style:{marginTop:'8px',fontSize:'12px',color:'#64748b'}},'현재 RSI: ~40.3 (중립 — 단기 기술적 매도 우위)')
+    ),
+    e('div',{className:'card'},e('div',{className:'card-title'},'수익률 비교 (vs SPY)'),e(PerfChart)),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'기술적 지표 요약'),
+      e('div',{className:'grid-2'},
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'RSI(14)'),e('div',{className:'stat-value neutral'},'40.3')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'대비 MA20'),e('div',{className:'stat-value up'},'+19.3%')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'대비 MA50'),e('div',{className:'stat-value up'},'+44.2%')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'기술신호'),e('div',{className:'stat-value down',style:{fontSize:'12px'}},'매도10·중립6·매수1'))
+      )
+    )
+  );
+}
+
+function FinanceTab() {
+  return e('div', null,
+    e('div',{className:'card'},e('div',{className:'card-title'},'분기 실적 추이'),e(RevenueChart)),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'Q1 2026 요약'),
+      e('div',{className:'grid-2'},
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'총 매출'),e('div',{className:'stat-value up'},'$9.4M')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'YoY 성장'),e('div',{className:'stat-value up'},'+58%')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'데이터호스팅'),e('div',{className:'stat-value up'},'$6.7M')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'Adj.EBITDA'),e('div',{className:'stat-value down'},'-$2.1M')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'순손실'),e('div',{className:'stat-value down'},'-$17.9M')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'현금보유'),e('div',{className:'stat-value up'},'$86M'))
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'재무 리스크 / 강점'),
+      e('div',{className:'risk-high'},'⚠️ 순손실 $17.9M — G&A 비용 급증 (SBC $10.2M 비현금 포함)'),
+      e('div',{className:'risk-high'},'⚠️ 주식수 1년간 10배 희석 — 지속적 신주 발행 리스크'),
+      e('div',{className:'risk-med'},'🟡 브리스코 $53M 현금 지출 — 단기 유동성 부담'),
+      e('div',{className:'risk-low'},'✅ 현금 $86M 보유 — 자금 조달 여력 충분'),
+      e('div',{className:'risk-low'},'✅ 4분기 연속 매출 성장 — 비즈니스 모멘텀 확인'),
+      e('div',{className:'risk-low',style:{marginBottom:0}},'✅ 총자산 $190M, 자본비율 59% — 재무구조 양호')
+    )
+  );
+}
+
+function TwitterTab() {
+  var bull = 0, bear = 0;
+  for (var i = 0; i < X_OPINIONS.length; i++) {
+    if (X_OPINIONS[i].sentiment === 'bullish') bull++;
+    else if (X_OPINIONS[i].sentiment === 'bearish') bear++;
+  }
+  var items = [];
+  for (var j = 0; j < X_OPINIONS.length; j++) {
+    var op = X_OPINIONS[j];
+    var isBear = op.sentiment === 'bearish';
+    items.push(e('div',{key:j,className:'item'+(isBear?' bear':'')},
+      e('div',{className:'item-header'},
+        e('span',{className:'item-user'+(isBear?' bear':'')},op.user),
+        e('span',{className:'item-date'},op.date)
+      ),
+      e('div',{className:'item-text'},op.text)
+    ));
+  }
+  return e('div', null,
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'X(트위터) 감성 분석'),
+      e('div',{className:'grid-2',style:{marginBottom:'12px'}},
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'강세'),e('div',{className:'stat-value up'},bull+'건')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'약세'),e('div',{className:'stat-value down'},bear+'건'))
+      ),
+      e.apply(null, ['div',null].concat(items))
+    )
+  );
+}
+
+function RedditTab() {
+  var items = [];
+  for (var i = 0; i < REDDIT_POSTS.length; i++) {
+    var p = REDDIT_POSTS[i];
+    var isBear = p.sentiment === 'bearish';
+    items.push(e('div',{key:i,className:'item'+(isBear?' bear':'')},
+      e('div',{className:'item-header'},
+        e('span',{className:'item-user'+(isBear?' bear':'')},p.user+' · '+p.sub),
+        e('span',{className:'item-date'},'↑'+p.upvotes)
+      ),
+      e('div',{className:'item-text'},p.text)
+    ));
+  }
+  return e('div', null,
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'Reddit 커뮤니티 의견'),
+      e.apply(null, ['div',null].concat(items))
+    )
+  );
+}
+
+function ConclusionTab() {
+  var scores = [
+    {label:'성장성',val:82,color:'#22c55e'},
+    {label:'수익성',val:28,color:'#ef4444'},
+    {label:'기술적',val:45,color:'#fbbf24'},
+    {label:'밸류에이션',val:72,color:'#22c55e'},
+    {label:'리스크관리',val:38,color:'#ef4444'}
+  ];
+  var rows = [];
+  for (var i = 0; i < scores.length; i++) {
+    var s = scores[i];
+    rows.push(e('div',{key:i,className:'score-row'},
+      e('div',{className:'score-label'},s.label),
+      e('div',{className:'score-bar-bg'},e('div',{className:'score-bar',style:{width:s.val+'%',background:s.color}})),
+      e('div',{className:'score-val',style:{color:s.color}},s.val)
+    ));
+  }
+  return e('div', null,
+    e('div',{className:'card'},e('div',{className:'card-title'},'종합 점수'),e.apply(null,['div',null].concat(rows))),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'투자 의견'),
+      e('div',{style:{textAlign:'center',padding:'12px 0'}},
+        e('div',{style:{fontSize:'32px',fontWeight:800,color:'#22c55e',marginBottom:'4px'}},'매수 (Buy)'),
+        e('div',{style:{fontSize:'14px',color:'#94a3b8',marginBottom:'12px'}},'목표가: $5.00 · 현재가: $1.73 · 상승여력: +189%')
+      ),
+      e('div',{className:'risk-low'},'✅ AI 전력 수직통합 — 브리스코 WindFarm으로 차별화된 해자 확보'),
+      e('div',{className:'risk-low'},'✅ Q1 +58% YoY, 4분기 연속 성장 — 비즈니스 모델 검증'),
+      e('div',{className:'risk-low'},'✅ 나스닥 컴플라이언스 회복 + $86M 현금 — 실행 여력 충분'),
+      e('div',{className:'risk-high'},'⚠️ 대규모 주식 희석 지속 — 포지션 관리 필수'),
+      e('div',{className:'risk-high',style:{marginBottom:0}},'⚠️ 기술적 매도 신호 우세 — 단기 변동성 주의')
+    )
+  );
+}
+
+function GlossaryTab() {
+  var fs = useState('전체');
+  var filter = fs[0]; var setFilter = fs[1];
+  var cats = ['전체','재무','비즈니스','기술','기술적','뉴스','리스크'];
+  var filtered = [];
+  for (var i = 0; i < GLOSSARY.length; i++) {
+    if (filter === '전체' || GLOSSARY[i].cat === filter) filtered.push(GLOSSARY[i]);
+  }
+  var catBtns = [];
+  for (var ci = 0; ci < cats.length; ci++) {
+    var c = cats[ci];
+    catBtns.push(e('button',{key:c,className:'filter-btn'+(filter===c?' active':''),onClick:function(x){return function(){setFilter(x);};}(c)},c));
+  }
+  var termItems = [];
+  for (var ti = 0; ti < filtered.length; ti++) {
+    var t = filtered[ti];
+    termItems.push(e('div',{key:ti,className:'term-item'},
+      e('div',{className:'term-word'},t.word+' ['+t.cat+']'),
+      e('div',{className:'term-def'},t.def)
+    ));
+  }
+  return e('div', null,
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'투자 용어 사전'),
+      e('div',{className:'filter-bar'},catBtns),
+      e.apply(null,['div',null].concat(termItems))
+    )
+  );
+}
+
+function MultibaggerTab() {
+  var total = 0;
+  for (var i = 0; i < MB_DATA.length; i++) total += MB_DATA[i];
+  var grade = total >= 6.5 ? '유망' : total >= 4 ? '보통' : '낮음';
+  var gradeColor = total >= 6.5 ? '#22c55e' : total >= 4 ? '#fbbf24' : '#ef4444';
+  var mbRows = [];
+  for (var j = 0; j < MB_ITEMS.length; j++) {
+    var m = MB_ITEMS[j];
+    mbRows.push(e('div',{key:j,className:'mb-item'},
+      e('div',{style:{flex:1}},
+        e('div',{style:{fontSize:'13px',color:'#e2e8f0',marginBottom:'2px'}},m.label),
+        e('div',{style:{fontSize:'11px',color:'#64748b'}},m.note)
+      ),
+      e('div',{style:{display:'flex',gap:'6px',alignItems:'center'}},
+        e('span',{style:{fontSize:'16px'}},m.icon),
+        e('span',{className:'mb-val'},m.score.toFixed(1))
+      )
+    ));
+  }
+  return e('div', null,
+    e('div',{className:'total-score'},
+      e('div',null,
+        e('span',{className:'total-num'},total.toFixed(1)),
+        e('span',{className:'total-denom'},' / 8')
+      ),
+      e('div',{style:{fontSize:'18px',fontWeight:700,color:gradeColor,marginTop:'4px'}},grade+' 등급'),
+      e('div',{style:{fontSize:'12px',color:'#64748b',marginTop:'4px'}},'Anna Yartseva 멀티배거 프레임워크')
+    ),
+    e('div',{className:'card'},e('div',{className:'card-title'},'8개 체크리스트'),e.apply(null,['div',null].concat(mbRows))),
+    e('div',{className:'card'},e('div',{className:'card-title'},'레이더 차트'),e(RadarChart)),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'멀티배거 평가 요약'),
+      e('div',{className:'risk-low'},'✅ 소형주 + 저밸류: $100M 시총, 브리스코 포함 P/S 매력적'),
+      e('div',{className:'risk-low'},'✅ 구조적 수요: AI 전력 부족 문제 직접 해결'),
+      e('div',{className:'risk-low'},'✅ 진입 시점: 저점 대비 반등, 전고점 하회 구간'),
+      e('div',{className:'risk-med'},'🟡 5.5/8 보통 등급 — FCF·자산효율 개선 시 6.5↑ 전환 가능'),
+      e('div',{className:'risk-high',style:{marginBottom:0}},'⚠️ 주식 희석 + FCF 부재가 멀티배거 확률을 낮추는 핵심 요인')
+    )
+  );
+}
+
+function App() {
+  var ts = useState('overview');
+  var tab = ts[0]; var setTab = ts[1];
+  var tabs = [
+    {id:'overview',label:'📊개요'},
+    {id:'technical',label:'📈기술적'},
+    {id:'finance',label:'💰재무'},
+    {id:'twitter',label:'🐦X'},
+    {id:'reddit',label:'💬Reddit'},
+    {id:'conclusion',label:'🎯결론'},
+    {id:'glossary',label:'📖용어'},
+    {id:'multibagger',label:'🔟멀티배거'}
+  ];
+  var tabBtns = [];
+  for (var i = 0; i < tabs.length; i++) {
+    var t = tabs[i];
+    tabBtns.push(e('button',{key:t.id,className:'tab-btn'+(tab===t.id?' active':''),onClick:function(id){return function(){setTab(id);};}(t.id)},t.label));
+  }
+  var content = null;
+  if (tab==='overview')     content = e(OverviewTab);
+  else if (tab==='technical')  content = e(TechnicalTab);
+  else if (tab==='finance')    content = e(FinanceTab);
+  else if (tab==='twitter')    content = e(TwitterTab);
+  else if (tab==='reddit')     content = e(RedditTab);
+  else if (tab==='conclusion') content = e(ConclusionTab);
+  else if (tab==='glossary')   content = e(GlossaryTab);
+  else if (tab==='multibagger')content = e(MultibaggerTab);
+  return e('div',{className:'container'},
+    e('div',{className:'header'},
+      e('a',{href:'https://disntm90.github.io/disntm90/',className:'back-link'},'← 목록으로'),
+      e('div',{className:'ticker'},'SLNH'),
+      e('div',{className:'company'},'Soluna Holdings, Inc. · NASDAQ'),
+      e('div',{className:'price-row'},
+        e('div',{className:'price'},'$1.73'),
+        e('div',{className:'up',style:{fontSize:'16px',fontWeight:600}},'+188% YTD')
+      ),
+      e('div',{className:'badges'},
+        e('span',{className:'badge badge-buy'},'매수'),
+        e('span',{className:'badge badge-hold'},'목표 $5.00'),
+        e('span',{className:'badge badge-neutral'},'AI·재생에너지'),
+        e('span',{className:'badge badge-neutral'},'2026.05.26')
+      )
+    ),
+    e('div',{className:'tabs'},tabBtns),
+    e('div',{key:tab},content)
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+</script>
+</body>
+</html>
