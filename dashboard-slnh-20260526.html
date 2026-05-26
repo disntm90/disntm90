@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLNH 종목 분석 — 2026.05.26</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f1a; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+.container { max-width: 480px; margin: 0 auto; padding: 16px; }
+.header { text-align: center; padding: 20px 0 16px; border-bottom: 1px solid #1e1e30; margin-bottom: 16px; }
+.header h1 { font-size: 1.8rem; font-weight: 700; color: #22c55e; letter-spacing: -0.5px; }
+.header .subtitle { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+.back-link { display: inline-block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px; text-decoration: none; }
+.back-link:hover { color: #22c55e; }
+.tabs { display: flex; overflow-x: auto; gap: 4px; margin-bottom: 16px; padding-bottom: 4px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn { flex-shrink: 0; padding: 7px 12px; border-radius: 20px; border: 1px solid #2d2d44; background: transparent; color: #94a3b8; font-size: 0.78rem; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+.tab-btn.active { background: #22c55e; border-color: #22c55e; color: #000; font-weight: 600; }
+.tab-btn:hover:not(.active) { border-color: #22c55e; color: #22c55e; }
+.card { background: #161625; border: 1px solid #1e1e30; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.card h3 { font-size: 0.9rem; color: #94a3b8; margin-bottom: 10px; font-weight: 500; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-item { background: #1a1a2e; border-radius: 8px; padding: 10px; }
+.stat-label { font-size: 0.7rem; color: #64748b; margin-bottom: 2px; }
+.stat-value { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; }
+.stat-value.green { color: #22c55e; }
+.stat-value.red { color: #ef4444; }
+.stat-value.yellow { color: #fbbf24; }
+.chart-wrap { height: 200px; position: relative; }
+.chart-wrap.tall { height: 240px; }
+.badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; }
+.badge.buy { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+.row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1e1e30; }
+.row:last-child { border-bottom: none; }
+.row-label { font-size: 0.8rem; color: #94a3b8; }
+.row-value { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; }
+.row-value.green { color: #22c55e; }
+.row-value.red { color: #ef4444; }
+.opinion-card { background: #1a1a2e; border-radius: 8px; padding: 12px; margin-bottom: 8px; border-left: 3px solid; }
+.opinion-card.bullish { border-left-color: #22c55e; }
+.opinion-card.bearish { border-left-color: #ef4444; }
+.opinion-card.neutral { border-left-color: #fbbf24; }
+.opinion-user { font-size: 0.72rem; color: #64748b; margin-bottom: 4px; }
+.opinion-text { font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; }
+.opinion-meta { display: flex; justify-content: space-between; margin-top: 6px; }
+.opinion-likes { font-size: 0.7rem; color: #22c55e; }
+.opinion-date { font-size: 0.7rem; color: #475569; }
+.conclusion-rating { text-align: center; padding: 20px; background: rgba(34,197,94,0.08); border-radius: 12px; border: 1px solid rgba(34,197,94,0.2); margin-bottom: 12px; }
+.conclusion-rating h2 { font-size: 2rem; font-weight: 800; color: #22c55e; }
+.conclusion-rating p { font-size: 0.85rem; color: #94a3b8; margin-top: 4px; }
+.risk-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid #1e1e30; }
+.risk-item:last-child { border-bottom: none; }
+.risk-icon { font-size: 0.9rem; flex-shrink: 0; }
+.risk-text { font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; }
+.glossary-filter { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.filter-btn { padding: 4px 10px; border-radius: 12px; border: 1px solid #2d2d44; background: transparent; color: #94a3b8; font-size: 0.73rem; cursor: pointer; }
+.filter-btn.active { background: #22c55e; border-color: #22c55e; color: #000; font-weight: 600; }
+.glossary-item { padding: 10px 0; border-bottom: 1px solid #1e1e30; }
+.glossary-item:last-child { border-bottom: none; }
+.glossary-term { font-size: 0.85rem; font-weight: 700; color: #22c55e; margin-bottom: 2px; }
+.glossary-def { font-size: 0.78rem; color: #94a3b8; line-height: 1.4; }
+.mb-score-big { text-align: center; padding: 20px; background: rgba(251,191,36,0.08); border-radius: 12px; border: 1px solid rgba(251,191,36,0.2); margin-bottom: 12px; }
+.mb-score-num { font-size: 3rem; font-weight: 800; }
+.mb-score-grade { font-size: 1rem; margin-top: 4px; }
+.mb-score-desc { font-size: 0.78rem; color: #64748b; margin-top: 6px; }
+.mb-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid #1e1e30; }
+.mb-item:last-child { border-bottom: none; }
+.mb-icon { font-size: 1.1rem; flex-shrink: 0; width: 20px; }
+.mb-content { flex: 1; }
+.mb-title { font-size: 0.83rem; font-weight: 600; color: #e2e8f0; margin-bottom: 2px; }
+.mb-desc { font-size: 0.75rem; color: #94a3b8; line-height: 1.4; }
+.mb-score-line { font-size: 0.75rem; font-weight: 700; color: #fbbf24; margin-top: 2px; }
+.progress-bar-wrap { background: #1a1a2e; border-radius: 4px; height: 5px; margin-top: 4px; }
+.progress-bar { height: 5px; border-radius: 4px; }
+.warning-card { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 12px; margin-top: 8px; }
+.warning-card h4 { font-size: 0.82rem; color: #ef4444; margin-bottom: 6px; }
+.warning-card p { font-size: 0.76rem; color: #94a3b8; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var { useState, useEffect, useRef } = React;
+
+var PRICE_LABELS = ['25.06','25.07','25.08','25.09','25.10','25.11','25.12','26.01','26.02','26.03','26.04','26.05'];
+var PRICE_DATA   = [1.50, 2.50, 5.14, 3.50, 2.00, 1.20, 0.80, 0.60, 0.415, 0.50, 1.28, 1.73];
+
+var PERF_LABELS = ['3개월', '6개월', '1년', 'YTD'];
+var SLNH_PERF   = [147, -13, 15, 188];
+var SPY_PERF    = [8, 5, 18, 6];
+var BG_SLNH = ['rgba(34,197,94,0.7)', 'rgba(239,68,68,0.7)', 'rgba(34,197,94,0.7)', 'rgba(34,197,94,0.7)'];
+var BD_SLNH = ['#22c55e', '#ef4444', '#22c55e', '#22c55e'];
+var BG_SPY  = ['rgba(99,102,241,0.5)', 'rgba(99,102,241,0.5)', 'rgba(99,102,241,0.5)', 'rgba(99,102,241,0.5)'];
+var BD_SPY  = ['#6366f1', '#6366f1', '#6366f1', '#6366f1'];
+
+var RSI_LABELS = ['25.09', '25.11', '26.01', '26.03', '26.05'];
+var RSI_DATA   = [72, 55, 48, 28, 42];
+var RSI_BG = ['rgba(239,68,68,0.7)', 'rgba(251,191,36,0.7)', 'rgba(251,191,36,0.7)', 'rgba(34,197,94,0.7)', 'rgba(251,191,36,0.7)'];
+var RSI_BD = ['#ef4444', '#fbbf24', '#fbbf24', '#22c55e', '#fbbf24'];
+
+var MA_LABELS = ['26.01', '26.02', '26.03', '26.04', '26.05'];
+var MA_PRICE  = [0.80, 0.55, 0.415, 1.28, 1.73];
+var MA_20     = [1.10, 0.85, 0.65, 0.75, 1.45];
+var MA_50     = [1.50, 1.30, 1.05, 0.85, 1.20];
+
+var Q_LABELS    = ['Q4 2024', 'Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Q1 2026'];
+var Q_REVENUE   = [5.9, 5.8, 6.5, 7.2, 8.2, 9.4];
+var EBITDA_DATA = [-6.0, -5.5, -5.0, -4.5, -4.0, -2.1];
+
+var MB_LABELS = ['규모', '밸류에이션', '성장의질', '자산효율', 'FCF', '수요연계', '고금리', '진입시점'];
+var MB_DATA   = [1.0, 1.0, 0.5, 0.0, 0.5, 1.0, 0.5, 1.0];
+
+var MB_ITEMS = [
+  {icon:'✅', title:'아직 충분히 작은 기업인가?', desc:'시총 ~$195M < $5B 기준 충족. 스몰캡 영역으로 상승 여지 큼', criteria:'$5B 이하 ✅', score:1.0},
+  {icon:'✅', title:'현재 가격이 미래를 과대반영하지 않았는가?', desc:'P/S ~5.2x, 애널 컨센서스 $5.10 대비 -66% 디스카운트. 미래 과대반영 없음', criteria:'밸류에이션 적정 ✅', score:1.0},
+  {icon:'⚠️', title:'매출보다 EBITDA·FCF 개선이 따라오는가?', desc:'매출 +58% YoY, Adj.EBITDA QoQ 47% 개선. 그러나 EBITDA 여전히 음수 (-$2.1M)', criteria:'부분충족 ⚠️', score:0.5},
+  {icon:'❌', title:'자산 증가율보다 EBITDA 증가율이 뒤처지지 않는가?', desc:'총자산 +107% (Briscoe 인수 효과), EBITDA는 여전히 음수. 자산 효율성 미달', criteria:'미충족 ❌', score:0.0},
+  {icon:'⚠️', title:'FCF yield 관점에서 가격이 합리적인가?', desc:'FCF 음수지만 현금 $86M = 시총 44%. 현금 버퍼 풍부해 부분 충족', criteria:'부분충족 ⚠️', score:0.5},
+  {icon:'✅', title:'투자가 실제 수요·주문과 연결되는가?', desc:'Blockware 17MW 실운영, Dorothy 50MW 완공, 4.3GW 파이프라인. 실수요 연계 확인', criteria:'수요 연계 ✅', score:1.0},
+  {icon:'⚠️', title:'고금리 환경에서도 버틸 수 있는가?', desc:'현금 $86M으로 1년 이상 버팀 가능. 단 SEPA 컨버터블 희석 지속으로 부분 충족', criteria:'부분충족 ⚠️', score:0.5},
+  {icon:'✅', title:'단기 급등 후 추격매수 구간은 아닌가?', desc:'ATH $5.14 대비 -67%, RSI 42. 급등 후가 아님. 합리적 진입 구간', criteria:'진입 적합 ✅', score:1.0}
+];
+
+var X_OPINIONS = [
+  {user:'@CryptoAIHosting', text:'SLNH Dorothy 1B 인수 완료. 50MW 데이터센터 full capacity!', sentiment:'bullish', likes:234, date:'26.05.20'},
+  {user:'@AIInfraWatch', text:'SLNH 4.3GW 파이프라인... 현재 시총 $195M 대비 얼마나 저평가인지', sentiment:'bullish', likes:189, date:'26.05.18'},
+  {user:'@MinerAlert', text:'SLNH Q1 매출 +58% YoY, adj EBITDA 47% 개선 → 흑자전환 가시권', sentiment:'bullish', likes:156, date:'26.05.15'},
+  {user:'@SmallCapTrader', text:'SLNH 아직도 8.5K 구독자가 매달 주문하는 중. 해지율 2.5%', sentiment:'bullish', likes:143, date:'26.05.22'},
+  {user:'@SolarEdgeAI', text:'Sazmining 300MW AI 페이즈 계획 수립 완료. 실행 시 시총 10배', sentiment:'bullish', likes:128, date:'26.05.19'},
+  {user:'@CryptoSkeptic', text:'SLNH 주가 -67% from ATH... ATH 때 사신분들 회복 언제?', sentiment:'bearish', likes:97, date:'26.05.21'},
+  {user:'@DilutionWatch', text:'SLNH SEPA 컨버터블 희석 지속 중. 대량 매물 우려', sentiment:'bearish', likes:85, date:'26.05.17'},
+  {user:'@NasdaqCompliance', text:'SLNH 나스닥 컴플라이언스 회복! 상폐 위험 제거됨', sentiment:'bullish', likes:211, date:'26.05.14'},
+  {user:'@AIDataCenter', text:'Blockware 17MW 실운영 + Briscoe 150MW 소유. 현물 해시율 급상승', sentiment:'bullish', likes:167, date:'26.05.23'},
+  {user:'@ValueInvestorKR', text:'SLNH 현금 $86M = 시총 44%. 이런 스몰캡 흔치 않다', sentiment:'bullish', likes:203, date:'26.05.16'},
+  {user:'@StockAlert99', text:'SLNH 29M 오버행... 언제 소화되나. 공매도 16% 여전히 부담', sentiment:'bearish', likes:76, date:'26.05.20'},
+  {user:'@AIHypeWatch', text:'4.3GW 파이프라인이 계약으로 전환되는 비율이 중요. 선언만 많으면 의미없음', sentiment:'bearish', likes:68, date:'26.05.18'},
+  {user:'@GreenEnergyInv', text:'SLNH 재생에너지 100% 인증 데이터센터. ESG 프리미엄 받을 자격', sentiment:'bullish', likes:145, date:'26.05.13'},
+  {user:'@BlockchainFundKR', text:'비트코인 haul 주당 $0.049 (3개월). 아직 BTC exposure 보유 중', sentiment:'neutral', likes:54, date:'26.05.22'},
+  {user:'@TechStockResearch', text:'SLNH 애널 컨센서스 $5.10. 현재가 $1.73 대비 upside 195%. 리스크 감안해도 매력적', sentiment:'bullish', likes:178, date:'26.05.24'}
+];
+
+var REDDIT_OPINIONS = [
+  {sub:'r/stocks', user:'AI_Infra_Bull', text:'SLNH는 AI 인프라 플레이 중 가장 저평가. Sazmining 300MW AI 전환 되면 게임체인저', upvotes:456, date:'26.05.22'},
+  {sub:'r/wallstreetbets', user:'Moon_Seeker_99', text:'SLNH 5배까지 간다. Dorothy + Briscoe + Sazmining = 폭발적 성장 조합', upvotes:389, date:'26.05.20'},
+  {sub:'r/Bitcoinhackers', user:'CryptoMiner_Pro', text:'SLNH 데이터 호스팅으로 전환이 현명한 선택. 채굴만으로는 한계 명확', upvotes:234, date:'26.05.18'},
+  {sub:'r/investing', user:'ValueFirst_DD', text:'현금 $86M에 시총 $195M. 순사업가치 $109M으로 예상매출 $38M 대비 P/S 2.9x. 매우 저렴', upvotes:567, date:'26.05.21'},
+  {sub:'r/smallcaps', user:'SmallCap_Hunter', text:'29M 오버행 조심. 공매도 16%도 부담. 그래도 펀더멘털은 개선 중', upvotes:198, date:'26.05.19'},
+  {sub:'r/AIstocks', user:'DataCenter_Watcher', text:'4.3GW 파이프라인에서 계약 전환률이 핵심. 10%만 돼도 430MW = 엄청난 수익원', upvotes:445, date:'26.05.23'},
+  {sub:'r/StocksAndCrypto', user:'Hybrid_Investor', text:'SLNH RSI 42 = 과매도 아니지만 저가 영역. 진입 타이밍 나쁘지 않음', upvotes:167, date:'26.05.17'},
+  {sub:'r/personalfinance', user:'Conservative_Carl', text:'SLNH 변동성 극심. 위험자산 비중 조절 필수. 포트폴리오 5% 이하로', upvotes:123, date:'26.05.15'},
+  {sub:'r/stocks', user:'DD_Master_KR', text:'Q1 2026: 매출 +58% + EBITDA 47% 개선 = 레버리지 효과 시작. 2027이 관건', upvotes:312, date:'26.05.24'},
+  {sub:'r/wallstreetbets', user:'YOLO_Energy', text:'SLNH 나스닥 컴플라이언스 이슈 해결. 이제 기관 진입 가능한 구조 완성', upvotes:278, date:'26.05.14'},
+  {sub:'r/investing', user:'Dilution_Skeptic', text:'SEPA 컨버터블 조건 확인했나? 지속적인 희석이 주주가치 잠식 중', upvotes:145, date:'26.05.16'},
+  {sub:'r/AIstocks', user:'AI_Energy_Play', text:'Sazmining AI 300MW 계획 구체화되면 SLNH = AI 인프라 pure-play. 지금 시총에서 10x 충분히 가능', upvotes:534, date:'26.05.22'},
+  {sub:'r/smallcaps', user:'Technical_Trader', text:'$1.28 지지선 확인. RSI 42에서 반등 패턴. 단기 $2.50 타겟', upvotes:189, date:'26.05.25'},
+  {sub:'r/Bitcoinhackers', user:'Miner_Economics', text:'비트코인 상승 시 채굴수익 증가 → EBITDA 직결. 전략 전환으로 의존도 줄이는 중', upvotes:156, date:'26.05.18'},
+  {sub:'r/stocks', user:'Long_Term_View', text:'2년 후 SLNH: 데이터센터 300MW+ 운영, 연매출 $200M+, 시총 $2B = 현재 대비 10x. 멀티배거 가능성 있음', upvotes:423, date:'26.05.23'}
+];
+
+var GLOSSARY_TERMS = [
+  {term:'해시레이트', def:'채굴 컴퓨터가 초당 계산하는 횟수. 높을수록 채굴 경쟁력', cat:'채굴'},
+  {term:'데이터 호스팅', def:'타사 채굴 장비를 자사 시설에서 운영해주는 서비스. 안정적 수수료 수익', cat:'사업'},
+  {term:'EBITDA', def:'이자·세금·감가상각 전 이익. 실질 영업 현금 창출 능력 지표', cat:'재무'},
+  {term:'SEPA', def:'Standby Equity Purchase Agreement. 회사가 필요 시 투자자에게 주식 발행하는 조달 수단 (희석 우려)', cat:'재무'},
+  {term:'컨버터블 노트', def:'만기에 주식으로 전환 가능한 채권. SEPA와 함께 SLNH 주요 자금조달 수단', cat:'재무'},
+  {term:'MW (메가와트)', def:'전력 단위. 1MW ≈ 1,000가구 전력. 데이터센터 규모 측정 기준', cat:'인프라'},
+  {term:'오버행', def:'미래에 시장에 출회될 수 있는 잠재 매도 물량. 주가 상승을 억제하는 요인', cat:'수급'},
+  {term:'RSI', def:'Relative Strength Index. 0~100, 70 이상 과매수 / 30 이하 과매도 신호', cat:'기술적'},
+  {term:'FCF', def:'자유현금흐름. 영업활동 현금흐름에서 자본지출 차감. 실질 현금 창출력', cat:'재무'},
+  {term:'P/S', def:'주가매출비율. 적자 기업 평가에 활용. SLNH는 예상 매출 기준 ~5.2x', cat:'재무'},
+  {term:'멀티배거', def:'투자금 대비 여러 배 수익을 내는 주식. 10배 상승 종목을 10-bagger라고 함', cat:'투자'},
+  {term:'나스닥 컴플라이언스', def:'나스닥 상장 유지 조건 (주가 $1 이상 등). 미달 시 상폐 위험. SLNH는 최근 기준 충족', cat:'수급'}
+];
+
+function OverviewTab() {
+  var priceRef = useRef(null);
+  var priceChart = useRef(null);
+  var perfRef = useRef(null);
+  var perfChart = useRef(null);
+
+  useEffect(function() {
+    if (priceRef.current) {
+      priceChart.current = new Chart(priceRef.current, {
+        type: 'line',
+        data: {
+          labels: PRICE_LABELS,
+          datasets: [{
+            label: 'SLNH',
+            data: PRICE_DATA,
+            borderColor: '#22c55e',
+            backgroundColor: 'rgba(34,197,94,0.08)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointBackgroundColor: '#22c55e'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e1e30' } },
+            y: { ticks: { color: '#64748b', font: { size: 10 }, callback: function(v){ return '$' + v; } }, grid: { color: '#1e1e30' } }
+          }
+        }
+      });
+    }
+    if (perfRef.current) {
+      perfChart.current = new Chart(perfRef.current, {
+        type: 'bar',
+        data: {
+          labels: PERF_LABELS,
+          datasets: [
+            { label: 'SLNH', data: SLNH_PERF, backgroundColor: BG_SLNH, borderColor: BD_SLNH, borderWidth: 1 },
+            { label: 'SPY',  data: SPY_PERF,  backgroundColor: BG_SPY,  borderColor: BD_SPY,  borderWidth: 1 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+          scales: {
+            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e1e30' } },
+            y: { ticks: { color: '#64748b', font: { size: 10 }, callback: function(v){ return v + '%'; } }, grid: { color: '#1e1e30' } }
+          }
+        }
+      });
+    }
+    return function() {
+      if (priceChart.current) { priceChart.current.destroy(); priceChart.current = null; }
+      if (perfChart.current)  { perfChart.current.destroy();  perfChart.current  = null; }
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className="card">
+        <h3>현재가 & 시총</h3>
+        <div className="stat-grid">
+          <div className="stat-item"><div className="stat-label">현재가</div><div className="stat-value green">$1.73</div></div>
+          <div className="stat-item"><div className="stat-label">52주 범위</div><div className="stat-value" style={{fontSize:'0.85rem'}}>$0.415 – $5.14</div></div>
+          <div className="stat-item"><div className="stat-label">시가총액</div><div className="stat-value">~$195M</div></div>
+          <div className="stat-item"><div className="stat-label">ATH 대비</div><div className="stat-value red">-67%</div></div>
+          <div className="stat-item"><div className="stat-label">발행주식</div><div className="stat-value">~113M주</div></div>
+          <div className="stat-item"><div className="stat-label">공매도 비율</div><div className="stat-value red">16.05%</div></div>
+        </div>
+      </div>
+      <div className="card">
+        <h3>12개월 주가 추이</h3>
+        <div className="chart-wrap"><canvas ref={priceRef}></canvas></div>
+      </div>
+      <div className="card">
+        <h3>기간별 수익률 비교</h3>
+        <div className="chart-wrap"><canvas ref={perfRef}></canvas></div>
+      </div>
+      <div className="card">
+        <h3>사업 현황</h3>
+        <div className="row"><span className="row-label">데이터 호스팅 매출</span><span className="row-value green">$6.7M (Q1 2026)</span></div>
+        <div className="row"><span className="row-label">암호화폐 채굴 매출</span><span className="row-value">$2.2M (Q1 2026)</span></div>
+        <div className="row"><span className="row-label">Blockware 운영 MW</span><span className="row-value">17 MW</span></div>
+        <div className="row"><span className="row-label">Briscoe 소유 MW</span><span className="row-value">150 MW</span></div>
+        <div className="row"><span className="row-label">Dorothy 1B (완공)</span><span className="row-value green">50 MW ✓</span></div>
+        <div className="row"><span className="row-label">파이프라인 총계</span><span className="row-value yellow">4.3 GW</span></div>
+        <div className="row"><span className="row-label">Sazmining AI 계획</span><span className="row-value">300 MW</span></div>
+      </div>
+      <div className="card">
+        <h3>투자의견</h3>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <span className="badge buy">매수 (Buy)</span>
+          <span style={{fontSize:'0.85rem', color:'#22c55e', fontWeight:700}}>타겟 $5.00</span>
+        </div>
+        <div className="row" style={{marginTop:'10px'}}><span className="row-label">애널리스트 평균 목표가</span><span className="row-value green">$5.10</span></div>
+        <div className="row"><span className="row-label">현재가 대비 업사이드</span><span className="row-value green">+195%</span></div>
+        <div className="row"><span className="row-label">나스닥 컴플라이언스</span><span className="row-value green">기준 충족 ✓</span></div>
+      </div>
+    </div>
+  );
+}
+
+function TechnicalTab() {
+  var rsiRef = useRef(null);
+  var rsiChart = useRef(null);
+  var maRef = useRef(null);
+  var maChart = useRef(null);
+
+  useEffect(function() {
+    if (rsiRef.current) {
+      rsiChart.current = new Chart(rsiRef.current, {
+        type: 'bar',
+        data: {
+          labels: RSI_LABELS,
+          datasets: [{ label: 'RSI', data: RSI_DATA, backgroundColor: RSI_BG, borderColor: RSI_BD, borderWidth: 1 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e1e30' } },
+            y: { min: 0, max: 100, ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e1e30' } }
+          }
+        }
+      });
+    }
+    if (maRef.current) {
+      maChart.current = new Chart(maRef.current, {
+        type: 'line',
+        data: {
+          labels: MA_LABELS,
+          datasets: [
+            { label: '주가',  data: MA_PRICE, borderColor: '#22c55e', backgroundColor: 'transparent', tension: 0.3, pointRadius: 3, pointBackgroundColor: '#22c55e' },
+            { label: '20일선', data: MA_20,   borderColor: '#fbbf24', backgroundColor: 'transparent', tension: 0.3, borderDash: [4,4], pointRadius: 0, pointBackgroundColor: '#fbbf24' },
+            { label: '50일선', data: MA_50,   borderColor: '#6366f1', backgroundColor: 'transparent', tension: 0.3, borderDash: [8,4], pointRadius: 0, pointBackgroundColor: '#6366f1' }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+          scales: {
+            x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e1e30' } },
+            y: { ticks: { color: '#64748b', font: { size: 10 }, callback: function(v){ return '$' + v; } }, grid: { color: '#1e1e30' } }
+          }
+        }
+      });
+    }
+    return function() {
+      if (rsiChart.current) { rsiChart.current.destroy(); rsiChart.current = null; }
+      if (maChart.current)  { maChart.current.destroy();  maChart.current  = null; }
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className="card">
+        <h3>기술적 지표 요약</h3>
+        <div className="stat-grid">
+          <div className="stat-item"><div className="stat-label">RSI (14일)</div><div className="stat-value yellow">42</div></div>
+          <div className="stat-item"><div className="stat-label">신호</div><div className="stat-value yellow">중립 (저가권)</div></div>
+          <div className="stat-item"><div className="stat-label">20일 이평</div><div className="stat-value">$1.45</div></div>
+          <div className="stat-item"><div className="stat-label">50일 이평</div><div className="stat-value">$1.20</div></div>
+          <div className="stat-item"><div className="stat-label">주요 지지선</div><div className="stat-value green">$1.28</div></div>
+          <div className="stat-item"><div className="stat-label">주요 저항선</div><div className="stat-value red">$2.50</div></div>
+        </div>
+      </div>
+      <div className="card">
+        <h3>RSI 추이</h3>
+        <div style={{fontSize:'0.72rem', color:'#64748b', marginBottom:'8px'}}>70 이상 과매수 · 30 이하 과매도</div>
+        <div className="chart-wrap"><canvas ref={rsiRef}></canvas></div>
+      </div>
+      <div className="card">
+        <h3>이동평균선</h3>
+        <div className="chart-wrap"><canvas ref={maRef}></canvas></div>
+      </div>
+      <div className="card">
+        <h3>기술적 분석 종합</h3>
+        <div className="risk-item"><span className="risk-icon">✅</span><span className="risk-text">RSI 42 — 과매도 영역 아니지만 저가권. 단기 반등 여지 존재</span></div>
+        <div className="risk-item"><span className="risk-icon">✅</span><span className="risk-text">$1.28 (Apr 29 저점) 강한 지지선 확인. 이중바닥 형성 시도 중</span></div>
+        <div className="risk-item"><span className="risk-icon">⚠️</span><span className="risk-text">주가가 20일선 ($1.45) 아래. 돌파 시 상승 추세 전환 신호</span></div>
+        <div className="risk-item"><span className="risk-icon">⚠️</span><span className="risk-text">단기 저항 $2.50, 중기 저항 $3.50. 돌파에는 강한 촉매 필요</span></div>
+        <div className="risk-item"><span className="risk-icon">❌</span><span className="risk-text">공매도 비율 16.05% — 대규모 숏 포지션. 쇼트 스퀴즈 가능성도 있으나 하방 압력 상존</span></div>
+      </div>
+    </div>
+  );
+}
+
+function FinancialTab() {
+  var revRef = useRef(null);
+  var revChart = useRef(null);
+
+  useEffect(function() {
+    if (revRef.current) {
+      revChart.current = new Chart(revRef.current, {
+        type: 'bar',
+        data: {
+          labels: Q_LABELS,
+          datasets: [
+            { label: '매출 ($M)', data: Q_REVENUE, backgroundColor: 'rgba(34,197,94,0.6)', borderColor: '#22c55e', borderWidth: 1, yAxisID: 'y' },
+            { label: 'Adj.EBITDA ($M)', data: EBITDA_DATA, backgroundColor: 'rgba(239,68,68,0.5)', borderColor: '#ef4444', borderWidth: 1, yAxisID: 'y2' }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+          scales: {
+            x:  { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: '#1e1e30' } },
+            y:  { position: 'left',  ticks: { color: '#22c55e', font: { size: 9 }, callback: function(v){ return '$' + v + 'M'; } }, grid: { color: '#1e1e30' } },
+            y2: { position: 'right', ticks: { color: '#ef4444', font: { size: 9 }, callback: function(v){ return '$' + v + 'M'; } }, grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+    }
+    return function() {
+      if (revChart.current) { revChart.current.destroy(); revChart.current = null; }
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className="card">
+        <h3>Q1 2026 실적 (2026.05.15 발표)</h3>
+        <div className="stat-grid">
+          <div className="stat-item"><div className="stat-label">매출</div><div className="stat-value green">$9.4M</div></div>
+          <div className="stat-item"><div className="stat-label">YoY 성장</div><div className="stat-value green">+58%</div></div>
+          <div className="stat-item"><div className="stat-label">Adj.EBITDA</div><div className="stat-value red">-$2.1M</div></div>
+          <div className="stat-item"><div className="stat-label">QoQ 개선</div><div className="stat-value green">+47%</div></div>
+          <div className="stat-item"><div className="stat-label">순손실</div><div className="stat-value red">-$17.9M</div></div>
+          <div className="stat-item"><div className="stat-label">SBC (비현금)</div><div className="stat-value">$10.2M</div></div>
+        </div>
+      </div>
+      <div className="card">
+        <h3>분기 매출 & EBITDA 추이</h3>
+        <div className="chart-wrap tall"><canvas ref={revRef}></canvas></div>
+      </div>
+      <div className="card">
+        <h3>재무상태표 (Q1 2026)</h3>
+        <div className="row"><span className="row-label">현금 & 등가물</span><span className="row-value green">$86.0M</span></div>
+        <div className="row"><span className="row-label">총자산</span><span className="row-value">$190.4M</span></div>
+        <div className="row"><span className="row-label">총부채</span><span className="row-value red">~$28.7M</span></div>
+        <div className="row"><span className="row-label">현금/시총 비율</span><span className="row-value green">44%</span></div>
+        <div className="row"><span className="row-label">순현금</span><span className="row-value green">~$57.3M</span></div>
+      </div>
+      <div className="card">
+        <h3>매출 구성 (Q1 2026)</h3>
+        <div className="row"><span className="row-label">데이터 호스팅 수수료</span><span className="row-value green">$6.7M (71%)</span></div>
+        <div className="row"><span className="row-label">암호화폐 채굴</span><span className="row-value">$2.2M (23%)</span></div>
+        <div className="row"><span className="row-label">기타</span><span className="row-value">$0.5M (6%)</span></div>
+      </div>
+      <div className="card">
+        <h3>밸류에이션</h3>
+        <div className="row"><span className="row-label">P/S (TTM)</span><span className="row-value">~5.2x</span></div>
+        <div className="row"><span className="row-label">EV/매출 (순현금 차감)</span><span className="row-value green">~2.9x</span></div>
+        <div className="row"><span className="row-label">애널 평균 목표가</span><span className="row-value green">$5.10</span></div>
+        <div className="row"><span className="row-label">잠재 업사이드</span><span className="row-value green">+195%</span></div>
+      </div>
+      <div className="card">
+        <h3>오버행 리스크</h3>
+        <div className="row"><span className="row-label">SEPA 잔여 매도 물량</span><span className="row-value red">26.51M주</span></div>
+        <div className="row"><span className="row-label">기타 잠재 물량</span><span className="row-value red">2.46M주</span></div>
+        <div className="row"><span className="row-label">총 오버행</span><span className="row-value red">~29M주</span></div>
+        <div className="row"><span className="row-label">발행주식 대비</span><span className="row-value red">~25.7%</span></div>
+      </div>
+    </div>
+  );
+}
+
+function TwitterTab() {
+  var bull = X_OPINIONS.filter(function(o){ return o.sentiment === 'bullish'; }).length;
+  var bear = X_OPINIONS.filter(function(o){ return o.sentiment === 'bearish'; }).length;
+  var neut = X_OPINIONS.filter(function(o){ return o.sentiment === 'neutral'; }).length;
+  return (
+    <div>
+      <div className="card">
+        <h3>X (Twitter) 센티먼트 요약</h3>
+        <div className="stat-grid">
+          <div className="stat-item"><div className="stat-label">긍정</div><div className="stat-value green">{bull}건</div></div>
+          <div className="stat-item"><div className="stat-label">부정</div><div className="stat-value red">{bear}건</div></div>
+          <div className="stat-item"><div className="stat-label">중립</div><div className="stat-value yellow">{neut}건</div></div>
+          <div className="stat-item"><div className="stat-label">전반 분위기</div><div className="stat-value green">긍정적</div></div>
+        </div>
+      </div>
+      {X_OPINIONS.map(function(op, i) {
+        return (
+          <div key={i} className={"opinion-card " + op.sentiment}>
+            <div className="opinion-user">{op.user}</div>
+            <div className="opinion-text">{op.text}</div>
+            <div className="opinion-meta">
+              <span className="opinion-likes">♥ {op.likes}</span>
+              <span className="opinion-date">{op.date}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RedditTab() {
+  var highUpvote = REDDIT_OPINIONS.filter(function(o){ return o.upvotes >= 300; }).length;
+  return (
+    <div>
+      <div className="card">
+        <h3>Reddit 커뮤니티 반응</h3>
+        <div className="stat-grid">
+          <div className="stat-item"><div className="stat-label">총 게시물</div><div className="stat-value">{REDDIT_OPINIONS.length}건</div></div>
+          <div className="stat-item"><div className="stat-label">300+ 업보트</div><div className="stat-value green">{highUpvote}건</div></div>
+          <div className="stat-item"><div className="stat-label">평균 업보트</div><div className="stat-value green">~290</div></div>
+          <div className="stat-item"><div className="stat-label">전반 분위기</div><div className="stat-value green">긍정적</div></div>
+        </div>
+      </div>
+      {REDDIT_OPINIONS.map(function(op, i) {
+        var cls = op.upvotes >= 300 ? 'bullish' : op.upvotes < 150 ? 'bearish' : 'neutral';
+        return (
+          <div key={i} className={"opinion-card " + cls}>
+            <div className="opinion-user">{op.sub} · {op.user}</div>
+            <div className="opinion-text">{op.text}</div>
+            <div className="opinion-meta">
+              <span className="opinion-likes">▲ {op.upvotes}</span>
+              <span className="opinion-date">{op.date}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ConclusionTab() {
+  return (
+    <div>
+      <div className="conclusion-rating">
+        <h2>매수 (Buy)</h2>
+        <p>목표가: $5.00 · 업사이드: +195%</p>
+        <p style={{marginTop:'6px', fontSize:'0.75rem'}}>분석일: 2026.05.26</p>
+      </div>
+      <div className="card">
+        <h3>핵심 투자 포인트 (Bull Case)</h3>
+        <div className="risk-item"><span className="risk-icon">🚀</span><span className="risk-text">Dorothy 1B 50MW 완공 + Briscoe 150MW — 총 200MW+ 자체 인프라 확보</span></div>
+        <div className="risk-item"><span className="risk-icon">📈</span><span className="risk-text">Q1 2026 매출 +58% YoY, Adj.EBITDA QoQ 47% 개선 — 흑자전환 궤도 진입</span></div>
+        <div className="risk-item"><span className="risk-icon">💰</span><span className="risk-text">현금 $86M = 시총 44% — 극대화된 재무 안전마진</span></div>
+        <div className="risk-item"><span className="risk-icon">🌐</span><span className="risk-text">4.3 GW 파이프라인 — AI 데이터센터 수요 증가 직접 수혜</span></div>
+        <div className="risk-item"><span className="risk-icon">🤖</span><span className="risk-text">Sazmining 300MW AI 페이즈 — 채굴에서 AI 인프라 pure-play 전환 가능</span></div>
+        <div className="risk-item"><span className="risk-icon">✅</span><span className="risk-text">나스닥 컴플라이언스 회복 — 기관 매수 장벽 제거</span></div>
+      </div>
+      <div className="card">
+        <h3>주요 리스크 (Bear Case)</h3>
+        <div className="risk-item"><span className="risk-icon">⚠️</span><span className="risk-text">오버행 29M주 (~25.7%) — SEPA 컨버터블 희석으로 주가 상승 억제</span></div>
+        <div className="risk-item"><span className="risk-icon">⚠️</span><span className="risk-text">공매도 16.05% — 단기 하방 압력 상존</span></div>
+        <div className="risk-item"><span className="risk-icon">⚠️</span><span className="risk-text">EBITDA 여전히 적자 (-$2.1M) — 흑자전환 시기 불확실</span></div>
+        <div className="risk-item"><span className="risk-icon">❌</span><span className="risk-text">4.3 GW 파이프라인 → 실계약 전환률 미검증 — 과대평가 가능성</span></div>
+        <div className="risk-item"><span className="risk-icon">❌</span><span className="risk-text">비트코인 가격 하락 시 채굴 수익 직접 타격</span></div>
+      </div>
+      <div className="card">
+        <h3>시나리오별 목표가</h3>
+        <div className="row"><span className="row-label">Bull (Sazmining AI 전환)</span><span className="row-value green">$8.00+</span></div>
+        <div className="row"><span className="row-label">Base (현 경로 지속)</span><span className="row-value green">$5.00</span></div>
+        <div className="row"><span className="row-label">Bear (희석 심화)</span><span className="row-value red">$0.80</span></div>
+        <div className="row"><span className="row-label">애널리스트 컨센서스</span><span className="row-value green">$5.10</span></div>
+      </div>
+      <div className="card">
+        <h3>핵심 모니터링 지표</h3>
+        <div className="risk-item"><span className="risk-icon">📊</span><span className="risk-text">분기 매출 증가 + EBITDA 흑자전환 시점 (2026 Q3~Q4 예상)</span></div>
+        <div className="risk-item"><span className="risk-icon">🏗️</span><span className="risk-text">Sazmining 300MW AI 페이즈 계약 체결 여부</span></div>
+        <div className="risk-item"><span className="risk-icon">💵</span><span className="risk-text">SEPA 컨버터블 잔여 물량 해소 속도</span></div>
+        <div className="risk-item"><span className="risk-icon">₿</span><span className="risk-text">비트코인 가격 및 해시레이트 추이</span></div>
+        <div className="risk-item"><span className="risk-icon">🌐</span><span className="risk-text">4.3 GW 파이프라인 중 실계약 전환 건수</span></div>
+      </div>
+    </div>
+  );
+}
+
+function GlossaryTab() {
+  var [filter, setFilter] = useState('전체');
+  var cats = ['전체', '재무', '기술적', '채굴', '사업', '인프라', '수급', '투자'];
+  var terms = filter === '전체' ? GLOSSARY_TERMS : GLOSSARY_TERMS.filter(function(t){ return t.cat === filter; });
+  return (
+    <div>
+      <div className="card">
+        <h3>용어 사전</h3>
+        <div className="glossary-filter">
+          {cats.map(function(c) {
+            return <button key={c} className={"filter-btn" + (filter === c ? ' active' : '')} onClick={function(){ setFilter(c); }}>{c}</button>;
+          })}
+        </div>
+        {terms.map(function(t, i) {
+          return (
+            <div key={i} className="glossary-item">
+              <div className="glossary-term">{t.term} <span style={{fontSize:'0.65rem', color:'#475569', background:'#1a1a2e', padding:'1px 5px', borderRadius:'8px', marginLeft:'4px'}}>{t.cat}</span></div>
+              <div className="glossary-def">{t.def}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MultibaggerTab() {
+  var radarRef = useRef(null);
+  var radarChart = useRef(null);
+  var total = MB_DATA.reduce(function(a, b){ return a + b; }, 0);
+  var grade = total >= 6.5 ? '유망' : total >= 4 ? '보통' : '낮음';
+  var gradeColor = total >= 6.5 ? '#22c55e' : total >= 4 ? '#fbbf24' : '#ef4444';
+
+  useEffect(function() {
+    if (radarRef.current) {
+      radarChart.current = new Chart(radarRef.current, {
+        type: 'radar',
+        data: {
+          labels: MB_LABELS,
+          datasets: [{
+            label: 'SLNH',
+            data: MB_DATA,
+            backgroundColor: 'rgba(251,191,36,0.15)',
+            borderColor: '#fbbf24',
+            borderWidth: 2,
+            pointBackgroundColor: '#fbbf24',
+            pointRadius: 4,
+            pointBorderColor: '#fbbf24'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            r: {
+              min: 0, max: 1,
+              ticks: { stepSize: 0.5, color: '#64748b', backdropColor: 'transparent', font: { size: 9 } },
+              grid: { color: '#2d2d44' },
+              angleLines: { color: '#2d2d44' },
+              pointLabels: { color: '#94a3b8', font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+    return function() {
+      if (radarChart.current) { radarChart.current.destroy(); radarChart.current = null; }
+    };
+  }, []);
+
+  var fullCount = MB_DATA.filter(function(d){ return d === 1.0; }).length;
+  var halfCount = MB_DATA.filter(function(d){ return d === 0.5; }).length;
+  var zeroCount = MB_DATA.filter(function(d){ return d === 0.0; }).length;
+
+  return (
+    <div>
+      <div className="mb-score-big">
+        <div className="mb-score-num" style={{color: gradeColor}}>{total.toFixed(1)} <span style={{fontSize:'1.2rem'}}>/ 8</span></div>
+        <div className="mb-score-grade" style={{color: gradeColor}}>멀티배거 등급: {grade}</div>
+        <div className="mb-score-desc">Anna Yartseva 연구 기반 (CAFE Working Paper 33)<br/>NYSE·NASDAQ 10배 이상 상승 464개 기업 공통 신호 분석</div>
+      </div>
+
+      <div className="card">
+        <h3>멀티배거 레이더 차트</h3>
+        <div className="chart-wrap tall"><canvas ref={radarRef}></canvas></div>
+        <div style={{textAlign:'center', marginTop:'8px', fontSize:'0.72rem', color:'#64748b'}}>✅ = 1.0 &nbsp;&nbsp;⚠️ = 0.5 &nbsp;&nbsp;❌ = 0.0</div>
+      </div>
+
+      <div className="card">
+        <h3>8개 체크리스트 상세</h3>
+        {MB_ITEMS.map(function(item, i) {
+          var barColor = item.score === 1.0 ? '#22c55e' : item.score === 0.5 ? '#fbbf24' : '#ef4444';
+          return (
+            <div key={i} className="mb-item">
+              <div className="mb-icon">{item.icon}</div>
+              <div className="mb-content">
+                <div className="mb-title">{i + 1}. {item.title}</div>
+                <div className="mb-desc">{item.desc}</div>
+                <div className="mb-score-line">{item.criteria} · 점수: {item.score.toFixed(1)}</div>
+                <div className="progress-bar-wrap">
+                  <div className="progress-bar" style={{width: (item.score * 100) + '%', background: barColor}}></div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <h3>점수 요약</h3>
+        <div className="row"><span className="row-label">✅ 충족 (1점씩)</span><span className="row-value green">{fullCount}개 · {fullCount}.0점</span></div>
+        <div className="row"><span className="row-label">⚠️ 부분충족 (0.5점씩)</span><span className="row-value yellow">{halfCount}개 · {(halfCount * 0.5).toFixed(1)}점</span></div>
+        <div className="row"><span className="row-label">❌ 미충족 (0점)</span><span className="row-value red">{zeroCount}개 · 0점</span></div>
+        <div className="row" style={{borderTop:'1px solid #2d2d44', paddingTop:'8px', marginTop:'2px'}}>
+          <span className="row-label" style={{fontWeight:700}}>총점</span>
+          <span className="row-value" style={{color: gradeColor, fontWeight:800, fontSize:'0.95rem'}}>{total.toFixed(1)} / 8.0 ({grade})</span>
+        </div>
+      </div>
+
+      <div className="warning-card">
+        <h4>⚠️ 핵심 한계 주의사항</h4>
+        <p>본 분석은 Anna Yartseva (2024) CAFE Working Paper 33의 10배 상승 주식 공통 패턴을 체크리스트화한 것입니다. 과거 패턴이 미래를 보장하지 않으며, 점수가 높더라도 투자 손실이 발생할 수 있습니다. SLNH는 5.5/8점으로 '보통' 등급이며, 자산효율 (❌)과 FCF (⚠️) 항목이 약점입니다. 투자 결정 전 전문 재무 조언을 구하세요.</p>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  var [tab, setTab] = useState('overview');
+  var tabs = [
+    {id:'overview',     label:'📊개요'},
+    {id:'technical',    label:'📈기술적'},
+    {id:'financial',    label:'💰재무'},
+    {id:'twitter',      label:'🐦X'},
+    {id:'reddit',       label:'💬Reddit'},
+    {id:'conclusion',   label:'🎯결론'},
+    {id:'glossary',     label:'📖용어'},
+    {id:'multibagger',  label:'🔟멀티배거'}
+  ];
+
+  return (
+    <div className="container">
+      <div className="header">
+        <a href="https://disntm90.github.io/disntm90/" className="back-link">← 목록으로</a>
+        <h1>SLNH</h1>
+        <div className="subtitle">Soluna Holdings · 2026.05.26 재분석</div>
+      </div>
+      <div className="tabs">
+        {tabs.map(function(t) {
+          return <button key={t.id} className={"tab-btn" + (tab === t.id ? ' active' : '')} onClick={function(){ setTab(t.id); }}>{t.label}</button>;
+        })}
+      </div>
+      <div key={tab}>
+        {tab === 'overview'    && <OverviewTab />}
+        {tab === 'technical'   && <TechnicalTab />}
+        {tab === 'financial'   && <FinancialTab />}
+        {tab === 'twitter'     && <TwitterTab />}
+        {tab === 'reddit'      && <RedditTab />}
+        {tab === 'conclusion'  && <ConclusionTab />}
+        {tab === 'glossary'    && <GlossaryTab />}
+        {tab === 'multibagger' && <MultibaggerTab />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
