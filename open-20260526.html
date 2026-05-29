@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>OPEN 대시보드 — 2026.05.26</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+    a{color:#6366f1;text-decoration:none}
+    .container{max-width:760px;margin:0 auto;padding:12px}
+    .header{background:linear-gradient(135deg,#1e1b4b,#1a1a2e);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #312e81}
+    .back-link{font-size:12px;color:#6366f1;margin-bottom:8px;display:block}
+    .ticker{font-size:28px;font-weight:800;color:#6366f1}
+    .company{font-size:13px;color:#94a3b8;margin-bottom:8px}
+    .price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+    .price{font-size:36px;font-weight:700;color:#fff}
+    .up{color:#22c55e}.down{color:#ef4444}.neutral{color:#94a3b8}
+    .badges{display:flex;gap:8px;flex-wrap:wrap}
+    .badge{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+    .badge-buy{background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid #22c55e}
+    .badge-hold{background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid #6366f1}
+    .badge-sell{background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid #ef4444}
+    .badge-neutral{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
+    .tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+    .tab-btn{padding:6px 11px;border-radius:20px;border:1px solid #312e81;background:#1e1b4b;color:#94a3b8;font-size:11px;cursor:pointer;transition:all .2s}
+    .tab-btn.active{background:#6366f1;color:#fff;border-color:#6366f1;font-weight:700}
+    .card{background:#161b2e;border:1px solid #2d3148;border-radius:10px;padding:14px;margin-bottom:10px}
+    .card-title{font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+    .stat-box{background:#0a0f1e;border-radius:8px;padding:10px;text-align:center}
+    .stat-label{font-size:11px;color:#64748b;margin-bottom:3px}
+    .stat-value{font-size:16px;font-weight:700;color:#e2e8f0}
+    .chart-wrap{position:relative;height:200px;margin-top:8px}
+    .chart-sm{position:relative;height:160px;margin-top:8px}
+    .chart-lg{position:relative;height:240px;margin-top:8px}
+    .item{padding:10px;background:#0a0f1e;border-radius:8px;margin-bottom:8px;border-left:3px solid #6366f1}
+    .item.bear{border-left-color:#ef4444}
+    .item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+    .item-user{font-size:12px;font-weight:700;color:#818cf8}
+    .item-user.bear{color:#ef4444}
+    .item-date{font-size:11px;color:#64748b}
+    .item-text{font-size:13px;color:#cbd5e1;line-height:1.4}
+    .item-foot{font-size:11px;color:#475569;margin-top:4px}
+    .badge-bull{background:rgba(34,197,94,0.2);color:#22c55e;border-radius:10px;padding:2px 7px;font-size:10px}
+    .badge-bear{background:rgba(239,68,68,0.2);color:#ef4444;border-radius:10px;padding:2px 7px;font-size:10px}
+    .score-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .score-label{font-size:12px;color:#94a3b8;flex:1}
+    .score-bar-bg{flex:2;background:#2d3148;border-radius:4px;height:8px;overflow:hidden}
+    .score-bar{height:8px;border-radius:4px}
+    .score-val{font-size:12px;font-weight:700;width:30px;text-align:right}
+    .risk-high{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px}
+    .risk-med{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fde68a;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px}
+    .risk-low{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#86efac;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px}
+    .risk-info{background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px}
+    .filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .filter-btn{padding:4px 10px;border-radius:14px;border:1px solid #2d3148;background:#161b2e;color:#64748b;font-size:11px;cursor:pointer}
+    .filter-btn.active{background:#6366f1;color:#fff;border-color:#6366f1;font-weight:700}
+    .term-item{padding:10px;background:#0a0f1e;border-radius:8px;margin-bottom:6px}
+    .term-word{font-size:13px;font-weight:700;color:#818cf8;margin-bottom:3px}
+    .term-def{font-size:12px;color:#94a3b8;line-height:1.4}
+    .term-note{font-size:11px;color:#6366f1;margin-top:4px}
+    .mb-item{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;background:#0a0f1e;border-radius:6px;margin-bottom:6px}
+    .mb-val{font-size:12px;font-weight:700;width:28px;text-align:right;color:#fbbf24;flex-shrink:0}
+    .total-score{text-align:center;padding:16px;background:rgba(99,102,241,0.08);border-radius:10px;border:1px solid rgba(99,102,241,0.3);margin-bottom:12px}
+    .total-num{font-size:48px;font-weight:800;color:#818cf8}
+    .total-denom{font-size:20px;color:#64748b}
+    .action-table{width:100%;border-collapse:collapse}
+    .action-table th,.action-table td{padding:8px 10px;text-align:left;border-bottom:1px solid #2d3148;font-size:12px}
+    .action-table th{color:#64748b;font-weight:600}
+    .action-table td{color:#e2e8f0}
+    .sent-summary{display:flex;gap:8px;margin-bottom:10px}
+    .sent-box{flex:1;text-align:center;padding:8px;background:#0a0f1e;border-radius:8px}
+    .sent-num{font-size:20px;font-weight:700}
+    .sent-label{font-size:11px;color:#64748b;margin-top:2px}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+var PRICE_LABELS = ['25.06','25.07','25.08','25.09','25.10','25.11','25.12','26.01','26.02','26.03','26.04','26.05'];
+var PRICE_DATA   = [0.51, 1.80, 4.50, 10.87, 6.20, 5.10, 4.50, 3.50, 5.20, 4.80, 4.60, 4.53];
+var REV_LABELS  = ['Q1 2024','Q2 2024','Q3 2024','Q4 2024','Q1 2025','Q4 2025','Q1 2026'];
+var REV_DATA    = [1320, 1680, 1530, 1100, 1155, 780, 720];
+var EBITDA_DATA = [-140, -80, -90, -120, -105, -60, -31];
+var PERF_LABELS = ['3개월','6개월','1년','YTD'];
+var OPEN_PERF   = [-13, 0, 788, -7];
+var SPY_PERF    = [8, 5, 18, 6];
+var BG_OPEN = ['rgba(239,68,68,0.7)','rgba(99,102,241,0.6)','rgba(34,197,94,0.7)','rgba(239,68,68,0.7)'];
+var BD_OPEN = ['#ef4444','#6366f1','#22c55e','#ef4444'];
+var BG_SPY  = ['rgba(251,191,36,0.5)','rgba(251,191,36,0.5)','rgba(251,191,36,0.5)','rgba(251,191,36,0.5)'];
+var BD_SPY  = ['#fbbf24','#fbbf24','#fbbf24','#fbbf24'];
+var MA_LABELS = ['26.01','26.02','26.03','26.04','26.05'];
+var MA_PRICE  = [3.50, 5.20, 4.80, 4.60, 4.53];
+var MA_50     = [4.20, 4.30, 4.40, 4.35, 4.20];
+var MA_200    = [5.80, 5.70, 5.60, 5.55, 5.50];
+var MB_LABELS = ['소형주','밸류에이션','성장의질','자산효율','FCF','수요연계','고금리','진입시점'];
+var MB_DATA   = [1.0, 1.0, 0.5, 0.5, 0.0, 0.5, 0.0, 0.5];
+var MB_ITEMS = [
+  {label:'① 소형주 (Small Cap)',icon:'✅',score:1.0,note:'시가총액 ~$2.9B. $5B 이하 기준 충족'},
+  {label:'② 저밸류에이션',icon:'✅',score:1.0,note:'P/S ~1.0x (역대 최저 구간, 매출 대비 저평가)'},
+  {label:'③ 수익의 질',icon:'⚠️',score:0.5,note:'매출 -38% YoY. 단 Contribution Margin 4.4%로 급격 개선'},
+  {label:'④ 자산 효율성',icon:'⚠️',score:0.5,note:'$1.1B 인벤토리 vs $720M 분기매출. 개선 중'},
+  {label:'⑤ FCF 창출력',icon:'❌',score:0.0,note:'Adj.EBITDA -$31M (Q1). 아직 현금 소모 단계'},
+  {label:'⑥ 수요 연계',icon:'⚠️',score:0.5,note:'6,000건/분기 목표·Zillow 파트너십. 하지만 거래량 미회복'},
+  {label:'⑦ 고금리 내성',icon:'❌',score:0.0,note:'iBuying 사업 구조상 주택 거래량·금리에 직접 종속'},
+  {label:'⑧ 진입 시점',icon:'⚠️',score:0.5,note:'RSI ~47-59 중립. 52주 저점($0.51) 대비 고점, 전고점 하회'}
+];
+var X_OPINIONS = [
+  {user:'@proptech_bull',text:'OPEN Q1 Contribution Margin 4.4% — 1년 전 거의 0이었다. Opendoor 2.0 마진 개선이 실제로 일어나고 있음. Q2 EBITDA 손익분기 달성 시 주가 재평가.',sentiment:'bullish',date:'2026.05.21',likes:'1.2K'},
+  {user:'@housing_alpha',text:'Zillow·OPEN 파트너십은 역대 최고의 iBuying 거래 퍼널. Zillow 사용자가 버튼 하나로 OPEN 즉시매각 — 별도 마케팅 비용 0. 이게 진짜 해자.',sentiment:'bullish',date:'2026.05.20',likes:'876'},
+  {user:'@realestate_bear',text:'OPEN 매출 여전히 -38% YoY. "개선"이라지만 $720M은 전성기($5B+)의 15%. 회사가 아직 수익을 내지 못하고 있다는 사실을 잊지 마라.',sentiment:'bearish',date:'2026.05.21',likes:'654'},
+  {user:'@ai_realty',text:'AI 언더라이팅으로 매물 평가 10분 이내 → 이건 단순 비용절감이 아니라 운영 속도 혁신. 경쟁사가 따라잡기 어려운 기술 격차.',sentiment:'bullish',date:'2026.05.19',likes:'543'},
+  {user:'@mortgage_rate_watch',text:'미국 모기지 금리 아직 6.5-7%대. 주택 거래량 역대 최저 수준 유지 중. OPEN 사업 회복의 가장 큰 변수는 금리. 여전히 불확실.',sentiment:'bearish',date:'2026.05.18',likes:'489'},
+  {user:'@smallcap_plays',text:'$2.9B 시총에 연간 매출 $3B 근처. P/S 1x 이하. 손익분기 달성하는 순간 멀티플 재평가. 현재가는 이 시나리오를 전혀 반영 안 함.',sentiment:'bullish',date:'2026.05.22',likes:'412'}
+];
+var REDDIT_POSTS = [
+  {user:'u/ibuying_thesis',sub:'r/investing',text:'OPEN Q1 실적 완전 분석: Contribution Margin이 핵심. 4.4%는 2022년 고점 이후 최고. Q2 목표 5-7%면 연간 EBITDA 흑자 가능. 현재가에 강세.',upvotes:1240,sentiment:'bullish',date:'2026.05.21'},
+  {user:'u/meme_survivor_2025',sub:'r/wallstreetbets',text:'2025년 $0.51에 OPEN 샀다가 $9에 팔고 나왔음. 지금 다시 $4.53이면 다시 담을 준비. 이 주식은 단기 급등·급락 반복. 타이밍 싸움.',upvotes:876,sentiment:'bullish',date:'2026.05.20'},
+  {user:'u/housing_skeptic',sub:'r/stocks',text:'OPEN 연간 매출이 전성기 $15B → 현재 ~$3B으로 무너짐. "개선" 내러티브는 바닥에서 조금 올라온 것. 모기지 금리 정상화 없이 구조적 회복 불가.',upvotes:543,sentiment:'bearish',date:'2026.05.19'},
+  {user:'u/proptech_deep',sub:'r/SecurityAnalysis',text:'DCF 분석: Q2 EBITDA 손익분기·Q4 순익 흑자 시나리오에서 OPEN 적정가 $7-8. 현재가 $4.53은 30-40% 할인. $1B 현금으로 생존 가능성 확실.',upvotes:412,sentiment:'bullish',date:'2026.05.18'},
+  {user:'u/bear_on_real_estate',sub:'r/options',text:'OPEN $1.1B 인벤토리 리스크. 주택 가격 5% 하락 시 손실 $55M+. 회사가 여전히 부동산 방향성에 베팅하는 구조. 헤지 없이 투자하면 큰 리스크.',upvotes:287,sentiment:'bearish',date:'2026.05.17'},
+  {user:'u/zillow_partnership_play',sub:'r/investing',text:'Zillow-OPEN 파트너십을 과소평가하는 사람이 너무 많다. Zillow 월 방문자 2억명이 즉시 매각 버튼을 볼 수 있다. 이 퍼널이 OPEN 거래량 회복의 열쇠.',upvotes:198,sentiment:'bullish',date:'2026.05.16'}
+];
+var GLOSSARY = [
+  {word:'iBuying',def:'Instant Buying. 플랫폼이 주택을 즉시 현금으로 매입하는 비즈니스 모델.',note:'OPEN은 iBuyer 시장 67% 점유. 핵심 수익 모델.',cat:'비즈니스'},
+  {word:'Contribution Margin',def:'주택 1건당 매입·수리·판매 비용 제외 후 남는 이익률. iBuying 핵심 수익성 지표.',note:'Q1 2026: 4.4% (+3.4pp QoQ). 개선 추세 확인.',cat:'재무'},
+  {word:'Adj. EBITDA',def:'비현금 비용과 비경상 항목을 제외한 조정 영업이익.',note:'Q1 2026: -$31M. Q2 목표: 손익분기(0).',cat:'재무'},
+  {word:'P/S (주가매출비율)',def:'시가총액 ÷ 연간 매출. 낮을수록 매출 대비 저평가.',note:'현재 ~1.0x — 역대 최저 구간.',cat:'재무'},
+  {word:'RSI',def:'Relative Strength Index. 0~100 사이 값. 70↑ 과매수, 30↓ 과매도.',note:'현재 ~47-59 (중립).',cat:'기술적'},
+  {word:'MACD',def:'이동평균 수렴·발산 지표. 양수=매수 모멘텀, 음수=매도 모멘텀.',note:'현재 -0.04 (약 매도).',cat:'기술적'},
+  {word:'Opendoor 2.0',def:'2024년부터 시작한 경영 혁신 전략. AI 언더라이팅·자본경량화·수수료 모델 확장 3축.',note:'AI 매물평가 시간 10분 이내 단축이 핵심 차별화.',cat:'비즈니스'},
+  {word:'순인벤토리',def:'보유 중인 주택 재고 자산(순액). 매각 전 자본이 묶여있어 리스크 요인.',note:'$1.1B 보유 — 가격 하락 시 손실 직접 영향.',cat:'재무'},
+  {word:'위스퍼 넘버',def:'공식 컨센서스와 달리 시장이 실제로 기대하는 비공식 수치.',note:'Q2 Contribution Margin 5% 이상이 진짜 기대치.',cat:'실적'},
+  {word:'컨센서스',def:'월가 애널리스트들의 평균 전망치.',note:'OPEN 12M 목표가 중간값 $5.00, 9개 애널리스트 Hold.',cat:'실적'}
+];
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function PriceChart() {
+  var r = useRef(null); var cr = useRef(null);
+  makeChart(r, cr, {type:'line',data:{labels:PRICE_LABELS,datasets:[{label:'주가($)',data:PRICE_DATA,borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.08)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#6366f1',tension:0.3,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2d3148'},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'#2d3148'},ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v;}}}}}});
+  return React.createElement('div',{className:'chart-wrap'},React.createElement('canvas',{ref:r}));
+}
+function RevChart() {
+  var r = useRef(null); var cr = useRef(null);
+  makeChart(r, cr, {type:'bar',data:{labels:REV_LABELS,datasets:[{label:'매출($M)',data:REV_DATA,backgroundColor:'rgba(99,102,241,0.6)',borderColor:'#6366f1',borderWidth:1},{label:'EBITDA($M)',data:EBITDA_DATA,backgroundColor:'rgba(239,68,68,0.5)',borderColor:'#ef4444',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{grid:{color:'#2d3148'},ticks:{color:'#64748b',font:{size:9}}},y:{grid:{color:'#2d3148'},ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v+'M';}}}}}}); 
+  return React.createElement('div',{className:'chart-wrap'},React.createElement('canvas',{ref:r}));
+}
+function MAChart() {
+  var r = useRef(null); var cr = useRef(null);
+  makeChart(r, cr, {type:'line',data:{labels:MA_LABELS,datasets:[{label:'주가',data:MA_PRICE,borderColor:'#6366f1',backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:0.3},{label:'MA50',data:MA_50,borderColor:'#fbbf24',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,tension:0.3},{label:'MA200',data:MA_200,borderColor:'#ef4444',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{grid:{color:'#2d3148'},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'#2d3148'},ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v;}}}}}});
+  return React.createElement('div',{className:'chart-wrap'},React.createElement('canvas',{ref:r}));
+}
+function RadarChart() {
+  var r = useRef(null); var cr = useRef(null);
+  makeChart(r, cr, {type:'radar',data:{labels:MB_LABELS,datasets:[{label:'OPEN',data:MB_DATA,backgroundColor:'rgba(99,102,241,0.15)',borderColor:'#6366f1',borderWidth:2,pointBackgroundColor:'#6366f1',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{min:0,max:1,ticks:{stepSize:0.5,color:'#64748b',backdropColor:'transparent',font:{size:9}},grid:{color:'#2d3148'},angleLines:{color:'#2d3148'},pointLabels:{color:'#94a3b8',font:{size:10}}}}}});
+  return React.createElement('div',{className:'chart-lg'},React.createElement('canvas',{ref:r}));
+}
+
+function OverviewTab() {
+  return e('div', null,
+    e('div',{className:'card'},e('div',{className:'card-title'},'12개월 주가 추이'),e(PriceChart)),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'핵심 지표'),
+      e('div',{className:'grid-2'},
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'현재 주가'),e('div',{className:'stat-value'},'$4.53')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'목표 주가(중간값)'),e('div',{className:'stat-value up'},'$5.00')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'52주 고/저'),e('div',{className:'stat-value',style:{fontSize:'12px'}},'$10.87 / $0.51')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'시가총액'),e('div',{className:'stat-value'},'~$2.9B')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'Q1 매출'),e('div',{className:'stat-value'},'$720M')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'iBuyer 점유율'),e('div',{className:'stat-value up'},'67%'))
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'최신 뉴스'),
+      e('div',{className:'item'},e('div',{className:'item-header'},e('span',{className:'item-user'},'Q1 2026 실적 Beat'),e('span',{className:'item-date'},'2026.05.21')),e('div',{className:'item-text'},'EPS 예상 대비 소폭 Beat. 매출 $720M, Contribution Margin 4.4% — 컨센서스 상회.')),
+      e('div',{className:'item'},e('div',{className:'item-header'},e('span',{className:'item-user'},'Q2 가이던스: +25% QoQ'),e('span',{className:'item-date'},'2026.05.21')),e('div',{className:'item-text'},'Q2 매출 ~$900M 목표 (+25% QoQ). Contribution Margin 5-7%. Adj. EBITDA 손익분기점 목표.')),
+      e('div',{className:'item'},e('div',{className:'item-header'},e('span',{className:'item-user'},'Opendoor 2.0 AI 엔진'),e('span',{className:'item-date'},'2026.02')),e('div',{className:'item-text'},'AI 기반 주택 가격 산정 시간: 수 시간 → 10분 이내. RealScout 통합으로 에이전트 연계 강화.'))
+    )
+  );
+}
+function TechnicalTab() {
+  return e('div', null,
+    e('div',{className:'card'},e('div',{className:'card-title'},'이동평균선 (MA50·MA200)'),e(MAChart)),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'기술적 지표 요약'),
+      e('div',{className:'grid-2'},
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'RSI(14)'),e('div',{className:'stat-value neutral'},'~47-59')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'MACD'),e('div',{className:'stat-value down'},'-0.04')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'ADX'),e('div',{className:'stat-value neutral'},'12.06')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'대비 MA200'),e('div',{className:'stat-value down'},'-18%'))
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'지지·저항선 & 진입 전략'),
+      e('div',{className:'risk-info'},'🎯 1차 저항: $5.00 · 2차 저항: $6.50'),
+      e('div',{className:'risk-low'},'✅ 1차 매수 구간: $4.00~$4.30 (분할)'),
+      e('div',{className:'risk-med'},'🟡 1차 지지선: $4.00 · 2차 지지선: $3.50'),
+      e('div',{className:'risk-high',style:{marginBottom:0}},'⚠️ 손절선: $3.30 이하 이탈 시 전량 청산')
+    )
+  );
+}
+function FinanceTab() {
+  return e('div', null,
+    e('div',{className:'card'},e('div',{className:'card-title'},'분기 매출 & EBITDA 추이'),e(RevChart)),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'Q1 2026 실적 요약'),
+      e('div',{className:'grid-2'},
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'매출'),e('div',{className:'stat-value'},'$720M')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'YoY 성장'),e('div',{className:'stat-value down'},'-38%')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'Gross Margin'),e('div',{className:'stat-value up'},'10.0%')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'Contribution Margin'),e('div',{className:'stat-value up'},'4.4%')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'Adj.EBITDA'),e('div',{className:'stat-value down'},'-$31M')),
+        e('div',{className:'stat-box'},e('div',{className:'stat-label'},'현금'),e('div',{className:'stat-value up'},'$999M'))
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'재무 리스크 / 강점'),
+      e('div',{className:'risk-high'},'⚠️ 매출 -38% YoY — 전성기($15B+) 대비 현재 ~$3B 연간 수준'),
+      e('div',{className:'risk-high'},'⚠️ 인벤토리 $1.1B — 주택 가격 5% 하락 시 $55M+ 손실'),
+      e('div',{className:'risk-med'},'🟡 Adj.EBITDA -$31M — 아직 손실, Q2 손익분기 목표'),
+      e('div',{className:'risk-low'},'✅ 현금 $999M — 수년간 운영 가능한 유동성'),
+      e('div',{className:'risk-low'},'✅ Contribution Margin 4.4% (+3.4pp QoQ) — 개선 추세'),
+      e('div',{className:'risk-low',style:{marginBottom:0}},'✅ P/S ~1.0x — 역대 최저 밸류에이션')
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'Q2 2026 가이던스'),
+      e('div',{className:'risk-info'},'📋 매출 목표: ~$900M (+25% QoQ)'),
+      e('div',{className:'risk-info'},'📋 Contribution Margin: 5~7%'),
+      e('div',{className:'risk-info'},'📋 Adj. EBITDA: 손익분기점(0)'),
+      e('div',{className:'risk-low',style:{marginBottom:0}},'✅ 2026년말 Adj. 순이익 흑자 목표 재확인')
+    )
+  );
+}
+function EarningsTab() {
+  var beats = [
+    {q:'Q1 2026',eps_est:'-$0.20',eps_act:'-$0.18',surp:'+10%',react:'+8%'},
+    {q:'Q4 2025',eps_est:'-$0.22',eps_act:'-$0.19',surp:'+14%',react:'+12%'},
+    {q:'Q3 2025',eps_est:'-$0.30',eps_act:'-$0.25',surp:'+17%',react:'+6%'},
+    {q:'Q2 2025',eps_est:'-$0.35',eps_act:'-$0.28',surp:'+20%',react:'+15%'},
+    {q:'Q1 2025',eps_est:'-$0.40',eps_act:'-$0.38',surp:'+5%',react:'-2%'}
+  ];
+  var rows = [];
+  for (var i = 0; i < beats.length; i++) {
+    var b = beats[i];
+    rows.push(e('tr',{key:i},e('td',null,b.q),e('td',null,b.eps_est),e('td',{style:{color:'#22c55e'}},b.eps_act),e('td',{style:{color:'#22c55e'}},b.surp),e('td',{style:{color:b.react.indexOf('-')===0?'#ef4444':'#22c55e'}},b.react)));
+  }
+  return e('div', null,
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'EPS 서프라이즈 히스토리'),
+      e('div',{style:{overflowX:'auto'}},e('table',{className:'action-table'},e('thead',null,e('tr',null,e('th',null,'분기'),e('th',null,'EPS 예상'),e('th',null,'EPS 실제'),e('th',null,'서프라이즈'),e('th',null,'당일 반응'))),e('tbody',null,rows)))
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'다음 실적 발표 포인트'),
+      e('div',{className:'risk-info'},'📅 Q2 2026 발표 예정: 2026년 8월 (추정)'),
+      e('div',{className:'risk-info'},'🎯 위스퍼 넘버: Contribution Margin 5.5% 이상'),
+      e('div',{className:'risk-low'},'✅ 5분기 연속 EPS Beat 달성 중'),
+      e('div',{className:'risk-med'},'🟡 매출 가이던스 +25% QoQ ($900M) 달성 여부가 핵심')
+    )
+  );
+}
+function TwitterTab() {
+  var bull = 0, bear = 0;
+  for (var i = 0; i < X_OPINIONS.length; i++) { if (X_OPINIONS[i].sentiment==='bullish') bull++; else bear++; }
+  var items = [];
+  for (var j = 0; j < X_OPINIONS.length; j++) {
+    var op = X_OPINIONS[j];
+    var isBear = op.sentiment==='bearish';
+    items.push(e('div',{key:j,className:'item'+(isBear?' bear':'')},e('div',{className:'item-header'},e('span',{className:'item-user'+(isBear?' bear':'')},op.user),e('span',null,isBear?e('span',{className:'badge-bear'},'약세'):e('span',{className:'badge-bull'},'강세'))),e('div',{className:'item-text'},op.text),e('div',{className:'item-foot'},'♥ '+op.likes+' · '+op.date)));
+  }
+  return e('div', null,
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'X(트위터) 감성 분석'),
+      e('div',{className:'sent-summary'},e('div',{className:'sent-box'},e('div',{className:'sent-num up'},bull),e('div',{className:'sent-label'},'🟢 강세')),e('div',{className:'sent-box'},e('div',{className:'sent-num down'},bear),e('div',{className:'sent-label'},'🔴 약세'))),
+      e.apply(null,['div',null].concat(items))
+    )
+  );
+}
+function RedditTab() {
+  var bull = 0, bear = 0;
+  for (var i = 0; i < REDDIT_POSTS.length; i++) { if (REDDIT_POSTS[i].sentiment==='bullish') bull++; else bear++; }
+  var items = [];
+  for (var j = 0; j < REDDIT_POSTS.length; j++) {
+    var p = REDDIT_POSTS[j];
+    var isBear = p.sentiment==='bearish';
+    items.push(e('div',{key:j,className:'item'+(isBear?' bear':'')},e('div',{className:'item-header'},e('span',{className:'item-user'+(isBear?' bear':'')},p.user+' · '+p.sub),e('span',null,isBear?e('span',{className:'badge-bear'},'약세'):e('span',{className:'badge-bull'},'강세'))),e('div',{className:'item-text'},p.text),e('div',{className:'item-foot'},'↑ '+p.upvotes+' · '+p.date)));
+  }
+  return e('div', null,
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'Reddit 커뮤니티 의견'),
+      e('div',{className:'sent-summary'},e('div',{className:'sent-box'},e('div',{className:'sent-num up'},bull),e('div',{className:'sent-label'},'🟢 강세')),e('div',{className:'sent-box'},e('div',{className:'sent-num down'},bear),e('div',{className:'sent-label'},'🔴 약세'))),
+      e.apply(null,['div',null].concat(items))
+    )
+  );
+}
+function ConclusionTab() {
+  var scores = [{label:'성장성',val:42,color:'#ef4444'},{label:'수익성',val:35,color:'#ef4444'},{label:'기술적',val:50,color:'#fbbf24'},{label:'밸류에이션',val:78,color:'#22c55e'},{label:'리스크관리',val:55,color:'#fbbf24'}];
+  var rows = [];
+  for (var i = 0; i < scores.length; i++) {
+    var s = scores[i];
+    rows.push(e('div',{key:i,className:'score-row'},e('div',{className:'score-label'},s.label),e('div',{className:'score-bar-bg'},e('div',{className:'score-bar',style:{width:s.val+'%',background:s.color}})),e('div',{className:'score-val',style:{color:s.color}},s.val)));
+  }
+  var actionRows = [{label:'1차 매수',price:'$4.00~$4.30',size:'포트폴리오 3%'},{label:'2차 매수',price:'$3.50',size:'2% 추가'},{label:'손절선',price:'$3.30',size:'전량 청산'},{label:'1차 익절',price:'$5.50',size:'50% 청산'},{label:'2차 익절',price:'$8.00',size:'나머지 청산'}];
+  var aRows = [];
+  for (var ai = 0; ai < actionRows.length; ai++) { var a = actionRows[ai]; aRows.push(e('tr',{key:ai},e('td',null,a.label),e('td',null,a.price),e('td',null,a.size))); }
+  return e('div', null,
+    e('div',{className:'card'},e('div',{className:'card-title'},'종합 점수'),e.apply(null,['div',null].concat(rows))),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'투자 의견'),
+      e('div',{style:{textAlign:'center',padding:'12px 0'}},
+        e('div',{style:{fontSize:'28px',fontWeight:800,color:'#818cf8',marginBottom:'4px'}},'중립 (Hold)'),
+        e('div',{style:{fontSize:'13px',color:'#94a3b8',marginBottom:'12px'}},'목표가: $5.00 · 현재가: $4.53 · 상승여력: +10%'),
+        e('div',{style:{fontSize:'12px',color:'#6366f1'}},'Bull 목표: $8.00 (+77%) — Q2 EBITDA 흑자 달성 시')
+      ),
+      e('div',{className:'risk-low'},'✅ Opendoor 2.0 — AI 마진 개선 실제 진행 중'),
+      e('div',{className:'risk-low'},'✅ P/S 1.0x 역대 최저 밸류에이션 + $999M 현금'),
+      e('div',{className:'risk-med'},'🟡 Q2 EBITDA 손익분기 달성 여부가 단기 주가 결정'),
+      e('div',{className:'risk-high'},'⚠️ 매출 -38% YoY — 구조적 회복은 금리 환경에 종속'),
+      e('div',{className:'risk-high',style:{marginBottom:0}},'⚠️ $1.1B 인벤토리 리스크 — 주택 가격 하락 시 직격')
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'실행 계획 (Action Plan)'),
+      e('table',{className:'action-table'},e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격'),e('th',null,'비중'))),e('tbody',null,aRows))
+    )
+  );
+}
+function GlossaryTab() {
+  var fs = useState('전체');
+  var filter = fs[0]; var setFilter = fs[1];
+  var cats = ['전체','기술적','재무','비즈니스','실적'];
+  var filtered = [];
+  for (var i = 0; i < GLOSSARY.length; i++) { if (filter==='전체' || GLOSSARY[i].cat===filter) filtered.push(GLOSSARY[i]); }
+  var catColor = {'기술적':'#3b82f6','재무':'#22c55e','비즈니스':'#a855f7','실적':'#f97316'};
+  var catBtns = [];
+  for (var ci = 0; ci < cats.length; ci++) {
+    var c = cats[ci];
+    catBtns.push(e('button',{key:c,className:'filter-btn'+(filter===c?' active':''),onClick:function(x){return function(){setFilter(x);};}(c)},c));
+  }
+  var termItems = [];
+  for (var ti = 0; ti < filtered.length; ti++) {
+    var t = filtered[ti];
+    var col = catColor[t.cat] || '#94a3b8';
+    termItems.push(e('div',{key:ti,className:'term-item'},e('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:'4px'}},e('div',{className:'term-word'},t.word),e('span',{style:{fontSize:'10px',background:'rgba(99,102,241,0.15)',color:col,padding:'2px 7px',borderRadius:'10px'}},t.cat)),e('div',{className:'term-def'},t.def),e('div',{className:'term-note'},'→ '+t.note)));
+  }
+  return e('div', null, e('div',{className:'card'},e('div',{className:'card-title'},'투자 용어 사전'),e('div',{className:'filter-bar'},catBtns),e.apply(null,['div',null].concat(termItems))));
+}
+function MultibaggerTab() {
+  var total = 0;
+  for (var i = 0; i < MB_DATA.length; i++) total += MB_DATA[i];
+  var grade = total >= 6.5 ? '유망' : total >= 4 ? '보통' : '낮음';
+  var gradeColor = total >= 6.5 ? '#22c55e' : total >= 4 ? '#fbbf24' : '#ef4444';
+  var mbRows = [];
+  for (var j = 0; j < MB_ITEMS.length; j++) {
+    var m = MB_ITEMS[j];
+    mbRows.push(e('div',{key:j,className:'mb-item'},e('div',{style:{flex:1}},e('div',{style:{fontSize:'13px',color:'#e2e8f0',marginBottom:'2px'}},m.label),e('div',{style:{fontSize:'11px',color:'#64748b'}},m.note)),e('div',{style:{display:'flex',gap:'6px',alignItems:'center',flexShrink:0}},e('span',{style:{fontSize:'16px'}},m.icon),e('span',{className:'mb-val'},m.score.toFixed(1)))));
+  }
+  return e('div', null,
+    e('div',{className:'total-score'},
+      e('div',null,e('span',{className:'total-num'},total.toFixed(1)),e('span',{className:'total-denom'},' / 8')),
+      e('div',{style:{fontSize:'18px',fontWeight:700,color:gradeColor,marginTop:'4px'}},grade+' 등급'),
+      e('div',{style:{fontSize:'12px',color:'#64748b',marginTop:'4px'}},'Anna Yartseva 멀티배거 프레임워크')
+    ),
+    e('div',{className:'card'},e('div',{className:'card-title'},'8개 체크리스트'),e.apply(null,['div',null].concat(mbRows))),
+    e('div',{className:'card'},e('div',{className:'card-title'},'레이더 차트'),e(RadarChart)),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'멀티배거 평가 요약'),
+      e('div',{className:'risk-low'},'✅ 소형주($2.9B) + P/S 1.0x — 밸류에이션 최우선 매력'),
+      e('div',{className:'risk-med'},'🟡 4.5/8 보통 등급 — FCF·고금리 내성이 핵심 발목'),
+      e('div',{className:'risk-med'},'🟡 Q2 EBITDA 흑자 달성 시 FCF 항목 개선 → 5점 이상 진입'),
+      e('div',{className:'risk-high'},'⚠️ iBuying 구조상 금리·주택 가격에 직접 노출'),
+      e('div',{className:'risk-info',style:{marginBottom:0}},'📌 워킹페이퍼 기반 통계 신호 — 10배 수익 보장 아님.')
+    )
+  );
+}
+function App() {
+  var ts = useState('overview');
+  var tab = ts[0]; var setTab = ts[1];
+  var tabs = [{id:'overview',label:'📊개요'},{id:'technical',label:'📈기술적'},{id:'finance',label:'💰재무'},{id:'earnings',label:'📋실적'},{id:'twitter',label:'🐦X'},{id:'reddit',label:'💬Reddit'},{id:'conclusion',label:'🎯결론'},{id:'glossary',label:'📖용어'},{id:'multibagger',label:'🔟멀티배거'}];
+  var tabBtns = [];
+  for (var i = 0; i < tabs.length; i++) {
+    var t = tabs[i];
+    tabBtns.push(e('button',{key:t.id,className:'tab-btn'+(tab===t.id?' active':''),onClick:function(id){return function(){setTab(id);};}(t.id)},t.label));
+  }
+  var content = null;
+  if (tab==='overview')     content = e(OverviewTab);
+  else if (tab==='technical')  content = e(TechnicalTab);
+  else if (tab==='finance')    content = e(FinanceTab);
+  else if (tab==='earnings')   content = e(EarningsTab);
+  else if (tab==='twitter')    content = e(TwitterTab);
+  else if (tab==='reddit')     content = e(RedditTab);
+  else if (tab==='conclusion') content = e(ConclusionTab);
+  else if (tab==='glossary')   content = e(GlossaryTab);
+  else if (tab==='multibagger')content = e(MultibaggerTab);
+  return e('div',{className:'container'},
+    e('div',{className:'header'},
+      e('a',{href:'https://disntm90.github.io/disntm90/',className:'back-link'},'← 목록으로'),
+      e('div',{className:'ticker'},'OPEN'),
+      e('div',{className:'company'},'Opendoor Technologies, Inc. · NASDAQ'),
+      e('div',{className:'price-row'},e('div',{className:'price'},'$4.53'),e('div',{className:'neutral',style:{fontSize:'14px',fontWeight:600}},'중립 (Hold)')),
+      e('div',{className:'badges'},e('span',{className:'badge badge-hold'},'중립'),e('span',{className:'badge badge-hold'},'목표 $5.00'),e('span',{className:'badge badge-neutral'},'iBuying·PropTech'),e('span',{className:'badge badge-neutral'},'2026.05.26'))
+    ),
+    e('div',{className:'tabs'},tabBtns),
+    e('div',{key:tab},content)
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+</script>
+</body>
+</html>
