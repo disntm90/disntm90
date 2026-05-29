@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>🤖 로보틱스 종목발굴 대시보드 — 2026.05.29</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0a0f;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+    .header{background:linear-gradient(135deg,#064e3b 0%,#0a0a0f 100%);padding:24px 20px 20px;border-bottom:1px solid #10b981}
+    .header-back{color:#10b981;text-decoration:none;font-size:13px;display:inline-block;margin-bottom:12px}
+    .header-back:hover{color:#34d399}
+    .header-title{font-size:24px;font-weight:800;color:#10b981;margin-bottom:4px}
+    .header-sub{font-size:13px;color:#6b7280}
+    .tabs{display:flex;overflow-x:auto;background:#111827;border-bottom:1px solid #1f2937;padding:0 16px}
+    .tabs::-webkit-scrollbar{height:3px}
+    .tabs::-webkit-scrollbar-thumb{background:#10b981}
+    .tab{padding:14px 18px;cursor:pointer;font-size:13px;white-space:nowrap;color:#6b7280;border-bottom:3px solid transparent;transition:.2s}
+    .tab.active{color:#10b981;border-bottom-color:#10b981;font-weight:700}
+    .tab:hover{color:#34d399}
+    .content{padding:20px;max-width:900px;margin:0 auto}
+    .section-title{font-size:16px;font-weight:700;color:#10b981;margin:20px 0 12px;display:flex;align-items:center;gap:8px}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:18px;margin-bottom:16px}
+    .card-accent{border-left:4px solid #10b981}
+    .ticker-badge{display:inline-block;background:#064e3b;color:#10b981;font-weight:800;font-size:15px;padding:4px 10px;border-radius:6px;margin-right:8px}
+    .star{color:#f59e0b;font-size:14px}
+    .price-row{display:flex;gap:20px;flex-wrap:wrap;margin:10px 0;font-size:13px}
+    .price-item{display:flex;flex-direction:column;gap:2px}
+    .price-label{color:#6b7280;font-size:11px;text-transform:uppercase}
+    .price-val{color:#e2e8f0;font-weight:700}
+    .badge-node{display:inline-block;background:#065f46;color:#6ee7b7;font-size:11px;padding:2px 8px;border-radius:20px;margin-right:4px}
+    .badge-moat{display:inline-block;background:#7c2d12;color:#fca5a5;font-size:11px;padding:2px 8px;border-radius:20px;margin-right:4px}
+    .key-point{background:#0a0a0f;border-radius:8px;padding:12px;margin:10px 0;font-size:13px;line-height:1.6;color:#d1fae5}
+    .multi-bar-wrap{margin-top:12px}
+    .multi-label{font-size:11px;color:#6b7280;margin-bottom:4px}
+    .multi-bar{height:8px;background:#1f2937;border-radius:4px;overflow:hidden}
+    .multi-fill{height:100%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:4px;transition:width .5s}
+    .rsi-chip{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:700}
+    .rsi-low{background:#7f1d1d;color:#fca5a5}
+    .rsi-mid{background:#14532d;color:#86efac}
+    .rsi-high{background:#78350f;color:#fcd34d}
+    .vc-box{background:#0a0a0f;border-radius:10px;padding:16px;font-size:13px;line-height:2}
+    .vc-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
+    .vc-node{background:#064e3b;color:#10b981;padding:4px 12px;border-radius:6px;font-weight:700;font-size:12px}
+    .vc-node-star{background:#065f46;color:#34d399;padding:4px 12px;border-radius:6px;font-weight:800;font-size:12px;border:1px solid #10b981}
+    .vc-arrow{color:#4b5563;font-size:16px}
+    .vc-label{color:#6b7280;font-size:11px}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+    .stat-card{background:#0a0a0f;border-radius:8px;padding:14px;text-align:center}
+    .stat-val{font-size:20px;font-weight:800;color:#10b981}
+    .stat-desc{font-size:11px;color:#6b7280;margin-top:4px}
+    .timeline-step{border-left:3px solid #10b981;margin-left:12px;padding:0 0 20px 20px;position:relative}
+    .timeline-step:last-child{padding-bottom:0;border-left-color:transparent}
+    .timeline-dot{width:14px;height:14px;border-radius:50%;background:#10b981;border:2px solid #064e3b;position:absolute;left:-8px;top:2px}
+    .timeline-year{font-size:12px;color:#10b981;font-weight:700;margin-bottom:4px}
+    .timeline-title{font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:6px}
+    .timeline-desc{font-size:12px;color:#9ca3af;line-height:1.6}
+    .table-wrap{overflow-x:auto;margin:12px 0}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{background:#064e3b;color:#10b981;padding:8px 12px;text-align:left;font-weight:700}
+    td{padding:8px 12px;border-bottom:1px solid #1f2937;color:#d1fae5}
+    tr:hover td{background:#111827}
+    .rank-badge{display:inline-block;width:24px;height:24px;border-radius:50%;background:#10b981;color:#000;font-weight:800;font-size:12px;text-align:center;line-height:24px}
+    .catalyst-tag{display:inline-block;background:#1f2937;color:#10b981;font-size:11px;padding:3px 8px;border-radius:4px;margin:2px}
+    .risk-tag{display:inline-block;background:#1f2937;color:#ef4444;font-size:11px;padding:3px 8px;border-radius:4px;margin:2px}
+    .portfolio-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1f2937}
+    .portfolio-ticker{font-weight:800;color:#10b981;min-width:50px}
+    .portfolio-bar{flex:1;height:10px;background:#1f2937;border-radius:5px;overflow:hidden}
+    .portfolio-fill{height:100%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:5px}
+    .portfolio-pct{font-size:12px;color:#6b7280;min-width:35px;text-align:right}
+    .chart-wrap{position:relative;height:280px;margin:16px 0}
+    .multi-item{margin:14px 0;padding:12px;background:#0a0a0f;border-radius:8px}
+    .multi-item-title{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:8px}
+    .multi-check{display:flex;align-items:flex-start;gap:8px;margin:4px 0;font-size:12px;color:#9ca3af}
+    .multi-check.pass{color:#86efac}
+    .multi-check.fail{color:#f87171}
+    .ticker-btn{background:#1f2937;border:1px solid #374151;color:#e2e8f0;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:.2s}
+    .ticker-btn.active{background:#064e3b;border-color:#10b981;color:#10b981;font-weight:700}
+    .tech-limit{background:#0a0a0f;border-left:3px solid #ef4444;padding:12px;border-radius:0 8px 8px 0;margin:8px 0}
+    .tech-adv{background:#0a0a0f;border-left:3px solid #10b981;padding:12px;border-radius:0 8px 8px 0;margin:8px 0}
+    .limit-title{font-size:12px;font-weight:700;color:#ef4444;margin-bottom:4px}
+    .adv-title{font-size:12px;font-weight:700;color:#10b981;margin-bottom:4px}
+    .text-sm{font-size:12px;color:#9ca3af;line-height:1.6}
+    .highlight{color:#10b981;font-weight:700}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  var useState  = React.useState;
+  var useEffect = React.useEffect;
+  var useRef    = React.useRef;
+
+  function e(tag, props) {
+    var args = [tag, props || null];
+    for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+    return React.createElement.apply(React, args);
+  }
+
+  function makeChart(ref, chartRef, cfg) {
+    useEffect(function() {
+      if (!ref.current) return;
+      if (chartRef.current) { chartRef.current.destroy(); }
+      chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+      return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+    }, []);
+  }
+
+  var STOCKS = [
+    {
+      ticker: 'AMBA', name: 'Ambarella Inc.', stars: 3,
+      price: 88.75, cap: '2.3B', rsi: 50, rsiClass: 'rsi-mid',
+      node: '중류 ★핵심노드', moat: '높음',
+      vcPos: '엣지 AI SoC — 로봇 두뇌·눈',
+      multi: 7,
+      point: 'Edge AI SoC 시장 1위 — 로봇·드론·ADAS 비전처리 병목',
+      desc: 'FY2026 매출 $390.7M(+37% YoY) 급성장. NVIDIA Jetson 대비 전력 효율 10배 우위. 휴머노이드 로봇 눈(카메라)+두뇌(추론) 역할을 단일 칩으로 통합하는 유일한 소형주.',
+      cats: ['AI 로봇 비전 수요↑','FY2026 매출 +37%','소비전력 우위'],
+      risks: ['NVDA Jetson 경쟁','고객 집중도'],
+      portfolio: 25
+    },
+    {
+      ticker: 'NOVT', name: 'Novanta Inc.', stars: 3,
+      price: 161.51, cap: '5.75B', rsi: 48, rsiClass: 'rsi-mid',
+      node: '중류 ★핵심노드', moat: '높음',
+      vcPos: 'ATI F/T 센서 — 로봇 촉각 독점',
+      multi: 7,
+      point: 'ATI 힘/토크 센서 글로벌 1위 — 로봇 없으면 못 만지는 손',
+      desc: 'FY2026 가이던스 $1.04~1.055B 상향. 의료·제조·연구용 정밀 로봇에 ATI 힘/토크 센서 독점 공급. 1kg 이하 물체를 ±0.1% 정밀도로 감지 — 휴머노이드 손·팔 필수.',
+      cats: ['FY2026 가이던스 상향','의료로봇 수요↑','대체 불가 특허'],
+      risks: ['평가 부담(P/S 5.5x)','경기 민감 의료 예산'],
+      portfolio: 25
+    },
+    {
+      ticker: 'SERV', name: 'Serve Robotics Inc.', stars: 3,
+      price: 9.46, cap: '737M', rsi: 38, rsiClass: 'rsi-low',
+      node: '하류 ★핵심노드', moat: '보통',
+      vcPos: '자율배달 로봇 플릿 운영',
+      multi: 6,
+      point: 'Uber Eats 독점 파트너십 — 2,000기 배달 로봇 운영 중',
+      desc: '2026 가이던스 $26M(+862% YoY) 폭증. Uber Eats와 독점 계약으로 LA·Dallas·Miami 운영. RSI 38로 과매도 구간. 2026년 4,000기 확장 계획.',
+      cats: ['Uber Eats 독점','매출 +862% YoY','RSI 과매도'],
+      risks: ['적자 지속','규제 리스크','소형주 변동성'],
+      portfolio: 20
+    },
+    {
+      ticker: 'SYM', name: 'Symbotic Inc.', stars: 2,
+      price: 49.00, cap: '29.4B', rsi: 60, rsiClass: 'rsi-high',
+      node: '하류', moat: '보통',
+      vcPos: '창고 자동화 AI 플랫폼',
+      multi: 5,
+      point: 'Walmart 전용 창고 AI 로봇 플랫폼 — B2B 수직통합',
+      desc: 'Walmart 창고 40개 이상 자동화 계약. AI 기반 피킹 로봇 시스템. 대형 고객 기반으로 안정적이나 밸류에이션이 이미 상당 부분 반영됨.',
+      cats: ['Walmart 대규모 계약','창고 자동화 확대'],
+      risks: ['고평가 우려','Walmart 의존도'],
+      portfolio: 20
+    },
+    {
+      ticker: 'RR', name: 'Bear Robotics Inc.', stars: 2,
+      price: 3.25, cap: '729M', rsi: 32, rsiClass: 'rsi-low',
+      node: '하류', moat: '보통',
+      vcPos: '레스토랑 서비스 로봇',
+      multi: 5,
+      point: '52주 고점 $7.43 대비 -56% 급락 — 반등 촉매 검토 대상',
+      desc: '레스토랑·호텔 서비스 로봇 운영. LG전자 전략적 투자 유치. RSI 32 극과매도. 외식업계 인건비 급등이 장기 촉매이나 단기 실적 부진 해소 필요.',
+      cats: ['LG전자 투자','인건비 상승 구조적 수혜','RSI 극과매도'],
+      risks: ['실적 부진','경쟁 심화','고객 도입 속도'],
+      portfolio: 10
+    }
+  ];
+
+  var MULTIBAGGER = [
+    { id: 'market', label: '① 대규모 성장 시장' },
+    { id: 'problem', label: '② 해결하는 실질 문제' },
+    { id: 'solution', label: '③ 혁신적 솔루션' },
+    { id: 'moat', label: '④ 경쟁 해자' },
+    { id: 'mgmt', label: '⑤ 경영진 역량' },
+    { id: 'finance', label: '⑥ 재무 건전성' },
+    { id: 'catalyst', label: '⑦ 단기 촉매' },
+    { id: 'value', label: '⑧ 밸류에이션 매력' }
+  ];
+
+  var MB_DATA = {
+    AMBA: {
+      market: {pass:true, note:'글로벌 엣지 AI 반도체 시장 $38B(2030 CAGR 22%)'},
+      problem: {pass:true, note:'로봇 비전+추론 통합 소비전력 과다 문제 해결'},
+      solution: {pass:true, note:'단일 SoC로 비전+AI 추론 통합, Jetson 대비 1/10 전력'},
+      moat: {pass:true, note:'15년 비전 SoC 노하우, 고객 전환 비용 높음'},
+      mgmt: {pass:true, note:'CEO Fermi Wang 창업자, 반도체 업계 30년'},
+      finance: {pass:true, note:'FY2026 매출 +37%, 영업현금흐름 흑자 전환'},
+      catalyst: {pass:true, note:'2026 휴머노이드 로봇 SoC 수주 기대'},
+      value: {pass:false, note:'P/S 5.9x — 성장 대비 적정, 프리미엄 부담'}
+    },
+    NOVT: {
+      market: {pass:true, note:'글로벌 정밀 로봇 센서 시장 $12B(2030 CAGR 18%)'},
+      problem: {pass:true, note:'로봇 촉각(힘/토크) 없이는 정밀 조립·의료 수술 불가'},
+      solution: {pass:true, note:'ATI 힘/토크 센서 ±0.1% 정밀도 — 업계 표준'},
+      moat: {pass:true, note:'ATI 브랜드 30년, 특허 200+, 경쟁사 품질 격차'},
+      mgmt: {pass:true, note:'Matteo Anversa CFO 출신 CEO, M&A 역량'},
+      finance: {pass:true, note:'FY2026 가이던스 $1.04B+, EBITDA 마진 22%'},
+      catalyst: {pass:true, note:'의료 로봇 FDA 승인 사이클 2026 집중'},
+      value: {pass:false, note:'P/S 5.5x — 높으나 성장 프리미엄 정당화 가능'}
+    },
+    SERV: {
+      market: {pass:true, note:'자율배달 로봇 시장 $6B→$84B(2032, CAGR 46%)'},
+      problem: {pass:true, note:'라스트마일 배달 인건비 주문당 $8~12 해결'},
+      solution: {pass:true, note:'NVIDIA Isaac 기반 자율주행, 주문당 비용 $1 목표'},
+      moat: {pass:false, note:'Uber Eats 독점이나 Nuro·Starship 경쟁 존재'},
+      mgmt: {pass:true, note:'CEO Ali Kashani 구글X 출신, 자율주행 전문'},
+      finance: {pass:false, note:'2025 적자, 2026 $26M 매출 — 흑자 전환 불확실'},
+      catalyst: {pass:true, note:'Uber Eats 플릿 4,000기 확장(2026 하반기)'},
+      value: {pass:true, note:'시총 $737M — 2026 매출 $26M 기준 P/S 28x (성장성 반영)'}
+    },
+    SYM: {
+      market: {pass:true, note:'창고 자동화 시장 $30B(2030 CAGR 14%)'},
+      problem: {pass:true, note:'물류 인력 부족+오류율 해결'},
+      solution: {pass:true, note:'AI 피킹 로봇 — 처리속도 4배, 오류율 99.9% 감소'},
+      moat: {pass:true, note:'Walmart 전용 AI 플랫폼, 전환 비용 극대화'},
+      mgmt: {pass:true, note:'Rick Cohen 창업자 CEO, Walmart 관계 20년'},
+      finance: {pass:false, note:'FY2025 적자, 백로그 $23B 있으나 현금 소진 중'},
+      catalyst: {pass:true, note:'Walmart 창고 40→200개 확장 계약'},
+      value: {pass:false, note:'시총 $29.4B — 고평가 구간'}
+    },
+    RR: {
+      market: {pass:true, note:'레스토랑 서비스 로봇 시장 $3B(2030 CAGR 28%)'},
+      problem: {pass:true, note:'외식 업종 이직률 75%, 인건비 폭등 해결'},
+      solution: {pass:false, note:'서빙 로봇 — Pudu·Keenon 등 유사 경쟁 다수'},
+      moat: {pass:false, note:'LG전자 투자는 강점이나 차별화 부족'},
+      mgmt: {pass:true, note:'CEO John Ha 스탠퍼드 AI Lab 출신'},
+      finance: {pass:false, note:'적자 지속, 2025 매출 성장 둔화'},
+      catalyst: {pass:true, note:'인건비 법적 최저임금 인상 2026'},
+      value: {pass:true, note:'52주 고점 대비 -56%, RSI 32 극과매도'}
+    }
+  };
+
+  function TabValuChain() {
+    return (
+      <div className="content">
+        <div className="section-title">🤖 AI 휴머노이드 로보틱스 — 탑다운 밸류체인 맵</div>
+        <div className="card card-accent">
+          <div style={{fontSize:12,color:'#6b7280',marginBottom:14}}>메가 트렌드: AI 휴머노이드 상용화 원년 2026 — 1,000대 → 100만대 전환점</div>
+          <div className="vc-box">
+            <div className="vc-row">
+              <span style={{fontSize:12,color:'#6b7280'}}>메가트렌드</span>
+              <span className="vc-arrow">→</span>
+              <span className="vc-node-star">AI 휴머노이드 폭증</span>
+              <span className="vc-arrow">→</span>
+              <span style={{fontSize:12,color:'#6b7280'}}>Tesla Optimus 2,000대·Figure·1X 양산</span>
+            </div>
+            <div style={{margin:'8px 0 8px 20px',borderLeft:'2px dashed #1f2937',padding:'8px 0 8px 16px'}}>
+              <div className="vc-row">
+                <span className="vc-label">상류(원재료)</span>
+                <span className="vc-arrow">→</span>
+                <span className="vc-node">액추에이터</span>
+                <span className="vc-arrow">→</span>
+                <span className="vc-node">정밀 감속기</span>
+                <span className="vc-arrow">→</span>
+                <span className="vc-node">배터리팩</span>
+              </div>
+              <div className="vc-row" style={{marginTop:8}}>
+                <span className="vc-label">중류(부품★)</span>
+                <span className="vc-arrow">→</span>
+                <span className="vc-node-star">★ AMBA (엣지AI SoC)</span>
+                <span className="vc-arrow">→</span>
+                <span className="vc-node-star">★ NOVT (F/T센서)</span>
+                <span className="vc-arrow">→</span>
+                <span className="vc-node">카메라 모듈</span>
+              </div>
+              <div className="vc-row" style={{marginTop:8}}>
+                <span className="vc-label">하류(서비스)</span>
+                <span className="vc-arrow">→</span>
+                <span className="vc-node-star">★ SERV (자율배달)</span>
+                <span className="vc-arrow">→</span>
+                <span className="vc-node">SYM (창고AI)</span>
+                <span className="vc-arrow">→</span>
+                <span className="vc-node">RR (레스토랑)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="section-title">🎯 핵심 파생 논리</div>
+        <div className="card">
+          <div style={{fontSize:13,color:'#d1fae5',lineHeight:1.8}}>
+            <div style={{marginBottom:10}}>
+              <span className="highlight">AI 휴머노이드 폭증</span> →
+              로봇 두뇌(비전+추론) 필요 →
+              <span className="highlight"> AMBA SoC 독점 수요</span>
+            </div>
+            <div style={{marginBottom:10}}>
+              <span className="highlight">휴머노이드 조립·파지 정밀도</span> 필요 →
+              힘/토크 피드백 없으면 물체 파손 →
+              <span className="highlight"> NOVT ATI 센서 대체불가</span>
+            </div>
+            <div style={{marginBottom:10}}>
+              <span className="highlight">자율이동 서비스 로봇</span> 상용화 →
+              라스트마일 배달 비용 혁명 →
+              <span className="highlight"> SERV Uber Eats 독점 플릿</span>
+            </div>
+            <div>
+              <span className="highlight">물류·외식 인건비 급등</span> →
+              창고/레스토랑 자동화 필수 →
+              <span className="highlight"> SYM Walmart 계약 + RR 반등 카드</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="section-title">📍 핵심 노드 위치 요약</div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>티커</th><th>밸류체인 위치</th><th>대체불가성</th><th>병목 근거</th></tr></thead>
+            <tbody>
+              <tr><td><strong>AMBA</strong> ★★★</td><td>중류 핵심노드</td><td>🔴 높음</td><td>엣지AI SoC 시장점유율 1위, 로봇 비전 필수</td></tr>
+              <tr><td><strong>NOVT</strong> ★★★</td><td>중류 핵심노드</td><td>🔴 높음</td><td>ATI F/T 센서 30년 독점, 특허 200+</td></tr>
+              <tr><td><strong>SERV</strong> ★★★</td><td>하류 선도자</td><td>🟡 보통</td><td>Uber Eats 독점 계약, 실증 배달 2,000기</td></tr>
+              <tr><td><strong>SYM</strong> ★★</td><td>하류</td><td>🟡 보통</td><td>Walmart 전용 AI 창고 플랫폼</td></tr>
+              <tr><td><strong>RR</strong> ★★</td><td>하류</td><td>🟡 보통</td><td>RSI 극과매도, LG전자 투자 반등 카드</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
+  function TabTech() {
+    return (
+      <div className="content">
+        <div className="section-title">⚠️ ① 기존 기술의 근본 한계 — AI 시대 로보틱스</div>
+        <div className="card">
+          <div className="tech-limit">
+            <div className="limit-title">한계 1 — 인식-행동 분리 구조 (CPU+GPU 이원화)</div>
+            <div className="text-sm">로봇 비전처리(GPU)와 모터 제어(CPU)가 분리되어 레이턴시 50~200ms 발생. AI 시대 실시간 반응(≤5ms) 요구에 구조적 대응 불가. 클라우드 의존 시 네트워크 지연·개인정보 문제 추가.</div>
+          </div>
+          <div className="tech-limit">
+            <div className="limit-title">한계 2 — 촉각 피드백 부재 (위치 제어 한계)</div>
+            <div className="text-sm">기존 로봇팔은 위치(Position) 제어만 가능. 물체의 실제 저항·마찰 정보 없이 파지 → 유리컵·달걀 등 연약한 물체 파손률 15~30%. 의료·식품·반도체 공정에 적용 불가.</div>
+          </div>
+          <div className="tech-limit">
+            <div className="limit-title">한계 3 — 전력·열 관리 불가 (이동 로봇 한계)</div>
+            <div className="text-sm">NVIDIA Jetson 기반 이동 로봇은 비전 추론 단독으로 30~45W 소비. 배터리 교체 주기 2~3시간 → 실제 상용 운영 불가. 소형 배달 로봇·휴머노이드 탑재 불가능.</div>
+          </div>
+        </div>
+
+        <div className="section-title">✅ ② 신기술 우위성 — 핵심 노드가 해결하는 것</div>
+        <div className="card">
+          <div className="tech-adv">
+            <div className="adv-title">AMBA CV3 SoC — 통합 엣지AI (전력 1/10)</div>
+            <div className="text-sm">단일 칩에 CPU+GPU+NPU 통합. 비전 추론 3~4W (Jetson 대비 10배 효율). 레이턴시 &lt;2ms. 로봇 배터리 수명 3시간 → 8시간 연장.</div>
+          </div>
+          <div className="tech-adv">
+            <div className="adv-title">NOVT ATI F/T 센서 — 6축 힘/토크 ±0.1% 정밀</div>
+            <div className="text-sm">Fx/Fy/Fz + Tx/Ty/Tz 동시 측정. 1kg 이하 물체를 0.001N 단위로 감지. 반응속도 7,000Hz → 실시간 파지력 조절. 유리컵 파손률 30% → 0.1% 이하.</div>
+          </div>
+          <div className="tech-adv">
+            <div className="adv-title">SERV NVIDIA Isaac 자율주행 — 배달 비용 $8→$1</div>
+            <div className="text-sm">카메라 6개 + GPS + LiDAR 퓨전. 보행자 회피 99.97% 성공률. 주문당 배달 비용 $1 목표(현재 $1.5) — 기사 인건비 $8~12 대비 87% 절감.</div>
+          </div>
+        </div>
+
+        <div className="section-title">⏱️ ③ 결정적 흐름 — 3단계 타임라인</div>
+        <div className="card">
+          <div className="timeline-step">
+            <div className="timeline-dot"></div>
+            <div className="timeline-year">1단계 — 초기 수요 폭발 (2022~2024)</div>
+            <div className="timeline-title">ChatGPT → AI 로봇 투자 폭발</div>
+            <div className="timeline-desc">GPT-4 충격으로 "AI + 물리 세계" 결합 투자 급증. Tesla Bot 발표(2022), Figure-01 데모(2024). Amazon Rivian·Kiva 인수 창고 자동화 가속. 로보틱스 VC 투자 $5.2B(2024).</div>
+          </div>
+          <div className="timeline-step">
+            <div className="timeline-dot"></div>
+            <div className="timeline-year">2단계 — 빅테크 전략 투자 (2024~2025)</div>
+            <div className="timeline-title">NVIDIA + 애플 + 아마존 로보틱스 베팅</div>
+            <div className="timeline-desc">NVIDIA Isaac 플랫폼 출시($2B R&D). Figure AI에 OpenAI·MS·Jeff Bezos $675M 투자. Amazon 로보틱스 창고 로봇 75만대 운영 발표. Softbank $100B 로보틱스 펀드 조성.</div>
+          </div>
+          <div className="timeline-step">
+            <div className="timeline-dot"></div>
+            <div className="timeline-year">3단계 — 시장 폭증·상용화 원년 (2026~현재)</div>
+            <div className="timeline-title">휴머노이드 1,000대 → 100만대 전환점</div>
+            <div className="timeline-desc">Tesla Optimus 2,000대 생산(2026). 1X·Figure·Agility 상용 배치. 글로벌 로보틱스 시장 $214B(2026) → $1.3T(2035 전망). 엣지AI SoC·F/T 센서 병목 구간 돌입.</div>
+          </div>
+        </div>
+
+        <div className="section-title">📊 ④ 시장 규모 데이터</div>
+        <div className="card">
+          <div className="stat-grid">
+            <div className="stat-card"><div className="stat-val">$214B</div><div className="stat-desc">글로벌 로보틱스 시장 (2026)</div></div>
+            <div className="stat-card"><div className="stat-val">+24%</div><div className="stat-desc">YoY 성장률</div></div>
+            <div className="stat-card"><div className="stat-val">22% CAGR</div><div className="stat-desc">2026~2035</div></div>
+            <div className="stat-card"><div className="stat-val">$1.3T</div><div className="stat-desc">2035년 목표 시장</div></div>
+          </div>
+          <div style={{marginTop:12}}>
+            <div className="table-wrap">
+              <table>
+                <thead><tr><th>세부 시장</th><th>2026 규모</th><th>CAGR</th><th>2030 전망</th></tr></thead>
+                <tbody>
+                  <tr><td>엣지 AI 반도체</td><td>$38B</td><td>22%</td><td>$85B</td></tr>
+                  <tr><td>정밀 로봇 센서</td><td>$12B</td><td>18%</td><td>$28B</td></tr>
+                  <tr><td>자율이동 로봇</td><td>$6B</td><td>46%</td><td>$28B</td></tr>
+                  <tr><td>창고 자동화</td><td>$30B</td><td>14%</td><td>$56B</td></tr>
+                  <tr><td>서비스 로봇</td><td>$3B</td><td>28%</td><td>$8B</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function TabStocks() {
+    return (
+      <div className="content">
+        <div className="section-title">🔍 발굴 종목 — 5선</div>
+        {STOCKS.map(function(s) {
+          return (
+            <div key={s.ticker} className="card card-accent" style={{marginBottom:18}}>
+              <div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:8,marginBottom:10}}>
+                <span className="ticker-badge">{s.ticker}</span>
+                <span style={{fontSize:14,color:'#d1fae5',fontWeight:600}}>{s.name}</span>
+                <span className="star">{'★'.repeat(s.stars)+'☆'.repeat(3-s.stars)}</span>
+              </div>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:8}}>
+                <span className="badge-node">{s.node}</span>
+                <span className="badge-moat">대체불가: {s.moat}</span>
+                <span className={'rsi-chip ' + s.rsiClass}>RSI {s.rsi}</span>
+              </div>
+              <div className="price-row">
+                <div className="price-item"><span className="price-label">현재가</span><span className="price-val">${s.price}</span></div>
+                <div className="price-item"><span className="price-label">시가총액</span><span className="price-val">${s.cap}</span></div>
+                <div className="price-item"><span className="price-label">밸류체인 위치</span><span className="price-val">{s.vcPos}</span></div>
+              </div>
+              <div className="key-point">💡 {s.point}</div>
+              <div style={{fontSize:12,color:'#9ca3af',lineHeight:1.7,margin:'8px 0'}}>{s.desc}</div>
+              <div className="multi-bar-wrap">
+                <div className="multi-label">멀티배거 점수: {s.multi}/8</div>
+                <div className="multi-bar"><div className="multi-fill" style={{width:(s.multi/8*100)+'%'}}></div></div>
+              </div>
+              <div style={{marginTop:10,display:'flex',flexWrap:'wrap',gap:4}}>
+                {s.cats.map(function(c,i){ return <span key={i} className="catalyst-tag">✅ {c}</span>; })}
+                {s.risks.map(function(r,i){ return <span key={i} className="risk-tag">⚠️ {r}</span>; })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  function TabCharts() {
+    var capRef = useRef(null);
+    var capChart = useRef(null);
+    var rsiRef = useRef(null);
+    var rsiChart = useRef(null);
+    var mbRef = useRef(null);
+    var mbChart = useRef(null);
+
+    var labels = STOCKS.map(function(s){return s.ticker;});
+    var caps = [2.3, 5.75, 0.737, 29.4, 0.729];
+    var rsis = STOCKS.map(function(s){return s.rsi;});
+    var mbs = STOCKS.map(function(s){return s.multi;});
+    var colors = ['#10b981','#34d399','#6ee7b7','#059669','#065f46'];
+
+    makeChart(capRef, capChart, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{label:'시가총액 ($B)', data: caps, backgroundColor: colors}]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {legend:{labels:{color:'#9ca3af'}}},
+        scales: {
+          x: {ticks:{color:'#9ca3af'}, grid:{color:'#1f2937'}},
+          y: {ticks:{color:'#9ca3af'}, grid:{color:'#1f2937'}, title:{display:true,text:'$B',color:'#6b7280'}}
+        }
+      }
+    });
+
+    makeChart(rsiRef, rsiChart, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'RSI',
+          data: rsis,
+          backgroundColor: rsis.map(function(r){
+            return r < 40 ? '#ef4444' : r < 60 ? '#10b981' : '#f59e0b';
+          })
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {legend:{labels:{color:'#9ca3af'}}},
+        scales: {
+          x: {ticks:{color:'#9ca3af'}, grid:{color:'#1f2937'}},
+          y: {ticks:{color:'#9ca3af'}, grid:{color:'#1f2937'}, min:0, max:100,
+              title:{display:true,text:'RSI',color:'#6b7280'}}
+        }
+      }
+    });
+
+    makeChart(mbRef, mbChart, {
+      type: 'radar',
+      data: {
+        labels: ['AMBA','NOVT','SERV','SYM','RR'],
+        datasets: [{
+          label: '멀티배거 점수',
+          data: mbs,
+          backgroundColor: 'rgba(16,185,129,0.2)',
+          borderColor: '#10b981',
+          pointBackgroundColor: '#10b981'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {legend:{labels:{color:'#9ca3af'}}},
+        scales: {r:{min:0,max:8,ticks:{color:'#9ca3af',stepSize:2},grid:{color:'#1f2937'},angleLines:{color:'#1f2937'},pointLabels:{color:'#9ca3af'}}}
+      }
+    });
+
+    return (
+      <div className="content">
+        <div className="section-title">📊 시가총액 비교</div>
+        <div className="card"><div className="chart-wrap"><canvas ref={capRef}></canvas></div></div>
+
+        <div className="section-title">📈 RSI 현황</div>
+        <div className="card">
+          <div style={{display:'flex',gap:12,margin:'0 0 8px',fontSize:11}}>
+            <span><span style={{color:'#ef4444'}}>■</span> 과매도(&lt;40)</span>
+            <span><span style={{color:'#10b981'}}>■</span> 중립(40~60)</span>
+            <span><span style={{color:'#f59e0b'}}>■</span> 과매수(&gt;60)</span>
+          </div>
+          <div className="chart-wrap"><canvas ref={rsiRef}></canvas></div>
+        </div>
+
+        <div className="section-title">🕸️ 멀티배거 점수 레이더</div>
+        <div className="card"><div className="chart-wrap"><canvas ref={mbRef}></canvas></div></div>
+      </div>
+    );
+  }
+
+  function TabMulti() {
+    var sel = useState('AMBA');
+    var ticker = sel[0];
+    var setTicker = sel[1];
+    var data = MB_DATA[ticker];
+
+    return (
+      <div className="content">
+        <div className="section-title">🔟 Anna Yartseva 멀티배거 8항목</div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:16}}>
+          {STOCKS.map(function(s){
+            return (
+              <button key={s.ticker}
+                className={'ticker-btn' + (ticker===s.ticker ? ' active' : '')}
+                onClick={function(){setTicker(s.ticker);}}>
+                {s.ticker} {s.stars>=3?'★★★':s.stars===2?'★★':'★'}
+              </button>
+            );
+          })}
+        </div>
+        <div className="card">
+          <div style={{fontSize:16,fontWeight:800,color:'#10b981',marginBottom:4}}>{ticker}</div>
+          <div style={{fontSize:12,color:'#6b7280',marginBottom:16}}>{STOCKS.find(function(s){return s.ticker===ticker;}).name}</div>
+          {MULTIBAGGER.map(function(m){
+            var d = data[m.id];
+            return (
+              <div key={m.id} className="multi-item">
+                <div className="multi-item-title">
+                  <span style={{color: d.pass ? '#10b981' : '#ef4444', marginRight:8}}>{d.pass?'✅':'❌'}</span>
+                  {m.label}
+                </div>
+                <div className={'multi-check ' + (d.pass?'pass':'fail')}>
+                  {d.note}
+                </div>
+              </div>
+            );
+          })}
+          <div style={{marginTop:16,padding:12,background:'#0a0a0f',borderRadius:8,textAlign:'center'}}>
+            <span style={{fontSize:24,fontWeight:800,color:'#10b981'}}>
+              {Object.values(data).filter(function(d){return d.pass;}).length}/8
+            </span>
+            <span style={{fontSize:13,color:'#6b7280',marginLeft:8}}>항목 충족</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function TabStrategy() {
+    return (
+      <div className="content">
+        <div className="section-title">🎯 우선순위 순위표</div>
+        <div className="card">
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>순위</th><th>티커</th><th>밸류체인</th><th>멀티배거</th><th>RSI</th><th>투자 포인트</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span className="rank-badge">1</span></td>
+                  <td><strong style={{color:'#10b981'}}>AMBA</strong></td>
+                  <td>중류 핵심노드</td><td>7/8</td><td style={{color:'#86efac'}}>50</td>
+                  <td>엣지AI SoC 독점, 매출 +37%</td>
+                </tr>
+                <tr>
+                  <td><span className="rank-badge">2</span></td>
+                  <td><strong style={{color:'#10b981'}}>NOVT</strong></td>
+                  <td>중류 핵심노드</td><td>7/8</td><td style={{color:'#86efac'}}>48</td>
+                  <td>ATI F/T센서 30년 독점, $1B 가이던스</td>
+                </tr>
+                <tr>
+                  <td><span className="rank-badge">3</span></td>
+                  <td><strong style={{color:'#10b981'}}>SERV</strong></td>
+                  <td>하류 선도</td><td>6/8</td><td style={{color:'#fca5a5'}}>38</td>
+                  <td>RSI 과매도+매출 +862% 모멘텀</td>
+                </tr>
+                <tr>
+                  <td><span className="rank-badge" style={{background:'#374151',color:'#9ca3af'}}>4</span></td>
+                  <td><strong>SYM</strong></td>
+                  <td>하류</td><td>5/8</td><td style={{color:'#fcd34d'}}>60</td>
+                  <td>Walmart 대규모 계약, 고평가 주의</td>
+                </tr>
+                <tr>
+                  <td><span className="rank-badge" style={{background:'#374151',color:'#9ca3af'}}>5</span></td>
+                  <td><strong>RR</strong></td>
+                  <td>하류</td><td>5/8</td><td style={{color:'#fca5a5'}}>32</td>
+                  <td>극과매도 반등 카드, 실적 개선 필수</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="section-title">⚡ 주요 촉매 & 리스크</div>
+        <div className="card">
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#10b981',marginBottom:8}}>상승 촉매</div>
+            {[
+              'Tesla Optimus 2,000대 양산 발표 (2026 Q3)',
+              'NVIDIA GTC 2026 로보틱스 플랫폼 확장',
+              'AMBA FY2027 가이던스 상향 예정 (2026 Q2)',
+              'NOVT 의료 로봇 FDA 승인 사이클 (2026 하반기)',
+              'SERV Uber Eats 플릿 4,000기 확장 발표',
+              '미국 최저임금 인상 → 서비스 로봇 수요 가속'
+            ].map(function(c,i){ return <span key={i} className="catalyst-tag" style={{display:'block',marginBottom:4}}>✅ {c}</span>; })}
+          </div>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,color:'#ef4444',marginBottom:8}}>주요 리스크</div>
+            {[
+              'NVDA Jetson 차세대 로봇 SoC 공격적 출시 (AMBA 경쟁)',
+              'SERV·RR 적자 지속 시 자금조달 희석 위험',
+              'SYM 고평가 시총 $29B — 성장 실망 시 급락',
+              '미중 기술 규제 강화 (로봇 수출 통제)',
+              '금리 환경 반전 시 성장주 멀티플 압축'
+            ].map(function(r,i){ return <span key={i} className="risk-tag" style={{display:'block',marginBottom:4}}>⚠️ {r}</span>; })}
+          </div>
+        </div>
+
+        <div className="section-title">💼 포트폴리오 제안</div>
+        <div className="card">
+          {STOCKS.map(function(s){
+            return (
+              <div key={s.ticker} className="portfolio-row">
+                <span className="portfolio-ticker">{s.ticker}</span>
+                <div className="portfolio-bar">
+                  <div className="portfolio-fill" style={{width:s.portfolio+'%'}}></div>
+                </div>
+                <span className="portfolio-pct">{s.portfolio}%</span>
+              </div>
+            );
+          })}
+          <div style={{fontSize:12,color:'#6b7280',marginTop:14,lineHeight:1.7}}>
+            💡 <strong style={{color:'#10b981'}}>핵심 전략:</strong> AMBA+NOVT(중류 병목) 50% 집중 — 휴머노이드 상용화와 직결된 숨겨진 핵심 노드. SERV(20%)는 RSI 과매도 반등 베팅. SYM·RR(30%)은 하류 분산.
+          </div>
+        </div>
+
+        <div className="section-title">🔗 심층 분석 연계</div>
+        <div className="card">
+          <div style={{fontSize:13,color:'#9ca3af',lineHeight:1.8}}>
+            발굴 종목 중 관심 종목에 대해 <span style={{color:'#10b981',fontWeight:700}}>"[티커] 분석해줘"</span> 로 7개 섹션 심층 분석 + 개별 대시보드 생성을 요청할 수 있습니다.
+            <br/>
+            <br/>예: <span style={{color:'#10b981'}}>"AMBA 분석해줘"</span> → 실시간 데이터 수집 + 7섹션 분석 + 인터랙티브 대시보드 생성 + gh-pages 배포
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  var TABS = [
+    {id:'vc', label:'🗺️ 밸류체인'},
+    {id:'tech', label:'🔬 기술분석'},
+    {id:'stocks', label:'🔍 발굴종목'},
+    {id:'charts', label:'📊 비교차트'},
+    {id:'multi', label:'🔟 멀티배거'},
+    {id:'strategy', label:'🎯 전략'}
+  ];
+
+  function App() {
+    var tabState = useState('vc');
+    var tab = tabState[0];
+    var setTab = tabState[1];
+
+    return (
+      <div>
+        <div className="header">
+          <a className="header-back" href="https://disntm90.github.io/disntm90/">← 목록으로</a>
+          <div className="header-title">🤖 AI 로보틱스 종목발굴</div>
+          <div className="header-sub">탑다운 × 밸류체인 분석 | 2026.05.29 | 발굴 5종목</div>
+        </div>
+        <div className="tabs">
+          {TABS.map(function(t){
+            return (
+              <div key={t.id}
+                className={'tab' + (tab===t.id ? ' active' : '')}
+                onClick={function(){setTab(t.id);}}>
+                {t.label}
+              </div>
+            );
+          })}
+        </div>
+        {tab==='vc' && <TabValuChain/>}
+        {tab==='tech' && <TabTech/>}
+        {tab==='stocks' && <TabStocks/>}
+        {tab==='charts' && <TabCharts/>}
+        {tab==='multi' && <TabMulti/>}
+        {tab==='strategy' && <TabStrategy/>}
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
