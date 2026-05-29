@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>AI 에너지·데이터센터 종목발굴 대시보드 — 2026.05.29</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+    a{color:#f59e0b;text-decoration:none}
+    .container{max-width:760px;margin:0 auto;padding:12px}
+    .header{background:linear-gradient(135deg,#1a0f05,#0a0f1e);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #3d2007}
+    .back-link{font-size:12px;color:#fbbf24;margin-bottom:8px;display:block}
+    .header-badge{display:inline-block;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid #f59e0b;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;margin-bottom:8px}
+    .title{font-size:26px;font-weight:800;color:#f59e0b;margin-bottom:4px}
+    .subtitle{font-size:13px;color:#94a3b8;margin-bottom:12px}
+    .meta-row{display:flex;gap:8px;flex-wrap:wrap}
+    .meta-chip{background:#0a0f1e;border:1px solid #3d2007;border-radius:8px;padding:5px 10px;font-size:11px;color:#fde68a}
+    .tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+    .tab-btn{padding:6px 11px;border-radius:20px;border:1px solid #3d2007;background:#1a0f05;color:#94a3b8;font-size:11px;cursor:pointer;transition:all .2s}
+    .tab-btn.active{background:#f59e0b;color:#0a0f1e;border-color:#f59e0b;font-weight:700}
+    .card{background:#120a01;border:1px solid #3d2007;border-radius:10px;padding:14px;margin-bottom:10px}
+    .card-title{font-size:13px;font-weight:700;color:#fde68a;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+    .chart-wrap{position:relative;height:220px;margin-top:8px}
+    .chain-wrap{display:flex;flex-direction:column;gap:0}
+    .chain-tier{border-radius:10px;padding:12px;margin-bottom:4px}
+    .chain-tier.tier-up{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3)}
+    .chain-tier.tier-mid{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3)}
+    .chain-tier.tier-down{background:rgba(100,116,139,0.08);border:1px solid rgba(100,116,139,0.3)}
+    .chain-tier.tier-mega{background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2)}
+    .chain-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .chain-label.up{color:#f59e0b}
+    .chain-label.mid{color:#ef4444}
+    .chain-label.down{color:#64748b}
+    .chain-label.mega{color:#fde68a}
+    .chain-items{display:flex;flex-wrap:wrap;gap:6px}
+    .chain-item{background:#0a0f1e;border-radius:6px;padding:5px 9px;font-size:11px;display:flex;align-items:center;gap:4px}
+    .chain-item .ticker-tag{font-weight:800;color:#f59e0b}
+    .chain-item .star{color:#fbbf24;font-size:10px}
+    .chain-arrow{text-align:center;color:#374151;font-size:16px;margin:2px 0;line-height:1}
+    .stock-card{background:#0a0f1e;border:1px solid #3d2007;border-radius:10px;padding:14px;margin-bottom:10px}
+    .stock-card.tier-up{border-left:4px solid #f59e0b}
+    .stock-card.tier-mid{border-left:4px solid #ef4444}
+    .stock-card.tier-down{border-left:4px solid #475569}
+    .sc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+    .sc-ticker{font-size:22px;font-weight:800;color:#f59e0b}
+    .sc-name{font-size:12px;color:#94a3b8;margin-top:2px}
+    .sc-stars{font-size:14px}
+    .sc-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+    .sc-badge{padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700}
+    .sb-up{background:rgba(245,158,11,0.15);color:#fde68a;border:1px solid rgba(245,158,11,0.4)}
+    .sb-mid{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.4)}
+    .sb-down{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
+    .sb-med{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
+    .sb-low{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
+    .sc-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+    .sc-metric{background:#120a01;border-radius:6px;padding:7px;text-align:center}
+    .sc-metric-label{font-size:10px;color:#64748b;margin-bottom:2px}
+    .sc-metric-val{font-size:13px;font-weight:700;color:#e2e8f0}
+    .sc-point{font-size:12px;color:#fde68a;font-weight:700;margin-bottom:4px}
+    .sc-reason{font-size:12px;color:#94a3b8;line-height:1.5}
+    .sc-mb-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
+    .sc-mb-label{font-size:11px;color:#64748b;width:80px;flex-shrink:0}
+    .sc-mb-bg{flex:1;background:#1a0f05;border-radius:4px;height:7px;overflow:hidden}
+    .sc-mb-fill{height:7px;border-radius:4px;background:linear-gradient(90deg,#f59e0b,#fde68a)}
+    .sc-mb-val{font-size:11px;font-weight:700;color:#f59e0b;width:28px;text-align:right}
+    .mb-item{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;background:#0a0f1e;border-radius:6px;margin-bottom:6px}
+    .mb-label{font-size:12px;color:#94a3b8;flex:1;padding-right:8px}
+    .mb-val{font-size:13px;font-weight:700;flex-shrink:0}
+    .mb-yes{color:#22c55e}
+    .mb-part{color:#fbbf24}
+    .mb-no{color:#ef4444}
+    .total-score-box{text-align:center;padding:14px;background:rgba(245,158,11,0.08);border-radius:10px;border:1px solid rgba(245,158,11,0.3);margin-bottom:12px}
+    .total-num{font-size:44px;font-weight:800;color:#f59e0b}
+    .total-denom{font-size:18px;color:#64748b}
+    .score-grade{font-size:13px;color:#fde68a;margin-top:4px}
+    .ticker-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .ts-btn{padding:5px 12px;border-radius:14px;border:1px solid #3d2007;background:#1a0f05;color:#fde68a;font-size:11px;cursor:pointer;font-weight:700}
+    .ts-btn.active{background:#f59e0b;color:#0a0f1e;border-color:#f59e0b}
+    .insight-box{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fde68a;line-height:1.5;white-space:pre-line}
+    .warn-box{background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fde68a;line-height:1.5;white-space:pre-line}
+    .risk-box{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fca5a5;line-height:1.5;white-space:pre-line}
+    .section-h{font-size:12px;font-weight:700;color:#fde68a;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+    .priority-row{display:flex;align-items:center;gap:10px;padding:10px;background:#0a0f1e;border-radius:8px;margin-bottom:6px;border:1px solid #3d2007}
+    .pr-rank{font-size:20px;font-weight:800;color:#f59e0b;width:28px;flex-shrink:0}
+    .pr-ticker{font-size:15px;font-weight:800;color:#fbbf24;width:52px;flex-shrink:0}
+    .pr-text{font-size:12px;color:#94a3b8;flex:1;line-height:1.4}
+    .pr-timing{font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;flex-shrink:0}
+    .t-now{background:rgba(34,197,94,0.15);color:#86efac;border:1px solid rgba(34,197,94,0.4)}
+    .t-after{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
+    .t-small{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
+    .nuclear-banner{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px;margin-bottom:10px;font-size:12px;color:#fde68a;line-height:1.6}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+var STOCKS = [
+  {
+    ticker:'LEU', name:'Centrus Energy Corp.', tier:'up', stars:'★★★',
+    price:'$206', cap:'$4.07B', rsi:48, mb:5.5,
+    badge1:'상류 최고 병목', badge2:'대체불가 극도로 높음', badge3:'HALEU 독점',
+    point:'HALEU 농축 우라늄 — 미국 유일 생산 허가 기업, SMR 연료 독점 공급',
+    reason:'SMR 원자로가 완공되면 연료는 반드시 LEU에서 구매해야 함. $3.8B 수주 잔고 2040년까지 확보. 미국 러시아 우라늄 의존 탈피 국가 정책 = 정부 수요 보장. 시총 $4B vs 미래 수요 엄청난 괴리. 경쟁사가 2029년 이전에 따라오는 것 불가능 (NRC 인허가 필요). 모두가 CEG($90B)·GEV($266B) 살 때 진짜 병목은 연료인 LEU.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 기관 투자자 관심', v:'⚠️', cls:'mb-part'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
+    ]
+  },
+  {
+    ticker:'SMR', name:'NuScale Power Corp.', tier:'up', stars:'★★★',
+    price:'~$12', cap:'~$4.2B', rsi:32, mb:5.0,
+    badge1:'중류 핵심노드', badge2:'대체불가 매우높음', badge3:'NRC 인증 유일',
+    point:'미국 NRC 인증 유일한 SMR 설계 + TVA 6GW 파이프라인',
+    reason:'NRC 인증 = 경쟁사가 최소 10년 따라올 수 없는 규제 해자. 최근 48% 급락으로 RSI ~32 과매도 구간 = 역발상 진입 기회. $1B 현금 확보. ENTRA1과 TVA 최대 6GW 배포 프로그램 진행 중. AI 데이터센터 전력 공급 SMR 솔루션 중 가장 앞선 설계.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
+      {label:'⑤ 재무 건전성', v:'⚠️', cls:'mb-part'},
+      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 기관 투자자 관심', v:'⚠️', cls:'mb-part'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker:'OKLO', name:'Oklo Inc.', tier:'mid', stars:'★★',
+    price:'~$66', cap:'~$11.5B', rsi:55, mb:4.5,
+    badge1:'중류 마이크로리액터', badge2:'대체불가 높음', badge3:'전력 서비스형',
+    point:'AI 데이터센터 직결 핵 마이크로리액터 — Sam Altman + Switch 12GW 계약',
+    reason:'Sam Altman(OpenAI CEO) 회장 = OpenAI 데이터센터 전력 공급 유력. Switch 12GW + Equinix와 계약 파이프라인. 전력 서비스형(Power-as-a-Service) 비즈니스 모델 = 장기 안정 수익. 2027년 첫 상업 원자로 배포 예정. 단, 아직 수익 없음. 현재 $11.5B은 기대치 반영.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'⚠️', cls:'mb-part'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
+    ]
+  },
+  {
+    ticker:'APLD', name:'Applied Digital Corp.', tier:'mid', stars:'★★',
+    price:'$36.62', cap:'~$7.5B', rsi:52, mb:4.5,
+    badge1:'AI 전용 데이터센터', badge2:'대체불가 보통', badge3:'AI 팩토리',
+    point:'AI 팩토리 — 랙당 100kW 고밀도 설계, 하이퍼스케일러 장기 계약',
+    reason:'$31B 계약 매출 확보 (15년 Polaris Forge 3 임대 + 300MW 추가). 일반 클라우드 대비 3~4배 고밀도 AI 전용 설계. 하이퍼스케일러(MSFT·AMZN 등)가 AI 확장 시 APLD 수요 자동 증가. 1년 +235% 상승했지만 $31B 계약 볼 때 여전히 성장 여지. 단, 부채 수준 주의.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'⚠️', cls:'mb-part'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'⚠️', cls:'mb-part'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker:'BWXT', name:'BWX Technologies', tier:'down', stars:'★★',
+    price:'$207', cap:'~$19B', rsi:57, mb:4.5,
+    badge1:'핵 부품 제조', badge2:'대체불가 높음', badge3:'SMR 핵 컴포넌트',
+    point:'SMR 핵 부품 제조 독점 + 방위 핵 추진 시스템 이중 수혜',
+    reason:'Q1 2026 매출 $860M (+26% YoY), EPS +22%. SMR 배포 확대 → BWXT 핵 부품 주문 자동 폭증. 방위 핵 추진(잠수함·항공모함) + 민간 SMR 이중 수혜. 애널리스트 14명 전원 Buy. 단, 이미 $19B 중형주, 멀티배거는 기대보다 성장 플레이.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
+    ]
+  },
+  {
+    ticker:'POWL', name:'Powell Industries', tier:'down', stars:'★',
+    price:'$294', cap:'$10.7B', rsi:54, mb:4.0,
+    badge1:'전력 스위치기어', badge2:'대체불가 보통', badge3:'데이터센터 전력',
+    point:'데이터센터 전력 분배 스위치기어 — AI 데이터센터 구축 필수',
+    reason:'데이터센터 전력 인프라 수요 급증 직접 연동. 스위치기어 없이 데이터센터 전력 공급 불가. 방어적 수혜주. 단, $10.7B 이미 중형주 진입, 경쟁사 다수(ABB, Siemens). 포트폴리오 안정화 역할.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'⚠️', cls:'mb-part'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'⚠️', cls:'mb-part'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
+    ]
+  }
+];
+
+function App() {
+  var ts=useState(0); var tab=ts[0]; var setTab=ts[1];
+  var ms=useState(0); var mbIdx=ms[0]; var setMbIdx=ms[1];
+  var TABS=['🗺️ 밸류체인','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
+  return e('div',{className:'container'},
+    e('div',{className:'header'},
+      e('a',{className:'back-link',href:'https://disntm90.github.io/disntm90/'},'← 목록으로'),
+      e('div',{className:'header-badge'},'💡 종목발굴 · 2026.05.29'),
+      e('div',{className:'title'},'AI 에너지·데이터센터 종목발굴'),
+      e('div',{className:'subtitle'},'핵 에너지 × AI 전력 탑다운 밸류체인 분석 · 6종목 선별'),
+      e('div',{className:'meta-row'},
+        e('span',{className:'meta-chip'},'📅 2026.05.29'),
+        e('span',{className:'meta-chip'},'⚡ 데이터센터 전력 위기'),
+        e('span',{className:'meta-chip'},'☢️ SMR 원자로 시대 개막'),
+        e('span',{className:'meta-chip'},'🔬 6종목')
+      )
+    ),
+    e('div',{className:'tabs'},TABS.map(function(t,i){return e('button',{key:i,className:'tab-btn'+(tab===i?' active':''),onClick:function(){setTab(i);}},t);})),
+    tab===0 && e(ChainTab,null),
+    tab===1 && e('div',null,
+      e('div',{className:'nuclear-banner'},'⚡ 핵심 발굴 원칙: CEG($90B)·GEV($266B)·VRT($123B) 살 때 이미 늦음. 진짜 병목은 SMR 연료(HALEU) — 미국 유일 생산자 LEU($4B)가 가장 숨겨진 병목입니다.'),
+      STOCKS.map(function(s,i){
+        var tc=s.tier==='up'?'tier-up':s.tier==='mid'?'tier-mid':'tier-down';
+        var b1=s.tier==='up'?'sb-up':s.tier==='mid'?'sb-mid':'sb-down';
+        return e('div',{key:i,className:'stock-card '+tc},
+          e('div',{className:'sc-header'},e('div',null,e('div',{className:'sc-ticker'},s.ticker),e('div',{className:'sc-name'},s.name)),e('div',{className:'sc-stars'},s.stars)),
+          e('div',{className:'sc-badges'},e('span',{className:'sc-badge '+b1},s.badge1),e('span',{className:'sc-badge sb-med'},s.badge2),e('span',{className:'sc-badge sb-low'},s.badge3)),
+          e('div',{className:'sc-metrics'},
+            e('div',{className:'sc-metric'},e('div',{className:'sc-metric-label'},'현재가'),e('div',{className:'sc-metric-val'},s.price)),
+            e('div',{className:'sc-metric'},e('div',{className:'sc-metric-label'},'시가총액'),e('div',{className:'sc-metric-val'},s.cap)),
+            e('div',{className:'sc-metric'},e('div',{className:'sc-metric-label'},'RSI(추정)'),e('div',{className:'sc-metric-val'},s.rsi))
+          ),
+          e('div',{className:'sc-point'},'핵심: '+s.point),
+          e('div',{className:'sc-reason'},s.reason),
+          e('div',{className:'sc-mb-bar'},e('div',{className:'sc-mb-label'},'멀티배거'),e('div',{className:'sc-mb-bg'},e('div',{className:'sc-mb-fill',style:{width:(s.mb/8*100)+'%'}})),e('div',{className:'sc-mb-val'},s.mb+'/8'))
+        );
+      })
+    ),
+    tab===2 && e(ChartsTab,null),
+    tab===3 && e('div',null,
+      e('div',{className:'ticker-select'},STOCKS.map(function(s,i){return e('button',{key:i,className:'ts-btn'+(mbIdx===i?' active':''),onClick:function(){setMbIdx(i);}},s.ticker);})),
+      e(MBDetail,{stock:STOCKS[mbIdx]})
+    ),
+    tab===4 && e(StrategyTab,null)
+  );
+}
+
+function ChainTab() {
+  return e('div',null,
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'AI 에너지·데이터센터 밸류체인 맵'),
+      e('div',{className:'insight-box'},'⚡ 메가트렌드: AI GPU 클러스터 → 전력 수요 폭발. 데이터센터 전력: 미국 전체 6%→11%(2030). 빅테크 2026 데이터센터 투자 $650B+. 태양광·풍력으로 불가 → 원자력(24시간 안정 공급)만이 해법.'),
+      e('div',{className:'chain-wrap'},
+        e('div',{className:'chain-tier tier-mega'},
+          e('div',{className:'chain-label mega'},'💡 핵심 파생 논리'),
+          e('div',{className:'chain-items'},
+            e('div',{className:'chain-item'},'AI GPU 클러스터 확장'),
+            e('div',{className:'chain-item'},'24/7 안정 전력 = 원자력만 가능'),
+            e('div',{className:'chain-item'},'SMR = 데이터센터 직결 소형 원자로')
+          )
+        ),
+        e('div',{className:'chain-arrow'},'▼'),
+        e('div',{className:'chain-tier tier-up'},
+          e('div',{className:'chain-label up'},'🟡 상류 — 핵 연료 ★★★ 최고 병목'),
+          e('div',{className:'chain-items'},
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'LEU'),e('span',{className:'star'},'★★★'),' HALEU 독점 (미국 유일)'),
+            e('div',{className:'chain-item'},'우라늄 채굴 (UEC, CCJ)'),
+            e('div',{className:'chain-item'},'우라늄 전환/농축')
+          )
+        ),
+        e('div',{className:'chain-arrow'},'▼'),
+        e('div',{className:'chain-tier tier-mid'},
+          e('div',{className:'chain-label mid'},'🔴 중류 — SMR 원자로 설계·제조 ★병목'),
+          e('div',{className:'chain-items'},
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'SMR'),e('span',{className:'star'},'★★★'),' NRC 인증 유일 설계'),
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'OKLO'),e('span',{className:'star'},'★★'),' AI DC 직결 마이크로리액터'),
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'BWXT'),e('span',{className:'star'},'★★'),' 핵 부품 제조 독점')
+          )
+        ),
+        e('div',{className:'chain-arrow'},'▼'),
+        e('div',{className:'chain-tier tier-down'},
+          e('div',{className:'chain-label down'},'⬛ 인프라 — 전력 전송·데이터센터'),
+          e('div',{className:'chain-items'},
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'APLD'),e('span',{className:'star'},'★★'),' AI 전용 고밀도 데이터센터'),
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'POWL'),e('span',{className:'star'},'★'),' 전력 스위치기어'),
+            e('div',{className:'chain-item'},'GEV·VRT·CEG (이미 대형주)')
+          )
+        )
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'핵심 파생 논리 & 병목'),
+      e('div',{className:'insight-box'},'🏆 발굴 원칙: CEG($90B 원자력 발전)·GEV($266B 그리드 장비)·VRT($123B 데이터센터 전력)를 살 때 이미 늦음. 이 기업들이 운영하기 위해 반드시 필요한 연료·설계·부품 소형주를 선점하라.'),
+      e('div',{className:'warn-box'},'⚠️ 이미 대형화: CEG($90B), GEV($266B), VRT($123B), ETN(대형) — 멀티배거 기대 어려움'),
+      e('div',{className:'insight-box'},'🛡️ 병목 ①: HALEU(LEU) — SMR 연료 없이 원자로 가동 불가. 미국 유일 생산자. $3.8B 수주\n🛡️ 병목 ②: NRC 인증(SMR) — 10년 이상 진입장벽. 최근 48% 과매도 역발상 기회\n🛡️ 병목 ③: 마이크로리액터(OKLO) — AI DC 직결, Sam Altman 네트워크')
+    )
+  );
+}
+
+function ChartsTab() {
+  var cr=useRef(null),cc=useRef(null);
+  var mr=useRef(null),mc=useRef(null);
+  var rr=useRef(null),rc=useRef(null);
+  var labels=STOCKS.map(function(s){return s.ticker;});
+  var caps=[4.07,4.2,11.5,7.5,19,10.7];
+  var mbs=STOCKS.map(function(s){return s.mb;});
+  var rsis=STOCKS.map(function(s){return s.rsi;});
+  var COLS=['#f59e0b','#f59e0b','#ef4444','#ef4444','#64748b','#64748b'];
+  makeChart(cr,cc,{type:'bar',data:{labels:labels,datasets:[{label:'시총($B)',data:caps,backgroundColor:COLS.map(function(c){return c+'99';}),borderColor:COLS,borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return '$'+c.raw+'B';}}}},scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}},y:{ticks:{color:'#94a3b8',font:{size:10},callback:function(v){return '$'+v+'B';}},grid:{color:'#1e293b'}}}}});
+  makeChart(mr,mc,{type:'bar',data:{labels:labels,datasets:[{label:'MB점수',data:mbs,backgroundColor:mbs.map(function(v){return v>=5.5?'#f59e0b99':v>=5.0?'#d9770699':'#92400e99';}),borderColor:mbs.map(function(v){return v>=5.5?'#f59e0b':v>=5.0?'#d97706':'#92400e';}),borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}},y:{min:0,max:8,ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}}}}});
+  makeChart(rr,rc,{type:'bar',data:{labels:labels,datasets:[{label:'RSI',data:rsis,backgroundColor:rsis.map(function(v){return v<=45?'#22c55e99':v<=55?'#f59e0b99':v<=65?'#fbbf2499':'#ef444499';}),borderColor:rsis.map(function(v){return v<=45?'#22c55e':v<=55?'#f59e0b':v<=65?'#fbbf24':'#ef4444';}),borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}},y:{min:0,max:100,ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('div',{className:'card-title'},'시가총액 비교 ($B)'),e('div',{className:'insight-box',style:{marginBottom:'8px'}},'💡 LEU($4.07B)·SMR($4.2B)이 최고의 발굴 대상 — 작은 시총 대비 병목 가치 최대'),e('div',{className:'chart-wrap'},e('canvas',{ref:cr}))),
+    e('div',{className:'card'},e('div',{className:'card-title'},'멀티배거 점수 (Anna Yartseva 8기준)'),e('div',{className:'chart-wrap'},e('canvas',{ref:mr}))),
+    e('div',{className:'card'},e('div',{className:'card-title'},'RSI 현황 (추정)'),e('div',{className:'insight-box',style:{marginBottom:'8px'}},'🟢 45이하: 과매도 진입(SMR 32!) | 🟡 45~55: 중립(LEU·APLD·POWL) | 🔴 65+: 과매수'),e('div',{className:'chart-wrap'},e('canvas',{ref:rr})))
+  );
+}
+
+function MBDetail(props) {
+  var s=props.stock;
+  var yes=s.mb_items.filter(function(x){return x.cls==='mb-yes';}).length;
+  var part=s.mb_items.filter(function(x){return x.cls==='mb-part';}).length;
+  var score=yes+part*0.5;
+  var grade=score>=6?'매우 우수':score>=5?'우수 · 매수 검토':score>=4?'보통 · 선별적 접근':'낮음 · 고위험';
+  return e('div',null,e('div',{className:'card'},
+    e('div',{className:'total-score-box'},e('div',null,e('span',{className:'total-num'},s.mb.toFixed(1)),e('span',{className:'total-denom'},' / 8')),e('div',{className:'score-grade'},s.ticker+' — '+grade)),
+    s.mb_items.map(function(item,i){return e('div',{key:i,className:'mb-item'},e('div',{className:'mb-label'},item.label),e('div',{className:'mb-val '+item.cls},item.v));}),
+    e('div',{className:'warn-box',style:{marginTop:'10px'}},'⚠️ 교육 목적 분석이며 투자 권고가 아닙니다.')
+  ));
+}
+
+function StrategyTab() {
+  return e('div',null,
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'투자 우선순위'),
+      e('div',{className:'insight-box'},'🎯 전략: CEG·GEV·VRT 대신 그 기업들이 쓰는 연료(HALEU)·설계(NRC 인증 SMR)·직결 솔루션(마이크로리액터)을 선점'),
+      [
+        {rank:'①',ticker:'LEU',text:'HALEU 독점 — CEG·GEV 성장의 연료 병목. $3.8B 잔고 2040년까지. RSI 48 진입 구간. 시총 $4B vs 미래 수요 최고 괴리.',timing:'지금',tcls:'t-now'},
+        {rank:'②',ticker:'SMR',text:'NRC 인증 유일 — 최근 48% 급락, RSI 32 과매도 역발상 기회. $1B 현금. TVA 6GW 파이프라인. 고위험-고수익 진입.',timing:'지금',tcls:'t-now'},
+        {rank:'③',ticker:'OKLO',text:'AI DC 직결 마이크로리액터 — Sam Altman+Switch 12GW. Power-as-a-Service 장기 계약. 2027 배포 예정.',timing:'분할',tcls:'t-after'},
+        {rank:'④',ticker:'APLD',text:'AI 전용 팩토리 — $31B 계약 매출, 300MW 추가. 하이퍼스케일러 수요 직결. 단, 이미 235% 상승.',timing:'조정후',tcls:'t-after'},
+        {rank:'⑤',ticker:'BWXT',text:'SMR 핵 부품 제조 독점 + 방위. Q1 +26% 성장. 안정적이지만 $19B 중형주.',timing:'소량',tcls:'t-small'},
+        {rank:'⑥',ticker:'POWL',text:'전력 스위치기어 인프라 수혜. 방어적 포지션. $10.7B 중형주.',timing:'소량',tcls:'t-small'}
+      ].map(function(p,i){return e('div',{key:i,className:'priority-row'},e('div',{className:'pr-rank'},p.rank),e('div',{className:'pr-ticker'},p.ticker),e('div',{className:'pr-text'},p.text),e('span',{className:'pr-timing '+p.tcls},p.timing));})
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'촉매 & 리스크'),
+      e('div',{className:'section-h'},'상승 촉매'),
+      e('div',{className:'insight-box'},'⚡ 데이터센터 전력: 2024 미국 6% → 2030 11% (2배 성장)\n☢️ SMR 규제 완화: NRC·DOE 적극 지원, TVA $15B PJM 경매\n🤖 빅테크 원자력 직접 계약: MSFT-Three Mile Island, AMZN·GOOGL 원자력 PPA\n💰 미국 에너지 독립: 러시아 우라늄 의존 탈피 → LEU HALEU 수요 급증'),
+      e('div',{className:'section-h'},'주요 리스크'),
+      e('div',{className:'risk-box'},'⚠️ SMR·OKLO: 아직 수익화 전, 규제 지연 시 주가 급락\n⚠️ 원자력 사고 위험 인식 → 섹터 전반 급락 가능\n⚠️ SMR(NuScale): 최근 48% 하락 이유 분석 필요 (단기 조정 vs 구조적)\n⚠️ APLD: 부채 수준 높음, 금리 환경 민감\n⚠️ 에너지 규제 정책 변화 리스크'),
+      e('div',{className:'section-h'},'포트폴리오 제안'),
+      e('div',{className:'warn-box'},'핵심(50%): LEU + SMR — 진짜 병목, 소형주, 지금 진입\n성장(35%): OKLO + APLD — AI DC 직결, 분할 진입\n안전(15%): BWXT + POWL — 실적 기반, 소량 방어적')
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'심층 분석 안내'),
+      e('div',{className:'insight-box'},'💡 개별 종목 심층 분석:\n"[티커] 분석해줘" 라고 말씀해주세요.\n예: "LEU 분석해줘", "SMR 분석해줘", "OKLO 분석해줘"\n→ 7개 섹션 분석 + 대시보드 생성 + 인덱스 자동 등록')
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
