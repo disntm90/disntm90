@@ -123,6 +123,42 @@
 
 - 결과 하단에 **"[티커] 분석해줘"** 로 바로 이어서 심층 분석 가능함을 안내
 
+**Step 3-B — 종목발굴 대시보드 생성 & 배포 (필수)**
+텍스트 결과 제시 후 반드시 인터랙티브 웹 대시보드를 생성하고 gh-pages에 배포한다.
+
+#### 발굴 대시보드 파일명 규칙
+- 로컬: `dashboard-{분야}-discovery-{YYYYMMDD}.html`
+  - 예: `dashboard-space-discovery-20260529.html`, `dashboard-robotics-discovery-20260529.html`
+  - 분야명은 영문 소문자 (space, robotics, biotech, fintech, defense, energy, cyber 등)
+- gh-pages 배포: `{분야}-discovery-{YYYYMMDD}.html`
+  - URL: `https://disntm90.github.io/disntm90/{분야}-discovery-{YYYYMMDD}.html`
+  - **배포하면 인덱스에 자동 반영** (index.html이 `discovery` 포함 파일을 🔍 종목발굴 대시보드로 자동 표시)
+- **덮어쓰기 금지**: 같은 분야+날짜 파일이 이미 존재하면 `-v2.html` 형식 버전 증가
+
+#### 발굴 대시보드 필수 구성 (5탭)
+1. **🗺️ 밸류체인** — 탑다운 밸류체인 맵 + 핵심 파생 논리
+2. **🔍 발굴종목** — 종목별 카드 (가격·시총·RSI·핵심포인트·멀티배거 바)
+3. **📊 비교차트** — 시가총액 / 멀티배거 점수 / RSI Chart.js 차트
+4. **🔟 멀티배거** — Anna Yartseva 8항목 상세 (종목 선택 버튼)
+5. **🎯 전략** — 우선순위 순위표 + 촉매/리스크 + 포트폴리오 제안
+
+#### 발굴 대시보드 테마 색상 (분야별)
+| 분야 | 테마 색 |
+|------|---------|
+| 우주항공(space) | `#7c3aed` (보라) |
+| 로보틱스(robotics) | `#10b981` (초록) |
+| AI/반도체 | `#3b82f6` (파랑) |
+| 바이오(biotech) | `#ec4899` (핑크) |
+| 에너지(energy) | `#f59e0b` (앰버) |
+| 사이버보안(cyber) | `#ef4444` (빨강) |
+| 기타 | `#06b6d4` (시안) |
+
+#### 발굴 대시보드 생성 후 순서
+1. 로컬 파일 저장 (`/home/user/disntm90/dashboard-{분야}-discovery-{YYYYMMDD}.html`)
+2. GitHub API(`mcp__github__create_or_update_file`)로 gh-pages에 배포
+3. 로컬 dev 브랜치에 커밋 & push
+4. 유저에게 대시보드 URL + 인덱스 URL 안내
+
 **Step 4 — 심층 분석 연계**
 유저가 발굴 결과 중 특정 종목을 선택하면 → 자동으로 `주식 종목 분석` 절차로 전환
 (stock-analysis-template.md 7개 섹션 + 대시보드 생성 + gh-pages 배포)

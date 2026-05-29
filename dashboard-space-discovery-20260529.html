@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>우주항공 종목발굴 대시보드 — 2026.05.29</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+    a{color:#7c3aed;text-decoration:none}
+    .container{max-width:760px;margin:0 auto;padding:12px}
+    .header{background:linear-gradient(135deg,#1a0533,#0a0f1e);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #4c1d95}
+    .back-link{font-size:12px;color:#a78bfa;margin-bottom:8px;display:block}
+    .header-badge{display:inline-block;background:rgba(124,58,237,0.15);color:#a78bfa;border:1px solid #7c3aed;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;margin-bottom:8px}
+    .title{font-size:26px;font-weight:800;color:#a78bfa;margin-bottom:4px}
+    .subtitle{font-size:13px;color:#94a3b8;margin-bottom:12px}
+    .meta-row{display:flex;gap:8px;flex-wrap:wrap}
+    .meta-chip{background:#0a0f1e;border:1px solid #4c1d95;border-radius:8px;padding:5px 10px;font-size:11px;color:#c4b5fd}
+    .tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+    .tab-btn{padding:6px 11px;border-radius:20px;border:1px solid #4c1d95;background:#1a0533;color:#94a3b8;font-size:11px;cursor:pointer;transition:all .2s}
+    .tab-btn.active{background:#7c3aed;color:#fff;border-color:#7c3aed;font-weight:700}
+    .card{background:#0d0a1f;border:1px solid #4c1d95;border-radius:10px;padding:14px;margin-bottom:10px}
+    .card-title{font-size:13px;font-weight:700;color:#c4b5fd;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+    .chart-wrap{position:relative;height:220px;margin-top:8px}
+    .chart-sm{position:relative;height:170px;margin-top:8px}
+    .chart-lg{position:relative;height:260px;margin-top:8px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .stat-box{background:#0a0f1e;border-radius:8px;padding:10px;text-align:center}
+    .stat-label{font-size:11px;color:#64748b;margin-bottom:3px}
+    .stat-value{font-size:16px;font-weight:700;color:#e2e8f0}
+    /* Value chain */
+    .chain-wrap{display:flex;flex-direction:column;gap:0}
+    .chain-tier{border-radius:10px;padding:12px;margin-bottom:4px}
+    .chain-tier.tier-up{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3)}
+    .chain-tier.tier-mid{background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3)}
+    .chain-tier.tier-down{background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.3)}
+    .chain-tier.tier-mega{background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.3)}
+    .chain-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .chain-label.up{color:#ef4444}
+    .chain-label.mid{color:#fbbf24}
+    .chain-label.down{color:#a78bfa}
+    .chain-label.mega{color:#a78bfa}
+    .chain-items{display:flex;flex-wrap:wrap;gap:6px}
+    .chain-item{background:#0a0f1e;border-radius:6px;padding:5px 9px;font-size:11px;display:flex;align-items:center;gap:4px}
+    .chain-item .ticker-tag{font-weight:800;color:#fbbf24}
+    .chain-item .star{color:#fbbf24;font-size:10px}
+    .chain-arrow{text-align:center;color:#374151;font-size:16px;margin:2px 0;line-height:1}
+    /* Stock cards */
+    .stock-card{background:#0a0f1e;border:1px solid #4c1d95;border-radius:10px;padding:14px;margin-bottom:10px}
+    .stock-card.tier-up{border-left:4px solid #ef4444}
+    .stock-card.tier-mid{border-left:4px solid #fbbf24}
+    .stock-card.tier-down{border-left:4px solid #a78bfa}
+    .sc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+    .sc-ticker{font-size:22px;font-weight:800;color:#a78bfa}
+    .sc-name{font-size:12px;color:#94a3b8;margin-top:2px}
+    .sc-stars{font-size:14px}
+    .sc-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+    .sc-badge{padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700}
+    .sb-up{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.4)}
+    .sb-mid{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
+    .sb-down{background:rgba(124,58,237,0.15);color:#c4b5fd;border:1px solid rgba(124,58,237,0.4)}
+    .sb-high{background:rgba(124,58,237,0.15);color:#c4b5fd;border:1px solid rgba(124,58,237,0.4)}
+    .sb-med{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
+    .sb-low{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
+    .sc-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+    .sc-metric{background:#0d0a1f;border-radius:6px;padding:7px;text-align:center}
+    .sc-metric-label{font-size:10px;color:#64748b;margin-bottom:2px}
+    .sc-metric-val{font-size:13px;font-weight:700;color:#e2e8f0}
+    .sc-point{font-size:12px;color:#c4b5fd;font-weight:700;margin-bottom:4px}
+    .sc-reason{font-size:12px;color:#94a3b8;line-height:1.5}
+    .sc-mb-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
+    .sc-mb-label{font-size:11px;color:#64748b;width:80px;flex-shrink:0}
+    .sc-mb-bg{flex:1;background:#1a103a;border-radius:4px;height:7px;overflow:hidden}
+    .sc-mb-fill{height:7px;border-radius:4px;background:linear-gradient(90deg,#7c3aed,#c4b5fd)}
+    .sc-mb-val{font-size:11px;font-weight:700;color:#fbbf24;width:28px;text-align:right}
+    /* MB detail */
+    .mb-item{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;background:#0a0f1e;border-radius:6px;margin-bottom:6px}
+    .mb-label{font-size:12px;color:#94a3b8;flex:1;padding-right:8px}
+    .mb-val{font-size:13px;font-weight:700;flex-shrink:0}
+    .mb-yes{color:#22c55e}
+    .mb-part{color:#fbbf24}
+    .mb-no{color:#ef4444}
+    .total-score-box{text-align:center;padding:14px;background:rgba(124,58,237,0.08);border-radius:10px;border:1px solid rgba(124,58,237,0.3);margin-bottom:12px}
+    .total-num{font-size:44px;font-weight:800;color:#a78bfa}
+    .total-denom{font-size:18px;color:#64748b}
+    .score-grade{font-size:13px;color:#c4b5fd;margin-top:4px}
+    .ticker-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .ts-btn{padding:5px 12px;border-radius:14px;border:1px solid #4c1d95;background:#1a0533;color:#c4b5fd;font-size:11px;cursor:pointer;font-weight:700}
+    .ts-btn.active{background:#7c3aed;color:#fff;border-color:#7c3aed}
+    .insight-box{background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#c4b5fd;line-height:1.5}
+    .warn-box{background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fde68a;line-height:1.5}
+    .risk-box{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fca5a5;line-height:1.5}
+    .section-h{font-size:12px;font-weight:700;color:#c4b5fd;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+    .priority-row{display:flex;align-items:center;gap:10px;padding:10px;background:#0a0f1e;border-radius:8px;margin-bottom:6px;border:1px solid #1e1040}
+    .pr-rank{font-size:20px;font-weight:800;color:#7c3aed;width:28px;flex-shrink:0}
+    .pr-ticker{font-size:15px;font-weight:800;color:#a78bfa;width:52px;flex-shrink:0}
+    .pr-text{font-size:12px;color:#94a3b8;flex:1;line-height:1.4}
+    .pr-timing{font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;flex-shrink:0}
+    .t-now{background:rgba(34,197,94,0.15);color:#86efac;border:1px solid rgba(34,197,94,0.4)}
+    .t-after{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
+    .t-small{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+/* ── Data ── */
+var STOCKS = [
+  {
+    ticker: 'KRMN', name: 'Karman Holdings', tier: 'up', tierLabel: '상류',
+    stars: '★★', price: '$63.00', cap: '$8.4B', rsi: 45, mb: 5.5,
+    irr: '높음', bottleneck: true,
+    badge1: '상류 핵심노드', badge2: '대체불가 높음', badge3: '구조체·추진',
+    point: '발사체·초음속 미사일 구조체/추진 서브시스템 — 모든 로켓이 반드시 쓰는 부품',
+    reason: '우주발사체·극초음속 미사일·전략방어 시스템에 들어가는 페이로드 보호, 인터스테이지 구조체, 추진 어셈블리를 독점 제조. 탄소섬유 복합재 수요 +32% YoY. 52주 고점 $118에서 현재 $63(47% 할인), 분석가 평균 목표가 $119 = 89% 상승여력. 2025년 IPO로 아직 덜 알려진 이름.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
+      {label:'⑤ 재무 건전성', v:'⚠️', cls:'mb-part'},
+      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker: 'SPIR', name: 'Spire Global', tier: 'down', tierLabel: '하류',
+    stars: '★★★', price: '$24.00', cap: '$0.97B', rsi: 55, mb: 5.5,
+    irr: '높음', bottleneck: true,
+    badge1: '하류 핵심노드', badge2: '대체불가 매우높음', badge3: '위성데이터',
+    point: '100개+ LEO 위성 다목적 RF 데이터 독점 플랫폼 — 날씨·해양·GPS 신호',
+    reason: 'SpaceX도 Planet Labs도 대체 못하는 다목적 위성 데이터 플랫폼. FY2026 가이던스 $75~85M = +50%+ 성장. Q4 2026~Q1 2027 EBITDA 손익분기 임박. 해양 사업 매각 완료로 핵심 집중. 시총 $970M으로 $1B 미만이지만 데이터 독점성은 대형사 수준. 항공·기상·방산·금융 전 분야 필수 데이터.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'❌', cls:'mb-no'},
+      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 기관 투자자 관심', v:'⚠️', cls:'mb-part'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker: 'BKSY', name: 'BlackSky Technology', tier: 'down', tierLabel: '하류',
+    stars: '★★★', price: '$52.32', cap: '$1.94B', rsi: 70, mb: 5.0,
+    irr: '높음', bottleneck: true,
+    badge1: '하류 핵심노드', badge2: '대체불가 높음', badge3: '지구관측 AI',
+    point: 'Gen-3 위성 + AI 분석 플랫폼 — 방산 구독 서비스로 고마진 전환',
+    reason: '미 공군 $99M 계약 + Gen-3 고해상도 위성 빠른 채택. AI 분석 플랫폼 구독 모델로 전환 → 마진 급상승. 코어 비즈니스 +50% 성장 전망. 52주 저가 $10.61에서 현재 $52(393% 상승). 단기 과매수이므로 조정 후 진입이 유리. 국방·인텔 기관의 필수 구독 플랫폼으로 자리매김.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'❌', cls:'mb-no'},
+      {label:'⑥ 합리적 밸류에이션', v:'❌', cls:'mb-no'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker: 'RDW', name: 'Redwire Corporation', tier: 'mid', tierLabel: '중류',
+    stars: '★★', price: '$25.90', cap: '$5.15B', rsi: 72, mb: 5.5,
+    irr: '높음', bottleneck: true,
+    badge1: '중류 핵심노드', badge2: '대체불가 높음', badge3: '위성 하드웨어',
+    point: '우주 태양전지 배열(ROSA) + 배포 구조물 — 발사 증가 = 자동으로 주문 증가',
+    reason: 'Q1 2026 매출 +57.9% YoY, 수주잔고 $498M 사상 최고, 수주비율 1.92배. ROSA 태양전지 기술은 ISS·NASA·방산에 독점 공급. 모든 위성 발사 시 태양전지판 필수 → 발사 급증이 직접 매출로 연결. 5월 26일 +26% 급등 직후라 단기 과매수 주의, 조정 후 진입.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'⚠️', cls:'mb-part'},
+      {label:'⑥ 합리적 밸류에이션', v:'❌', cls:'mb-no'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker: 'FLY', name: 'Firefly Aerospace', tier: 'mid', tierLabel: '중류',
+    stars: '★★', price: '$55.00', cap: '$8.2B', rsi: 65, mb: 5.0,
+    irr: '보통', bottleneck: false,
+    badge1: '중류 발사서비스', badge2: '대체불가 보통', badge3: '소형발사체',
+    point: 'SpaceX 아닌 소형 발사 2위 — IPO 직접 수혜 + 달 착륙선',
+    reason: 'Q1 2026 매출 $80.9M(+40% QoQ), FY2026 $420-450M 가이던스에서 80% 이미 수주. SpaceX IPO 발표 시 가장 먼저 오를 종목. 달 착륙선 사업으로 아르테미스 계획 직접 수혜. 단 시총 $8.2B으로 $5B 기준 초과, 이미 많이 올라 단기 조정 후 진입 고려.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'⚠️', cls:'mb-part'},
+      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'❌', cls:'mb-no'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker: 'MNTS', name: 'Momentus Inc.', tier: 'mid', tierLabel: '중류',
+    stars: '★', price: '$19.22', cap: '$0.2B', rsi: 50, mb: 3.5,
+    irr: '매우높음(고위험)', bottleneck: false,
+    badge1: '중류 신규영역', badge2: '대체불가 보통', badge3: '궤도내수송',
+    point: '위성 궤도 내 이동·재배치 서비스 세계 최초 — 아직 아무도 지배 못한 시장',
+    reason: '수성 기반 추진 Vigoride로 위성 배치 비용 60% 절감. 궤도 내 수송 시장은 아직 초기 단계로 경쟁자 없음. $25M 유상증자 완료로 운영 자금 확보. 단 매출이 미미하고 흑자전환 시기 불명확. 포트폴리오의 5% 이하 초고위험 베팅 포지션으로만 접근 권장.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'⚠️', cls:'mb-part'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
+      {label:'⑤ 재무 건전성', v:'❌', cls:'mb-no'},
+      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 기관 투자자 관심', v:'❌', cls:'mb-no'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
+    ]
+  }
+];
+
+/* ── App ── */
+function App() {
+  var tabState  = useState(0);
+  var tab       = tabState[0];
+  var setTab    = tabState[1];
+
+  var mbState   = useState(0);
+  var mbIdx     = mbState[0];
+  var setMbIdx  = mbState[1];
+
+  var TABS = ['🗺️ 밸류체인', '🔍 발굴종목', '📊 비교차트', '🔟 멀티배거', '🎯 전략'];
+
+  return e('div', {className:'container'},
+    /* Header */
+    e('div', {className:'header'},
+      e('a', {className:'back-link', href:'https://disntm90.github.io/disntm90/'}, '← 목록으로'),
+      e('div', {className:'header-badge'}, '🚀 종목발굴 · 2026.05.29'),
+      e('div', {className:'title'}, '우주항공 종목발굴'),
+      e('div', {className:'subtitle'}, 'Space Economy 탑다운 × 밸류체인 분석 · 6종목 선별'),
+      e('div', {className:'meta-row'},
+        e('span', {className:'meta-chip'}, '📅 2026.05.29'),
+        e('span', {className:'meta-chip'}, '🚀 SpaceX IPO 임박'),
+        e('span', {className:'meta-chip'}, '🛰️ 6종목'),
+        e('span', {className:'meta-chip'}, '⭐ 핵심노드 4개')
+      )
+    ),
+
+    /* Tabs */
+    e('div', {className:'tabs'},
+      TABS.map(function(t, i) {
+        return e('button', {
+          key: i,
+          className: 'tab-btn' + (tab === i ? ' active' : ''),
+          onClick: function() { setTab(i); }
+        }, t);
+      })
+    ),
+
+    /* Tab 0: 밸류체인 */
+    tab === 0 && e('div', null,
+      e('div', {className:'card'},
+        e('div', {className:'card-title'}, '우주항공 산업 밸류체인 맵'),
+        e('div', {className:'insight-box'}, '🚀 메가트렌드: SpaceX IPO(2026.6) + 미 우주군 $71B 예산 + 아르테미스 달 경제 + LEO 위성 폭발'),
+        e('div', {className:'chain-wrap'},
+          e('div', {className:'chain-tier tier-mega'},
+            e('div', {className:'chain-label mega'}, '💡 메가 트렌드 → 핵심 논리'),
+            e('div', {className:'chain-items'},
+              e('div', {className:'chain-item'}, '모든 위성·로켓 = 구조체/부품 수요 폭증'),
+              e('div', {className:'chain-item'}, '위성 데이터 독점 = 구독 매출'),
+              e('div', {className:'chain-item'}, 'SpaceX IPO = 섹터 전체 리레이팅')
+            )
+          ),
+          e('div', {className:'chain-arrow'}, '▼'),
+          e('div', {className:'chain-tier tier-up'},
+            e('div', {className:'chain-label up'}, '🔴 상류 — 소재·구조체·추진 ★병목'),
+            e('div', {className:'chain-items'},
+              e('div', {className:'chain-item'}, e('span', {className:'ticker-tag'}, 'KRMN'), e('span', {className:'star'}, '★★'), ' 구조체·추진 서브시스템'),
+              e('div', {className:'chain-item'}, '탄소섬유 복합재 +32% YoY'),
+              e('div', {className:'chain-item'}, '진공챔버·진동테스트 설비 ★병목')
+            )
+          ),
+          e('div', {className:'chain-arrow'}, '▼'),
+          e('div', {className:'chain-tier tier-mid'},
+            e('div', {className:'chain-label mid'}, '🟡 중류 — 위성 하드웨어·발사 서비스'),
+            e('div', {className:'chain-items'},
+              e('div', {className:'chain-item'}, e('span', {className:'ticker-tag'}, 'RDW'), e('span', {className:'star'}, '★★'), ' 태양전지판·구조물'),
+              e('div', {className:'chain-item'}, e('span', {className:'ticker-tag'}, 'FLY'), e('span', {className:'star'}, '★★'), ' 소형 발사체·달착륙'),
+              e('div', {className:'chain-item'}, e('span', {className:'ticker-tag'}, 'MNTS'), e('span', {className:'star'}, '★'), ' 궤도 내 수송(신규)')
+            )
+          ),
+          e('div', {className:'chain-arrow'}, '▼'),
+          e('div', {className:'chain-tier tier-down'},
+            e('div', {className:'chain-label down'}, '🟣 하류 — 위성 데이터·AI 분석 ★병목'),
+            e('div', {className:'chain-items'},
+              e('div', {className:'chain-item'}, e('span', {className:'ticker-tag'}, 'SPIR'), e('span', {className:'star'}, '★★★'), ' 다목적 LEO 데이터'),
+              e('div', {className:'chain-item'}, e('span', {className:'ticker-tag'}, 'BKSY'), e('span', {className:'star'}, '★★★'), ' 지구관측 AI 플랫폼')
+            )
+          )
+        )
+      ),
+      e('div', {className:'card'},
+        e('div', {className:'card-title'}, '핵심 파생 논리'),
+        e('div', {className:'insight-box'}, '🔍 파생 논리: SpaceX → 위성 폭증 → 구조체/부품(KRMN, RDW) + 데이터(SPIR, BKSY) → 병목 구간이 가장 먼저, 가장 크게 수혜'),
+        e('div', {className:'warn-box'}, '⚠️ 이미 알려진 이름 주의: RKLB($87B), LUNR($8.3B), ASTS — 이미 대형화되어 멀티배거 가능성 낮음. 상류·데이터 병목 구간의 소형주 집중 권장.'),
+        e('div', {className:'insight-box'}, '🛡️ 병목 포인트 ①: 탄소섬유 복합재 + 발사체 구조체 — 수요 급증 대비 공급 절대 부족 → KRMN\n🛡️ 병목 포인트 ②: 다목적 위성 RF 데이터 — 100개+ 위성 네트워크 구축에 수년 소요 → SPIR')
+      )
+    ),
+
+    /* Tab 1: 발굴종목 */
+    tab === 1 && e('div', null,
+      STOCKS.map(function(s, i) {
+        var tierCls = s.tier === 'up' ? 'tier-up' : s.tier === 'mid' ? 'tier-mid' : 'tier-down';
+        var badge1Cls = s.tier === 'up' ? 'sb-up' : s.tier === 'mid' ? 'sb-mid' : 'sb-down';
+        return e('div', {key: i, className: 'stock-card ' + tierCls},
+          e('div', {className:'sc-header'},
+            e('div', null,
+              e('div', {className:'sc-ticker'}, s.ticker),
+              e('div', {className:'sc-name'}, s.name)
+            ),
+            e('div', {className:'sc-stars'}, s.stars)
+          ),
+          e('div', {className:'sc-badges'},
+            e('span', {className:'sc-badge ' + badge1Cls}, s.badge1),
+            e('span', {className:'sc-badge sb-med'}, s.badge2),
+            e('span', {className:'sc-badge sb-low'}, s.badge3)
+          ),
+          e('div', {className:'sc-metrics'},
+            e('div', {className:'sc-metric'},
+              e('div', {className:'sc-metric-label'}, '현재가'),
+              e('div', {className:'sc-metric-val'}, s.price)
+            ),
+            e('div', {className:'sc-metric'},
+              e('div', {className:'sc-metric-label'}, '시가총액'),
+              e('div', {className:'sc-metric-val'}, s.cap)
+            ),
+            e('div', {className:'sc-metric'},
+              e('div', {className:'sc-metric-label'}, 'RSI(추정)'),
+              e('div', {className:'sc-metric-val'}, s.rsi)
+            )
+          ),
+          e('div', {className:'sc-point'}, '핵심: ' + s.point),
+          e('div', {className:'sc-reason'}, s.reason),
+          e('div', {className:'sc-mb-bar'},
+            e('div', {className:'sc-mb-label'}, '멀티배거'),
+            e('div', {className:'sc-mb-bg'},
+              e('div', {className:'sc-mb-fill', style:{width: (s.mb/8*100)+'%'}})
+            ),
+            e('div', {className:'sc-mb-val'}, s.mb+'/8')
+          )
+        );
+      })
+    ),
+
+    /* Tab 2: 비교차트 */
+    tab === 2 && e(ChartsTab, null),
+
+    /* Tab 3: 멀티배거 */
+    tab === 3 && e('div', null,
+      e('div', {className:'ticker-select'},
+        STOCKS.map(function(s, i) {
+          return e('button', {
+            key: i,
+            className: 'ts-btn' + (mbIdx === i ? ' active' : ''),
+            onClick: function() { setMbIdx(i); }
+          }, s.ticker);
+        })
+      ),
+      e(MBDetail, {stock: STOCKS[mbIdx]})
+    ),
+
+    /* Tab 4: 전략 */
+    tab === 4 && e('div', null,
+      e('div', {className:'card'},
+        e('div', {className:'card-title'}, '투자 우선순위'),
+        e('div', {className:'insight-box'}, '🎯 전략 요약: 이미 잘 알려진 RKLB·LUNR 대신 밸류체인 병목 구간(구조체·데이터)의 소형주를 선점'),
+        [
+          {rank:'①', ticker:'KRMN', text:'ATH 47% 할인 + 분석가 89% 상승여력. 발사체 구조체 병목 = 지금 진입 최적 타이밍', timing:'지금', tcls:'t-now'},
+          {rank:'②', ticker:'SPIR', text:'시총 $1B 미만, 50%+ 성장, EBITDA 손익분기 임박. 독보적 위성 데이터 플랫폼', timing:'지금', tcls:'t-now'},
+          {rank:'③', ticker:'BKSY', text:'방산 계약 $99M 확보, Gen-3 기술. ATH 근처라 단기 조정 시 진입', timing:'조정 후', tcls:'t-after'},
+          {rank:'④', ticker:'RDW', text:'펀더멘털 최강(수주비율 1.92배). 5/26 +26% 급등 직후 단기 과매수', timing:'조정 후', tcls:'t-after'},
+          {rank:'⑤', ticker:'FLY', text:'SpaceX IPO 최대 수혜. 이미 $8.2B이나 이벤트 전 포지션 고려', timing:'이벤트 전', tcls:'t-after'},
+          {rank:'⑥', ticker:'MNTS', text:'초고위험 궤도 내 수송 신시장. 포트폴리오 5% 이하 소량만', timing:'소량', tcls:'t-small'}
+        ].map(function(p, i) {
+          return e('div', {key:i, className:'priority-row'},
+            e('div', {className:'pr-rank'}, p.rank),
+            e('div', {className:'pr-ticker'}, p.ticker),
+            e('div', {className:'pr-text'}, p.text),
+            e('span', {className:'pr-timing ' + p.tcls}, p.timing)
+          );
+        })
+      ),
+      e('div', {className:'card'},
+        e('div', {className:'card-title'}, '핵심 촉매 & 리스크'),
+        e('div', {className:'section-h'}, '상승 촉매'),
+        e('div', {className:'insight-box'}, '🚀 SpaceX IPO (2026년 6월 예상) → 섹터 전체 리레이팅 기대\n🛡️ 미 우주군 $71B 예산 + NASA 아르테미스 계획 지속\n📡 LEO 위성 인터넷 경쟁 심화 → 발사·부품·데이터 수요 폭증\n🌍 탄소섬유 복합재 수요 +32% YoY로 상류 공급 병목 지속'),
+        e('div', {className:'section-h'}, '주요 리스크'),
+        e('div', {className:'risk-box'}, '⚠️ SpaceX IPO 지연 시 섹터 전체 실망 매도 가능\n⚠️ 발사 실패 이벤트 (FLY 과거 발사 단계 폭발 선례)\n⚠️ 금리 상승 시 적자 성장주 밸류에이션 압박\n⚠️ 정부 예산 삭감 리스크 (방산 계약 의존 기업)'),
+        e('div', {className:'section-h'}, '포트폴리오 구성 제안'),
+        e('div', {className:'warn-box'}, '핵심(60%): KRMN + SPIR — 병목 노드, 진입 타이밍 최적\n성장(30%): BKSY + RDW — 조정 후 분할 매수\n투기(10%): FLY + MNTS — SpaceX IPO 전후 이벤트 플레이')
+      ),
+      e('div', {className:'card'},
+        e('div', {className:'card-title'}, '심층 분석 안내'),
+        e('div', {className:'insight-box'}, '💡 개별 종목 심층 분석을 원하시면:\n"[티커] 분석해줘" 라고 말씀해주세요.\n예: "KRMN 분석해줘", "SPIR 분석해줘"\n→ 7개 섹션 분석 + 인터랙티브 대시보드 생성 + 인덱스 자동 등록')
+      )
+    )
+  );
+}
+
+/* ── Charts Tab ── */
+function ChartsTab() {
+  var capRef   = useRef(null);
+  var capChart = useRef(null);
+  var mbRef    = useRef(null);
+  var mbChart  = useRef(null);
+  var rsiRef   = useRef(null);
+  var rsiChart = useRef(null);
+
+  var labels  = STOCKS.map(function(s) { return s.ticker; });
+  var capNums = [8.4, 0.97, 1.94, 5.15, 8.2, 0.2];
+  var mbNums  = STOCKS.map(function(s) { return s.mb; });
+  var rsiNums = STOCKS.map(function(s) { return s.rsi; });
+  var COLORS  = ['#ef4444','#7c3aed','#7c3aed','#fbbf24','#fbbf24','#fbbf24'];
+
+  makeChart(capRef, capChart, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '시가총액($B)',
+        data: capNums,
+        backgroundColor: COLORS.map(function(c) { return c + '99'; }),
+        borderColor: COLORS,
+        borderWidth: 2,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return '$' + c.raw + 'B'; } } } },
+      scales: {
+        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+        y: { ticks: { color: '#94a3b8', font: { size: 10 }, callback: function(v) { return '$' + v + 'B'; } }, grid: { color: '#1e293b' } }
+      }
+    }
+  });
+
+  makeChart(mbRef, mbChart, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '멀티배거 점수',
+        data: mbNums,
+        backgroundColor: mbNums.map(function(v) { return v >= 5.5 ? '#a78bfa99' : v >= 5.0 ? '#7c3aed99' : '#4c1d9599'; }),
+        borderColor: mbNums.map(function(v) { return v >= 5.5 ? '#a78bfa' : v >= 5.0 ? '#7c3aed' : '#6d28d9'; }),
+        borderWidth: 2,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return c.raw + '/8'; } } } },
+      scales: {
+        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+        y: { min: 0, max: 8, ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } }
+      }
+    }
+  });
+
+  makeChart(rsiRef, rsiChart, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'RSI',
+        data: rsiNums,
+        backgroundColor: rsiNums.map(function(v) { return v <= 55 ? '#a78bfa99' : v <= 65 ? '#fbbf2499' : '#ef444499'; }),
+        borderColor: rsiNums.map(function(v) { return v <= 55 ? '#a78bfa' : v <= 65 ? '#fbbf24' : '#ef4444'; }),
+        borderWidth: 2,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function(c) { return 'RSI ' + c.raw; } } },
+        annotation: {}
+      },
+      scales: {
+        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+        y: { min: 0, max: 100, ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } }
+      }
+    }
+  });
+
+  return e('div', null,
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '시가총액 비교 ($B)'),
+      e('div', {className:'warn-box', style:{marginBottom:'8px'}}, '⚠️ $5B 이하 우선 (멀티배거 가능성 높음) — SPIR·MNTS 주목'),
+      e('div', {className:'chart-wrap'}, e('canvas', {ref: capRef}))
+    ),
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '멀티배거 점수 (Anna Yartseva 8기준)'),
+      e('div', {className:'chart-wrap'}, e('canvas', {ref: mbRef}))
+    ),
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, 'RSI 현황 (추정)'),
+      e('div', {className:'insight-box', style:{marginBottom:'8px'}}, '🟣 55 이하: 진입 유리 (KRMN·MNTS) | 🟡 55~65: 중립 | 🔴 70 이상: 단기 과매수 주의 (BKSY·RDW)'),
+      e('div', {className:'chart-wrap'}, e('canvas', {ref: rsiRef}))
+    )
+  );
+}
+
+/* ── MB Detail ── */
+function MBDetail(props) {
+  var s = props.stock;
+  var yesCount = s.mb_items.filter(function(x) { return x.cls === 'mb-yes'; }).length;
+  var partCount = s.mb_items.filter(function(x) { return x.cls === 'mb-part'; }).length;
+  var score = yesCount + partCount * 0.5;
+  var grade = score >= 6 ? '매우 우수' : score >= 5 ? '우수 · 매수 검토' : score >= 4 ? '보통 · 선별적 접근' : '낮음 · 고위험';
+
+  return e('div', null,
+    e('div', {className:'card'},
+      e('div', {className:'total-score-box'},
+        e('div', null,
+          e('span', {className:'total-num'}, s.mb.toFixed(1)),
+          e('span', {className:'total-denom'}, ' / 8')
+        ),
+        e('div', {className:'score-grade'}, s.ticker + ' — ' + grade)
+      ),
+      s.mb_items.map(function(item, i) {
+        return e('div', {key: i, className:'mb-item'},
+          e('div', {className:'mb-label'}, item.label),
+          e('div', {className:'mb-val ' + item.cls}, item.v)
+        );
+      }),
+      e('div', {className:'warn-box', style:{marginTop:'10px'}},
+        '⚠️ 본 분석은 교육 목적이며 투자 권고가 아닙니다. 실제 투자 전 독립적인 리서치를 반드시 수행하세요.'
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
+</script>
+</body>
+</html>
