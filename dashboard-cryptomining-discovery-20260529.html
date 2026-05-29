@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>비트코인 채굴×AI HPC 종목발굴 — 2026-05-29</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0f;color:#e2e8f0;font-family:'Segoe UI',sans-serif;font-size:14px}
+#root{max-width:900px;margin:0 auto;padding:12px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+var ACCENT  = '#f97316';
+var ACCENT2 = '#ea580c';
+var BG_CARD = '#111827';
+var BG_INNER= '#1f2937';
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+var STOCKS = [
+  {
+    ticker:'CIFR', name:'Cipher Digital Inc.', tier:'low', stars:'★★★',
+    price:'~$24', cap:'~$6.7B', capNum:6.7, rsi:43, mb:5.5,
+    badge1:'중류 — 전환 임박', badge2:'대체불가 높음', badge3:'AWS+Google 계약',
+    isRef:false,
+    point:'$9.3B HPC 계약 체결(AWS+Google) — Oct 2026 가동 예정, 아직 순수채굴 배수로 거래 중',
+    reason:'AWS 15년/300MW + Google/Fluidstack 10년/300MW 총 $9.3B 계약. 그러나 가동이 Oct 2026 예정이라 주가는 아직 순수채굴 EV/NTM 5.9x 적용 중. 가동 시 HPC 배수(12.3x)로 전환 → 2배+ 멀티플 확장 잠재력. 애널리스트 목표가 $30.53 (+38%). IREN보다 훨씬 작은 $6.7B에 더 큰 업사이드.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'✅', cls:'mb-yes'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 고성장 가능성', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 재무 건전성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑧ 촉매/이벤트', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker:'RIOT', name:'Riot Platforms Inc.', tier:'low', stars:'★★★',
+    price:'~$28', cap:'~$9.9B', capNum:9.9, rsi:55, mb:5.0,
+    badge1:'중류 — 전환 초기', badge2:'대체불가 높음', badge3:'1.1GW 전력 자산',
+    isRef:false,
+    point:'Whinstone 1.1GW 초대형 전력 자산 — AMD 파트너십·원자력 DC 계획, HPC 전환 최대 잠재력',
+    reason:'Whinstone 캠퍼스(텍사스) 1.1GW는 업계 최대 에너지화 가능 전력. AMD와 10년 데이터센터 파트너십, 원자력 전력 데이터센터 계획. 현재 YTD +84%지만 HPC 가동 전 단계 → 대규모 HPC 계약 발표 시 밸류에이션 최대 재평가. IREN이 걸어간 길(비채굴 → AI 클라우드)을 RIOT가 뒤따를 것.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'✅', cls:'mb-yes'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'⚠️', cls:'mb-mid'},
+      {label:'⑥ 고성장 가능성', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매/이벤트', v:'⚠️', cls:'mb-mid'}
+    ]
+  },
+  {
+    ticker:'WULF', name:'TeraWulf Inc.', tier:'mid', stars:'★★',
+    price:'~$27', cap:'~$13.3B', capNum:13.3, rsi:60, mb:5.0,
+    badge1:'중류 — 전환 진행', badge2:'대체불가 높음', badge3:'원자력 전력',
+    isRef:false,
+    point:'$12.8B HPC 계약, 원자력 전력 → 업계 최저 전력비용 경쟁력',
+    reason:'총 $12.8B 계약 HPC 매출, 522MW 가동 중. Lake Mariner는 원자력 발전소 직접 연결 → 전력 비용이 업계 최저 수준. Q1 2026 HPC 매출 $21M(이제 시작). YTD 73.58% 상승에도 원자력 전력 + 장기계약 기반 성장이 지속. Muskie 데이터 캠퍼스(켄터키) 신규 인수로 확장.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'✅', cls:'mb-yes'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 고성장 가능성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑦ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매/이벤트', v:'⚠️', cls:'mb-mid'}
+    ]
+  },
+  {
+    ticker:'CORZ', name:'Core Scientific Inc.', tier:'mid', stars:'★★',
+    price:'~$28', cap:'~$8.8B', capNum:8.8, rsi:71, mb:4.5,
+    badge1:'중류 — 전환 중', badge2:'대체불가 높음', badge3:'CoreWeave $10.2B',
+    isRef:false,
+    point:'CoreWeave $10.2B/12년 계약 — 350MW 가동, 200MW 결제 중 (RSI 과매수 주의)',
+    reason:'OpenAI 최대 GPU 클라우드 공급사 CoreWeave와 $10.2B 12년 계약. 350MW 에너지화, 200MW 현재 결제 중. BTIG 매수 업그레이드 시 $4M/MW vs 동종업계 $7M/MW → 아직 저평가. RSI 70.74 과매수 단점, 단기 조정 후 분할 진입 전략 권장.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'✅', cls:'mb-yes'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 고성장 가능성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑦ 재무 건전성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑧ 촉매/이벤트', v:'⚠️', cls:'mb-mid'}
+    ]
+  },
+  {
+    ticker:'HUT', name:'Hut 8 Corp.', tier:'mid', stars:'★★',
+    price:'~$124', cap:'~$13.3B', capNum:13.3, rsi:62, mb:4.5,
+    badge1:'중류 — 전환 완료', badge2:'대체불가 보통', badge3:'$16.8B 계약',
+    isRef:false,
+    point:'Texas $9.8B/15년 + Louisiana $7B 총 $16.8B 계약 — AI 클라우드·ASIC·전통 클라우드',
+    reason:'$9.8B/15년 Texas 리스(AI 인프라) + Fluidstack $7B Louisiana 15년 리스. AI 클라우드·ASIC 컴퓨팅·전통 클라우드 3분야 동시 운영. YTD +100%+ 이미 많이 올랐지만 총 계약 $16.8B 규모가 $13.3B 시총 대비 압도적. River Bend 캠퍼스 2027년 Q1 첫 데이터홀 오픈.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'✅', cls:'mb-yes'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 고성장 가능성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑦ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매/이벤트', v:'⚠️', cls:'mb-mid'}
+    ]
+  },
+  {
+    ticker:'BTBT', name:'Bit Digital Inc.', tier:'low', stars:'★',
+    price:'~$2.0', cap:'~$0.69B', capNum:0.69, rsi:38, mb:4.0,
+    badge1:'하류 — 초기 전환', badge2:'대체불가 낮음', badge3:'GPU AI 클라우드',
+    isRef:true,
+    point:'[참고] $0.69B 마이크로캡, 52주 고점 $4.55→$2 (55% 급락) — AI 클라우드 전환 초기',
+    reason:'GPU 클라우드 서비스(생성 AI 워크스트림 지원) 로 피벗 중. 52주 고점 $4.55에서 55% 급락, 현재 RSI ~38 과매도 영역. 5명 애널리스트 전원 강력매수. 하지만 $0.69B 마이크로캡으로 유동성 부족, HPC 계약 미보유. 위험감수 투자자를 위한 참고용.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'⚠️', cls:'mb-mid'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'❌', cls:'mb-no'},
+      {label:'④ 훌륭한 경영진', v:'⚠️', cls:'mb-mid'},
+      {label:'⑤ 반복 수익 구조', v:'⚠️', cls:'mb-mid'},
+      {label:'⑥ 고성장 가능성', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 재무 건전성', v:'❌', cls:'mb-no'},
+      {label:'⑧ 촉매/이벤트', v:'⚠️', cls:'mb-mid'}
+    ]
+  }
+];
+
+var TABS = ['🗺️ 밸류체인','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
+
+function Badge(props) {
+  return e('span', {style:{
+    background:'rgba(249,115,22,0.15)', border:'1px solid rgba(249,115,22,0.4)',
+    color:ACCENT, padding:'2px 7px', borderRadius:4, fontSize:11, marginRight:4
+  }}, props.children);
+}
+
+function RefBadge() {
+  return e('span', {style:{
+    background:'rgba(251,191,36,0.15)', border:'1px solid rgba(251,191,36,0.4)',
+    color:'#fbbf24', padding:'2px 7px', borderRadius:4, fontSize:11, marginRight:4
+  }}, '이미 대형주/참고');
+}
+
+function RSIBar(props) {
+  var v = props.v;
+  var color = v < 35 ? '#34d399' : v > 65 ? '#f87171' : '#fbbf24';
+  var label = v < 35 ? '과매도' : v > 65 ? '과매수' : '중립';
+  return e('div', {style:{marginTop:4}},
+    e('div', {style:{display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:2}},
+      e('span', {style:{color:'#9ca3af'}}, 'RSI ' + v),
+      e('span', {style:{color:color}}, label)
+    ),
+    e('div', {style:{background:'#374151', borderRadius:4, height:6, position:'relative'}},
+      e('div', {style:{
+        position:'absolute', height:6, borderRadius:4,
+        width:v+'%', background:color, maxWidth:'100%'
+      }})
+    )
+  );
+}
+
+function MBBar(props) {
+  var pct = (props.v / 8) * 100;
+  var color = pct >= 62.5 ? ACCENT : pct >= 50 ? '#fbbf24' : '#6b7280';
+  return e('div', {style:{marginTop:4}},
+    e('div', {style:{display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:2}},
+      e('span', {style:{color:'#9ca3af'}}, '멀티배거'),
+      e('span', {style:{color:color}}, props.v + '/8')
+    ),
+    e('div', {style:{background:'#374151', borderRadius:4, height:6}},
+      e('div', {style:{height:6, borderRadius:4, width:pct+'%', background:color}})
+    )
+  );
+}
+
+function PivotBar(props) {
+  var stages = ['순수채굴','채굴혼합','HPC전환','완전전환'];
+  var stageColors = ['#6b7280','#fbbf24','#f97316','#34d399'];
+  var idx = props.idx;
+  return e('div', {style:{marginTop:6}},
+    e('div', {style:{color:'#9ca3af', fontSize:10, marginBottom:3}}, 'AI 피벗 단계'),
+    e('div', {style:{display:'flex', gap:2}},
+      stages.map(function(s, i) {
+        return e('div', {key:i, style:{
+          flex:1, textAlign:'center', padding:'3px 2px',
+          borderRadius:4, fontSize:9,
+          background: i <= idx ? stageColors[i] : '#374151',
+          color: i <= idx ? '#000' : '#6b7280',
+          fontWeight: i === idx ? 700 : 400
+        }}, s);
+      })
+    )
+  );
+}
+
+function TabValuchain() {
+  var stages = [
+    {label:'메가트렌드', items:['비트코인 채산성 하락 → AI HPC 피벗 불가피', 'AI 하이퍼스케일러 전력·부지 부족 → 채굴 인프라가 해답', '$70B+ 누적 HPC 계약 공개 발표 (2025~2026)'], color:'#9ca3af'},
+    {label:'순수 채굴 (EV/NTM 5.9x)', items:['MARA · CLSK · 기타 순수 채굴사', 'BTC 채굴 수익만 의존', '밸류에이션 프리미엄 없음'], color:'#6b7280'},
+    {label:'전환 초기·임박 (잠재 12.3x)', items:['★★★ CIFR — $9.3B AWS+Google 계약, Oct 2026 가동', '★★★ RIOT — 1.1GW 전력 자산, AMD 파트너십', '→ 아직 채굴 배수 → 가동 시 급격한 재평가'], color:ACCENT},
+    {label:'전환 진행 중 (12~15x)', items:['★★ WULF — $12.8B 계약, 원자력 전력, Q1 HPC $21M', '★★ CORZ — CoreWeave $10.2B, 350MW 가동', '★★ HUT — $16.8B 계약, AI·ASIC·클라우드'], color:'#fb923c'},
+    {label:'전환 완료 (20x+)', items:['IREN — $1.6B Dell 딜, $2.6B 전환사채, $20B+', '이미 HPC 배수 완전 반영된 대형주', '→ 신규 진입보다 벤치마크로 활용'], color:'#34d399'}
+  ];
+
+  return e('div', null,
+    e('h3', {style:{color:ACCENT, fontSize:16, marginBottom:16}}, '비트코인 채굴 × AI HPC 전환 밸류체인'),
+    stages.map(function(s, i) {
+      return e('div', {key:i, style:{marginBottom:6}},
+        e('div', {style:{
+          background:BG_INNER, borderRadius:8, padding:'10px 14px',
+          borderLeft:'3px solid ' + s.color
+        }},
+          e('div', {style:{color:s.color, fontSize:11, fontWeight:700, marginBottom:4}}, s.label),
+          s.items.map(function(it, j) {
+            return e('div', {key:j, style:{color:'#e2e8f0', fontSize:13, marginBottom:2}}, it);
+          })
+        ),
+        i < stages.length - 1 && e('div', {style:{textAlign:'center', color:ACCENT, fontSize:18, margin:'2px 0'}}, '↓')
+      );
+    }),
+    e('div', {style:{
+      background:'rgba(249,115,22,0.07)', border:'1px solid rgba(249,115,22,0.2)',
+      borderRadius:8, padding:'12px 14px', marginTop:16
+    }},
+      e('div', {style:{color:ACCENT, fontSize:13, fontWeight:700, marginBottom:8}},
+        '⚡ 핵심 파생 논리 (왜 지금인가?)'),
+      [
+        '1. 비트코인 반감기(2024) 이후 채굴 수익성 악화 → 전환 속도 가속',
+        '2. 하이퍼스케일러 전력·부지 병목 → 에너지화 완료된 채굴 인프라에 프리미엄',
+        '3. 배수 차이: 채굴 5.9x → HPC 12.3x → DC 운영사 20~25x EBITDA',
+        '4. 가장 큰 기회: "계약은 했지만 아직 가동 전" → 채굴 배수로 거래 중인 종목',
+        '5. IREN이 증명: 완전 전환 후 $2B → $22B (11배) 재평가'
+      ].map(function(a, i) {
+        return e('div', {key:i, style:{color:'#d1d5db', fontSize:12, marginBottom:4}}, a);
+      })
+    ),
+    e('div', {style:{
+      background:'rgba(251,191,36,0.07)', border:'1px solid rgba(251,191,36,0.2)',
+      borderRadius:8, padding:'12px 14px', marginTop:12
+    }},
+      e('div', {style:{color:'#fbbf24', fontSize:13, fontWeight:700, marginBottom:8}}, '⚠️ 이미 전환 완료된 대형주 (제외)'),
+      [
+        'IREN $20B — Dell $1.6B 딜, 완전 AI 클라우드 전환',
+        'WULF $13.3B — YTD 73%, 이미 HPC 배수 상당 반영',
+        'HUT $13.25B — YTD 100%+, Texas+Louisiana 대형 계약'
+      ].map(function(t, i) {
+        return e('div', {key:i, style:{color:'#fbbf24', fontSize:12, marginBottom:3}}, '• ' + t);
+      })
+    )
+  );
+}
+
+function TabStocks() {
+  var pivotIdx = {'CIFR':1,'RIOT':1,'WULF':2,'CORZ':2,'HUT':2,'BTBT':0};
+  return e('div', null,
+    e('h3', {style:{color:ACCENT, fontSize:16, marginBottom:16}}, '발굴 종목 카드'),
+    STOCKS.map(function(s, i) {
+      return e('div', {key:i, style:{
+        background:BG_CARD, borderRadius:12, padding:16, marginBottom:12,
+        border:'1px solid ' + (s.isRef ? 'rgba(251,191,36,0.25)' : 'rgba(249,115,22,0.25)')
+      }},
+        e('div', {style:{display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:4}},
+          e('div', null,
+            e('span', {style:{fontSize:18, fontWeight:700, color: s.isRef ? '#fbbf24' : ACCENT}}, s.ticker),
+            e('span', {style:{color:'#9ca3af', fontSize:12, marginLeft:8}}, s.name)
+          ),
+          e('span', {style:{fontSize:22}}, s.stars)
+        ),
+        e('div', {style:{marginTop:8, display:'flex', flexWrap:'wrap', gap:4}},
+          s.isRef ? e(RefBadge, null) : null,
+          e(Badge, null, s.badge1),
+          e(Badge, null, s.badge2),
+          e(Badge, null, s.badge3)
+        ),
+        e(PivotBar, {idx: pivotIdx[s.ticker] || 0}),
+        e('div', {style:{
+          display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:10
+        }},
+          e('div', {style:{background:BG_INNER, borderRadius:6, padding:'8px 10px'}},
+            e('div', {style:{color:'#6b7280', fontSize:10}}, '현재가'),
+            e('div', {style:{color:'#f9fafb', fontWeight:700}}, s.price)
+          ),
+          e('div', {style:{background:BG_INNER, borderRadius:6, padding:'8px 10px'}},
+            e('div', {style:{color:'#6b7280', fontSize:10}}, '시가총액'),
+            e('div', {style:{color:'#f9fafb', fontWeight:700}}, s.cap)
+          )
+        ),
+        e(RSIBar, {v:s.rsi}),
+        e(MBBar, {v:s.mb}),
+        e('div', {style:{background:BG_INNER, borderRadius:6, padding:'8px 10px', marginTop:10}},
+          e('div', {style:{color:ACCENT, fontSize:11, fontWeight:600, marginBottom:4}}, '핵심 포인트'),
+          e('div', {style:{color:'#d1d5db', fontSize:12, lineHeight:1.5}}, s.point)
+        ),
+        e('div', {style:{
+          background:'rgba(249,115,22,0.05)', borderRadius:6,
+          padding:'8px 10px', marginTop:6,
+          border:'1px solid rgba(249,115,22,0.1)'
+        }},
+          e('div', {style:{color:'#9ca3af', fontSize:11, fontWeight:600, marginBottom:4}}, '주목 이유 (파생 논리)'),
+          e('div', {style:{color:'#d1d5db', fontSize:12, lineHeight:1.6}}, s.reason)
+        )
+      );
+    })
+  );
+}
+
+function ChartCap() {
+  var ref = useRef(null);
+  var chartRef = useRef(null);
+  var data = STOCKS.map(function(s) { return s.capNum; });
+  var labels = STOCKS.map(function(s) { return s.ticker; });
+  var colors = STOCKS.map(function(s) {
+    return s.isRef ? 'rgba(251,191,36,0.6)' : 'rgba(249,115,22,0.7)';
+  });
+  makeChart(ref, chartRef, {
+    type:'bar',
+    data:{labels:labels, datasets:[{
+      label:'시가총액 ($B)',
+      data:data, backgroundColor:colors, borderColor:colors, borderWidth:1, borderRadius:4
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ' $'+ctx.raw+'B';}}}},
+      scales:{
+        y:{grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#9ca3af',callback:function(v){return '$'+v+'B';}}},
+        x:{grid:{display:false}, ticks:{color:'#9ca3af'}}
+      }
+    }
+  });
+  return e('div', {style:{height:220}}, e('canvas', {ref:ref}));
+}
+
+function ChartMB() {
+  var ref = useRef(null);
+  var chartRef = useRef(null);
+  var data = STOCKS.map(function(s) { return s.mb; });
+  var labels = STOCKS.map(function(s) { return s.ticker; });
+  var colors = STOCKS.map(function(s) {
+    return s.mb >= 5 ? 'rgba(52,211,153,0.75)' : s.mb >= 4 ? 'rgba(251,191,36,0.75)' : 'rgba(107,114,128,0.75)';
+  });
+  makeChart(ref, chartRef, {
+    type:'bar',
+    data:{labels:labels, datasets:[{label:'멀티배거', data:data, backgroundColor:colors, borderColor:colors, borderWidth:1, borderRadius:4}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{min:0, max:8, grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#9ca3af'}},
+        x:{grid:{display:false}, ticks:{color:'#9ca3af'}}
+      }
+    }
+  });
+  return e('div', {style:{height:220}}, e('canvas', {ref:ref}));
+}
+
+function ChartContracts() {
+  var ref = useRef(null);
+  var chartRef = useRef(null);
+  var contracts = [
+    {t:'CIFR', v:9.3}, {t:'RIOT', v:0}, {t:'WULF', v:12.8},
+    {t:'CORZ', v:10.2}, {t:'HUT', v:16.8}, {t:'BTBT', v:0}, {t:'IREN', v:4.0}
+  ];
+  makeChart(ref, chartRef, {
+    type:'bar',
+    data:{
+      labels:contracts.map(function(c){return c.t;}),
+      datasets:[{
+        label:'HPC 계약 규모 ($B)',
+        data:contracts.map(function(c){return c.v;}),
+        backgroundColor:'rgba(249,115,22,0.6)',
+        borderColor:'rgba(249,115,22,0.9)', borderWidth:1, borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ' $'+ctx.raw+'B';}}}},
+      scales:{
+        y:{grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#9ca3af',callback:function(v){return '$'+v+'B';}}},
+        x:{grid:{display:false}, ticks:{color:'#9ca3af'}}
+      }
+    }
+  });
+  return e('div', {style:{height:220}}, e('canvas', {ref:ref}));
+}
+
+function TabCharts() {
+  return e('div', null,
+    e('h3', {style:{color:ACCENT, fontSize:16, marginBottom:16}}, '종목 비교 차트'),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:'#9ca3af', fontSize:12, marginBottom:8}}, '시가총액 비교 ($B)'),
+      e(ChartCap, null)
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:'#9ca3af', fontSize:12, marginBottom:8}}, 'HPC 계약 규모 ($B) — 계약 vs 시총 비교'),
+      e(ChartContracts, null)
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14}},
+      e('div', {style:{color:'#9ca3af', fontSize:12, marginBottom:8}}, '멀티배거 점수 (8점 만점)'),
+      e(ChartMB, null)
+    ),
+    e('div', {style:{
+      background:'rgba(249,115,22,0.06)', border:'1px solid rgba(249,115,22,0.18)',
+      borderRadius:8, padding:'10px 14px', marginTop:12
+    }},
+      e('div', {style:{color:ACCENT, fontSize:12, fontWeight:600, marginBottom:6}}, '💡 차트 인사이트'),
+      [
+        'HUT: $16.8B 계약 vs $13.3B 시총 → 계약이 시총을 초과',
+        'WULF: $12.8B 계약 vs $13.3B 시총 → 거의 동등',
+        'CIFR: $9.3B 계약 vs $6.7B 시총 → 아직 채굴 배수, 가장 큰 업사이드',
+        'RIOT: 계약 없지만 1.1GW 전력자산이 최대 카탈리스트'
+      ].map(function(t, i) {
+        return e('div', {key:i, style:{color:'#d1d5db', fontSize:12, marginBottom:3}}, '• ' + t);
+      })
+    )
+  );
+}
+
+function TabMultibagger() {
+  var choices = STOCKS.filter(function(s) { return !s.isRef; }).map(function(s) { return s.ticker; });
+  var state = useState(choices[0]);
+  var sel = state[0]; var setSel = state[1];
+  var s = STOCKS.find(function(x) { return x.ticker === sel; });
+
+  return e('div', null,
+    e('h3', {style:{color:ACCENT, fontSize:16, marginBottom:12}}, 'Anna Yartseva 멀티배거 8항목'),
+    e('div', {style:{display:'flex', flexWrap:'wrap', gap:6, marginBottom:16}},
+      choices.map(function(t) {
+        return e('button', {key:t, onClick:function(){setSel(t);}, style:{
+          padding:'5px 12px', borderRadius:6,
+          background: t === sel ? ACCENT : BG_INNER,
+          color: t === sel ? '#000' : '#9ca3af',
+          border:'1px solid ' + (t === sel ? ACCENT : '#374151'),
+          cursor:'pointer', fontSize:13, fontWeight:600
+        }}, t);
+      })
+    ),
+    s && e('div', null,
+      e('div', {style:{color:'#9ca3af', fontSize:12, marginBottom:12}},
+        s.name + ' — 멀티배거 점수: ',
+        e('span', {style:{color:ACCENT, fontWeight:700}}, s.mb + '/8')
+      ),
+      s.mb_items.map(function(item, i) {
+        var isYes = item.cls === 'mb-yes';
+        var isMid = item.cls === 'mb-mid';
+        return e('div', {key:i, style:{
+          display:'flex', justifyContent:'space-between', alignItems:'center',
+          background:BG_INNER, borderRadius:6, padding:'10px 14px', marginBottom:6,
+          borderLeft:'3px solid ' + (isYes ? '#34d399' : isMid ? '#fbbf24' : '#ef4444')
+        }},
+          e('span', {style:{color:'#e2e8f0', fontSize:13}}, item.label),
+          e('span', {style:{fontSize:16}}, item.v)
+        );
+      })
+    )
+  );
+}
+
+function TabStrategy() {
+  var ranked = STOCKS.slice().sort(function(a,b) {
+    if (a.isRef !== b.isRef) return a.isRef ? 1 : -1;
+    return b.mb - a.mb;
+  });
+
+  var catalysts = [
+    {t:'CIFR', c:'Oct 2026 AWS+Google 300MW×2 가동 → HPC 배수 재평가 카탈리스트'},
+    {t:'RIOT', c:'대형 HPC 계약 발표 + Whinstone 에너지화 확대, 원자력 DC 착공'},
+    {t:'WULF', c:'Muskie 캠퍼스 신규 가동, Q2+ HPC 매출 급증'},
+    {t:'CORZ', c:'CoreWeave 결제 용량 200MW → 350MW 확대, 신규 HPC 계약'},
+    {t:'HUT', c:'River Bend Q1 2027 첫 데이터홀 오픈, AI 클라우드 고객 추가'}
+  ];
+
+  var risks = [
+    {t:'CIFR', r:'가동 일정 지연 리스크, AWS·Google 계약 조건 변경'},
+    {t:'RIOT', r:'HPC 계약 미보유 상태 → 채굴 의존도 높음, 전환 실행 불확실'},
+    {t:'WULF', r:'원자력 전력 공급 계약 리스크, RSI 60 중립-과매수 경계'},
+    {t:'CORZ', r:'RSI 70.74 과매수, CoreWeave 의존도 집중 리스크'},
+    {t:'HUT', r:'계약 상대방(Fluidstack) 재정 리스크, 2027 가동 지연'}
+  ];
+
+  var multiples = [
+    {stage:'순수 채굴', mult:'5.9x', color:'#6b7280'},
+    {stage:'HPC 전환', mult:'12.3x', color:ACCENT},
+    {stage:'DC 운영사', mult:'20~25x', color:'#34d399'}
+  ];
+
+  return e('div', null,
+    e('h3', {style:{color:ACCENT, fontSize:16, marginBottom:16}}, '투자 전략 & 포트폴리오'),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:ACCENT, fontSize:13, fontWeight:600, marginBottom:10}}, '📐 EV/NTM 배수 재평가 로드맵'),
+      e('div', {style:{display:'flex', gap:4, flexWrap:'wrap'}},
+        multiples.map(function(m, i) {
+          return e('div', {key:i, style:{
+            flex:1, minWidth:80, background:BG_INNER, borderRadius:8,
+            padding:'10px 12px', textAlign:'center',
+            borderTop:'3px solid ' + m.color
+          }},
+            e('div', {style:{color:m.color, fontSize:16, fontWeight:800}}, m.mult),
+            e('div', {style:{color:'#9ca3af', fontSize:10, marginTop:3}}, m.stage)
+          );
+        })
+      ),
+      e('div', {style:{color:'#d1d5db', fontSize:11, marginTop:8, textAlign:'center'}},
+        '전환 성공 시 5.9x → 12.3x (+108%) → 20x+ (+239%)'
+      )
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:ACCENT, fontSize:13, fontWeight:600, marginBottom:10}}, '🏆 우선순위 순위표'),
+      ranked.map(function(s, i) {
+        return e('div', {key:i, style:{
+          display:'flex', alignItems:'center', gap:10,
+          background:BG_INNER, borderRadius:6, padding:'8px 12px', marginBottom:6,
+          opacity: s.isRef ? 0.6 : 1
+        }},
+          e('span', {style:{color:'#6b7280', fontSize:12, width:18}}, i+1),
+          e('span', {style:{color: s.isRef ? '#fbbf24' : ACCENT, fontWeight:700, width:50}}, s.ticker),
+          e('span', {style:{color:'#9ca3af', fontSize:12, flex:1}}, s.stars + ' ' + s.cap),
+          e('span', {style:{
+            color: s.mb >= 5 ? '#34d399' : s.mb >= 4 ? '#fbbf24' : '#6b7280',
+            fontSize:12
+          }}, 'MB ' + s.mb),
+          s.isRef && e('span', {style:{color:'#fbbf24', fontSize:10}}, '[참고]')
+        );
+      })
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:'#34d399', fontSize:13, fontWeight:600, marginBottom:10}}, '⚡ 주요 촉매'),
+      catalysts.map(function(x, i) {
+        return e('div', {key:i, style:{marginBottom:8}},
+          e('span', {style:{color:ACCENT, fontWeight:700, fontSize:12}}, x.t + ': '),
+          e('span', {style:{color:'#d1d5db', fontSize:12}}, x.c)
+        );
+      })
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:'#f87171', fontSize:13, fontWeight:600, marginBottom:10}}, '⚠️ 핵심 리스크'),
+      risks.map(function(x, i) {
+        return e('div', {key:i, style:{marginBottom:8}},
+          e('span', {style:{color:'#f87171', fontWeight:700, fontSize:12}}, x.t + ': '),
+          e('span', {style:{color:'#d1d5db', fontSize:12}}, x.r)
+        );
+      })
+    ),
+    e('div', {style:{
+      background:'rgba(249,115,22,0.07)', border:'1px solid rgba(249,115,22,0.2)',
+      borderRadius:8, padding:'12px 14px'
+    }},
+      e('div', {style:{color:ACCENT, fontSize:13, fontWeight:700, marginBottom:10}}, '📐 포트폴리오 제안'),
+      [
+        {t:'CIFR', w:'35%', note:'최우선 — $9.3B 계약 미가동 → 가동 시 최대 재평가'},
+        {t:'RIOT', w:'30%', note:'카탈리스트 대기 — 1.1GW 자산 HPC 계약 발표 전'},
+        {t:'WULF', w:'20%', note:'안정형 — 원자력 전력 + $12.8B 계약 가동 중'},
+        {t:'CORZ', w:'15%', note:'분할 진입 — RSI 과매수 이후 조정 시 매수'}
+      ].map(function(r, i) {
+        return e('div', {key:i, style:{
+          display:'flex', alignItems:'center', gap:8,
+          background:BG_INNER, borderRadius:6, padding:'7px 10px', marginBottom:5
+        }},
+          e('span', {style:{color:ACCENT, fontWeight:700, width:40}}, r.t),
+          e('span', {style:{
+            background:'rgba(249,115,22,0.2)', color:ACCENT,
+            padding:'1px 7px', borderRadius:4, fontSize:11, width:36
+          }}, r.w),
+          e('span', {style:{color:'#d1d5db', fontSize:12}}, r.note)
+        );
+      })
+    )
+  );
+}
+
+function App() {
+  var state = useState(0);
+  var tab = state[0]; var setTab = state[1];
+
+  var contents = [
+    e(TabValuchain, null),
+    e(TabStocks, null),
+    e(TabCharts, null),
+    e(TabMultibagger, null),
+    e(TabStrategy, null)
+  ];
+
+  return e('div', null,
+    e('div', {style:{
+      display:'flex', justifyContent:'space-between', alignItems:'center',
+      marginBottom:16, flexWrap:'wrap', gap:8
+    }},
+      e('a', {href:'https://disntm90.github.io/disntm90/', style:{
+        color:'#6b7280', fontSize:12, textDecoration:'none'
+      }}, '← 목록으로'),
+      e('div', {style:{textAlign:'right'}},
+        e('div', {style:{color:'#9ca3af', fontSize:10}}, '2026-05-29'),
+        e('div', {style:{color:'#6b7280', fontSize:10}}, '탑다운 × 밸류체인 종목발굴')
+      )
+    ),
+    e('div', {style:{
+      background:'linear-gradient(135deg,rgba(249,115,22,0.15),rgba(234,88,12,0.1))',
+      border:'1px solid rgba(249,115,22,0.25)',
+      borderRadius:12, padding:'16px 18px', marginBottom:20
+    }},
+      e('div', {style:{color:ACCENT, fontSize:11, fontWeight:600, letterSpacing:2, marginBottom:6}}, '종목발굴 리포트'),
+      e('h1', {style:{fontSize:22, fontWeight:800, color:'#f9fafb', marginBottom:6}},
+        '₿ 비트코인 채굴 × AI HPC 전환'),
+      e('p', {style:{color:'#9ca3af', fontSize:12, lineHeight:1.6}},
+        'IREN 동일 섹터 — 채굴 배수(5.9x)→HPC 배수(12.3x)→DC 배수(20x+) 재평가 수혜\n' +
+        '"계약은 했지만 아직 가동 전"인 숨겨진 재평가 대기 종목 발굴'
+      )
+    ),
+    e('div', {style:{
+      display:'flex', gap:4, marginBottom:16, overflowX:'auto', paddingBottom:4
+    }},
+      TABS.map(function(t, i) {
+        return e('button', {key:i, onClick:function(){setTab(i);}, style:{
+          padding:'7px 10px', borderRadius:7, whiteSpace:'nowrap',
+          background: i === tab ? ACCENT : BG_INNER,
+          color: i === tab ? '#000' : '#9ca3af',
+          border:'1px solid ' + (i === tab ? ACCENT : '#374151'),
+          cursor:'pointer', fontSize:12, fontWeight: i === tab ? 700 : 400
+        }}, t);
+      })
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:12, padding:16}},
+      contents[tab]
+    ),
+    e('div', {style:{
+      textAlign:'center', color:'#374151', fontSize:10, marginTop:12
+    }}, '투자 참고 자료이며 투자 권유가 아닙니다.')
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
+</script>
+</body>
+</html>
