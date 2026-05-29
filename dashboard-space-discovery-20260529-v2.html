@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🚀 우주항공 종목발굴 — 2026.05.29</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a1a;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+.card{background:#13132a;border:1px solid #2d2d5a;border-radius:12px;padding:16px;margin-bottom:12px}
+.tab-bar{display:flex;gap:4px;padding:12px 16px;background:#0d0d22;border-bottom:1px solid #2d2d5a;overflow-x:auto;position:sticky;top:0;z-index:10}
+.tab-btn{padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;transition:all .2s}
+.tab-btn.active{background:#7c3aed;color:#fff}
+.tab-btn:not(.active){background:#1e1e3f;color:#94a3b8}
+.tab-btn:not(.active):hover{background:#2d2d5a;color:#e2e8f0}
+.header{padding:20px 16px 0;background:#0d0d22}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-purple{background:#4c1d95;color:#c4b5fd}
+.badge-green{background:#14532d;color:#86efac}
+.badge-yellow{background:#713f12;color:#fde68a}
+.badge-red{background:#7f1d1d;color:#fca5a5}
+.badge-gray{background:#374151;color:#d1d5db}
+.metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.metric{background:#1a1a35;border-radius:8px;padding:10px;text-align:center}
+.metric-val{font-size:18px;font-weight:800;color:#a78bfa}
+.metric-label{font-size:11px;color:#64748b;margin-top:2px}
+.progress-bar{height:6px;background:#1e1e3f;border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px}
+.section-title{font-size:15px;font-weight:700;color:#7c3aed;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #2d2d5a}
+.chain-box{background:#0f0f2a;border:1px solid #2d2d5a;border-radius:10px;padding:14px;font-size:13px;line-height:1.9;white-space:pre-wrap}
+.tech-item{background:#1a1a35;border-left:3px solid #7c3aed;border-radius:0 8px 8px 0;padding:12px;margin-bottom:8px}
+.tech-title{font-size:13px;font-weight:700;color:#a78bfa;margin-bottom:4px}
+.tech-desc{font-size:12px;color:#94a3b8;line-height:1.6}
+.timeline-step{display:flex;gap:12px;margin-bottom:14px}
+.timeline-dot{width:32px;height:32px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;margin-top:2px;color:#fff}
+.timeline-content{flex:1}
+.timeline-title{font-size:13px;font-weight:700;color:#c4b5fd;margin-bottom:4px}
+.timeline-desc{font-size:12px;color:#94a3b8;line-height:1.6}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#1e1e3f;color:#94a3b8;padding:8px 10px;text-align:left;font-weight:600}
+td{padding:8px 10px;border-bottom:1px solid #1e1e3f;color:#e2e8f0}
+tr:hover td{background:#1a1a35}
+.rank-num{width:28px;height:28px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0}
+.rank-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.chart-wrap{position:relative;height:220px;margin-top:10px}
+.portfolio-card{background:#1a1a35;border:1px solid #4c1d95;border-radius:10px;padding:14px;margin-bottom:8px}
+.catalyst-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;font-size:13px}
+select{background:#1e1e3f;color:#e2e8f0;border:1px solid #2d2d5a;border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer}
+.multi-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.multi-item{background:#1a1a35;border-radius:8px;padding:8px;font-size:12px}
+.multi-item-ok{border-left:3px solid #22c55e}
+.multi-item-warn{border-left:3px solid #f59e0b}
+.multi-label{color:#94a3b8;margin-bottom:2px}
+.multi-val{font-weight:700}
+.val-ok{color:#86efac}
+.val-warn{color:#fde68a}
+.back-link{display:inline-block;padding:6px 14px;background:#1e1e3f;border-radius:6px;color:#a78bfa;text-decoration:none;font-size:13px;font-weight:600}
+.back-link:hover{background:#2d2d5a}
+@media(max-width:500px){.multi-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+var STOCKS = [
+  {
+    ticker:'KRMN', name:'Karman Holdings', price:63, cap:'$8.4B', rsi:48,
+    stars:3, tier:'상류 ★★★ 핵심노드', moat:'높음',
+    point:'발사체 원가 70%+ 복합소재·추진 독점 — 발사 증가 = 직결 수요',
+    multi:6, capN:8.4, rsiN:48,
+    badges:['복합소재','추진시스템','하이퍼소닉'],
+    catalyst:'IPO 후 52주 고점 $118 대비 47% 조정 + 2026 가이던스 매출 $715~730M 상향',
+    risk:'고체 로켓 모터 규제, 국방예산 삭감 리스크',
+    detail:'SpaceX·로켓랩 등 모든 발사체 제조사에 복합소재·고체 로켓 모터·페이로드 보호 시스템 공급. 2026 EBITDA 가이던스 $207~218M. 하이퍼소닉 + 미사일 방어 + 우주 발사 3중 수혜 구조. IPO 후 조정으로 진입 기회.',
+    m8:[
+      {label:'대형 TAM', val:'우주+방산 $600B+', ok:true},
+      {label:'경쟁 해자', val:'복합소재 특허·수직계열화', ok:true},
+      {label:'반복 매출', val:'장기 정부 계약 기반', ok:true},
+      {label:'경영진', val:'IPO 후 실적 3배 성장', ok:true},
+      {label:'재무상태', val:'EBITDA 마진 28%', ok:true},
+      {label:'매출 성장', val:'47% YoY Q4 2025', ok:true},
+      {label:'고객 집중', val:'국방 의존도 높음', ok:false},
+      {label:'밸류에이션', val:'IPO 후 고평가 구간', ok:false}
+    ]
+  },
+  {
+    ticker:'BKSY', name:'BlackSky Technology', price:50, cap:'$1.9B', rsi:62,
+    stars:3, tier:'하류 ★★★ 핵심노드', moat:'높음',
+    point:'AI Gen-3 위성 이미지+분석 플랫폼 — 정부 sole-source 계약 유일',
+    multi:6, capN:1.9, rsiN:62,
+    badges:['AI 위성이미지','EO 데이터','정부계약'],
+    catalyst:'정부 sole-source IDIQ $99M + 52주 +134% 성과, 2026 매출 가이던스 최대 $145M',
+    risk:'위성 궤도 수명, Planet Labs 경쟁 추격',
+    detail:'Gen-3 AI 위성 이미지 분석 플랫폼 미국 내 유일 sole-source 운영. EO 데이터에 AI 분석 레이어 포함으로 단가 4~5x 프리미엄. 시총 $1.9B로 멀티배거 가능성 높음. SpaceX IPO 랠리 이후에도 전통 위성사 대비 AI 차별화로 추가 재평가 가능.',
+    m8:[
+      {label:'대형 TAM', val:'EO+AI 분석 $50B+', ok:true},
+      {label:'경쟁 해자', val:'AI Gen-3 sole-source', ok:true},
+      {label:'반복 매출', val:'정부 IDIQ 반복 계약', ok:true},
+      {label:'경영진', val:'Aerojet Rocketdyne 출신', ok:true},
+      {label:'재무상태', val:'흑자 전환 임박', ok:true},
+      {label:'매출 성장', val:'+134% 52주 주가', ok:true},
+      {label:'고객 집중', val:'정부 의존도 80%+', ok:false},
+      {label:'밸류에이션', val:'P/S 13x 다소 높음', ok:false}
+    ]
+  },
+  {
+    ticker:'VOYG', name:'Voyager Technologies', price:48.25, cap:'$3.0B', rsi:52,
+    stars:2, tier:'중류 ★★', moat:'보통',
+    point:'방산+우주+Starlab 3중 사업부 — ISS 후계자 독점 가능성',
+    multi:5, capN:3.0, rsiN:52,
+    badges:['Starlab','방산','우주정거장'],
+    catalyst:'52주 고점 $73.95 대비 35% 조정, 2026 가이던스 +38~53% YoY, 백로그 $275M +54%',
+    risk:'Starlab 개발 일정 지연 위험, 국방 계약 의존도',
+    detail:'Starlab 상업용 우주정거장(2028 목표)의 운영사 겸 방산 사업부 운영. ISS 퇴역(2030) 후 후계자 시장 독점 가능. 백로그 $275M +54% YoY. Starlab 독립 스핀오프 시 모회사 디스카운트 해소 = 재평가 트리거. 52주 고점 대비 35% 조정으로 진입 기회.',
+    m8:[
+      {label:'대형 TAM', val:'우주정거장+방산 복합', ok:true},
+      {label:'경쟁 해자', val:'Starlab ISS 후계 독점', ok:true},
+      {label:'반복 매출', val:'정부·국방 장기계약', ok:true},
+      {label:'경영진', val:'전직 NASA·국방부 출신', ok:true},
+      {label:'재무상태', val:'적자 지속, 현금 소진 중', ok:false},
+      {label:'매출 성장', val:'+38~53% YoY 가이던스', ok:true},
+      {label:'고객 집중', val:'NASA·USSF 집중', ok:false},
+      {label:'밸류에이션', val:'P/S 12x 적정 수준', ok:false}
+    ]
+  },
+  {
+    ticker:'RDW', name:'Redwire Corporation', price:25.9, cap:'$1.5B', rsi:68,
+    stars:2, tier:'중류 ★★', moat:'보통',
+    point:'우주 RF안테나·in-space 제조 + 유럽 국방 진입 — NATO 위성 독점 공급',
+    multi:5, capN:1.5, rsiN:68,
+    badges:['RF안테나','유럽국방','in-space제조'],
+    catalyst:'벨기에 국방위성 prime 계약, 2026 매출 $450~500M (+41% YoY 가이던스)',
+    risk:'손실 지속(Q1 $76.5M), 일회성 비용 과다',
+    detail:'우주 RF 안테나·in-space 제조 전문. 벨기에 최초 국방 위성 prime 계약 체결. NATO Link-16 통신 위성 공급. 유럽 국방 우주 지출 급증(+32% YoY)으로 미국 외 시장 차별화. 매출 57.9% YoY 성장. 단, Q1 $76.5M 순손실(일회성 포함) → 흑자 전환 시점 모니터링.',
+    m8:[
+      {label:'대형 TAM', val:'유럽 국방 우주 $15B+', ok:true},
+      {label:'경쟁 해자', val:'NATO RF 통신위성 sole', ok:true},
+      {label:'반복 매출', val:'국방 장기 계약 기반', ok:true},
+      {label:'경영진', val:'SPAC 상장 후 턴어라운드', ok:true},
+      {label:'재무상태', val:'적자, 부채 과다', ok:false},
+      {label:'매출 성장', val:'+57.9% YoY Q1 2026', ok:true},
+      {label:'고객 집중', val:'미국·유럽 정부 집중', ok:false},
+      {label:'밸류에이션', val:'EV/Rev 3.3x 적정', ok:false}
+    ]
+  },
+  {
+    ticker:'LUNR', name:'Intuitive Machines', price:45.7, cap:'$7.3B', rsi:75,
+    stars:2, tier:'하류 ★★ (달 인프라)', moat:'높음',
+    point:'NASA 달 착륙선 유일 민간 운영사 — Artemis 2030 수혜',
+    multi:5, capN:7.3, rsiN:75,
+    badges:['달착륙선','NASA독점','Artemis'],
+    catalyst:'Q1 2026 매출 3배 YoY, EBITDA 흑자 전환, IM-3 착륙 2H 2026 예정',
+    risk:'181% YTD 상승 RSI 과열, IM-3 실패 시 급락 위험',
+    detail:'NASA CLPS 계약 하 달 착륙선 유일 민간 운영사. Q1 2026 매출 $186.7M(3배 YoY), EBITDA 흑자 전환. IM-3 착륙 성공(2H 2026) 시 IM-4~5 계약 확보. 단, 181% YTD 상승 + RSI 75로 단기 조정 주의. 신규 진입보다 IM-3 결과 후 조정 매수 권장.',
+    m8:[
+      {label:'대형 TAM', val:'달 경제 $120B (2040)', ok:true},
+      {label:'경쟁 해자', val:'NASA CLPS 독점 계약', ok:true},
+      {label:'반복 매출', val:'IM 시리즈 연속 계약', ok:true},
+      {label:'경영진', val:'전직 NASA 기술자 팀', ok:true},
+      {label:'재무상태', val:'EBITDA 흑자 전환', ok:true},
+      {label:'매출 성장', val:'+200% YoY Q1 2026', ok:true},
+      {label:'고객 집중', val:'NASA 80%+ 의존', ok:false},
+      {label:'밸류에이션', val:'EV/Rev 37x 과대평가', ok:false}
+    ]
+  }
+];
+
+var TABS = ['🗺️ 밸류체인','🔬 기술분석','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
+
+function MultiBar(props) {
+  var val = props.val || 0;
+  var pct = (val/8)*100;
+  var col = pct>=75?'#22c55e':pct>=50?'#f59e0b':'#ef4444';
+  return e('div',{style:{marginTop:6}},
+    e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:3}},
+      e('span',{style:{color:'#94a3b8'}},'멀티배거'),
+      e('span',{style:{color:col,fontWeight:700}},val+'/8')
+    ),
+    e('div',{className:'progress-bar'},
+      e('div',{className:'progress-fill',style:{width:pct+'%',background:col}})
+    )
+  );
+}
+
+function StarRow(props) {
+  var n = props.n || 0;
+  return e('div',{style:{display:'flex',gap:4,marginBottom:6}},
+    [0,1,2].map(function(i){
+      return e('span',{key:i,style:{fontSize:14,color:i<n?'#fbbf24':'#374151'}},'★');
+    })
+  );
+}
+
+function TabValorchain() {
+  return e('div',{style:{padding:'16px'}},
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'🚀 메가 트렌드 — SpaceX IPO × AI 수렴'),
+      e('div',{style:{fontSize:13,lineHeight:1.7,color:'#e2e8f0'}},
+        'SpaceX IPO($1.75~2T) → 섹터 재평가 + AI 위성 데이터 수요 폭증',
+        e('br',null),
+        'LEO 메가컨스텔레이션 확장 → 대량 발사 → ',
+        e('span',{style:{color:'#fbbf24',fontWeight:700}},'복합소재·추진 시스템이 발사체 원가 70%+ → KRMN 병목')
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'🗺️ 밸류체인 맵'),
+      e('div',{className:'chain-box'},
+        '[SpaceX IPO $1.75T~$2T 촉매 + AI × 위성 데이터 수렴]\n             ↓\n[상류 — 소재·구조물·추진]\n  KRMN ★★★ — 복합소재, 고체로켓모터, 페이로드보호\n             ↓\n[중류 — 위성 제조·부품·플랫폼]\n  RDW  ★★  — 위성부품, RF안테나, in-space 제조\n  VOYG ★★  — Starlab 우주정거장, 방산+우주 통합\n             ↓\n[하류 — 데이터·서비스·운영]\n  BKSY ★★★ — AI Gen-3 EO 데이터 분석 플랫폼\n  LUNR ★★  — 달 착륙선, NASA Artemis 독점'
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'🔗 핵심 파생 논리'),
+      [
+        'AI 수요 폭증 → 실시간 위성 데이터 필수화 → 더 많은 위성 발사',
+        '더 많은 발사 → 발사체 구조물·복합소재 대량 수요 → KRMN 공급 없이 라인 중단',
+        '위성 데이터 가치 상승 → AI 분석 플랫폼 프리미엄 → BKSY sole-source 재평가',
+        'ISS 퇴역(2030) → 상업 우주정거장 수요 → VOYG Starlab 독점 가능성',
+        'SpaceX IPO 상장 → 공급망 중소형주 멀티플 확장 → KRMN·BKSY 직접 수혜'
+      ].map(function(t,i){
+        return e('div',{key:i,className:'catalyst-item'},
+          e('span',{style:{fontSize:14}},'→'),
+          e('span',{style:{fontSize:13,color:'#e2e8f0'}},t)
+        );
+      })
+    )
+  );
+}
+
+function TabTech() {
+  return e('div',{style:{padding:'16px'}},
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'① 기존 기술의 근본 한계'),
+      e('div',{className:'tech-item'},
+        e('div',{className:'tech-title'},'발사 비용 구조 한계'),
+        e('div',{className:'tech-desc'},'SpaceX 외 소형 위성 전용 발사는 여전히 $30,000~40,000/kg. AI 시대에 실시간 위성 갱신 주기가 짧아질수록 즉응(responsive) 발사 수요 폭증 → 기존 인프라로는 빠른 재배치 불가')
+      ),
+      e('div',{className:'tech-item'},
+        e('div',{className:'tech-title'},'위성 수명·수리 불가 한계'),
+        e('div',{className:'tech-desc'},'LEO 메가컨스텔레이션 수명 5~7년(GEO 15년 대비 단축). 대량 연속 제조가 필수화 → 복합소재·추진 시스템 공급사가 발사체 원가 70%+ 차지 → 병목 가중')
+      ),
+      e('div',{className:'tech-item'},
+        e('div',{className:'tech-title'},'지상 통신 의존·분석 지연'),
+        e('div',{className:'tech-desc'},'위성 이미지·데이터가 지상국 통과 없이 실시간 전달 불가. AI on-orbit 분석 없이는 경쟁 불가 → AI Gen-3 위성 플랫폼(BKSY) 없인 정보 우위 확보 불가능')
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'② 신기술 우위성 — 정량 비교'),
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'기술'),e('th',null,'기존 대비 개선'))),
+        e('tbody',null,
+          [
+            ['SpaceX 재사용 발사체','비용 90%↓ ($300M → $67M/회)'],
+            ['LEO 메가컨스텔레이션','지연 20ms vs GEO 600ms (30배↑)'],
+            ['AI Gen-3 위성 이미지 (BKSY)','분석 속도 10x↑, sole-source 계약'],
+            ['복합소재 구조물 (KRMN)','발사체 경량화 → 발사 횟수 20%↑']
+          ].map(function(row,i){
+            return e('tr',{key:i},
+              e('td',null,row[0]),
+              e('td',{style:{color:'#86efac',fontWeight:600}},row[1])
+            );
+          })
+        )
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'③ 결정적 흐름 — 3단계 타임라인'),
+      [
+        {n:'1',title:'1단계 — 발사 비용 붕괴 (2015~2020)',desc:'SpaceX Falcon 9 재착륙 성공 → 발사 비용 90% 절감 → 소형 위성 수백~수천 기 제조·발사 경제화 → LEO 메가컨스텔레이션 개념 현실화'},
+        {n:'2',title:'2단계 — 빅테크·국방 전략 투자 (2020~2025)',desc:'Amazon Kuiper $10B 투자, NASA Artemis $93B 예산, Microsoft Azure Space 파트너십. USSF 예산 확대 → 민간 공급망(KRMN·RDW·BKSY) 의존도 급등'},
+        {n:'3',title:'3단계 — SpaceX IPO × AI 수렴 (2025~현재)',desc:'SpaceX IPO 비밀 제출(2026.4.1) → 밸류에이션 $1.75~2T → 전체 우주 섹터 재평가 랠리. AI × 위성 데이터 결합으로 EO 분석 시장 독자 성장. 변곡점: 2026년 상장 시 섹터 멀티플 재산정'}
+      ].map(function(s){
+        return e('div',{key:s.n,className:'timeline-step'},
+          e('div',{className:'timeline-dot'},s.n),
+          e('div',{className:'timeline-content'},
+            e('div',{className:'timeline-title'},s.title),
+            e('div',{className:'timeline-desc'},s.desc)
+          )
+        );
+      })
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'④ 시장 규모 데이터'),
+      e('table',null,
+        e('tbody',null,
+          [
+            ['현재 시장 규모','$470B~$626B (2026)'],
+            ['YoY 성장률','+8~12%'],
+            ['CAGR','8~12% (2026~2034)'],
+            ['목표 시장 규모','$1T+ (2032~2034)'],
+            ['복합소재·추진 수요 증가','+32% YoY (USSF 기반)'],
+            ['AI EO 분석 시장','$50B+ (2030 전망)']
+          ].map(function(row,i){
+            return e('tr',{key:i},
+              e('td',{style:{color:'#94a3b8',paddingRight:12}},row[0]),
+              e('td',{style:{color:'#a78bfa',fontWeight:700,textAlign:'right'}},row[1])
+            );
+          })
+        )
+      )
+    )
+  );
+}
+
+function TabStocks() {
+  return e('div',{style:{padding:'16px'}},
+    STOCKS.map(function(s) {
+      return e('div',{key:s.ticker,className:'card'},
+        e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}},
+          e('div',null,
+            e('div',{style:{fontSize:18,fontWeight:800,color:'#a78bfa'}},s.ticker),
+            e('div',{style:{fontSize:12,color:'#64748b'}},s.name)
+          ),
+          e('div',{style:{textAlign:'right'}},
+            e('div',{style:{fontSize:18,fontWeight:800}},'$'+s.price),
+            e('div',{style:{fontSize:12,color:'#64748b'}},s.cap)
+          )
+        ),
+        e('div',{style:{marginBottom:6}},
+          e('span',{className:'badge badge-purple'},s.tier)
+        ),
+        e(StarRow,{n:s.stars}),
+        e('div',{className:'metric-grid'},
+          e('div',{className:'metric'},
+            e('div',{className:'metric-val'},'$'+s.price),
+            e('div',{className:'metric-label'},'현재가')
+          ),
+          e('div',{className:'metric'},
+            e('div',{className:'metric-val',style:{color:s.rsi<50?'#86efac':s.rsi<70?'#fde68a':'#fca5a5'}},s.rsi),
+            e('div',{className:'metric-label'},'RSI (14)')
+          )
+        ),
+        e('div',{style:{fontSize:13,color:'#c4b5fd',fontWeight:600,margin:'10px 0 4px'}},'핵심 포인트'),
+        e('div',{style:{fontSize:12,color:'#e2e8f0',lineHeight:1.6}},s.point),
+        e('div',{style:{display:'flex',gap:6,flexWrap:'wrap',marginTop:8}},
+          s.badges.map(function(b,i){
+            return e('span',{key:i,className:'badge badge-purple'},b);
+          })
+        ),
+        e(MultiBar,{val:s.multi}),
+        e('div',{style:{marginTop:8,fontSize:12,color:'#86efac'}},'✅ '+s.catalyst),
+        e('div',{style:{marginTop:4,fontSize:12,color:'#fca5a5'}},'⚠️ '+s.risk)
+      );
+    })
+  );
+}
+
+function TabCharts() {
+  var capRef = useRef(null); var capChart = useRef(null);
+  var rsiRef = useRef(null); var rsiChart = useRef(null);
+  var multiRef = useRef(null); var multiChart = useRef(null);
+
+  var labels = STOCKS.map(function(s){return s.ticker;});
+
+  makeChart(capRef, capChart, {
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[{
+        label:'시가총액 ($B)',
+        data:STOCKS.map(function(s){return s.capN;}),
+        backgroundColor:['#7c3aed','#a78bfa','#6d28d9','#8b5cf6','#c4b5fd'],
+        borderRadius:6
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#94a3b8'},grid:{color:'#1e1e3f'}},x:{ticks:{color:'#e2e8f0'},grid:{display:false}}}}
+  });
+
+  makeChart(rsiRef, rsiChart, {
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[{
+        label:'RSI',
+        data:STOCKS.map(function(s){return s.rsiN;}),
+        backgroundColor:STOCKS.map(function(s){return s.rsiN<50?'#22c55e':s.rsiN<70?'#f59e0b':'#ef4444';}),
+        borderRadius:6
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{color:'#94a3b8'},grid:{color:'#1e1e3f'}},x:{ticks:{color:'#e2e8f0'},grid:{display:false}}}}
+  });
+
+  makeChart(multiRef, multiChart, {
+    type:'radar',
+    data:{
+      labels:['대형TAM','경쟁해자','반복매출','경영진','재무상태','매출성장','고객분산','밸류에이션'],
+      datasets: STOCKS.map(function(s,idx){
+        var colors = ['#7c3aed','#a78bfa','#6d28d9','#8b5cf6','#c4b5fd'];
+        var vals = s.m8.map(function(v){return v.ok?10:3;});
+        return {label:s.ticker,data:vals,borderColor:colors[idx],backgroundColor:colors[idx]+'33',pointBackgroundColor:colors[idx]};
+      })
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},scales:{r:{ticks:{display:false},grid:{color:'#2d2d5a'},pointLabels:{color:'#94a3b8',font:{size:10}}}}}
+  });
+
+  return e('div',{style:{padding:'16px'}},
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'📊 시가총액 비교 ($B)'),
+      e('div',{className:'chart-wrap'},e('canvas',{ref:capRef}))
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'📈 RSI 현황 (🟢<50 진입 | 🟡50~70 중립 | 🔴>70 과열)'),
+      e('div',{className:'chart-wrap'},e('canvas',{ref:rsiRef}))
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'🕸️ 멀티배거 레이더 (Anna Yartseva 8항목)'),
+      e('div',{className:'chart-wrap',style:{height:280}},e('canvas',{ref:multiRef}))
+    )
+  );
+}
+
+function TabMultibagger() {
+  var sel = useState(0);
+  var idx = sel[0]; var setSel = sel[1];
+  var s = STOCKS[idx];
+
+  return e('div',{style:{padding:'16px'}},
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'Anna Yartseva 멀티배거 8항목 분석'),
+      e('div',{style:{marginBottom:12}},
+        e('select',{value:idx,onChange:function(ev){setSel(parseInt(ev.target.value));}},
+          STOCKS.map(function(st,i){return e('option',{key:i,value:i},st.ticker+' — '+st.name);})
+        )
+      ),
+      e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12,padding:'10px',background:'#1a1a35',borderRadius:8}},
+        e('span',{style:{fontSize:15,fontWeight:700,color:'#a78bfa'}},s.ticker+' — '+s.name),
+        e('span',{style:{fontSize:20,fontWeight:800,color:s.multi>=6?'#22c55e':s.multi>=5?'#f59e0b':'#ef4444'}},s.multi+'/8')
+      ),
+      e('div',{className:'multi-grid'},
+        s.m8.map(function(item,i){
+          return e('div',{key:i,className:'multi-item '+(item.ok?'multi-item-ok':'multi-item-warn')},
+            e('div',{className:'multi-label'},item.label),
+            e('div',{className:'multi-val '+(item.ok?'val-ok':'val-warn')},(item.ok?'✅ ':'⚠️ ')+item.val)
+          );
+        })
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'상세 분석'),
+      e('div',{style:{fontSize:13,color:'#e2e8f0',lineHeight:1.7}},s.detail)
+    )
+  );
+}
+
+function TabStrategy() {
+  return e('div',{style:{padding:'16px'}},
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'🏆 우선순위 순위표'),
+      STOCKS.map(function(s,i){
+        return e('div',{key:i,className:'rank-row'},
+          e('div',{className:'rank-num'},i+1),
+          e('div',{style:{flex:1}},
+            e('div',{style:{display:'flex',justifyContent:'space-between'}},
+              e('span',{style:{fontWeight:700,color:'#a78bfa'}},s.ticker),
+              e('span',{style:{fontSize:12,color:'#64748b'}},s.cap)
+            ),
+            e('div',{style:{fontSize:12,color:'#e2e8f0',marginTop:2}},s.point),
+            e(MultiBar,{val:s.multi})
+          )
+        );
+      })
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'🎯 핵심 촉매 vs 리스크'),
+      e('table',null,
+        e('thead',null,
+          e('tr',null,e('th',null,'종목'),e('th',null,'핵심 촉매'),e('th',null,'리스크'))
+        ),
+        e('tbody',null,
+          STOCKS.map(function(s,i){
+            return e('tr',{key:i},
+              e('td',{style:{fontWeight:700,color:'#a78bfa'}},s.ticker),
+              e('td',{style:{fontSize:11,color:'#86efac'}},s.catalyst.substring(0,40)+'...'),
+              e('td',{style:{fontSize:11,color:'#fca5a5'}},s.risk.substring(0,35)+'...')
+            );
+          })
+        )
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'💼 포트폴리오 제안 (공격형 기준)'),
+      e('div',{className:'portfolio-card'},
+        e('div',{style:{fontWeight:700,color:'#c4b5fd',marginBottom:8}},'핵심 포지션 (40%)'),
+        e('div',{style:{fontSize:13,lineHeight:1.8}},
+          e('span',{style:{color:'#fbbf24',fontWeight:700}},'KRMN 25%'),
+          ' — 상류 핵심노드, 발사 증가 직결, 조정 구간 진입 우수',e('br',null),
+          e('span',{style:{color:'#fbbf24',fontWeight:700}},'BKSY 15%'),
+          ' — AI Gen-3 EO 플랫폼, 소형 시총 고성장'
+        )
+      ),
+      e('div',{className:'portfolio-card'},
+        e('div',{style:{fontWeight:700,color:'#c4b5fd',marginBottom:8}},'인프라 포지션 (35%)'),
+        e('div',{style:{fontSize:13,lineHeight:1.8}},
+          e('span',{style:{color:'#a78bfa',fontWeight:700}},'VOYG 20%'),
+          ' — Starlab ISS 후계 + 방산, 조정 구간',e('br',null),
+          e('span',{style:{color:'#a78bfa',fontWeight:700}},'RDW 15%'),
+          ' — 유럽 국방 우주 진입, 고성장 매출'
+        )
+      ),
+      e('div',{className:'portfolio-card'},
+        e('div',{style:{fontWeight:700,color:'#c4b5fd',marginBottom:8}},'달 경제 포지션 (25%)'),
+        e('div',{style:{fontSize:13,lineHeight:1.8}},
+          e('span',{style:{color:'#93c5fd',fontWeight:700}},'LUNR 25%'),
+          ' — IM-3 착륙 성공 후 조정 매수 권장 (현재 RSI 75 과열)'
+        )
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'🚀 SpaceX IPO 타임라인 모니터링'),
+      [
+        'SpaceX IPO 비밀 제출 완료 (2026.4.1) → 6월 상장 목표',
+        '상장 시 섹터 전체 멀티플 재산정 → KRMN·BKSY 직접 수혜',
+        'IPO 지연(시장 악화) 시 조정 → 추가 매수 기회로 활용',
+        '밸류에이션 $1.75T 확정 시 공급망 소형주 재평가 가속'
+      ].map(function(t,i){
+        return e('div',{key:i,className:'catalyst-item'},
+          e('span',{style:{fontSize:14}},'🚀'),
+          e('span',{style:{fontSize:13}},t)
+        );
+      })
+    )
+  );
+}
+
+function App() {
+  var tabSt = useState(0);
+  var tab = tabSt[0]; var setTab = tabSt[1];
+
+  var content;
+  if (tab===0) content = e(TabValorchain,null);
+  else if (tab===1) content = e(TabTech,null);
+  else if (tab===2) content = e(TabStocks,null);
+  else if (tab===3) content = e(TabCharts,null);
+  else if (tab===4) content = e(TabMultibagger,null);
+  else content = e(TabStrategy,null);
+
+  return e('div',null,
+    e('div',{className:'header'},
+      e('a',{href:'https://disntm90.github.io/disntm90/',className:'back-link'},'← 목록으로'),
+      e('div',{style:{marginTop:12,display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}},
+        e('div',null,
+          e('h1',{style:{fontSize:22,fontWeight:900,color:'#a78bfa'}},'🚀 우주항공 종목발굴'),
+          e('div',{style:{fontSize:13,color:'#64748b',marginTop:4}},'탑다운 × 밸류체인 | 2026.05.29 | SpaceX IPO 촉매')
+        ),
+        e('div',{style:{textAlign:'right'}},
+          e('div',{style:{fontSize:13,color:'#7c3aed',fontWeight:700}},'발굴 5종목'),
+          e('div',{style:{fontSize:11,color:'#64748b'}},'우주경제 $626B → $1T+')
+        )
+      ),
+      e('div',{style:{display:'flex',gap:8,flexWrap:'wrap',marginTop:12,paddingBottom:16}},
+        e('span',{className:'badge badge-purple'},'#우주항공'),
+        e('span',{className:'badge badge-green'},'#SpaceXIPO'),
+        e('span',{className:'badge badge-yellow'},'#AI×위성'),
+        e('span',{className:'badge badge-gray'},'#밸류체인분석')
+      )
+    ),
+    e('div',{className:'tab-bar'},
+      TABS.map(function(t,i){
+        return e('button',{key:i,className:'tab-btn'+(tab===i?' active':''),onClick:function(){setTab(i);}},t);
+      })
+    ),
+    content
+  );
+}
+
+var root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(e(App,null));
+</script>
+</body>
+</html>
