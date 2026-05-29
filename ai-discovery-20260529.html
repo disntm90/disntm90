@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>AI 반도체 종목발굴 대시보드 — 2026.05.29</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+    a{color:#3b82f6;text-decoration:none}
+    .container{max-width:760px;margin:0 auto;padding:12px}
+    .header{background:linear-gradient(135deg,#0a1628,#0a0f1e);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #1e3a5f}
+    .back-link{font-size:12px;color:#60a5fa;margin-bottom:8px;display:block}
+    .header-badge{display:inline-block;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid #3b82f6;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;margin-bottom:8px}
+    .title{font-size:26px;font-weight:800;color:#60a5fa;margin-bottom:4px}
+    .subtitle{font-size:13px;color:#94a3b8;margin-bottom:12px}
+    .meta-row{display:flex;gap:8px;flex-wrap:wrap}
+    .meta-chip{background:#0a0f1e;border:1px solid #1e3a5f;border-radius:8px;padding:5px 10px;font-size:11px;color:#93c5fd}
+    .tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+    .tab-btn{padding:6px 11px;border-radius:20px;border:1px solid #1e3a5f;background:#0a1628;color:#94a3b8;font-size:11px;cursor:pointer;transition:all .2s}
+    .tab-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6;font-weight:700}
+    .card{background:#0d1524;border:1px solid #1e3a5f;border-radius:10px;padding:14px;margin-bottom:10px}
+    .card-title{font-size:13px;font-weight:700;color:#93c5fd;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+    .chart-wrap{position:relative;height:220px;margin-top:8px}
+    .chain-wrap{display:flex;flex-direction:column;gap:0}
+    .chain-tier{border-radius:10px;padding:12px;margin-bottom:4px}
+    .chain-tier.tier-up{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3)}
+    .chain-tier.tier-mid{background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3)}
+    .chain-tier.tier-down{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3)}
+    .chain-tier.tier-mega{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3)}
+    .chain-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .chain-label.up{color:#ef4444}
+    .chain-label.mid{color:#fbbf24}
+    .chain-label.down{color:#60a5fa}
+    .chain-label.mega{color:#60a5fa}
+    .chain-items{display:flex;flex-wrap:wrap;gap:6px}
+    .chain-item{background:#0a0f1e;border-radius:6px;padding:5px 9px;font-size:11px;display:flex;align-items:center;gap:4px}
+    .chain-item .ticker-tag{font-weight:800;color:#fbbf24}
+    .chain-item .star{color:#fbbf24;font-size:10px}
+    .chain-arrow{text-align:center;color:#374151;font-size:16px;margin:2px 0;line-height:1}
+    .stock-card{background:#0a0f1e;border:1px solid #1e3a5f;border-radius:10px;padding:14px;margin-bottom:10px}
+    .stock-card.tier-up{border-left:4px solid #ef4444}
+    .stock-card.tier-mid{border-left:4px solid #fbbf24}
+    .stock-card.tier-down{border-left:4px solid #60a5fa}
+    .sc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+    .sc-ticker{font-size:22px;font-weight:800;color:#60a5fa}
+    .sc-name{font-size:12px;color:#94a3b8;margin-top:2px}
+    .sc-stars{font-size:14px}
+    .sc-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+    .sc-badge{padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700}
+    .sb-up{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.4)}
+    .sb-mid{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
+    .sb-down{background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.4)}
+    .sb-med{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
+    .sb-low{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
+    .sc-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+    .sc-metric{background:#0d1524;border-radius:6px;padding:7px;text-align:center}
+    .sc-metric-label{font-size:10px;color:#64748b;margin-bottom:2px}
+    .sc-metric-val{font-size:13px;font-weight:700;color:#e2e8f0}
+    .sc-point{font-size:12px;color:#93c5fd;font-weight:700;margin-bottom:4px}
+    .sc-reason{font-size:12px;color:#94a3b8;line-height:1.5}
+    .sc-mb-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
+    .sc-mb-label{font-size:11px;color:#64748b;width:80px;flex-shrink:0}
+    .sc-mb-bg{flex:1;background:#0f2040;border-radius:4px;height:7px;overflow:hidden}
+    .sc-mb-fill{height:7px;border-radius:4px;background:linear-gradient(90deg,#3b82f6,#93c5fd)}
+    .sc-mb-val{font-size:11px;font-weight:700;color:#fbbf24;width:28px;text-align:right}
+    .mb-item{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;background:#0a0f1e;border-radius:6px;margin-bottom:6px}
+    .mb-label{font-size:12px;color:#94a3b8;flex:1;padding-right:8px}
+    .mb-val{font-size:13px;font-weight:700;flex-shrink:0}
+    .mb-yes{color:#22c55e}
+    .mb-part{color:#fbbf24}
+    .mb-no{color:#ef4444}
+    .total-score-box{text-align:center;padding:14px;background:rgba(59,130,246,0.08);border-radius:10px;border:1px solid rgba(59,130,246,0.3);margin-bottom:12px}
+    .total-num{font-size:44px;font-weight:800;color:#60a5fa}
+    .total-denom{font-size:18px;color:#64748b}
+    .score-grade{font-size:13px;color:#93c5fd;margin-top:4px}
+    .ticker-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .ts-btn{padding:5px 12px;border-radius:14px;border:1px solid #1e3a5f;background:#0a1628;color:#93c5fd;font-size:11px;cursor:pointer;font-weight:700}
+    .ts-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6}
+    .insight-box{background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#93c5fd;line-height:1.5;white-space:pre-line}
+    .warn-box{background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fde68a;line-height:1.5;white-space:pre-line}
+    .risk-box{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fca5a5;line-height:1.5;white-space:pre-line}
+    .section-h{font-size:12px;font-weight:700;color:#93c5fd;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+    .priority-row{display:flex;align-items:center;gap:10px;padding:10px;background:#0a0f1e;border-radius:8px;margin-bottom:6px;border:1px solid #112240}
+    .pr-rank{font-size:20px;font-weight:800;color:#3b82f6;width:28px;flex-shrink:0}
+    .pr-ticker{font-size:15px;font-weight:800;color:#60a5fa;width:52px;flex-shrink:0}
+    .pr-text{font-size:12px;color:#94a3b8;flex:1;line-height:1.4}
+    .pr-timing{font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;flex-shrink:0}
+    .t-now{background:rgba(34,197,94,0.15);color:#86efac;border:1px solid rgba(34,197,94,0.4)}
+    .t-after{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
+    .t-small{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+var STOCKS = [
+  {
+    ticker:'PLAB', name:'Photronics Inc.', tier:'up', stars:'★★★',
+    price:'$34.32', cap:'$2.01B', rsi:40, mb:5.5,
+    badge1:'상류 핵심노드', badge2:'대체불가 매우높음', badge3:'포토마스크',
+    point:'모든 반도체의 회로 스텐실 — NVIDIA칩이든 AMD칩이든 반드시 필요',
+    reason:'포토마스크 없이 반도체 1개도 만들 수 없음. P/E 14.4x = 역사적 평균 22% 할인. 2026년 capex $330M(2배 확장) = 미래 성장 자기 확신. CHIPS Act 텍사스 팹 직접 수혜. 시총 $2B으로 소형주 기준 완벽. 모두가 NVIDIA를 볼 때 아무도 모르는 진짜 숨겨진 병목.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 기관 투자자 관심', v:'⚠️', cls:'mb-part'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
+    ]
+  },
+  {
+    ticker:'AEHR', name:'Aehr Test Systems', tier:'up', stars:'★★★',
+    price:'$99.90', cap:'$3.14B', rsi:55, mb:6.0,
+    badge1:'후공정 핵심노드', badge2:'대체불가 매우높음', badge3:'번인테스트',
+    point:'AI/SiC 반도체 웨이퍼 번인 테스트 독점 — 수주비율 3.5배',
+    reason:'기록적 $41M 수주 확보, 수주비율 3.5배(분기 매출의 3.5배 수주 완료). AI칩 복잡도 증가 = 번인 테스트 시간 증가 = 단위당 매출 자동 증가. AI반도체 + SiC(전기차/데이터센터 전력) 두 메가트렌드 동시 수혜. 단 한 개의 칩도 번인 테스트 없이 출하 불가 → 절대 대체 불가.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker:'ACLS', name:'Axcelis Technologies', tier:'mid', stars:'★★',
+    price:'$164.27', cap:'~$3.4B', rsi:62, mb:5.0,
+    badge1:'전공정 핵심노드', badge2:'대체불가 높음', badge3:'이온주입장비',
+    point:'모든 트랜지스터 제조의 필수 공정 — CHIPS Act 팹 신설 직접 수혜',
+    reason:'이온 주입 없이 반도체 트랜지스터 불가. 52주 신고가 경신 중 강한 모멘텀. CHIPS Act로 미국·일본·유럽 팹 신설 → 장비 납기 1~2년으로 수주 이미 확보. AMAT·KLAC 다음 강자로 기관 주목도 낮아 저평가 구간. 중국 규제 노출 없어 미국 투자 안전.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker:'ACMR', name:'ACM Research', tier:'mid', stars:'★★',
+    price:'$92.86', cap:'~$5.9B', rsi:50, mb:5.0,
+    badge1:'전공정 핵심노드', badge2:'대체불가 높음', badge3:'세척장비',
+    point:'반도체 세척·처리 장비 — 선단 공정 오염 0.1nm도 불허, 선적 +53.6%',
+    reason:'Q1 2026 매출 $231.3M (+34.2% YoY), 선적 $240.7M (+53.6% YoY). 선적이 매출 선행 → 향후 2분기 매출 급증 예고. FY2026 가이던스 $1.08B~$1.175B (+21%~30%). 중국 팹 증설의 최대 수혜. 단, 매출 70%가 중국 → 미중 무역 규제 리스크. 리스크 인지 후 분할 매수 권장.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'⚠️', cls:'mb-part'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker:'UCTT', name:'Ultra Clean Holdings', tier:'mid', stars:'★★',
+    price:'~$32', cap:'~$1.3B', rsi:48, mb:4.5,
+    badge1:'전공정 2차수혜', badge2:'대체불가 보통', badge3:'장비서브시스템',
+    point:'AMAT·LAM·KLAC의 장비 서브어셈블리 공급 — 장비 주문 = UCTT 자동 수혜',
+    reason:'반도체 장비 대기업이 주문을 받으면 그 부품을 만드는 UCTT도 자동 수혜. "장비사의 장비사" 이중 병목 포지션. 시총 $1.3B으로 완벽한 소형주 기준. CHIPS Act 장비 발주 급증 → 직접 연동. 가스 공급·유체 제어 서브시스템은 대체 어려운 정밀 부품.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'⚠️', cls:'mb-part'},
+      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
+      {label:'⑤ 재무 건전성', v:'⚠️', cls:'mb-part'},
+      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 기관 투자자 관심', v:'⚠️', cls:'mb-part'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker:'COHU', name:'Cohu Inc.', tier:'down', stars:'★',
+    price:'~$22', cap:'~$800M', rsi:45, mb:4.0,
+    badge1:'후공정 테스트', badge2:'대체불가 보통', badge3:'테스트핸들러',
+    point:'반도체 테스트 핸들러 — AI칩 생산 증가 = 처리량 자동 증가',
+    reason:'반도체 테스트 핸들러: AI칩·메모리 테스트 처리에 필수 장비. 시총 $800M 초소형. AI칩 생산량 폭증으로 테스트 수요 급증. AEHR(번인)와 상호보완. 단, 경쟁자(Teradyne, Advantest) 많아 가격 경쟁 리스크. 포트폴리오 5% 이하 고위험 베팅.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'⚠️', cls:'mb-part'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'⚠️', cls:'mb-part'},
+      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 기관 투자자 관심', v:'❌', cls:'mb-no'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
+    ]
+  }
+];
+
+function App() {
+  var ts=useState(0); var tab=ts[0]; var setTab=ts[1];
+  var ms=useState(0); var mbIdx=ms[0]; var setMbIdx=ms[1];
+  var TABS=['🗺️ 밸류체인','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
+  return e('div',{className:'container'},
+    e('div',{className:'header'},
+      e('a',{className:'back-link',href:'https://disntm90.github.io/disntm90/'},'← 목록으로'),
+      e('div',{className:'header-badge'},'💡 종목발굴 · 2026.05.29'),
+      e('div',{className:'title'},'AI 반도체 종목발굴'),
+      e('div',{className:'subtitle'},'AI 칩 공급망 탑다운 × 밸류체인 분석 · 6종목 선별'),
+      e('div',{className:'meta-row'},
+        e('span',{className:'meta-chip'},'📅 2026.05.29'),
+        e('span',{className:'meta-chip'},'🤖 AI 팹 증설 사이클'),
+        e('span',{className:'meta-chip'},'🔬 6종목'),
+        e('span',{className:'meta-chip'},'⭐ 핵심노드 4개')
+      )
+    ),
+    e('div',{className:'tabs'},TABS.map(function(t,i){return e('button',{key:i,className:'tab-btn'+(tab===i?' active':''),onClick:function(){setTab(i);}},t);})),
+    tab===0 && e(ChainTab,null),
+    tab===1 && e('div',null,STOCKS.map(function(s,i){
+      var tc=s.tier==='up'?'tier-up':s.tier==='mid'?'tier-mid':'tier-down';
+      var b1=s.tier==='up'?'sb-up':s.tier==='mid'?'sb-mid':'sb-down';
+      return e('div',{key:i,className:'stock-card '+tc},
+        e('div',{className:'sc-header'},e('div',null,e('div',{className:'sc-ticker'},s.ticker),e('div',{className:'sc-name'},s.name)),e('div',{className:'sc-stars'},s.stars)),
+        e('div',{className:'sc-badges'},e('span',{className:'sc-badge '+b1},s.badge1),e('span',{className:'sc-badge sb-med'},s.badge2),e('span',{className:'sc-badge sb-low'},s.badge3)),
+        e('div',{className:'sc-metrics'},
+          e('div',{className:'sc-metric'},e('div',{className:'sc-metric-label'},'현재가'),e('div',{className:'sc-metric-val'},s.price)),
+          e('div',{className:'sc-metric'},e('div',{className:'sc-metric-label'},'시가총액'),e('div',{className:'sc-metric-val'},s.cap)),
+          e('div',{className:'sc-metric'},e('div',{className:'sc-metric-label'},'RSI(추정)'),e('div',{className:'sc-metric-val'},s.rsi))
+        ),
+        e('div',{className:'sc-point'},'핵심: '+s.point),
+        e('div',{className:'sc-reason'},s.reason),
+        e('div',{className:'sc-mb-bar'},e('div',{className:'sc-mb-label'},'멀티배거'),e('div',{className:'sc-mb-bg'},e('div',{className:'sc-mb-fill',style:{width:(s.mb/8*100)+'%'}})),e('div',{className:'sc-mb-val'},s.mb+'/8'))
+      );
+    })),
+    tab===2 && e(ChartsTab,null),
+    tab===3 && e('div',null,
+      e('div',{className:'ticker-select'},STOCKS.map(function(s,i){return e('button',{key:i,className:'ts-btn'+(mbIdx===i?' active':''),onClick:function(){setMbIdx(i);}},s.ticker);})),
+      e(MBDetail,{stock:STOCKS[mbIdx]})
+    ),
+    tab===4 && e(StrategyTab,null)
+  );
+}
+
+function ChainTab() {
+  return e('div',null,
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'AI 반도체 공급망 밸류체인 맵'),
+      e('div',{className:'insight-box'},'🤖 메가트렌드: AI 모델 파라미터 증가 → GPU 주문 폭발 → 전 세계 첨단 팹 증설 사이클 → 모든 공정 장비·소재 수요 폭증'),
+      e('div',{className:'chain-wrap'},
+        e('div',{className:'chain-tier tier-mega'},
+          e('div',{className:'chain-label mega'},'💡 핵심 파생 논리'),
+          e('div',{className:'chain-items'},
+            e('div',{className:'chain-item'},'AI 학습 수요 → GPU 수요 폭발'),
+            e('div',{className:'chain-item'},'CHIPS Act → 전 세계 팹 증설'),
+            e('div',{className:'chain-item'},'팹 증설 = 장비·소재 자동 수혜')
+          )
+        ),
+        e('div',{className:'chain-arrow'},'▼'),
+        e('div',{className:'chain-tier tier-up'},
+          e('div',{className:'chain-label up'},'🔴 상류 — 소재·포토마스크 ★병목'),
+          e('div',{className:'chain-items'},
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'PLAB'),e('span',{className:'star'},'★★★'),' 포토마스크(회로 스텐실)'),
+            e('div',{className:'chain-item'},'실리콘 웨이퍼 — 수요 급증'),
+            e('div',{className:'chain-item'},'특수 가스·화학물질')
+          )
+        ),
+        e('div',{className:'chain-arrow'},'▼'),
+        e('div',{className:'chain-tier tier-mid'},
+          e('div',{className:'chain-label mid'},'🟡 중류 — 전공정 장비 ★병목'),
+          e('div',{className:'chain-items'},
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'ACLS'),e('span',{className:'star'},'★★'),' 이온주입장비'),
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'ACMR'),e('span',{className:'star'},'★★'),' 세척·처리장비'),
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'UCTT'),e('span',{className:'star'},'★★'),' 장비 서브시스템')
+          )
+        ),
+        e('div',{className:'chain-arrow'},'▼'),
+        e('div',{className:'chain-tier tier-down'},
+          e('div',{className:'chain-label down'},'🔵 후공정 — 테스트 ★병목'),
+          e('div',{className:'chain-items'},
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'AEHR'),e('span',{className:'star'},'★★★'),' 번인 테스트'),
+            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'COHU'),e('span',{className:'star'},'★'),' 테스트 핸들러'),
+            e('div',{className:'chain-item'},'CoWoS 패키징 — TSMC 독점')
+          )
+        )
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'핵심 파생 논리 & 병목'),
+      e('div',{className:'insight-box'},'🏆 궁극의 발굴 원칙: NVIDIA·AMD 주식을 살 때 이미 늦음. 그 칩을 만들기 위해 반드시 필요한 장비/소재 소형주를 선점하라.'),
+      e('div',{className:'warn-box'},'⚠️ 이미 제외한 이름들: NVDA($3.4T), AMAT($170B), LRCX($100B), KLAC($90B), CRDO($35.7B), AAOI($17.9B) — 모두 대형화, 멀티배거 가능성 낮음'),
+      e('div',{className:'insight-box'},'🛡️ 병목 ①: 포토마스크(PLAB) — 회로 스텐실 없이 칩 제조 불가. P/E 14x 저평가. 진짜 숨겨진 병목\n🛡️ 병목 ②: 번인테스트(AEHR) — 칩 복잡도 증가 = 테스트 시간 자동 증가. 수주비율 3.5배\n🛡️ 병목 ③: 이온주입(ACLS) — 트랜지스터 제조 필수. CHIPS Act 팹 신설 = 대규모 수주')
+    )
+  );
+}
+
+function ChartsTab() {
+  var cr=useRef(null),cc=useRef(null);
+  var mr=useRef(null),mc=useRef(null);
+  var rr=useRef(null),rc=useRef(null);
+  var labels=STOCKS.map(function(s){return s.ticker;});
+  var caps=[2.01,3.14,3.4,5.9,1.3,0.8];
+  var mbs=STOCKS.map(function(s){return s.mb;});
+  var rsis=STOCKS.map(function(s){return s.rsi;});
+  var COLS=['#ef4444','#ef4444','#fbbf24','#fbbf24','#fbbf24','#3b82f6'];
+  makeChart(cr,cc,{type:'bar',data:{labels:labels,datasets:[{label:'시총($B)',data:caps,backgroundColor:COLS.map(function(c){return c+'99';}),borderColor:COLS,borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return '$'+c.raw+'B';}}}},scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}},y:{ticks:{color:'#94a3b8',font:{size:10},callback:function(v){return '$'+v+'B';}},grid:{color:'#1e293b'}}}}});
+  makeChart(mr,mc,{type:'bar',data:{labels:labels,datasets:[{label:'MB점수',data:mbs,backgroundColor:mbs.map(function(v){return v>=5.5?'#60a5fa99':v>=5.0?'#3b82f699':'#1d4ed899';}),borderColor:mbs.map(function(v){return v>=5.5?'#60a5fa':v>=5.0?'#3b82f6':'#2563eb';}),borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}},y:{min:0,max:8,ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}}}}});
+  makeChart(rr,rc,{type:'bar',data:{labels:labels,datasets:[{label:'RSI',data:rsis,backgroundColor:rsis.map(function(v){return v<=55?'#60a5fa99':v<=65?'#fbbf2499':'#ef444499';}),borderColor:rsis.map(function(v){return v<=55?'#60a5fa':v<=65?'#fbbf24':'#ef4444';}),borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}},y:{min:0,max:100,ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('div',{className:'card-title'},'시가총액 비교 ($B)'),e('div',{className:'warn-box',style:{marginBottom:'8px'}},'⚠️ $5B 이하 우선 — PLAB($2.01B)·UCTT($1.3B)·COHU($0.8B) 주목'),e('div',{className:'chart-wrap'},e('canvas',{ref:cr}))),
+    e('div',{className:'card'},e('div',{className:'card-title'},'멀티배거 점수 (Anna Yartseva 8기준)'),e('div',{className:'chart-wrap'},e('canvas',{ref:mr}))),
+    e('div',{className:'card'},e('div',{className:'card-title'},'RSI 현황 (추정)'),e('div',{className:'insight-box',style:{marginBottom:'8px'}},'🔵 55이하: 진입유리(PLAB·UCTT·COHU) | 🟡 55~65: 중립(AEHR·ACMR) | 🔴 65+: 과매수주의'),e('div',{className:'chart-wrap'},e('canvas',{ref:rr})))
+  );
+}
+
+function MBDetail(props) {
+  var s=props.stock;
+  var yes=s.mb_items.filter(function(x){return x.cls==='mb-yes';}).length;
+  var part=s.mb_items.filter(function(x){return x.cls==='mb-part';}).length;
+  var score=yes+part*0.5;
+  var grade=score>=6?'매우 우수':score>=5?'우수 · 매수 검토':score>=4?'보통 · 선별적 접근':'낮음 · 고위험';
+  return e('div',null,e('div',{className:'card'},
+    e('div',{className:'total-score-box'},e('div',null,e('span',{className:'total-num'},s.mb.toFixed(1)),e('span',{className:'total-denom'},' / 8')),e('div',{className:'score-grade'},s.ticker+' — '+grade)),
+    s.mb_items.map(function(item,i){return e('div',{key:i,className:'mb-item'},e('div',{className:'mb-label'},item.label),e('div',{className:'mb-val '+item.cls},item.v));}),
+    e('div',{className:'warn-box',style:{marginTop:'10px'}},'⚠️ 교육 목적 분석이며 투자 권고가 아닙니다.')
+  ));
+}
+
+function StrategyTab() {
+  return e('div',null,
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'투자 우선순위'),
+      e('div',{className:'insight-box'},'🎯 전략: NVIDIA·AMAT 대신 밸류체인 병목(포토마스크·번인테스트·이온주입)의 소형주를 선점'),
+      [
+        {rank:'①',ticker:'PLAB',text:'P/E 14x 역대급 저평가 + 포토마스크 절대 독점 + capex 2배 확장 신호',timing:'지금',tcls:'t-now'},
+        {rank:'②',ticker:'AEHR',text:'수주비율 3.5배 + AI/SiC 이중 수혜 + 번인테스트 독점. 다음 2분기 매출 폭증 예고',timing:'지금',tcls:'t-now'},
+        {rank:'③',ticker:'ACLS',text:'CHIPS Act 팹 신설 직접 수혜. 52주 신고가 모멘텀. 납기 1~2년으로 수주 이미 확보',timing:'분할매수',tcls:'t-after'},
+        {rank:'④',ticker:'ACMR',text:'선적 +53.6% 선행지표 강력. 단, 중국 노출 70% → 규제 리스크 인지 후 진입',timing:'조정후',tcls:'t-after'},
+        {rank:'⑤',ticker:'UCTT',text:'장비사의 장비사. $1.3B 초소형. CHIPS Act 발주 간접 연동',timing:'소량',tcls:'t-small'},
+        {rank:'⑥',ticker:'COHU',text:'$800M 초소형 테스트 핸들러. 경쟁 많음 → 포트폴리오 5% 이하 고위험 베팅',timing:'소량',tcls:'t-small'}
+      ].map(function(p,i){return e('div',{key:i,className:'priority-row'},e('div',{className:'pr-rank'},p.rank),e('div',{className:'pr-ticker'},p.ticker),e('div',{className:'pr-text'},p.text),e('span',{className:'pr-timing '+p.tcls},p.timing));})
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'촉매 & 리스크'),
+      e('div',{className:'section-h'},'상승 촉매'),
+      e('div',{className:'insight-box'},'🤖 AI 모델 파라미터 증가 → GPU 주문 지속 → 팹 capex 사이클 유지\n🏭 CHIPS Act: 미국·일본·유럽 팹 신설 → 장비 대규모 발주\n🔋 SiC 반도체 확산 → AEHR 이중 수혜\n📈 반도체 장비 수주 → 매출 선행 지표 이미 강력'),
+      e('div',{className:'section-h'},'주요 리스크'),
+      e('div',{className:'risk-box'},'⚠️ AI 설비 과투자(캐팩스 버블) 우려 시 장비주 전반 조정\n⚠️ 미중 무역 규제 강화 → ACMR 직격 (중국 70%)\n⚠️ 반도체 사이클 하강 시 장비 발주 취소 가능\n⚠️ CoWoS 패키징 병목 완화 시 AI 칩 증산 → 단기 과잉공급'),
+      e('div',{className:'section-h'},'포트폴리오 제안'),
+      e('div',{className:'warn-box'},'핵심(50%): PLAB + AEHR — 진짜 병목, 저평가, 지금 진입\n성장(35%): ACLS + ACMR — 강한 성장, 조정 후 분할\n투기(15%): UCTT + COHU — 소형 고위험, 소량')
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'심층 분석 안내'),
+      e('div',{className:'insight-box'},'💡 개별 종목 심층 분석:\n"[티커] 분석해줘" 라고 말씀해주세요.\n예: "PLAB 분석해줘", "AEHR 분석해줘"\n→ 7개 섹션 분석 + 대시보드 생성 + 인덱스 자동 등록')
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
