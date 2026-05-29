@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>로보틱스 종목발굴 대시보드 — 2026.05.29</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+    a{color:#10b981;text-decoration:none}
+    .container{max-width:760px;margin:0 auto;padding:12px}
+    .header{background:linear-gradient(135deg,#052e16,#0a0f1e);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #166534}
+    .back-link{font-size:12px;color:#10b981;margin-bottom:8px;display:block}
+    .header-badge{display:inline-block;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid #10b981;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;margin-bottom:8px}
+    .title{font-size:26px;font-weight:800;color:#10b981;margin-bottom:4px}
+    .subtitle{font-size:13px;color:#94a3b8;margin-bottom:12px}
+    .meta-row{display:flex;gap:8px;flex-wrap:wrap}
+    .meta-chip{background:#0a0f1e;border:1px solid #166534;border-radius:8px;padding:5px 10px;font-size:11px;color:#6ee7b7}
+    .tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+    .tab-btn{padding:6px 11px;border-radius:20px;border:1px solid #166534;background:#052e16;color:#94a3b8;font-size:11px;cursor:pointer;transition:all .2s}
+    .tab-btn.active{background:#10b981;color:#fff;border-color:#10b981;font-weight:700}
+    .card{background:#0d1f13;border:1px solid #166534;border-radius:10px;padding:14px;margin-bottom:10px}
+    .card-title{font-size:13px;font-weight:700;color:#6ee7b7;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+    .chart-wrap{position:relative;height:220px;margin-top:8px}
+    .chart-sm{position:relative;height:170px;margin-top:8px}
+    .chart-lg{position:relative;height:260px;margin-top:8px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .stat-box{background:#0a0f1e;border-radius:8px;padding:10px;text-align:center}
+    .stat-label{font-size:11px;color:#64748b;margin-bottom:3px}
+    .stat-value{font-size:16px;font-weight:700;color:#e2e8f0}
+    /* Value chain */
+    .chain-wrap{display:flex;flex-direction:column;gap:0}
+    .chain-tier{border-radius:10px;padding:12px;margin-bottom:4px}
+    .chain-tier.tier-up{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3)}
+    .chain-tier.tier-mid{background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3)}
+    .chain-tier.tier-down{background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.3)}
+    .chain-tier.tier-mega{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3)}
+    .chain-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .chain-label.up{color:#ef4444}
+    .chain-label.mid{color:#fbbf24}
+    .chain-label.down{color:#818cf8}
+    .chain-label.mega{color:#10b981}
+    .chain-items{display:flex;flex-wrap:wrap;gap:6px}
+    .chain-item{background:#0a0f1e;border-radius:6px;padding:5px 9px;font-size:11px;display:flex;align-items:center;gap:4px}
+    .chain-item .ticker-tag{font-weight:800;color:#fbbf24}
+    .chain-item .star{color:#fbbf24;font-size:10px}
+    .chain-arrow{text-align:center;color:#374151;font-size:16px;margin:2px 0;line-height:1}
+    /* Stock cards */
+    .stock-card{background:#0a0f1e;border:1px solid #166534;border-radius:10px;padding:14px;margin-bottom:10px}
+    .stock-card.tier-up{border-left:4px solid #ef4444}
+    .stock-card.tier-mid{border-left:4px solid #fbbf24}
+    .stock-card.tier-down{border-left:4px solid #818cf8}
+    .sc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+    .sc-ticker{font-size:22px;font-weight:800;color:#10b981}
+    .sc-name{font-size:12px;color:#94a3b8;margin-top:2px}
+    .sc-stars{font-size:14px}
+    .sc-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+    .sc-badge{padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700}
+    .sb-up{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.4)}
+    .sb-mid{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
+    .sb-down{background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.4)}
+    .sb-high{background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.4)}
+    .sb-med{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
+    .sb-low{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
+    .sc-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+    .sc-metric{background:#0d1f13;border-radius:6px;padding:7px;text-align:center}
+    .sc-metric-label{font-size:10px;color:#64748b;margin-bottom:2px}
+    .sc-metric-val{font-size:13px;font-weight:700;color:#e2e8f0}
+    .sc-point{font-size:12px;color:#6ee7b7;font-weight:700;margin-bottom:4px}
+    .sc-reason{font-size:12px;color:#94a3b8;line-height:1.5}
+    .sc-mb-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
+    .sc-mb-label{font-size:11px;color:#64748b;width:80px;flex-shrink:0}
+    .sc-mb-bg{flex:1;background:#1a2e22;border-radius:4px;height:7px;overflow:hidden}
+    .sc-mb-fill{height:7px;border-radius:4px;background:linear-gradient(90deg,#10b981,#6ee7b7)}
+    .sc-mb-val{font-size:11px;font-weight:700;color:#fbbf24;width:28px;text-align:right}
+    /* MB detail */
+    .mb-item{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;background:#0a0f1e;border-radius:6px;margin-bottom:6px}
+    .mb-label{font-size:12px;color:#94a3b8;flex:1;padding-right:8px}
+    .mb-val{font-size:13px;font-weight:700;flex-shrink:0}
+    .mb-yes{color:#22c55e}
+    .mb-part{color:#fbbf24}
+    .mb-no{color:#ef4444}
+    .total-score-box{text-align:center;padding:14px;background:rgba(16,185,129,0.08);border-radius:10px;border:1px solid rgba(16,185,129,0.3);margin-bottom:12px}
+    .total-num{font-size:44px;font-weight:800;color:#10b981}
+    .total-denom{font-size:18px;color:#64748b}
+    .score-grade{font-size:13px;color:#6ee7b7;margin-top:4px}
+    .ticker-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .ts-btn{padding:5px 12px;border-radius:14px;border:1px solid #166534;background:#052e16;color:#6ee7b7;font-size:11px;cursor:pointer;font-weight:700}
+    .ts-btn.active{background:#10b981;color:#fff;border-color:#10b981}
+    .insight-box{background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#6ee7b7;line-height:1.5}
+    .warn-box{background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fde68a;line-height:1.5}
+    .risk-box{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fca5a5;line-height:1.5}
+    .section-h{font-size:12px;font-weight:700;color:#6ee7b7;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+/* ── Data ── */
+var STOCKS = [
+  {
+    ticker: 'AMBA', name: 'Ambarella Inc.', tier: 'up', tierLabel: '상류',
+    stars: '★★★', price: '$52.80', cap: '$2.1B', rsi: 47, mb: 6.0,
+    irr: '높음', bottleneck: true,
+    badge1: '상류 핵심노드', badge2: '대체불가 높음', badge3: 'AI SoC',
+    point: 'AI 비전·엣지 추론 SoC — 로봇 "눈+뇌" 핵심 칩',
+    reason: 'AI 로봇이 실시간으로 보고 판단하려면 반드시 AMBA의 CVflow 아키텍처가 필요. ARM보다 에너지 효율 3~5배 우위. iRobot·드론·자율주행 차량 전방위 채택. NVIDIA Jetson과 다른 포지셔닝.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'⚠️', cls:'mb-part'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker: 'USAR', name: 'USA Rare Earth LLC', tier: 'up', tierLabel: '상류',
+    stars: '★★★', price: '$5.80', cap: '$490M', rsi: 40, mb: 5.5,
+    irr: '높음', bottleneck: true,
+    badge1: '상류 핵심노드', badge2: '대체불가 높음', badge3: '희토류',
+    point: '로봇 모터·액추에이터 필수 희토류 자석 — 미국 유일 수직계열화',
+    reason: '모든 전기 모터와 액추에이터는 네오디뮴 자석을 요구. 중국이 세계 공급 90% 독점 → 미국 정부 국가안보 차원 지원. OK Panhandle 광산+제련소 완공 시 북미 유일 full-stack 희토류 공급망. 최근 DoD 계약 촉매.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'❌', cls:'mb-no'},
+      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 기관 투자자 관심', v:'⚠️', cls:'mb-part'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker: 'AEIS', name: 'Advanced Energy Industries', tier: 'up', tierLabel: '상류',
+    stars: '★★', price: '$68.20', cap: '$2.4B', rsi: 48, mb: 5.0,
+    irr: '높음', bottleneck: false,
+    badge1: '상류 부품', badge2: '대체불가 높음', badge3: '정밀전력',
+    point: '로봇 제조 핵심 — 반도체 식각·증착 공정 정밀 전력',
+    reason: '로봇 생산에 쓰이는 반도체 제조 공정(식각·증착)에서 독보적 정밀 전력 공급 점유율 60%↑. RF 전력 변환 기술은 수십 년 누적으로 대체 불가. 반도체 capex 반등 시 직접 수혜.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'❌', cls:'mb-no'}
+    ]
+  },
+  {
+    ticker: 'OSIS', name: 'OSI Systems Inc.', tier: 'mid', tierLabel: '중류',
+    stars: '★★', price: '$178.40', cap: '$1.8B', rsi: 44, mb: 5.5,
+    irr: '보통', bottleneck: false,
+    badge1: '중류 솔루션', badge2: '대체불가 보통', badge3: '검사시스템',
+    point: '물류·공항 자동 검사 — 로봇 통합 핵심 솔루션 업체',
+    reason: 'TSA·공항·항만 X-ray 검사 시장 점유율 40%↑. 물류 자동화(로봇+검사) 결합 수요 폭증. 방산/정부 장기 계약 기반으로 안정적 수익. 소형주 중 가장 방어적인 현금흐름.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'⚠️', cls:'mb-part'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker: 'CGNX', name: 'Cognex Corporation', tier: 'mid', tierLabel: '중류',
+    stars: '★', price: '$31.60', cap: '$5.3B', rsi: 50, mb: 4.5,
+    irr: '보통', bottleneck: false,
+    badge1: '중류 솔루션', badge2: '대체불가 보통', badge3: '머신비전',
+    point: '산업용 로봇 "눈" — 머신 비전 글로벌 1위',
+    reason: '제조 자동화 라인 비전 시스템 시장 점유율 20%↑. 로봇 팔이 부품을 잡으려면 CGNX 카메라가 필요. EV 배터리·반도체 검사 라인 확장이 신성장 촉매. 다만 $5B 이상으로 멀티배거 여지 제한.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
+      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'❌', cls:'mb-no'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'❌', cls:'mb-no'}
+    ]
+  },
+  {
+    ticker: 'MP', name: 'MP Materials Corp.', tier: 'up', tierLabel: '상류',
+    stars: '★', price: '$19.80', cap: '$3.2B', rsi: 42, mb: 4.0,
+    irr: '보통', bottleneck: false,
+    badge1: '상류 원자재', badge2: '대체불가 보통', badge3: '희토류채굴',
+    point: '북미 최대 희토류 광산 — Mountain Pass 독점',
+    reason: 'Mountain Pass는 미국 유일 희토류 광산. 중국 수출 제한 시나리오에서 직접 수혜. 단, 제련·자석 단계까지 수직계열화가 아직 미완성이라 USAR 대비 병목 지위 낮음. Tesla NdFeB 자석 공급 계약 체결 촉매.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'⚠️', cls:'mb-part'},
+      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
+      {label:'⑤ 재무 건전성', v:'❌', cls:'mb-no'},
+      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
+    ]
+  },
+  {
+    ticker: 'TRMB', name: 'Trimble Inc.', tier: 'down', tierLabel: '하류',
+    stars: '★', price: '$68.90', cap: '$17.5B', rsi: 52, mb: 4.0,
+    irr: '낮음', bottleneck: false,
+    badge1: '하류 플랫폼', badge2: '대체불가 낮음', badge3: '포지셔닝',
+    point: '건설·농업 자율 로봇 포지셔닝 — 소프트웨어 전환 중',
+    reason: '건설·농업 자율주행 장비용 GPS/GNSS 포지셔닝 점유율 1위. SaaS 전환으로 반복매출 증가. 단, 시가총액 $17B로 멀티배거 가능성 제한적. 경쟁사 Hexagon 대비 밸류에이션 프리미엄 낮음이 장점.',
+    mb_items: [
+      {label:'① 탁월한 성장 스토리', v:'⚠️', cls:'mb-part'},
+      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위 (해자)', v:'⚠️', cls:'mb-part'},
+      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
+      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매 (최근 뉴스)', v:'❌', cls:'mb-no'}
+    ]
+  }
+];
+
+/* ── Chain Tab ── */
+function ChainTab() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '🤖 로보틱스 메가트렌드 → 밸류체인 해부'),
+      e('div', {className:'insight-box'},
+        '핵심 관점: "모두가 아는 완제품 로봇 기업(FANUC, ABB)"이 아닌, ',
+        e('strong', null, '그 로봇을 만들기 위해 반드시 써야 하는 숨겨진 병목 기업'),
+        '을 선점한다.'
+      ),
+      e('div', {className:'chain-wrap'},
+        e('div', {className:'chain-tier tier-mega'},
+          e('div', {className:'chain-label mega'}, '메가 트렌드'),
+          e('div', {className:'chain-items'},
+            e('div', {className:'chain-item'}, '🌐 로봇 자동화 = 글로벌 제조·물류·국방 패러다임 전환'),
+            e('div', {className:'chain-item'}, '💡 AI+로봇 = 1조 달러 시장 (2030E)')
+          )
+        ),
+        e('div', {className:'chain-arrow'}, '↓'),
+        e('div', {className:'chain-tier tier-up'},
+          e('div', {className:'chain-label up'}, '▲ 상류 — 소재·칩·부품 ★ 핵심 노드'),
+          e('div', {className:'chain-items'},
+            e('div', {className:'chain-item'},
+              e('span', {className:'star'}, '★★★ '),
+              e('span', {className:'ticker-tag'}, 'AMBA'),
+              ' AI SoC 칩 (CVflow)'
+            ),
+            e('div', {className:'chain-item'},
+              e('span', {className:'star'}, '★★★ '),
+              e('span', {className:'ticker-tag'}, 'USAR'),
+              ' 희토류 자석 (수직계열화)'
+            ),
+            e('div', {className:'chain-item'},
+              e('span', {className:'star'}, '★★ '),
+              e('span', {className:'ticker-tag'}, 'AEIS'),
+              ' 정밀 전력 (반도체 공정)'
+            ),
+            e('div', {className:'chain-item'},
+              e('span', {className:'star'}, '★ '),
+              e('span', {className:'ticker-tag'}, 'MP'),
+              ' 희토류 채굴 (Mountain Pass)'
+            )
+          )
+        ),
+        e('div', {className:'chain-arrow'}, '↓'),
+        e('div', {className:'chain-tier tier-mid'},
+          e('div', {className:'chain-label mid'}, '■ 중류 — 핵심 기술·솔루션'),
+          e('div', {className:'chain-items'},
+            e('div', {className:'chain-item'},
+              e('span', {className:'star'}, '★★ '),
+              e('span', {className:'ticker-tag'}, 'OSIS'),
+              ' 검사·보안 시스템'
+            ),
+            e('div', {className:'chain-item'},
+              e('span', {className:'star'}, '★ '),
+              e('span', {className:'ticker-tag'}, 'CGNX'),
+              ' 머신 비전'
+            ),
+            e('div', {className:'chain-item'}, '⚙️ 정밀 감속기 (Nabtesco·Harmonic Drive)'),
+            e('div', {className:'chain-item'}, '🔌 서보 드라이버 (Yaskawa·Kollmorgen)')
+          )
+        ),
+        e('div', {className:'chain-arrow'}, '↓'),
+        e('div', {className:'chain-tier tier-down'},
+          e('div', {className:'chain-label down'}, '▼ 하류 — 완제품·플랫폼·서비스'),
+          e('div', {className:'chain-items'},
+            e('div', {className:'chain-item'},
+              e('span', {className:'star'}, '★ '),
+              e('span', {className:'ticker-tag'}, 'TRMB'),
+              ' 포지셔닝 플랫폼'
+            ),
+            e('div', {className:'chain-item'}, '🤖 산업용 로봇 (FANUC·ABB·KUKA)'),
+            e('div', {className:'chain-item'}, '🚚 물류 자동화 (Amazon Robotics)'),
+            e('div', {className:'chain-item'}, '🏥 의료·서비스 로봇 (Intuitive)'),
+            e('div', {className:'chain-item'}, '🚜 농업 자율주행 (Deere)')
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '🎯 파생 논리 — 병목 노드 식별'),
+      e('div', {className:'section-h'}, '핵심 파생 경로'),
+      e('div', {className:'insight-box'},
+        '로보틱스 급성장 → AI 추론·비전 수요 폭발 → ',
+        e('strong', null, 'AMBA CVflow SoC ★★★'),
+        ' (GPU보다 에너지효율 5배, 엣지 AI 독보적)'
+      ),
+      e('div', {className:'insight-box'},
+        '모든 로봇 모터 → 네오디뮴 자석 필수 → 중국 90% 독점 리스크 → ',
+        e('strong', null, 'USAR 수직계열화 ★★★'),
+        ' (미국 내 제련+자석 full-stack 유일)'
+      ),
+      e('div', {className:'warn-box'},
+        '물류 자동화 확산 → 검사·보안 시스템 함께 설치 필수 → ',
+        e('strong', null, 'OSIS ★★'),
+        ' (정부계약 기반 방어적 현금흐름)'
+      ),
+      e('div', {className:'warn-box'},
+        '로봇 생산 → 반도체 제조 공정 필수 → RF 정밀전력 시장 60% 점유 → ',
+        e('strong', null, 'AEIS ★★'),
+        ' (반도체 capex 반등 시 직접 수혜)'
+      )
+    )
+  );
+}
+
+/* ── Stock Card component ── */
+function StockCard(props) {
+  var s = props.stock;
+  var tierCls = 'stock-card tier-' + s.tier;
+  var badgeCls1 = s.tier === 'up' ? 'sc-badge sb-up' : (s.tier === 'mid' ? 'sc-badge sb-mid' : 'sc-badge sb-down');
+  var irrCls = s.irr === '높음' ? 'sc-badge sb-high' : (s.irr === '보통' ? 'sc-badge sb-med' : 'sc-badge sb-low');
+  var mbPct = (s.mb / 8 * 100).toFixed(0);
+  return e('div', {className: tierCls},
+    e('div', {className:'sc-header'},
+      e('div', null,
+        e('div', {className:'sc-ticker'}, s.ticker, ' ', e('span', {style:{fontSize:'13px'}}, s.stars)),
+        e('div', {className:'sc-name'}, s.name)
+      ),
+      e('div', {style:{textAlign:'right'}},
+        e('div', {style:{fontSize:'20px',fontWeight:'800',color:'#e2e8f0'}}, s.price),
+        e('div', {style:{fontSize:'11px',color:'#64748b'}}, s.cap)
+      )
+    ),
+    e('div', {className:'sc-badges'},
+      e('span', {className: badgeCls1}, s.tierLabel + ' · ' + s.badge1.split(' ')[1]),
+      e('span', {className: irrCls}, '대체불가 ' + s.irr),
+      e('span', {className:'sc-badge',style:{background:'rgba(251,191,36,0.1)',color:'#fde68a',border:'1px solid rgba(251,191,36,0.3)'}}, s.badge3),
+      s.bottleneck ? e('span', {className:'sc-badge',style:{background:'rgba(239,68,68,0.15)',color:'#fca5a5',border:'1px solid rgba(239,68,68,0.4)'}}, '🔴 병목노드') : null
+    ),
+    e('div', {className:'sc-metrics'},
+      e('div', {className:'sc-metric'},
+        e('div', {className:'sc-metric-label'}, 'RSI'),
+        e('div', {className:'sc-metric-val', style:{color: s.rsi < 40 ? '#22c55e' : s.rsi < 55 ? '#fbbf24' : '#ef4444'}}, s.rsi)
+      ),
+      e('div', {className:'sc-metric'},
+        e('div', {className:'sc-metric-label'}, '멀티배거'),
+        e('div', {className:'sc-metric-val', style:{color:'#10b981'}}, s.mb + '/8')
+      ),
+      e('div', {className:'sc-metric'},
+        e('div', {className:'sc-metric-label'}, '밸류체인'),
+        e('div', {className:'sc-metric-val', style:{fontSize:'11px'}}, s.tierLabel)
+      )
+    ),
+    e('div', {className:'sc-point'}, '▶ ' + s.point),
+    e('div', {className:'sc-reason'}, s.reason),
+    e('div', {className:'sc-mb-bar'},
+      e('div', {className:'sc-mb-label'}, '멀티배거 점수'),
+      e('div', {className:'sc-mb-bg'},
+        e('div', {className:'sc-mb-fill', style:{width: mbPct + '%'}})
+      ),
+      e('div', {className:'sc-mb-val'}, s.mb + '/8')
+    )
+  );
+}
+
+/* ── Stocks Tab ── */
+function StocksTab() {
+  return e('div', null,
+    e('div', {className:'insight-box', style:{marginBottom:'10px'}},
+      '총 7개 종목 발굴 · 상류(4) / 중류(2) / 하류(1) · ',
+      e('strong', null, '핵심노드 최우선 매수 전략')
+    ),
+    STOCKS.map(function(s, i) { return e(StockCard, {key: i, stock: s}); })
+  );
+}
+
+/* ── Compare Tab ── */
+function CompareTab() {
+  var capRef = useRef(null); var capChart = useRef(null);
+  var mbRef  = useRef(null); var mbChart  = useRef(null);
+  var rsiRef = useRef(null); var rsiChart = useRef(null);
+
+  var labels  = STOCKS.map(function(s){ return s.ticker; });
+  var caps    = [2.1, 0.49, 2.4, 1.8, 5.3, 3.2, 17.5];
+  var mbs     = STOCKS.map(function(s){ return s.mb; });
+  var rsis    = STOCKS.map(function(s){ return s.rsi; });
+  var colors  = ['#ef4444','#f97316','#eab308','#fbbf24','#22c55e','#14b8a6','#6366f1'];
+  var DARK = {color:'#94a3b8',borderColor:'#166534',gridColor:'rgba(22,101,52,0.3)'};
+
+  makeChart(capRef, capChart, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '시가총액 ($B)',
+        data: caps,
+        backgroundColor: colors,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend:{display:false}, tooltip:{callbacks:{label:function(c){return '$'+c.raw+'B';}}}},
+      scales: {
+        x: {ticks:{color:DARK.color}, grid:{color:DARK.gridColor}, border:{color:DARK.borderColor}},
+        y: {ticks:{color:DARK.color,callback:function(v){return '$'+v+'B';}}, grid:{color:DARK.gridColor}, border:{color:DARK.borderColor}}
+      }
+    }
+  });
+
+  makeChart(mbRef, mbChart, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '멀티배거 점수',
+        data: mbs,
+        backgroundColor: colors,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend:{display:false}},
+      scales: {
+        x: {ticks:{color:DARK.color}, grid:{color:DARK.gridColor}, border:{color:DARK.borderColor}},
+        y: {min:0, max:8, ticks:{color:DARK.color,stepSize:2}, grid:{color:DARK.gridColor}, border:{color:DARK.borderColor}}
+      }
+    }
+  });
+
+  makeChart(rsiRef, rsiChart, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'RSI',
+        data: rsis,
+        backgroundColor: rsis.map(function(r){
+          return r < 40 ? 'rgba(34,197,94,0.7)' : r < 55 ? 'rgba(251,191,36,0.7)' : 'rgba(239,68,68,0.7)';
+        }),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend:{display:false}, annotation:{}},
+      scales: {
+        x: {ticks:{color:DARK.color}, grid:{color:DARK.gridColor}, border:{color:DARK.borderColor}},
+        y: {min:20, max:70, ticks:{color:DARK.color,stepSize:10}, grid:{color:DARK.gridColor}, border:{color:DARK.borderColor}}
+      }
+    }
+  });
+
+  return e('div', null,
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '시가총액 비교 ($B)'),
+      e('div', {style:{fontSize:'11px',color:'#64748b',marginBottom:'4px'}}, '$5B 이하 = 멀티배거 가능 구간 (초록선 기준)'),
+      e('div', {className:'chart-wrap'}, e('canvas', {ref: capRef}))
+    ),
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '멀티배거 점수 (/ 8점)'),
+      e('div', {style:{fontSize:'11px',color:'#64748b',marginBottom:'4px'}}, '5점 이상 = 발굴 기준 충족'),
+      e('div', {className:'chart-wrap'}, e('canvas', {ref: mbRef}))
+    ),
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, 'RSI 현황'),
+      e('div', {style:{fontSize:'11px',color:'#64748b',marginBottom:'4px'}},
+        e('span', {style:{color:'#22c55e'}}, '■ < 40 과매도  '),
+        e('span', {style:{color:'#fbbf24'}}, '■ 40~55 적정  '),
+        e('span', {style:{color:'#ef4444'}}, '■ > 55 과매수')
+      ),
+      e('div', {className:'chart-wrap'}, e('canvas', {ref: rsiRef}))
+    ),
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '📋 종합 스코어카드'),
+      e('div', {style:{overflowX:'auto'}},
+        e('table', {style:{width:'100%',borderCollapse:'collapse',fontSize:'11px'}},
+          e('thead', null,
+            e('tr', null,
+              ['티커','위치','별점','시총','RSI','멀티배거','병목'].map(function(h,i){
+                return e('th', {key:i,style:{padding:'6px 8px',color:'#64748b',textAlign:'left',borderBottom:'1px solid #166534'}}, h);
+              })
+            )
+          ),
+          e('tbody', null,
+            STOCKS.map(function(s, i) {
+              return e('tr', {key:i, style:{borderBottom:'1px solid #0d1f13'}},
+                e('td', {style:{padding:'6px 8px',fontWeight:'800',color:'#10b981'}}, s.ticker),
+                e('td', {style:{padding:'6px 8px',color:'#94a3b8'}}, s.tierLabel),
+                e('td', {style:{padding:'6px 8px'}}, s.stars),
+                e('td', {style:{padding:'6px 8px',color:'#e2e8f0'}}, s.cap),
+                e('td', {style:{padding:'6px 8px',color: s.rsi < 40 ? '#22c55e' : '#fbbf24'}}, s.rsi),
+                e('td', {style:{padding:'6px 8px',color:'#fbbf24',fontWeight:'700'}}, s.mb + '/8'),
+                e('td', {style:{padding:'6px 8px'}}, s.bottleneck ? '🔴 병목' : '—')
+              );
+            })
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Multibagger Tab ── */
+function MultibaggerTab() {
+  var tickers = STOCKS.map(function(s){ return s.ticker; });
+  var ts = useState('AMBA');
+  var sel = ts[0]; var setSel = ts[1];
+
+  var stock = null;
+  for (var i = 0; i < STOCKS.length; i++) {
+    if (STOCKS[i].ticker === sel) { stock = STOCKS[i]; break; }
+  }
+
+  var yesCount = 0; var partCount = 0; var noCount = 0;
+  for (var j = 0; j < stock.mb_items.length; j++) {
+    var v = stock.mb_items[j].v;
+    if (v === '✅') yesCount++;
+    else if (v === '⚠️') partCount++;
+    else noCount++;
+  }
+
+  return e('div', null,
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '🔟 멀티배거 점수 분석 (Anna Yartseva 8 기준)'),
+      e('div', {className:'insight-box'},
+        '✅ = 1점  ·  ⚠️ = 0.5점  ·  ❌ = 0점  |  5점 이상 = 발굴 기준 충족'
+      ),
+      e('div', {className:'ticker-select'},
+        tickers.map(function(t, i){
+          return e('button', {
+            key: i,
+            className: 'ts-btn' + (t === sel ? ' active' : ''),
+            onClick: function(){ setSel(t); }
+          }, t);
+        })
+      )
+    ),
+    e('div', {className:'total-score-box'},
+      e('div', null,
+        e('span', {className:'total-num'}, stock.mb),
+        e('span', {className:'total-denom'}, ' / 8')
+      ),
+      e('div', {className:'score-grade'}, stock.ticker + ' — ' + stock.name),
+      e('div', {style:{fontSize:'11px',color:'#64748b',marginTop:'4px'}},
+        e('span', {style:{color:'#22c55e'}}, '✅ ' + yesCount + '개  '),
+        e('span', {style:{color:'#fbbf24'}}, '⚠️ ' + partCount + '개  '),
+        e('span', {style:{color:'#ef4444'}}, '❌ ' + noCount + '개')
+      )
+    ),
+    e('div', {className:'card'},
+      stock.mb_items.map(function(item, i) {
+        return e('div', {key: i, className:'mb-item'},
+          e('div', {className:'mb-label'}, item.label),
+          e('div', {className:'mb-val ' + item.cls}, item.v)
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '📌 전략 포인트'),
+      e('div', {className:'sc-point', style:{marginBottom:'6px'}}, '▶ ' + stock.point),
+      e('div', {className:'sc-reason'}, stock.reason)
+    )
+  );
+}
+
+/* ── Strategy Tab ── */
+function StrategyTab() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '🏆 우선순위 매수 전략'),
+      e('div', {className:'section-h'}, '1순위 — 핵심 병목 노드 (★★★)'),
+      e('div', {className:'insight-box'},
+        e('strong', null, 'AMBA'),
+        ' — AI 비전 SoC. 로봇 "눈+뇌"의 핵심. CVflow 아키텍처 독점적 우위. 분할매수 진입 권장 (현재가 $52.80, 목표 $90+)'
+      ),
+      e('div', {className:'insight-box'},
+        e('strong', null, 'USAR'),
+        ' — 희토류 수직계열화. 지정학 리스크 헤지 자산. DoD 계약 촉매 주목. 소형주 고위험/고수익 (현재가 $5.80, 목표 $15+)'
+      ),
+      e('div', {className:'section-h'}, '2순위 — 안정적 해자 종목 (★★)'),
+      e('div', {className:'warn-box'},
+        e('strong', null, 'OSIS'),
+        ' — 물류 자동화+검사 결합. 방산/정부 계약 기반 안정. 하방 방어력 우수 (현재가 $178, 목표 $220+)'
+      ),
+      e('div', {className:'warn-box'},
+        e('strong', null, 'AEIS'),
+        ' — 반도체 capex 반등 시 직접 수혜. 정밀전력 60%↑ 점유율. 사이클 저점 매수 기회 (현재가 $68, 목표 $95+)'
+      ),
+      e('div', {className:'section-h'}, '3순위 — 참고용 관심 종목 (★)'),
+      e('div', {className:'risk-box'},
+        e('strong', null, 'MP / CGNX / TRMB'),
+        ' — 밸류체인 상 위치는 좋으나, 멀티배거 점수 4점 이하 또는 시총 과다($5B↑). 별도 심층 분석 후 진입 결정 권장.'
+      )
+    ),
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '⚠️ 주요 리스크'),
+      e('div', {className:'risk-box'}, '① 중국 희토류 수출 제한 완화 시 USAR·MP 투자 논리 약화'),
+      e('div', {className:'risk-box'}, '② 반도체 업황 장기 침체 시 AMBA·AEIS 실적 타격'),
+      e('div', {className:'warn-box'}, '③ 금리 인하 지연 → 소형 성장주(USAR) 밸류에이션 압박'),
+      e('div', {className:'warn-box'}, '④ CGNX·TRMB 경쟁 심화 (중국 로봇 기업의 비전·포지셔닝 내재화)'),
+      e('div', {className:'insight-box'}, '✅ 분산: 상류(AMBA+USAR) + 중류(OSIS) 조합으로 리스크 헤지 권장')
+    ),
+    e('div', {className:'card'},
+      e('div', {className:'card-title'}, '📅 주요 촉매 일정'),
+      e('div', {className:'insight-box'}, '🔔 AMBA Q2 2026 실적 발표 (2026.08 예정) — 로봇 설계 승인(Design Win) 현황 주목'),
+      e('div', {className:'insight-box'}, '🔔 USAR Mountain Pass 제련 시설 완공 발표 예정 (2026 H2)'),
+      e('div', {className:'warn-box'}, '🔔 DoD 희토류 국가비축 계획 발표 (2026 Q3 예상) — USAR·MP 동반 수혜'),
+      e('div', {className:'warn-box'}, '🔔 반도체 장비 capex 리포트 (2026 Q3) — AEIS 업사이드 확인 지표')
+    )
+  );
+}
+
+/* ── Main App ── */
+function App() {
+  var ts = useState('chain');
+  var tab = ts[0]; var setTab = ts[1];
+
+  var tabs = [
+    {id:'chain', label:'🗺️밸류체인'},
+    {id:'stocks', label:'🔍발굴종목'},
+    {id:'compare', label:'📊비교차트'},
+    {id:'mb', label:'🔟멀티배거'},
+    {id:'strategy', label:'🎯전략'}
+  ];
+
+  var content = null;
+  if (tab === 'chain')    content = e(ChainTab, null);
+  if (tab === 'stocks')   content = e(StocksTab, null);
+  if (tab === 'compare')  content = e(CompareTab, null);
+  if (tab === 'mb')       content = e(MultibaggerTab, null);
+  if (tab === 'strategy') content = e(StrategyTab, null);
+
+  return e('div', {className:'container'},
+    e('div', {className:'header'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back-link'}, '← 목록으로'),
+      e('div', {className:'header-badge'}, '🔍 종목발굴 · 2026.05.29'),
+      e('div', {className:'title'}, '🤖 로보틱스 밸류체인 종목발굴'),
+      e('div', {className:'subtitle'}, '탑다운 × 밸류체인 분석 — 병목 노드 선점 전략'),
+      e('div', {className:'meta-row'},
+        e('div', {className:'meta-chip'}, '발굴 종목: 7개'),
+        e('div', {className:'meta-chip'}, '핵심노드: 2개 (AMBA·USAR)'),
+        e('div', {className:'meta-chip'}, '분석일: 2026.05.29'),
+        e('div', {className:'meta-chip'}, '방법론: Anna Yartseva 8기준')
+      )
+    ),
+    e('div', {className:'tabs'},
+      tabs.map(function(t, i) {
+        return e('button', {
+          key: i,
+          className: 'tab-btn' + (tab === t.id ? ' active' : ''),
+          onClick: function(){ setTab(t.id); }
+        }, t.label);
+      })
+    ),
+    content
+  );
+}
+
+var root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(e(App, null));
+</script>
+</body>
+</html>
