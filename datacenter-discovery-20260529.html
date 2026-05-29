@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>데이터센터 종목발굴 — 2026-05-29</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0f;color:#e2e8f0;font-family:'Segoe UI',sans-serif;font-size:14px}
+#root{max-width:900px;margin:0 auto;padding:12px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+var ACCENT = '#06b6d4';
+var ACCENT2 = '#0891b2';
+var BG_CARD = '#111827';
+var BG_INNER = '#1f2937';
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+var STOCKS = [
+  {
+    ticker:'BDC', name:'Belden Inc.', tier:'low', stars:'★★★',
+    price:'~$109', cap:'~$4.4B', capNum:4.4, rsi:30, mb:5.5,
+    badge1:'중류 핵심노드', badge2:'대체불가 높음', badge3:'연결 인프라',
+    isRef:false,
+    point:'데이터센터 케이블·광섬유 — RUCKUS 인수 충격으로 29% 과매도, 역발상 매수',
+    reason:'RUCKUS 인수(1.85B) 발표 후 레버리지 우려로 52주 고점 대비 29% 급락. Q1 매출 $696M +11% YoY는 견고. 애널리스트 평균 목표가 $179 → 현재가 대비 +64% 업사이드. 데이터센터 내부 케이블·광섬유·패치패널·랙 표준화 선두이며 RUCKUS로 와이파이·클라우드 네트워킹까지 수직 통합. 시장의 과도한 공포 반응이 역발상 매수 기회.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'✅', cls:'mb-yes'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 고성장 가능성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑦ 재무 건전성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑧ 촉매/이벤트', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker:'PPIH', name:'Perma-Pipe Intl Holdings', tier:'low', stars:'★★★',
+    price:'~$32', cap:'~$265M', capNum:0.265, rsi:52, mb:5.0,
+    badge1:'중류 핵심노드', badge2:'대체불가 높음', badge3:'DLC 냉각 배관',
+    isRef:false,
+    point:'AI 데이터센터 직접 액체냉각(DLC) 배관 전문 — 매출 +33%, 순이익 +89%',
+    reason:'NVIDIA GB200 NVL72 랙(120kW+)은 공랭 불가 → 직접 액체냉각(DLC) 필수. Perma-Pipe는 DLC 배관 시스템 전문, Q1 2026 $54M 수주 (AI 데이터센터 포함). 미국 북동부 신규 제조시설 Q2 2026 가동 → 생산능력 급확대. $265M 마이크로캡이지만 매출·이익 성장 모멘텀이 압도적. 52주 범위 $11.22 → $36.72 이미 3배 상승했지만 성장 스토리는 초기.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'✅', cls:'mb-yes'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'⚠️', cls:'mb-mid'},
+      {label:'⑥ 고성장 가능성', v:'✅', cls:'mb-yes'},
+      {label:'⑦ 재무 건전성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑧ 촉매/이벤트', v:'✅', cls:'mb-yes'}
+    ]
+  },
+  {
+    ticker:'MYRG', name:'MYR Group Inc.', tier:'mid', stars:'★★',
+    price:'~$461', cap:'~$7.2B', capNum:7.2, rsi:57, mb:5.0,
+    badge1:'하류 핵심노드', badge2:'대체불가 보통', badge3:'전기 건설 EPC',
+    isRef:false,
+    point:'데이터센터 전기 건설 특화 EPC — 수주잔고 $2.84B 사상 최대, Q1 EPS +46% 상회',
+    reason:'FIX($65B)·EME($41B)가 이미 천문학적으로 올랐지만 MYRG는 $7.2B로 상대적 저평가. Q1 2026 매출 $1B +20% YoY, EPS $2.99 예상 대비 46% 상회. 수주잔고 $2.84B 사상 최대 → 향후 3~5년 매출 가시성 확보. 전기 건설은 면허·경험·인력이 필요한 고진입장벽 영역. 195% YoY 상승에도 FIX 대비 여전히 저평가 구간.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'✅', cls:'mb-yes'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 고성장 가능성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑦ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매/이벤트', v:'⚠️', cls:'mb-mid'}
+    ]
+  },
+  {
+    ticker:'NVT', name:'nVent Electric plc', tier:'mid', stars:'★★',
+    price:'~$169', cap:'~$26.3B', capNum:26.3, rsi:55, mb:4.5,
+    badge1:'중류 핵심노드', badge2:'대체불가 높음', badge3:'인클로저·PDU·냉각',
+    isRef:false,
+    point:'인클로저·PDU·직접 액체냉각 통합 — Q1 인프라 +100%+, 매출 $1.24B +53%',
+    reason:'AI 데이터센터 회색공간(전력·배전)과 백색공간(서버 냉각) 모두 커버하는 원스톱 솔루션. Q1 2026 매출 $1.24B +53%, 인프라 부문(데이터센터) +100%+ 유기 성장. 백로그 $2.6B. Vertiv($120B)보다 훨씬 저평가인 $26B. 특히 고밀도 서버 랙용 DLC + PDU + 인클로저 통합 포트폴리오는 경쟁사 추격 불가.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'✅', cls:'mb-yes'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 고성장 가능성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑦ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매/이벤트', v:'⚠️', cls:'mb-mid'}
+    ]
+  },
+  {
+    ticker:'ENS', name:'EnerSys', tier:'mid', stars:'★★',
+    price:'~$228', cap:'~$8.8B', capNum:8.8, rsi:65, mb:4.0,
+    badge1:'중류 핵심노드', badge2:'대체불가 보통', badge3:'UPS 배터리',
+    isRef:false,
+    point:'데이터센터 UPS 배터리 — 전력 중단 허용 불가, 글로벌 1위 산업용 배터리',
+    reason:'AI 데이터센터는 마이크로초 단위 전력 중단도 치명적 → 고성능 UPS 배터리 필수. EnerSys는 데이터센터·통신·산업용 배터리 글로벌 1위. 데이터센터·A&D 부문이 성장 견인. P/E 28.75 적정 밸류에이션. AI/전력/포토닉스 테마에 가려 시장의 주목을 덜 받고 있는 숨겨진 병목.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'⚠️', cls:'mb-mid'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'✅', cls:'mb-yes'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 고성장 가능성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑦ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매/이벤트', v:'⚠️', cls:'mb-mid'}
+    ]
+  },
+  {
+    ticker:'STRL', name:'Sterling Infrastructure', tier:'high', stars:'★',
+    price:'~$700', cap:'~$24.7B', capNum:24.7, rsi:72, mb:4.5,
+    badge1:'상류 핵심노드', badge2:'대체불가 보통', badge3:'부지 개발 EPC',
+    isRef:true,
+    point:'[참고] 데이터센터 부지 개발·토목 — E-Infrastructure +174% YoY, 이미 $24.7B 대형주',
+    reason:'E-Infrastructure(데이터센터 부지 개발) 매출 +174% YoY로 폭발적 성장. 2026 매출 가이던스 $3.7-$3.8B 상향. 하지만 이미 $24.7B 대형주, RSI 과매수 구간. 신규 진입보다 참고용. 데이터센터 부지 개발 밸류체인 최상류 핵심 플레이어임은 분명.',
+    mb_items:[
+      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
+      {label:'② 대형 TAM', v:'✅', cls:'mb-yes'},
+      {label:'③ 경쟁 우위', v:'⚠️', cls:'mb-mid'},
+      {label:'④ 훌륭한 경영진', v:'✅', cls:'mb-yes'},
+      {label:'⑤ 반복 수익 구조', v:'✅', cls:'mb-yes'},
+      {label:'⑥ 고성장 가능성', v:'⚠️', cls:'mb-mid'},
+      {label:'⑦ 재무 건전성', v:'✅', cls:'mb-yes'},
+      {label:'⑧ 촉매/이벤트', v:'⚠️', cls:'mb-mid'}
+    ]
+  }
+];
+
+var TABS = ['🗺️ 밸류체인','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
+
+function Badge(props) {
+  return e('span', {style:{
+    background:'rgba(6,182,212,0.15)', border:'1px solid rgba(6,182,212,0.4)',
+    color:ACCENT, padding:'2px 7px', borderRadius:4, fontSize:11, marginRight:4
+  }}, props.children);
+}
+
+function RefBadge() {
+  return e('span', {style:{
+    background:'rgba(251,191,36,0.15)', border:'1px solid rgba(251,191,36,0.4)',
+    color:'#fbbf24', padding:'2px 7px', borderRadius:4, fontSize:11, marginRight:4
+  }}, '이미 대형주');
+}
+
+function RSIBar(props) {
+  var v = props.v;
+  var color = v < 35 ? '#34d399' : v > 65 ? '#f87171' : '#fbbf24';
+  var label = v < 35 ? '과매도' : v > 65 ? '과매수' : '중립';
+  return e('div', {style:{marginTop:4}},
+    e('div', {style:{display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:2}},
+      e('span', {style:{color:'#9ca3af'}}, 'RSI ' + v),
+      e('span', {style:{color:color}}, label)
+    ),
+    e('div', {style:{background:'#374151', borderRadius:4, height:6, position:'relative'}},
+      e('div', {style:{
+        position:'absolute', height:6, borderRadius:4,
+        width:(v)+'%', background:color, maxWidth:'100%'
+      }})
+    )
+  );
+}
+
+function MBBar(props) {
+  var pct = (props.v / 8) * 100;
+  var color = pct >= 62.5 ? ACCENT : pct >= 50 ? '#fbbf24' : '#6b7280';
+  return e('div', {style:{marginTop:4}},
+    e('div', {style:{display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:2}},
+      e('span', {style:{color:'#9ca3af'}}, '멀티배거'),
+      e('span', {style:{color:color}}, props.v + '/8')
+    ),
+    e('div', {style:{background:'#374151', borderRadius:4, height:6}},
+      e('div', {style:{height:6, borderRadius:4, width:pct+'%', background:color}})
+    )
+  );
+}
+
+function TabValuchain() {
+  var chain = [
+    {label:'메가트렌드', items:['AI 빅테크 CapEx 폭증 ($300B+/yr)', 'GPT-5급 모델 추론 수요 급증', '하이퍼스케일러 멀티 GW 확장']},
+    {label:'상류 — 부지·토목', items:['★ STRL 데이터센터 부지 개발·토목 건설', 'QTS·Cyrusone 등 비상장 플레이어', '전력망 연결 (노던 버지니아 2028년까지 대기)']},
+    {label:'중류 — 건설·전기', items:['★★ MYRG 데이터센터 전기 공사 EPC', 'FIX $65B / EME $41B 이미 대형주', '인력·면허 희소성 → 강한 진입장벽']},
+    {label:'중류 — 인클로저·전력', items:['★★ NVT 인클로저·PDU·DLC 통합', '★★ ENS 무정전전원(UPS) 배터리', 'VRT $120B 이미 대형주']},
+    {label:'중류 — 냉각 배관', items:['★★★ PPIH 직접 액체냉각(DLC) 배관', '120kW+ GPU 랙 → 공랭 불가', 'CoolIT(Ecolab 자회사) 비상장']},
+    {label:'하류 — 연결 인프라', items:['★★★ BDC 데이터센터 케이블·광섬유·랙', 'RUCKUS 인수로 29% 급락 → 역발상 기회', '애널리스트 목표가 +64% 업사이드']}
+  ];
+
+  var arrows = [
+    'AI 학습·추론 → 전력 수요 10배 이상 증가, 데이터센터 건설 붐',
+    '부지 확보 → 전기 인프라 설치 → 서버실 완성',
+    '서버 밀도 증가 → 냉각 방식 변화 (공랭 → 직접 액체냉각)',
+    '데이터센터 내부 → 수만 km 케이블·광섬유로 연결'
+  ];
+
+  return e('div', null,
+    e('h3', {style:{color:ACCENT, fontSize:16, marginBottom:16}}, '데이터센터 탑다운 밸류체인'),
+    chain.map(function(c, i) {
+      return e('div', {key:i, style:{marginBottom:8}},
+        e('div', {style:{
+          background:BG_INNER, borderRadius:8, padding:'10px 14px',
+          borderLeft:'3px solid ' + ACCENT
+        }},
+          e('div', {style:{color:'#9ca3af', fontSize:11, marginBottom:4}}, c.label),
+          c.items.map(function(it, j) {
+            return e('div', {key:j, style:{color:'#e2e8f0', fontSize:13, marginBottom:2}}, it);
+          })
+        ),
+        i < chain.length - 1 && e('div', {style:{
+          textAlign:'center', color:ACCENT, fontSize:18, margin:'2px 0'
+        }}, '↓')
+      );
+    }),
+    e('div', {style:{
+      background:'rgba(6,182,212,0.07)', border:'1px solid rgba(6,182,212,0.2)',
+      borderRadius:8, padding:'12px 14px', marginTop:16
+    }},
+      e('div', {style:{color:ACCENT, fontSize:13, fontWeight:700, marginBottom:8}},
+        '⚡ 핵심 파생 논리'),
+      arrows.map(function(a, i) {
+        return e('div', {key:i, style:{color:'#d1d5db', fontSize:12, marginBottom:4}},
+          (i+1) + '. ' + a
+        );
+      })
+    ),
+    e('div', {style:{
+      background:'rgba(251,191,36,0.07)', border:'1px solid rgba(251,191,36,0.2)',
+      borderRadius:8, padding:'12px 14px', marginTop:12
+    }},
+      e('div', {style:{color:'#fbbf24', fontSize:13, fontWeight:700, marginBottom:8}},
+        '⚠️ 이미 크게 오른 대형주 (제외)'),
+      [
+        'Vertiv (VRT) $120B — 데이터센터 냉각·전력',
+        'Comfort Systems (FIX) $65B — MEP 건설 (+302% YoY)',
+        'EMCOR Group (EME) $41B — 기계·전기 건설',
+        'Sterling Construction (STRL) $24.7B — 부지 개발 (RSI 과매수)',
+        'nVent Electric (NVT) $26.3B — 인클로저·냉각 (★★ 참고 포함)',
+        'TTM Technologies (TTMI) $20.4B — AI 서버 PCB'
+      ].map(function(t, i) {
+        return e('div', {key:i, style:{color:'#fbbf24', fontSize:12, marginBottom:3}}, '• ' + t);
+      })
+    )
+  );
+}
+
+function TabStocks() {
+  return e('div', null,
+    e('h3', {style:{color:ACCENT, fontSize:16, marginBottom:16}}, '발굴 종목 카드'),
+    STOCKS.map(function(s, i) {
+      return e('div', {key:i, style:{
+        background:BG_CARD, borderRadius:12, padding:16, marginBottom:12,
+        border:'1px solid ' + (s.isRef ? 'rgba(251,191,36,0.25)' : 'rgba(6,182,212,0.2)')
+      }},
+        e('div', {style:{display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:4}},
+          e('div', null,
+            e('span', {style:{fontSize:18, fontWeight:700, color: s.isRef ? '#fbbf24' : ACCENT}}, s.ticker),
+            e('span', {style:{color:'#9ca3af', fontSize:12, marginLeft:8}}, s.name)
+          ),
+          e('span', {style:{fontSize:22}}, s.stars)
+        ),
+        e('div', {style:{marginTop:8, display:'flex', flexWrap:'wrap', gap:4}},
+          s.isRef ? e(RefBadge, null) : null,
+          e(Badge, null, s.badge1),
+          e(Badge, null, s.badge2),
+          e(Badge, null, s.badge3)
+        ),
+        e('div', {style:{
+          display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:10
+        }},
+          e('div', {style:{background:BG_INNER, borderRadius:6, padding:'8px 10px'}},
+            e('div', {style:{color:'#6b7280', fontSize:10}}, '현재가'),
+            e('div', {style:{color:'#f9fafb', fontWeight:700}}, s.price)
+          ),
+          e('div', {style:{background:BG_INNER, borderRadius:6, padding:'8px 10px'}},
+            e('div', {style:{color:'#6b7280', fontSize:10}}, '시가총액'),
+            e('div', {style:{color:'#f9fafb', fontWeight:700}}, s.cap)
+          )
+        ),
+        e(RSIBar, {v:s.rsi}),
+        e(MBBar, {v:s.mb}),
+        e('div', {style:{
+          background:BG_INNER, borderRadius:6, padding:'8px 10px', marginTop:10
+        }},
+          e('div', {style:{color:ACCENT, fontSize:11, fontWeight:600, marginBottom:4}}, '핵심 포인트'),
+          e('div', {style:{color:'#d1d5db', fontSize:12, lineHeight:1.5}}, s.point)
+        ),
+        e('div', {style:{
+          background:'rgba(6,182,212,0.05)', borderRadius:6,
+          padding:'8px 10px', marginTop:6,
+          border:'1px solid rgba(6,182,212,0.1)'
+        }},
+          e('div', {style:{color:'#9ca3af', fontSize:11, fontWeight:600, marginBottom:4}}, '주목 이유 (파생 논리)'),
+          e('div', {style:{color:'#d1d5db', fontSize:12, lineHeight:1.6}}, s.reason)
+        )
+      );
+    })
+  );
+}
+
+function ChartCapRef(props) {
+  var ref = useRef(null);
+  var chartRef = useRef(null);
+  var data = STOCKS.map(function(s) { return s.capNum; });
+  var labels = STOCKS.map(function(s) { return s.ticker; });
+  var colors = STOCKS.map(function(s) { return s.isRef ? 'rgba(251,191,36,0.7)' : 'rgba(6,182,212,0.7)'; });
+  makeChart(ref, chartRef, {
+    type:'bar',
+    data:{labels:labels, datasets:[{
+      label:'시가총액 ($B)',
+      data:data, backgroundColor:colors,
+      borderColor:colors, borderWidth:1, borderRadius:4
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ' $'+ctx.raw+'B';}}}},
+      scales:{
+        y:{grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#9ca3af',callback:function(v){return '$'+v+'B';}}},
+        x:{grid:{display:false}, ticks:{color:'#9ca3af'}}
+      }
+    }
+  });
+  return e('div', {style:{height:220}}, e('canvas', {ref:ref}));
+}
+
+function ChartMB(props) {
+  var ref = useRef(null);
+  var chartRef = useRef(null);
+  var data = STOCKS.map(function(s) { return s.mb; });
+  var labels = STOCKS.map(function(s) { return s.ticker; });
+  var colors = STOCKS.map(function(s) { return s.mb >= 5 ? 'rgba(52,211,153,0.75)' : s.mb >= 4 ? 'rgba(251,191,36,0.75)' : 'rgba(107,114,128,0.75)'; });
+  makeChart(ref, chartRef, {
+    type:'bar',
+    data:{labels:labels, datasets:[{
+      label:'멀티배거 점수',
+      data:data, backgroundColor:colors,
+      borderColor:colors, borderWidth:1, borderRadius:4
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{min:0, max:8, grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#9ca3af'}},
+        x:{grid:{display:false}, ticks:{color:'#9ca3af'}}
+      }
+    }
+  });
+  return e('div', {style:{height:220}}, e('canvas', {ref:ref}));
+}
+
+function ChartRSI(props) {
+  var ref = useRef(null);
+  var chartRef = useRef(null);
+  var data = STOCKS.map(function(s) { return s.rsi; });
+  var labels = STOCKS.map(function(s) { return s.ticker; });
+  var colors = STOCKS.map(function(s) {
+    return s.rsi < 35 ? 'rgba(52,211,153,0.75)' : s.rsi > 65 ? 'rgba(248,113,113,0.75)' : 'rgba(251,191,36,0.75)';
+  });
+  makeChart(ref, chartRef, {
+    type:'bar',
+    data:{labels:labels, datasets:[{
+      label:'RSI',
+      data:data, backgroundColor:colors,
+      borderColor:colors, borderWidth:1, borderRadius:4
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        annotation:{annotations:{
+          line30:{type:'line',yMin:30,yMax:30,borderColor:'rgba(52,211,153,0.5)',borderWidth:1,borderDash:[4,4]},
+          line70:{type:'line',yMin:70,yMax:70,borderColor:'rgba(248,113,113,0.5)',borderWidth:1,borderDash:[4,4]}
+        }}
+      },
+      scales:{
+        y:{min:0, max:100, grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#9ca3af'}},
+        x:{grid:{display:false}, ticks:{color:'#9ca3af'}}
+      }
+    }
+  });
+  return e('div', {style:{height:220}}, e('canvas', {ref:ref}));
+}
+
+function TabCharts() {
+  return e('div', null,
+    e('h3', {style:{color:ACCENT, fontSize:16, marginBottom:16}}, '종목 비교 차트'),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:'#9ca3af', fontSize:12, marginBottom:8}}, '시가총액 비교 ($B) — 시안=핵심종목, 노랑=참고용'),
+      e(ChartCapRef, null)
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:'#9ca3af', fontSize:12, marginBottom:8}}, '멀티배거 점수 (8점 만점) — 초록≥5, 노랑≥4'),
+      e(ChartMB, null)
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14}},
+      e('div', {style:{color:'#9ca3af', fontSize:12, marginBottom:8}}, 'RSI — 초록<35(과매도), 노랑 35~65(중립), 빨강>65(과매수)'),
+      e(ChartRSI, null)
+    ),
+    e('div', {style:{
+      background:'rgba(6,182,212,0.06)', border:'1px solid rgba(6,182,212,0.18)',
+      borderRadius:8, padding:'10px 14px', marginTop:12
+    }},
+      e('div', {style:{color:ACCENT, fontSize:12, fontWeight:600, marginBottom:6}}, '💡 차트 인사이트'),
+      [
+        'BDC: RSI 30 과매도 + 시총 $4.4B 소형 → 역발상 최우선',
+        'PPIH: 시총 $265M 극소형이지만 성장률 압도적',
+        'MYRG: RSI 57 중립, FIX/EME 대비 시총 갭 존재',
+        'ENS: RSI 65 과매수 주의, 하지만 밸류에이션 합리적'
+      ].map(function(t, i) {
+        return e('div', {key:i, style:{color:'#d1d5db', fontSize:12, marginBottom:3}}, '• ' + t);
+      })
+    )
+  );
+}
+
+function TabMultibagger() {
+  var choices = STOCKS.filter(function(s) { return !s.isRef; }).map(function(s) { return s.ticker; });
+  var state = useState(choices[0]);
+  var sel = state[0]; var setSel = state[1];
+  var s = STOCKS.find(function(x) { return x.ticker === sel; });
+
+  return e('div', null,
+    e('h3', {style:{color:ACCENT, fontSize:16, marginBottom:12}}, 'Anna Yartseva 멀티배거 8항목'),
+    e('div', {style:{display:'flex', flexWrap:'wrap', gap:6, marginBottom:16}},
+      choices.map(function(t) {
+        return e('button', {key:t, onClick:function(){setSel(t);}, style:{
+          padding:'5px 12px', borderRadius:6,
+          background: t === sel ? ACCENT : BG_INNER,
+          color: t === sel ? '#000' : '#9ca3af',
+          border: '1px solid ' + (t === sel ? ACCENT : '#374151'),
+          cursor:'pointer', fontSize:13, fontWeight:600
+        }}, t);
+      })
+    ),
+    s && e('div', null,
+      e('div', {style:{color:'#9ca3af', fontSize:12, marginBottom:12}},
+        s.name + ' — 멀티배거 점수: ',
+        e('span', {style:{color:ACCENT, fontWeight:700}}, s.mb + '/8')
+      ),
+      s.mb_items.map(function(item, i) {
+        var isYes = item.cls === 'mb-yes';
+        var isMid = item.cls === 'mb-mid';
+        return e('div', {key:i, style:{
+          display:'flex', justifyContent:'space-between', alignItems:'center',
+          background: BG_INNER, borderRadius:6, padding:'10px 14px', marginBottom:6,
+          borderLeft: '3px solid ' + (isYes ? '#34d399' : isMid ? '#fbbf24' : '#4b5563')
+        }},
+          e('span', {style:{color:'#e2e8f0', fontSize:13}}, item.label),
+          e('span', {style:{fontSize:16}}, item.v)
+        );
+      })
+    )
+  );
+}
+
+function TabStrategy() {
+  var ranked = STOCKS.slice().sort(function(a,b) {
+    if (a.isRef !== b.isRef) return a.isRef ? 1 : -1;
+    return b.mb - a.mb;
+  });
+
+  var catalysts = [
+    {t:'BDC', c:'RUCKUS 통합 시너지 발표, Q2 이후 레버리지 우려 해소'},
+    {t:'PPIH', c:'미국 북동부 신규 공장 Q2 2026 가동 → 수주 급증'},
+    {t:'MYRG', c:'대형 데이터센터 신규 수주 발표, EPS 컨센서스 상향'},
+    {t:'NVT', c:'DLC 통합 솔루션 수주 확대, 백로그 $2.6B 소화'},
+    {t:'ENS', c:'데이터센터 UPS 교체 사이클, ESS 배터리 신사업'}
+  ];
+
+  var risks = [
+    {t:'BDC', r:'RUCKUS 레버리지(3x EBITDA) 우려 지속, 인수 통합 실패 리스크'},
+    {t:'PPIH', r:'마이크로캡 유동성 부족, 신규 공장 가동 지연 가능성'},
+    {t:'MYRG', r:'이미 195% 상승, 수주 성장률 둔화 시 밸류에이션 부담'},
+    {t:'NVT', r:'$26B 대형주, 추가 멀티플 확장 제한적'},
+    {t:'ENS', r:'RSI 과매수, 모티브 파워(지게차 배터리) 부문 부진'}
+  ];
+
+  return e('div', null,
+    e('h3', {style:{color:ACCENT, fontSize:16, marginBottom:16}}, '투자 전략 & 포트폴리오'),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:ACCENT, fontSize:13, fontWeight:600, marginBottom:10}}, '🏆 우선순위 순위표'),
+      ranked.map(function(s, i) {
+        return e('div', {key:i, style:{
+          display:'flex', alignItems:'center', gap:10,
+          background:BG_INNER, borderRadius:6, padding:'8px 12px', marginBottom:6,
+          opacity: s.isRef ? 0.6 : 1
+        }},
+          e('span', {style:{color:'#6b7280', fontSize:12, width:18}}, i+1),
+          e('span', {style:{color: s.isRef ? '#fbbf24' : ACCENT, fontWeight:700, width:50}}, s.ticker),
+          e('span', {style:{color:'#9ca3af', fontSize:12, flex:1}}, s.stars + ' ' + s.cap),
+          e('span', {style:{
+            color: s.mb >= 5 ? '#34d399' : s.mb >= 4 ? '#fbbf24' : '#6b7280',
+            fontSize:12
+          }}, 'MB ' + s.mb),
+          s.isRef && e('span', {style:{color:'#fbbf24', fontSize:10}}, '[참고]')
+        );
+      })
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:'#34d399', fontSize:13, fontWeight:600, marginBottom:10}}, '⚡ 주요 촉매'),
+      catalysts.map(function(x, i) {
+        return e('div', {key:i, style:{marginBottom:8}},
+          e('span', {style:{color:ACCENT, fontWeight:700, fontSize:12}}, x.t + ': '),
+          e('span', {style:{color:'#d1d5db', fontSize:12}}, x.c)
+        );
+      })
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:10, padding:14, marginBottom:12}},
+      e('div', {style:{color:'#f87171', fontSize:13, fontWeight:600, marginBottom:10}}, '⚠️ 핵심 리스크'),
+      risks.map(function(x, i) {
+        return e('div', {key:i, style:{marginBottom:8}},
+          e('span', {style:{color:'#f87171', fontWeight:700, fontSize:12}}, x.t + ': '),
+          e('span', {style:{color:'#d1d5db', fontSize:12}}, x.r)
+        );
+      })
+    ),
+    e('div', {style:{
+      background:'rgba(6,182,212,0.07)', border:'1px solid rgba(6,182,212,0.2)',
+      borderRadius:8, padding:'12px 14px'
+    }},
+      e('div', {style:{color:ACCENT, fontSize:13, fontWeight:700, marginBottom:10}}, '📐 포트폴리오 제안'),
+      [
+        {t:'BDC', w:'30%', note:'역발상 핵심 — 과매도 반등 + 장기 연결 인프라 성장'},
+        {t:'PPIH', w:'20%', note:'마이크로캡 고성장 — 소규모 분산 진입'},
+        {t:'MYRG', w:'25%', note:'데이터센터 전기 건설 — 확실한 수주 가시성'},
+        {t:'NVT', w:'15%', note:'냉각·인클로저 통합 — 중장기 성장 안정형'},
+        {t:'ENS', w:'10%', note:'UPS 배터리 — 헤지 및 분산 목적'}
+      ].map(function(r, i) {
+        return e('div', {key:i, style:{
+          display:'flex', alignItems:'center', gap:8,
+          background:BG_INNER, borderRadius:6, padding:'7px 10px', marginBottom:5
+        }},
+          e('span', {style:{color:ACCENT, fontWeight:700, width:40}}, r.t),
+          e('span', {style:{
+            background:'rgba(6,182,212,0.2)', color:ACCENT,
+            padding:'1px 7px', borderRadius:4, fontSize:11, width:36
+          }}, r.w),
+          e('span', {style:{color:'#d1d5db', fontSize:12}}, r.note)
+        );
+      })
+    )
+  );
+}
+
+function App() {
+  var state = useState(0);
+  var tab = state[0]; var setTab = state[1];
+
+  var contents = [
+    e(TabValuchain, null),
+    e(TabStocks, null),
+    e(TabCharts, null),
+    e(TabMultibagger, null),
+    e(TabStrategy, null)
+  ];
+
+  return e('div', null,
+    e('div', {style:{
+      display:'flex', justifyContent:'space-between', alignItems:'center',
+      marginBottom:16, flexWrap:'wrap', gap:8
+    }},
+      e('a', {href:'https://disntm90.github.io/disntm90/', style:{
+        color:'#6b7280', fontSize:12, textDecoration:'none'
+      }}, '← 목록으로'),
+      e('div', {style:{textAlign:'right'}},
+        e('div', {style:{color:'#9ca3af', fontSize:10}}, '2026-05-29'),
+        e('div', {style:{color:'#6b7280', fontSize:10}}, '탑다운 × 밸류체인 종목발굴')
+      )
+    ),
+    e('div', {style:{
+      background:'linear-gradient(135deg,rgba(6,182,212,0.15),rgba(8,145,178,0.1))',
+      border:'1px solid rgba(6,182,212,0.25)',
+      borderRadius:12, padding:'16px 18px', marginBottom:20
+    }},
+      e('div', {style:{color:ACCENT, fontSize:11, fontWeight:600, letterSpacing:2, marginBottom:6}},
+        '종목발굴 리포트'),
+      e('h1', {style:{fontSize:22, fontWeight:800, color:'#f9fafb', marginBottom:6}},
+        '🏗️ 데이터센터 인프라'),
+      e('p', {style:{color:'#9ca3af', fontSize:12, lineHeight:1.6}},
+        'AI CapEx 폭증 → 데이터센터 건설 붐의 진짜 병목 발굴\n' +
+        '이미 대형주가 된 VRT·FIX·EME를 제외한 숨겨진 핵심 노드'
+      )
+    ),
+    e('div', {style:{
+      display:'flex', gap:4, marginBottom:16, overflowX:'auto',
+      paddingBottom:4
+    }},
+      TABS.map(function(t, i) {
+        return e('button', {key:i, onClick:function(){setTab(i);}, style:{
+          padding:'7px 10px', borderRadius:7, whiteSpace:'nowrap',
+          background: i === tab ? ACCENT : BG_INNER,
+          color: i === tab ? '#000' : '#9ca3af',
+          border: '1px solid ' + (i === tab ? ACCENT : '#374151'),
+          cursor:'pointer', fontSize:12, fontWeight: i === tab ? 700 : 400
+        }}, t);
+      })
+    ),
+    e('div', {style:{background:BG_CARD, borderRadius:12, padding:16}},
+      contents[tab]
+    ),
+    e('div', {style:{
+      textAlign:'center', color:'#374151', fontSize:10, marginTop:12
+    }}, '투자 참고 자료이며 투자 권유가 아닙니다.')
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
+</script>
+</body>
+</html>
