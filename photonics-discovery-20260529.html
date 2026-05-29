@@ -1,102 +1,67 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>광 포토닉스 반도체 종목발굴 대시보드 — 2026.05.29</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#0a0f1e;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
-    a{color:#06b6d4;text-decoration:none}
-    .container{max-width:760px;margin:0 auto;padding:12px}
-    .header{background:linear-gradient(135deg,#051a1f,#0a0f1e);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #0e3a42}
-    .back-link{font-size:12px;color:#06b6d4;margin-bottom:8px;display:block}
-    .header-badge{display:inline-block;background:rgba(6,182,212,0.15);color:#06b6d4;border:1px solid #06b6d4;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;margin-bottom:8px}
-    .title{font-size:26px;font-weight:800;color:#06b6d4;margin-bottom:4px}
-    .subtitle{font-size:13px;color:#94a3b8;margin-bottom:12px}
-    .meta-row{display:flex;gap:8px;flex-wrap:wrap}
-    .meta-chip{background:#0a0f1e;border:1px solid #0e3a42;border-radius:8px;padding:5px 10px;font-size:11px;color:#67e8f9}
-    .tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
-    .tab-btn{padding:6px 11px;border-radius:20px;border:1px solid #0e3a42;background:#051a1f;color:#94a3b8;font-size:11px;cursor:pointer;transition:all .2s}
-    .tab-btn.active{background:#06b6d4;color:#fff;border-color:#06b6d4;font-weight:700}
-    .card{background:#061518;border:1px solid #0e3a42;border-radius:10px;padding:14px;margin-bottom:10px}
-    .card-title{font-size:13px;font-weight:700;color:#67e8f9;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
-    .chart-wrap{position:relative;height:220px;margin-top:8px}
-    .chain-wrap{display:flex;flex-direction:column;gap:0}
-    .chain-tier{border-radius:10px;padding:12px;margin-bottom:4px}
-    .chain-tier.tier-up{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3)}
-    .chain-tier.tier-mid{background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.3)}
-    .chain-tier.tier-down{background:rgba(100,116,139,0.08);border:1px solid rgba(100,116,139,0.3)}
-    .chain-tier.tier-mega{background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.2)}
-    .chain-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-    .chain-label.up{color:#ef4444}
-    .chain-label.mid{color:#06b6d4}
-    .chain-label.down{color:#64748b}
-    .chain-label.mega{color:#67e8f9}
-    .chain-items{display:flex;flex-wrap:wrap;gap:6px}
-    .chain-item{background:#0a0f1e;border-radius:6px;padding:5px 9px;font-size:11px;display:flex;align-items:center;gap:4px}
-    .chain-item .ticker-tag{font-weight:800;color:#fbbf24}
-    .chain-item .star{color:#06b6d4;font-size:10px}
-    .chain-arrow{text-align:center;color:#374151;font-size:16px;margin:2px 0;line-height:1}
-    .stock-card{background:#0a0f1e;border:1px solid #0e3a42;border-radius:10px;padding:14px;margin-bottom:10px}
-    .stock-card.tier-up{border-left:4px solid #ef4444}
-    .stock-card.tier-mid{border-left:4px solid #06b6d4}
-    .stock-card.tier-down{border-left:4px solid #475569}
-    .sc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-    .sc-ticker{font-size:22px;font-weight:800;color:#06b6d4}
-    .sc-name{font-size:12px;color:#94a3b8;margin-top:2px}
-    .sc-stars{font-size:14px}
-    .sc-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-    .sc-badge{padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700}
-    .sb-up{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.4)}
-    .sb-mid{background:rgba(6,182,212,0.15);color:#67e8f9;border:1px solid rgba(6,182,212,0.4)}
-    .sb-down{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
-    .sb-med{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
-    .sb-low{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
-    .sb-ref{background:rgba(100,116,139,0.1);color:#64748b;border:1px solid #334155}
-    .sc-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
-    .sc-metric{background:#061518;border-radius:6px;padding:7px;text-align:center}
-    .sc-metric-label{font-size:10px;color:#64748b;margin-bottom:2px}
-    .sc-metric-val{font-size:13px;font-weight:700;color:#e2e8f0}
-    .sc-point{font-size:12px;color:#67e8f9;font-weight:700;margin-bottom:4px}
-    .sc-reason{font-size:12px;color:#94a3b8;line-height:1.5}
-    .sc-mb-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
-    .sc-mb-label{font-size:11px;color:#64748b;width:80px;flex-shrink:0}
-    .sc-mb-bg{flex:1;background:#051a1f;border-radius:4px;height:7px;overflow:hidden}
-    .sc-mb-fill{height:7px;border-radius:4px;background:linear-gradient(90deg,#06b6d4,#67e8f9)}
-    .sc-mb-val{font-size:11px;font-weight:700;color:#fbbf24;width:28px;text-align:right}
-    .mb-item{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;background:#0a0f1e;border-radius:6px;margin-bottom:6px}
-    .mb-label{font-size:12px;color:#94a3b8;flex:1;padding-right:8px}
-    .mb-val{font-size:13px;font-weight:700;flex-shrink:0}
-    .mb-yes{color:#22c55e}
-    .mb-part{color:#fbbf24}
-    .mb-no{color:#ef4444}
-    .total-score-box{text-align:center;padding:14px;background:rgba(6,182,212,0.08);border-radius:10px;border:1px solid rgba(6,182,212,0.3);margin-bottom:12px}
-    .total-num{font-size:44px;font-weight:800;color:#06b6d4}
-    .total-denom{font-size:18px;color:#64748b}
-    .score-grade{font-size:13px;color:#67e8f9;margin-top:4px}
-    .ticker-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-    .ts-btn{padding:5px 12px;border-radius:14px;border:1px solid #0e3a42;background:#051a1f;color:#67e8f9;font-size:11px;cursor:pointer;font-weight:700}
-    .ts-btn.active{background:#06b6d4;color:#fff;border-color:#06b6d4}
-    .insight-box{background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#67e8f9;line-height:1.5;white-space:pre-line}
-    .warn-box{background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fde68a;line-height:1.5;white-space:pre-line}
-    .risk-box{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#fca5a5;line-height:1.5;white-space:pre-line}
-    .section-h{font-size:12px;font-weight:700;color:#67e8f9;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px}
-    .priority-row{display:flex;align-items:center;gap:10px;padding:10px;background:#0a0f1e;border-radius:8px;margin-bottom:6px;border:1px solid #0e3a42}
-    .pr-rank{font-size:20px;font-weight:800;color:#06b6d4;width:28px;flex-shrink:0}
-    .pr-ticker{font-size:15px;font-weight:800;color:#06b6d4;width:52px;flex-shrink:0}
-    .pr-text{font-size:12px;color:#94a3b8;flex:1;line-height:1.4}
-    .pr-timing{font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;flex-shrink:0}
-    .t-now{background:rgba(34,197,94,0.15);color:#86efac;border:1px solid rgba(34,197,94,0.4)}
-    .t-after{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.4)}
-    .t-small{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid #475569}
-    .t-ref{background:rgba(51,65,85,0.3);color:#475569;border:1px solid #1e293b}
-    .already-ran-banner{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px;margin-bottom:10px;font-size:12px;color:#fca5a5;line-height:1.6}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🔵 광포토닉스 종목발굴 — 2026.05.29</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#060c14;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+.card{background:#0a1520;border:1px solid #1e3a4a;border-radius:12px;padding:16px;margin-bottom:12px}
+.tab-bar{display:flex;gap:4px;padding:12px 16px;background:#070e18;border-bottom:1px solid #1e3a4a;overflow-x:auto;position:sticky;top:0;z-index:10}
+.tab-btn{padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;transition:all .2s}
+.tab-btn.active{background:#06b6d4;color:#000}
+.tab-btn:not(.active){background:#0f1e2e;color:#94a3b8}
+.tab-btn:not(.active):hover{background:#1e3a4a;color:#e2e8f0}
+.header{padding:20px 16px 0;background:#070e18}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-cyan{background:#083344;color:#67e8f9}
+.badge-green{background:#14532d;color:#86efac}
+.badge-yellow{background:#713f12;color:#fde68a}
+.badge-red{background:#7f1d1d;color:#fca5a5}
+.badge-gray{background:#374151;color:#d1d5db}
+.metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.metric{background:#0f1e2e;border-radius:8px;padding:10px;text-align:center}
+.metric-val{font-size:18px;font-weight:800;color:#67e8f9}
+.metric-label{font-size:11px;color:#64748b;margin-top:2px}
+.progress-bar{height:6px;background:#0f1e2e;border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px}
+.section-title{font-size:15px;font-weight:700;color:#06b6d4;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #1e3a4a}
+.chain-box{background:#050d16;border:1px solid #1e3a4a;border-radius:10px;padding:14px;font-size:13px;line-height:1.9;white-space:pre-wrap;font-family:monospace}
+.tech-item{background:#0f1e2e;border-left:3px solid #06b6d4;border-radius:0 8px 8px 0;padding:12px;margin-bottom:8px}
+.tech-title{font-size:13px;font-weight:700;color:#67e8f9;margin-bottom:4px}
+.tech-desc{font-size:12px;color:#94a3b8;line-height:1.6}
+.timeline-step{display:flex;gap:12px;margin-bottom:14px}
+.timeline-dot{width:32px;height:32px;background:#06b6d4;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;margin-top:2px;color:#000}
+.timeline-content{flex:1}
+.timeline-title{font-size:13px;font-weight:700;color:#67e8f9;margin-bottom:4px}
+.timeline-desc{font-size:12px;color:#94a3b8;line-height:1.6}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#0f1e2e;color:#94a3b8;padding:8px 10px;text-align:left;font-weight:600}
+td{padding:8px 10px;border-bottom:1px solid #0f1e2e;color:#e2e8f0}
+tr:hover td{background:#0f1e2e}
+.rank-num{width:28px;height:28px;background:#06b6d4;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#000;flex-shrink:0}
+.rank-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.chart-wrap{position:relative;height:220px;margin-top:10px}
+.portfolio-card{background:#0f1e2e;border:1px solid #1e3a4a;border-radius:10px;padding:14px;margin-bottom:8px}
+.catalyst-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;font-size:13px}
+select{background:#0f1e2e;color:#e2e8f0;border:1px solid #1e3a4a;border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer}
+.multi-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.multi-item{background:#0f1e2e;border-radius:8px;padding:8px;font-size:12px}
+.multi-item-ok{border-left:3px solid #22c55e}
+.multi-item-warn{border-left:3px solid #f59e0b}
+.multi-label{color:#64748b;margin-bottom:2px}
+.multi-val{font-weight:700}
+.val-ok{color:#86efac}
+.val-warn{color:#fde68a}
+.back-link{display:inline-block;padding:6px 14px;background:#0f1e2e;border-radius:6px;color:#67e8f9;text-decoration:none;font-size:13px;font-weight:600}
+.back-link:hover{background:#1e3a4a}
+@media(max-width:500px){.multi-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <div id="root"></div>
@@ -122,277 +87,387 @@ function makeChart(ref, chartRef, cfg) {
 
 var STOCKS = [
   {
-    ticker:'POET', name:'POET Technologies Inc.', tier:'mid', stars:'★★★',
-    price:'~$16', cap:'~$2.5B', rsi:60, mb:5.5,
-    badge1:'중류 핵심노드', badge2:'대체불가 매우높음', badge3:'광 인터포저',
-    isRef:false,
-    point:'광 인터포저 — 레이저·변조기·검출기 단일 웨이퍼 통합, 제조비 1/10',
-    reason:'$50M 루미렌스 수주 확보 + Foxconn CPO 스위치 Q3 양산 공급 임박. 기존 광 모듈 제조는 사람 손으로 정렬하는 고비용 공정 → POET 광 인터포저는 반도체 웨이퍼 공정으로 자동화. LITE·COHR이 성장하면 POET의 플랫폼 수요도 자동 폭증. 시총 $2.5B → 수익화 확인 시 $10B+ 재평가 트리거.',
-    mb_items:[
-      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
-      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
-      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
-      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
-      {label:'⑤ 재무 건전성', v:'⚠️', cls:'mb-part'},
-      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
-      {label:'⑦ 기관 투자자 관심', v:'⚠️', cls:'mb-part'},
-      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ticker:'AXTI', name:'AXT Inc', price:115, cap:'$7.6B', rsi:72,
+    stars:3, tier:'최상류 ★★★ 핵심노드', moat:'높음',
+    point:'InP 기판 미국 유일 공급사 — 모든 레이저의 원재료, 공급 없으면 전체 라인 중단',
+    multi:5, capN:7.6, rsiN:72,
+    badges:['InP기판','미국유일','미중갈등헤지'],
+    catalyst:'InP 수요 2026 2x·2027 추가 2x / $550M 증자 생산 2배 확대 / 52주 +8,870%',
+    risk:'이미 급등(+8,870%), 중국 경쟁사 회복 시 점유율 위험',
+    detail:'AXT Inc는 InP(인듐 포스파이드)·GaAs 반도체 기판을 제조하는 소재 기업. 모든 InP 레이저(EML·CW)의 원재료 기판 = 광포토닉스 밸류체인 최심부 병목. 52주 +8,870% 상승에도 2026 InP 수요 2x, 2027 추가 2x 전망. $550M 증자로 생산능력 2배 확대 중. 미중 갈등으로 중국산 InP 수출 통제 시 미국 내 유일 대안으로 전략적 가치 극대화.',
+    m8:[
+      {label:'대형 TAM', val:'포토닉스 $28.75B (2034)', ok:true},
+      {label:'경쟁 해자', val:'InP 기판 미국 유일', ok:true},
+      {label:'반복 매출', val:'장기 공급 계약 기반', ok:true},
+      {label:'경영진', val:'InP 30년 이상 전문', ok:true},
+      {label:'재무상태', val:'$550M 증자 현금 충분', ok:true},
+      {label:'매출 성장', val:'InP 250%+ QoQ 성장', ok:true},
+      {label:'고객 집중', val:'AI 데이터센터 집중', ok:false},
+      {label:'밸류에이션', val:'+8,870% 급등 고평가', ok:false}
     ]
   },
   {
-    ticker:'LWLG', name:'Lightwave Logic Inc.', tier:'up', stars:'★★★',
-    price:'$11.46', cap:'~$1.7B', rsi:47, mb:4.5,
-    badge1:'상류 소재 병목', badge2:'대체불가 높음', badge3:'EO 폴리머',
-    isRef:false,
-    point:'전기광학 폴리머 — 기존 변조기 대비 전력 50%↓ · 속도 10배↑',
-    reason:'실리콘 포토닉스의 약점인 변조기 성능을 EO 폴리머로 근본 해결. Tower Semiconductor($30B) 제조 파트너십으로 제조 리스크 제거. 4개 Stage 3 설계 고객(= 양산 검토 단계). $70M 현금 runway. 아직 매출 없지만 진짜 소재 혁신 — 2027 양산 시 현재 시총이 웃음거리.',
-    mb_items:[
-      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
-      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
-      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
-      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
-      {label:'⑤ 재무 건전성', v:'⚠️', cls:'mb-part'},
-      {label:'⑥ 합리적 밸류에이션', v:'✅', cls:'mb-yes'},
-      {label:'⑦ 기관 투자자 관심', v:'❌', cls:'mb-no'},
-      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
+    ticker:'LITE', name:'Lumentum Holdings', price:970, cap:'$75B', rsi:58,
+    stars:3, tier:'상류 ★★★ 핵심노드', moat:'높음',
+    point:'200G EML 레이저 유일 양산사 — NVIDIA $2B 직접 투자, CPO 핵심 공급',
+    multi:6, capN:75, rsiN:58,
+    badges:['EML레이저','NVIDIA직투','CPO필수'],
+    catalyst:'NVIDIA $2B 전략 투자(2026.3.2), CEO "2026 breakout year", 고점 $1,085 대비 조정 중',
+    risk:'이미 $75B 대형주, 단기 과열 구간 잠재',
+    detail:'200G EML 레이저 세계 유일 양산사. NVIDIA가 $2B를 직접 투자한 이유: EML 공급 없이는 CPO 전체 스케일이 불가. NVIDIA 구매 약정으로 매출 예측 가능성 극대화. CEO "2026 breakout year" — EML 레이저 최대 단일 구매 약정 수령 발표. 고점 $1,085 대비 현재 $970으로 조정 중 = 상대적 진입 기회.',
+    m8:[
+      {label:'대형 TAM', val:'광트랜시버 $63B+(2026)', ok:true},
+      {label:'경쟁 해자', val:'200G EML 유일 양산', ok:true},
+      {label:'반복 매출', val:'NVIDIA 장기 구매 약정', ok:true},
+      {label:'경영진', val:'광학 30년 전문 기업', ok:true},
+      {label:'재무상태', val:'흑자, $2B 투자 수령', ok:true},
+      {label:'매출 성장', val:'EML 수요 10x+ 예상', ok:true},
+      {label:'고객 집중', val:'NVIDIA·데이터센터 집중', ok:false},
+      {label:'밸류에이션', val:'$75B 이미 대형주', ok:false}
     ]
   },
   {
-    ticker:'AXTI', name:'AXT Inc.', tier:'up', stars:'★★',
-    price:'~$116', cap:'~$7.6B', rsi:64, mb:5.0,
-    badge1:'상류 원자재', badge2:'대체불가 높음', badge3:'InP 기판',
-    isRef:false,
-    point:'인듐인화물(InP) 기판 — 모든 광 레이저 칩의 필수 원자재',
-    reason:'InP 매출 Q1 2026 $13.6M(전체 50%+, 분기比 +70%). 중국 수출 허가 획득 후 InP 공급 폭발적 성장. 중국 공장 STAR Market 상장 추진 = 잠재적 가치 분리 트리거. ⚠️ 경고: 1년 전 $1.45 → $116 이미 엄청난 상승. RSI 64 중립~과매수. 조정 시 분할 매수 접근 권장.',
-    mb_items:[
-      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
-      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
-      {label:'③ 경쟁 우위 (해자)', v:'⚠️', cls:'mb-part'},
-      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
-      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
-      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
-      {label:'⑦ 기관 투자자 관심', v:'⚠️', cls:'mb-part'},
-      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ticker:'POET', name:'POET Technologies', price:12.95, cap:'$2B', rsi:42,
+    stars:3, tier:'중류 ★★★ 핵심노드', moat:'높음',
+    point:'CPO 광인터포저 이종집적 플랫폼 특허 — 레이저+전자+광 단일 칩 통합 독점',
+    multi:5, capN:2, rsiN:42,
+    badges:['CPO인터포저','Foxconn파트너','초기단계'],
+    catalyst:'$300M+ 현금, Foxconn 파트너십, 3.2T 광엔진 2026 말 타깃, RSI 42 저평가 구간',
+    risk:'매출 $1.1M (초기 단계), 양산 전환 실패 시 급락 위험',
+    detail:'POET Optical Interposer: 레이저·모듈레이터·전자 소자를 단일 칩에 통합하는 CPO 핵심 플랫폼. LITE가 레이저를 만들어도 패키징·인터포저 없이는 CPO 불가 = POET 독점 기술. $2B 최소 시총, $300M+ 현금, Foxconn 파트너십, 3.2T 광엔진 2026 말 타깃. 현재 매출 $1.1M → 양산 전환 시 섹터 최대 멀티배거 후보.',
+    m8:[
+      {label:'대형 TAM', val:'CPO 시장 $10B+(2030)', ok:true},
+      {label:'경쟁 해자', val:'광인터포저 특허 독점', ok:true},
+      {label:'반복 매출', val:'계약 수주 초기 단계', ok:false},
+      {label:'경영진', val:'광통신 전문가 팀', ok:true},
+      {label:'재무상태', val:'$300M+ 현금 (증자)', ok:true},
+      {label:'매출 성장', val:'$1.1M 초기 (폭발 전)', ok:false},
+      {label:'고객 집중', val:'Foxconn·데이터센터', ok:true},
+      {label:'밸류에이션', val:'$2B 소형, 매출 대비 고평가', ok:false}
     ]
   },
   {
-    ticker:'FN', name:'Fabrinet', tier:'down', stars:'★★',
-    price:'~$722', cap:'~$26B', rsi:55, mb:4.5,
-    badge1:'하류 제조 수혜', badge2:'대체불가 보통', badge3:'광 모듈 제조',
-    isRef:false,
-    point:'광 모듈 정밀 제조 서비스 — LITE·COHR이 설계하면 FN이 만든다',
-    reason:'Q3 2026 기록적 실적 달성. 광 포토닉스 업체들이 급등할 때 FN은 상대적으로 덜 올라 P/E 저평가 구간. 주요 고객 LITE·COHR·MTSI의 광 모듈 생산량 폭증 = FN 매출 자동 폭증. 실질 이익 기반 + 업계 최고 제조 실행력.',
-    mb_items:[
-      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
-      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
-      {label:'③ 경쟁 우위 (해자)', v:'⚠️', cls:'mb-part'},
-      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
-      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
-      {label:'⑥ 합리적 밸류에이션', v:'⚠️', cls:'mb-part'},
-      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
-      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
+    ticker:'MTSI', name:'MACOM Technology', price:391, cap:'$29.4B', rsi:65,
+    stars:2, tier:'중류 ★★', moat:'보통',
+    point:'800G→1.6T 트랜시버 드라이버·TIA IC 독점 부품 — 트랜시버 출하 = MTSI 매출',
+    multi:5, capN:29.4, rsiN:65,
+    badges:['광IC반도체','1.6T LPO','드라이버TIA'],
+    catalyst:'Pure Drive 200G/레인 드라이버 → 1.6T LPO 표준 부품, 800G→1.6T 전환 사이클',
+    risk:'$29.4B 이미 중대형, Broadcom·Marvell 경쟁 잠재',
+    detail:'고속 아날로그·포토닉 반도체 부품 전문사. 모든 광트랜시버에 탑재되는 레이저 드라이버·TIA·모듈레이터 공급. 200G/레인 Pure Drive 선형 드라이버 출시로 1.6T LPO 표준 핵심 부품 확보. 트랜시버 출하 63M units(2026)의 직접 수혜.',
+    m8:[
+      {label:'대형 TAM', val:'광IC 시장 $5B+(2028)', ok:true},
+      {label:'경쟁 해자', val:'광IC 드라이버 독점', ok:true},
+      {label:'반복 매출', val:'트랜시버 탑재 반복 수요', ok:true},
+      {label:'경영진', val:'반도체 전문가 팀', ok:true},
+      {label:'재무상태', val:'흑자, 안정 현금흐름', ok:true},
+      {label:'매출 성장', val:'1.6T 전환 수혜 예상', ok:true},
+      {label:'고객 집중', val:'데이터센터 고객 집중', ok:false},
+      {label:'밸류에이션', val:'$29.4B 이미 상당 반영', ok:false}
     ]
   },
   {
-    ticker:'COHR', name:'Coherent Corp (참고용)', tier:'down', stars:'★',
-    price:'$379', cap:'$74B', rsi:62, mb:4.0,
-    badge1:'참고용 (대형)', badge2:'대체불가 높음', badge3:'광 컴포넌트',
-    isRef:true,
-    point:'광 컴포넌트+InP 기판+레이저 업계 지배자 — 이미 대형주',
-    reason:'II-VI + Coherent 합병으로 광 포토닉스 공급망 지배. 데이터센터 트랜시버·레이저·InP 기판 모두 보유. ⛔ 이미 $74B 대형주, 멀티배거 어려움. 포트폴리오 벤치마크 참고용으로만 제시.',
-    mb_items:[
-      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
-      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
-      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
-      {label:'④ 강력한 경영진', v:'⚠️', cls:'mb-part'},
-      {label:'⑤ 재무 건전성', v:'⚠️', cls:'mb-part'},
-      {label:'⑥ 합리적 밸류에이션', v:'❌', cls:'mb-no'},
-      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
-      {label:'⑧ 촉매 (최근 뉴스)', v:'⚠️', cls:'mb-part'}
-    ]
-  },
-  {
-    ticker:'LITE', name:'Lumentum Holdings (참고용)', tier:'down', stars:'★',
-    price:'$887', cap:'$69B', rsi:70, mb:4.0,
-    badge1:'참고용 (대형)', badge2:'대체불가 매우높음', badge3:'EML/VCSEL 레이저',
-    isRef:true,
-    point:'VCSEL·EML 레이저 독보적 위치 — NVIDIA $2B 파트너십, 이미 대형주',
-    reason:'Q2 FY26 매출 $665M (+65.5% YoY). NVIDIA $2B 투자로 업계 지위 확인. 광학회로 스위치 2027년까지 백오더. ⛔ 이미 $69B 대형주, 이 시점에서 멀티배거 어려움. 포트폴리오 벤치마크 참고용으로만 제시.',
-    mb_items:[
-      {label:'① 탁월한 성장 스토리', v:'✅', cls:'mb-yes'},
-      {label:'② 대규모 시장 기회 (TAM)', v:'✅', cls:'mb-yes'},
-      {label:'③ 경쟁 우위 (해자)', v:'✅', cls:'mb-yes'},
-      {label:'④ 강력한 경영진', v:'✅', cls:'mb-yes'},
-      {label:'⑤ 재무 건전성', v:'✅', cls:'mb-yes'},
-      {label:'⑥ 합리적 밸류에이션', v:'❌', cls:'mb-no'},
-      {label:'⑦ 기관 투자자 관심', v:'✅', cls:'mb-yes'},
-      {label:'⑧ 촉매 (최근 뉴스)', v:'✅', cls:'mb-yes'}
+    ticker:'FN', name:'Fabrinet', price:722, cap:'$25.8B', rsi:55,
+    stars:2, tier:'하류 ★★', moat:'보통',
+    point:'광트랜시버 계약제조 세계 1위 — 섹터 전체 성장의 안정적 하부 수혜',
+    multi:5, capN:25.8, rsiN:55,
+    badges:['계약제조','광통신73%','역대최대매출'],
+    catalyst:'Q3 FY2026 매출 $1.214B (+39% YoY) 역대 최대, 광통신 매출 73.2%',
+    risk:'제조 마진 한계, 단가 하락 압력, 태국 지정학 리스크',
+    detail:'Lumentum·Coherent 광트랜시버 위탁 제조 세계 1위. Q3 FY2026 매출 $1.214B(+39% YoY) 역대 최대. 광통신 매출 73.2% — 포토닉스 섹터 노출 가장 순수한 제조사. 리스크 최소·안정 성장형. 공격적 멀티배거보다 포트폴리오 앵커 역할에 최적.',
+    m8:[
+      {label:'대형 TAM', val:'광제조 서비스 $20B+', ok:true},
+      {label:'경쟁 해자', val:'스케일·정밀도·태국 허브', ok:true},
+      {label:'반복 매출', val:'장기 OEM 위탁 계약', ok:true},
+      {label:'경영진', val:'안정적 실적 관리 이력', ok:true},
+      {label:'재무상태', val:'흑자, 안정 현금흐름', ok:true},
+      {label:'매출 성장', val:'+39% YoY 역대 최대', ok:true},
+      {label:'고객 집중', val:'LITE·COHR 등 일부 집중', ok:false},
+      {label:'밸류에이션', val:'P/E 30x 적정 수준', ok:false}
     ]
   }
 ];
 
-function App() {
-  var ts=useState(0); var tab=ts[0]; var setTab=ts[1];
-  var ms=useState(0); var mbIdx=ms[0]; var setMbIdx=ms[1];
-  var TABS=['🗺️ 밸류체인','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
-  return e('div',{className:'container'},
-    e('div',{className:'header'},
-      e('a',{className:'back-link',href:'https://disntm90.github.io/disntm90/'},'← 목록으로'),
-      e('div',{className:'header-badge'},'💡 종목발굴 · 2026.05.29'),
-      e('div',{className:'title'},'광 포토닉스 반도체 종목발굴'),
-      e('div',{className:'subtitle'},'AI 광 인터커넥트 탑다운 × 밸류체인 분석 · 6종목 선별'),
-      e('div',{className:'meta-row'},
-        e('span',{className:'meta-chip'},'📅 2026.05.29'),
-        e('span',{className:'meta-chip'},'💡 구리→광 인터커넥트 대전환'),
-        e('span',{className:'meta-chip'},'🔬 6종목 (진짜병목 4개)'),
-        e('span',{className:'meta-chip'},'🌊 400G→800G→1.6T')
-      )
+var TABS = ['🗺️ 밸류체인','🔬 기술분석','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
+
+function MultiBar(props) {
+  var val = props.val || 0;
+  var pct = (val/8)*100;
+  var col = pct>=75?'#22c55e':pct>=50?'#f59e0b':'#ef4444';
+  return e('div',{style:{marginTop:6}},
+    e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:3}},
+      e('span',{style:{color:'#64748b'}},'멀티배거'),
+      e('span',{style:{color:col,fontWeight:700}},val+'/8')
     ),
-    e('div',{className:'tabs'},TABS.map(function(t,i){return e('button',{key:i,className:'tab-btn'+(tab===i?' active':''),onClick:function(){setTab(i);}},t);})),
-    tab===0 && e(ChainTab,null),
-    tab===1 && e('div',null,
-      e('div',{className:'already-ran-banner'},'⚠️ 2026 핵심 인사이트: LITE($69B)·COHR($74B)·MTSI($29B)·TSEM($30B)·VIAV($13B)·AXTI($7.6B) — 대부분 이미 10배~5,418% 상승 완료. 지금 발굴해야 할 것은 이 대형주들이 존재하기 위해 반드시 필요한 2차 병목 소형주(POET·LWLG)입니다.'),
-      STOCKS.map(function(s,i){
-        var tc=s.tier==='up'?'tier-up':s.tier==='mid'?'tier-mid':'tier-down';
-        var b1=s.tier==='up'?'sb-up':s.tier==='mid'?'sb-mid':s.isRef?'sb-ref':'sb-down';
-        return e('div',{key:i,className:'stock-card '+tc,style:s.isRef?{opacity:.6}:{}},
-          e('div',{className:'sc-header'},e('div',null,e('div',{className:'sc-ticker'},s.ticker),e('div',{className:'sc-name'},s.name)),e('div',{className:'sc-stars'},s.stars)),
-          e('div',{className:'sc-badges'},e('span',{className:'sc-badge '+b1},s.badge1),e('span',{className:'sc-badge sb-med'},s.badge2),e('span',{className:'sc-badge sb-low'},s.badge3)),
-          e('div',{className:'sc-metrics'},
-            e('div',{className:'sc-metric'},e('div',{className:'sc-metric-label'},'현재가'),e('div',{className:'sc-metric-val'},s.price)),
-            e('div',{className:'sc-metric'},e('div',{className:'sc-metric-label'},'시가총액'),e('div',{className:'sc-metric-val'},s.cap)),
-            e('div',{className:'sc-metric'},e('div',{className:'sc-metric-label'},'RSI(추정)'),e('div',{className:'sc-metric-val'},s.rsi))
-          ),
-          e('div',{className:'sc-point'},'핵심: '+s.point),
-          e('div',{className:'sc-reason'},s.reason),
-          e('div',{className:'sc-mb-bar'},e('div',{className:'sc-mb-label'},'멀티배거'),e('div',{className:'sc-mb-bg'},e('div',{className:'sc-mb-fill',style:{width:(s.mb/8*100)+'%'}})),e('div',{className:'sc-mb-val'},s.mb+'/8'))
-        );
-      })
-    ),
-    tab===2 && e(ChartsTab,null),
-    tab===3 && e('div',null,
-      e('div',{className:'ticker-select'},STOCKS.map(function(s,i){return e('button',{key:i,className:'ts-btn'+(mbIdx===i?' active':''),onClick:function(){setMbIdx(i);}},s.ticker);})),
-      e(MBDetail,{stock:STOCKS[mbIdx]})
-    ),
-    tab===4 && e(StrategyTab,null)
+    e('div',{className:'progress-bar'},
+      e('div',{className:'progress-fill',style:{width:pct+'%',background:col}})
+    )
   );
 }
 
-function ChainTab() {
-  return e('div',null,
+function StarRow(props) {
+  var n = props.n || 0;
+  return e('div',{style:{display:'flex',gap:4,marginBottom:6}},
+    [0,1,2].map(function(i){
+      return e('span',{key:i,style:{fontSize:14,color:i<n?'#fbbf24':'#374151'}},'★');
+    })
+  );
+}
+
+function TabValorchain() {
+  return e('div',{style:{padding:'16px'}},
     e('div',{className:'card'},
-      e('div',{className:'card-title'},'광 포토닉스 반도체 밸류체인 맵'),
-      e('div',{className:'insight-box'},'💡 메가트렌드: AI GPU 클러스터 확장 → 구리(전기) 인터커넥트 물리적 한계 도달 → 광(빛) 인터커넥트 대전환 불가피 (400G→800G→1.6T→3.2T)'),
-      e('div',{className:'chain-wrap'},
-        e('div',{className:'chain-tier tier-mega'},
-          e('div',{className:'chain-label mega'},'💡 핵심 파생 논리'),
-          e('div',{className:'chain-items'},
-            e('div',{className:'chain-item'},'AI GPU 클러스터 → 수백TB 인터커넥트 필요'),
-            e('div',{className:'chain-item'},'구리 전기 신호 = 1.6T에서 물리 한계'),
-            e('div',{className:'chain-item'},'광(빛)만이 유일한 해법')
-          )
-        ),
-        e('div',{className:'chain-arrow'},'▼'),
-        e('div',{className:'chain-tier tier-up'},
-          e('div',{className:'chain-label up'},'🔴 상류 — 소재 ★병목'),
-          e('div',{className:'chain-items'},
-            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'LWLG'),e('span',{className:'star'},'★★★'),' EO 폴리머(숨겨진 병목)'),
-            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'AXTI'),e('span',{className:'star'},'★★'),' InP 기판(광 레이저 원료)'),
-            e('div',{className:'chain-item'},'GaAs·SOI 웨이퍼')
-          )
-        ),
-        e('div',{className:'chain-arrow'},'▼'),
-        e('div',{className:'chain-tier tier-mid'},
-          e('div',{className:'chain-label mid'},'🔵 중류 — 광 집적회로(PIC) ★★★ 최고 병목'),
-          e('div',{className:'chain-items'},
-            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'POET'),e('span',{className:'star'},'★★★'),' 광 인터포저(통합 플랫폼)'),
-            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'LITE'),e('span',{className:'star'},'★'),' EML/VCSEL 레이저(대형)'),
-            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'COHR'),e('span',{className:'star'},'★'),' InP 광 칩(대형)')
-          )
-        ),
-        e('div',{className:'chain-arrow'},'▼'),
-        e('div',{className:'chain-tier tier-down'},
-          e('div',{className:'chain-label down'},'⬛ 하류 — 모듈·제조 서비스'),
-          e('div',{className:'chain-items'},
-            e('div',{className:'chain-item'},e('span',{className:'ticker-tag'},'FN'),e('span',{className:'star'},'★★'),' 정밀 광 모듈 제조'),
-            e('div',{className:'chain-item'},'광 트랜시버 모듈'),
-            e('div',{className:'chain-item'},'데이터센터 스위치/라우터')
-          )
+      e('div',{className:'section-title'},'🔵 메가 트렌드 — 구리 시대의 종말, 빛의 시대 개막'),
+      e('div',{style:{fontSize:13,lineHeight:1.7,color:'#e2e8f0',marginBottom:12}},
+        'AI GPU 클러스터 수만 개 확장 → 구리 배선 물리적 한계 도달.',
+        e('br',null),
+        e('span',{style:{color:'#fde68a',fontWeight:700}},'NVIDIA $4B 포토닉스 베팅(2026.3)'),
+        ' → 업계 공식 전환 신호. InP 레이저 리드타임 2027년 이후로 밀림 → 공급 병목 확정.'
+      ),
+      e('div',{style:{display:'flex',gap:8,flexWrap:'wrap'}},
+        [['구리 전력 낭비','AI 클러스터 에너지 30%'],['광신호 절감','동일 대역폭 80%↓'],['800G+ 출하','24M→63M units(2.6x)']].map(function(item,i){
+          return e('div',{key:i,style:{background:'#0f1e2e',border:'1px solid #0e7490',borderRadius:8,padding:'10px 14px',flex:1,minWidth:90}},
+            e('div',{style:{fontSize:11,color:'#64748b',marginBottom:3}},item[0]),
+            e('div',{style:{fontSize:13,fontWeight:700,color:'#67e8f9'}},item[1])
+          );
+        })
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'🗺️ 밸류체인 맵'),
+      e('div',{className:'chain-box'},
+'[AI GPU 클러스터 수만 개 → 구리 물리 한계 → CPO 전환 필수]\n                    ↓\n[최상류 — InP 기판 소재]\n  AXTI ★★★  InP/GaAs 기판 세계 주요 공급사 (미국 유일)\n                    ↓\n[상류 — EML/CW 레이저 칩]\n  LITE ★★★  200G EML 레이저 유일 양산 + NVIDIA $2B 직접 투자\n                    ↓\n[중류 — 광 IC · CPO 인터포저]\n  POET ★★★  CPO 광인터포저 핵심 특허 (소형주 $2B)\n  MTSI ★★   광트랜시버 IC 드라이버·TIA 독점\n                    ↓\n[하류 — 모듈 조립 · 계약제조]\n  FN   ★★   광트랜시버 계약제조 세계 1위'
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'🔗 핵심 파생 논리'),
+      ['AI → GPU 수만 개 → 구리 1m 도달거리 붕괴 → CPO 전환 불가피','CPO = InP 레이저 + SiPh 칩 + 광인터포저 → InP 기판이 모든 레이저의 원료','AXTI 공급 없이 → LITE 레이저 생산 불가 → CPO 전체 라인 중단 ★★★','LITE EML 공급 없이 → POET 인터포저 의미 없음 → 모든 CPO 스케일 불가','InP 중국 집중 생산 → 미중 갈등 수출 통제 시 AXTI 전략 자산으로 프리미엄'].map(function(t,i){
+        return e('div',{key:i,className:'catalyst-item'},
+          e('span',{style:{fontSize:14,color:'#06b6d4'}},'→'),
+          e('span',{style:{fontSize:13}},t)
+        );
+      })
+    )
+  );
+}
+
+function TabTech() {
+  return e('div',{style:{padding:'16px'}},
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'① 기존 기술(구리 배선)의 근본 한계'),
+      e('div',{className:'tech-item'},
+        e('div',{className:'tech-title'},'대역폭 벽 — 224Gbps 레인에서 구리 도달거리 1m 붕괴'),
+        e('div',{className:'tech-desc'},'GPU 수만 개 연결 시 신호 재증폭에 막대한 전력 소모. AI 클러스터 에너지의 30%를 데이터 이동만으로 낭비. 구리는 전기 신호이므로 저항·열 손실 불가피.')
+      ),
+      e('div',{className:'tech-item'},
+        e('div',{className:'tech-title'},'전력 낭비 구조 — AI 팩토리 연간 전기요금 수억 달러 차이'),
+        e('div',{className:'tech-desc'},'구리 기반 인터커넥트 전력 낭비를 광포토닉스로 80% 절감. 연간 $1B+ 단위 데이터센터에서 20~30% 전력 비용 절감 = ROI 즉각적. AI 팩토리 규모에서 임계점 도달.')
+      ),
+      e('div',{className:'tech-item'},
+        e('div',{className:'tech-title'},'확장성 붕괴 — 수백 Tbps 시스템에서 구리 물리적 대응 불가'),
+        e('div',{className:'tech-desc'},'Blackwell NVL72, 차세대 HGX 이상 수백 Tbps 요구 시스템에서 구리는 구조적 한계. Co-Packaged Optics(CPO)로만 해결 가능 → 2026년 섹터 전환 가속.')
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'② 신기술 우위성 — 정량 비교'),
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'기술'),e('th',null,'기존(구리) 대비 개선'))),
+        e('tbody',null,
+          [['광신호 전송 손실','구리 대비 1/100 (장거리 신호 완전성)'],['전력 효율','동일 대역폭 기준 80% 절감'],['CPO 거리 단축','전기-광 변환: 수 cm → 수 mm'],['800G+ 출하','24M → 63M units (2025→2026, 2.6x)'],['InP EML 리드타임','NVIDIA 선점 후 2027년 이후 대기']].map(function(row,i){
+            return e('tr',{key:i},e('td',null,row[0]),e('td',{style:{color:'#67e8f9',fontWeight:600}},row[1]));
+          })
         )
       )
     ),
     e('div',{className:'card'},
-      e('div',{className:'card-title'},'핵심 파생 논리 & 병목'),
-      e('div',{className:'insight-box'},'🏆 2026 발굴 원칙: LITE($69B)·COHR($74B) 살 때 이미 늦음. 이 기업들이 성장하기 위해 반드시 필요한 소재·플랫폼 소형주(POET·LWLG)를 선점하라.'),
-      e('div',{className:'warn-box'},'⚠️ 이미 대형화된 종목: LITE($69B, +600%↑), COHR($74B), MTSI($29B, +130%↑), TSEM($30B), VIAV($13B), AXTI($7.6B, +5418%!!) — 모두 이미 크게 상승 완료'),
-      e('div',{className:'insight-box'},'🛡️ 병목 ①: 광 인터포저(POET) — 기존 광 모듈 수작업 정렬을 웨이퍼 자동화로 대체. $2.5B으로 업사이드 최대\n🛡️ 병목 ②: EO 폴리머(LWLG) — 변조기 성능의 근본 한계를 소재로 해결. TSEM 파트너십\n🛡️ 병목 ③: InP 기판(AXTI) — 모든 광 레이저의 원자재. 이미 많이 올랐지만 성장 지속')
+      e('div',{className:'section-title'},'③ 결정적 흐름 — 3단계 타임라인'),
+      [{n:'1',title:'1단계 — AI 폭발로 구리 한계 가시화 (2022~2024)',desc:'ChatGPT 이후 GPU 클러스터 규모 10x 확장 → 구리 대역폭 벽 실체화. NVIDIA·Broadcom CPO 표준화 주도. 광트랜시버 800G 전환 가속 시작.'},{n:'2',title:'2단계 — 빅테크 전략 투자 확정 (2025~2026.3)',desc:'NVIDIA $4B 포토닉스 베팅: Lumentum $2B + Coherent $2B (2026.3.2). "광인터커넥트 없이 차세대 AI 팩토리 불가" 공식 선언. InP 레이저 리드타임 2027년 이후로 밀림 → 공급 병목 확정.'},{n:'3',title:'3단계 — 시장 폭증·기술 성숙 (2026~2030)',desc:'LightCounting: "2026 = 실리콘 포토닉스 원년". CAGR 28~29%, $2.86B → $9.6B(2030). CPO 표준화+InP 병목 → 기판(AXTI), EML(LITE), 인터포저(POET) 순차 수혜.'}].map(function(s){
+        return e('div',{key:s.n,className:'timeline-step'},
+          e('div',{className:'timeline-dot'},s.n),
+          e('div',{className:'timeline-content'},
+            e('div',{className:'timeline-title'},s.title),
+            e('div',{className:'timeline-desc'},s.desc)
+          )
+        );
+      })
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'④ 시장 규모 데이터'),
+      e('table',null,
+        e('tbody',null,
+          [['현재 시장 규모','$2.86B (2025) / $3.69B (2026)'],['YoY 성장률','+29%'],['CAGR','28~29% (2026~2030)'],['목표 시장 규모','$9.6B (2030) / $28.75B (2034)'],['800G+ 트랜시버','24M → 63M units (2025→2026, 2.6x)'],['InP 수요 전망','2026 2x, 2027 추가 2x (AXTI 예측)']].map(function(row,i){
+            return e('tr',{key:i},e('td',{style:{color:'#64748b',paddingRight:12}},row[0]),e('td',{style:{color:'#67e8f9',fontWeight:700,textAlign:'right'}},row[1]));
+          })
+        )
+      )
     )
   );
 }
 
-function ChartsTab() {
-  var cr=useRef(null),cc=useRef(null);
-  var mr=useRef(null),mc=useRef(null);
-  var rr=useRef(null),rc=useRef(null);
-  var labels=STOCKS.map(function(s){return s.ticker;});
-  var caps=[2.5,1.7,7.6,26,74,69];
-  var mbs=STOCKS.map(function(s){return s.mb;});
-  var rsis=STOCKS.map(function(s){return s.rsi;});
-  var COLS=['#06b6d4','#ef4444','#ef4444','#64748b','#334155','#334155'];
-  makeChart(cr,cc,{type:'bar',data:{labels:labels,datasets:[{label:'시총($B)',data:caps,backgroundColor:COLS.map(function(c){return c+'99';}),borderColor:COLS,borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return '$'+c.raw+'B';}}}},scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}},y:{ticks:{color:'#94a3b8',font:{size:10},callback:function(v){return '$'+v+'B';}},grid:{color:'#1e293b'}}}}});
-  makeChart(mr,mc,{type:'bar',data:{labels:labels,datasets:[{label:'MB점수',data:mbs,backgroundColor:mbs.map(function(v){return v>=5.5?'#06b6d499':v>=5.0?'#0891b299':'#0e7490bb';}),borderColor:mbs.map(function(v){return v>=5.5?'#06b6d4':v>=5.0?'#0891b2':'#0e7490';}),borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}},y:{min:0,max:8,ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}}}}});
-  makeChart(rr,rc,{type:'bar',data:{labels:labels,datasets:[{label:'RSI',data:rsis,backgroundColor:rsis.map(function(v){return v<=55?'#06b6d499':v<=65?'#fbbf2499':'#ef444499';}),borderColor:rsis.map(function(v){return v<=55?'#06b6d4':v<=65?'#fbbf24':'#ef4444';}),borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}},y:{min:0,max:100,ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e293b'}}}}});
-  return e('div',null,
-    e('div',{className:'card'},e('div',{className:'card-title'},'시가총액 비교 ($B)'),e('div',{className:'insight-box',style:{marginBottom:'8px'}},'💡 POET($2.5B)·LWLG($1.7B)이 진짜 발굴 대상 — COHR($74B)·LITE($69B)는 이미 대형주'),e('div',{className:'chart-wrap'},e('canvas',{ref:cr}))),
-    e('div',{className:'card'},e('div',{className:'card-title'},'멀티배거 점수 (Anna Yartseva 8기준)'),e('div',{className:'chart-wrap'},e('canvas',{ref:mr}))),
-    e('div',{className:'card'},e('div',{className:'card-title'},'RSI 현황 (추정)'),e('div',{className:'insight-box',style:{marginBottom:'8px'}},'🔵 55이하: 진입유리(LWLG 47) | 🟡 55~65: 중립(POET·AXTI·FN·COHR) | 🔴 65+: 과매수주의(LITE 70)'),e('div',{className:'chart-wrap'},e('canvas',{ref:rr})))
+function TabStocks() {
+  return e('div',{style:{padding:'16px'}},
+    STOCKS.map(function(s) {
+      var rc = s.rsi<50?'#86efac':s.rsi<70?'#fde68a':'#fca5a5';
+      return e('div',{key:s.ticker,className:'card'},
+        e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}},
+          e('div',null,e('div',{style:{fontSize:18,fontWeight:800,color:'#67e8f9'}},s.ticker),e('div',{style:{fontSize:12,color:'#64748b'}},s.name)),
+          e('div',{style:{textAlign:'right'}},e('div',{style:{fontSize:18,fontWeight:800}},'$'+s.price),e('div',{style:{fontSize:12,color:'#64748b'}},s.cap))
+        ),
+        e('div',{style:{marginBottom:6}},e('span',{className:'badge badge-cyan'},s.tier)),
+        e(StarRow,{n:s.stars}),
+        e('div',{className:'metric-grid'},
+          e('div',{className:'metric'},e('div',{className:'metric-val'},'$'+s.price),e('div',{className:'metric-label'},'현재가')),
+          e('div',{className:'metric'},e('div',{className:'metric-val',style:{color:rc}},s.rsi),e('div',{className:'metric-label'},'RSI (14)'))
+        ),
+        e('div',{style:{fontSize:13,color:'#67e8f9',fontWeight:600,margin:'10px 0 4px'}},'핵심 포인트'),
+        e('div',{style:{fontSize:12,color:'#e2e8f0',lineHeight:1.6}},s.point),
+        e('div',{style:{display:'flex',gap:6,flexWrap:'wrap',marginTop:8}},
+          s.badges.map(function(b,i){return e('span',{key:i,className:'badge badge-cyan'},b);})
+        ),
+        e(MultiBar,{val:s.multi}),
+        e('div',{style:{marginTop:8,fontSize:12,color:'#86efac'}},'✅ '+s.catalyst),
+        e('div',{style:{marginTop:4,fontSize:12,color:'#fca5a5'}},'⚠️ '+s.risk)
+      );
+    })
   );
 }
 
-function MBDetail(props) {
-  var s=props.stock;
-  var yes=s.mb_items.filter(function(x){return x.cls==='mb-yes';}).length;
-  var part=s.mb_items.filter(function(x){return x.cls==='mb-part';}).length;
-  var score=yes+part*0.5;
-  var grade=score>=6?'매우 우수':score>=5?'우수 · 매수 검토':score>=4?'보통 · 선별적 접근':'낮음 · 고위험';
-  return e('div',null,e('div',{className:'card'},
-    e('div',{className:'total-score-box'},e('div',null,e('span',{className:'total-num'},s.mb.toFixed(1)),e('span',{className:'total-denom'},' / 8')),e('div',{className:'score-grade'},s.ticker+' — '+grade)),
-    s.mb_items.map(function(item,i){return e('div',{key:i,className:'mb-item'},e('div',{className:'mb-label'},item.label),e('div',{className:'mb-val '+item.cls},item.v));}),
-    e('div',{className:'warn-box',style:{marginTop:'10px'}},'⚠️ 교육 목적 분석이며 투자 권고가 아닙니다.')
-  ));
+function TabCharts() {
+  var c1 = useRef(null); var r1 = useRef(null);
+  var c2 = useRef(null); var r2 = useRef(null);
+  var c3 = useRef(null); var r3 = useRef(null);
+  var labels = STOCKS.map(function(s){return s.ticker;});
+  var colors = ['#06b6d4','#67e8f9','#0891b2','#0e7490','#155e75'];
+  makeChart(c1,r1,{type:'bar',data:{labels:labels,datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.capN;}),backgroundColor:colors,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#94a3b8'},grid:{color:'#0f1e2e'}},x:{ticks:{color:'#e2e8f0'},grid:{display:false}}}}});
+  makeChart(c2,r2,{type:'bar',data:{labels:labels,datasets:[{label:'RSI',data:STOCKS.map(function(s){return s.rsiN;}),backgroundColor:STOCKS.map(function(s){return s.rsiN<50?'#22c55e':s.rsiN<70?'#f59e0b':'#ef4444';}),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{color:'#94a3b8'},grid:{color:'#0f1e2e'}},x:{ticks:{color:'#e2e8f0'},grid:{display:false}}}}});
+  makeChart(c3,r3,{type:'radar',data:{labels:['대형TAM','경쟁해자','반복매출','경영진','재무상태','매출성장','고객분산','밸류에이션'],datasets:STOCKS.map(function(s,idx){var vals=s.m8.map(function(v){return v.ok?10:3;});return {label:s.ticker,data:vals,borderColor:colors[idx],backgroundColor:colors[idx]+'33',pointBackgroundColor:colors[idx]};})},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},scales:{r:{ticks:{display:false},grid:{color:'#1e3a4a'},pointLabels:{color:'#94a3b8',font:{size:10}}}}}});
+  return e('div',{style:{padding:'16px'}},
+    e('div',{className:'card'},e('div',{className:'section-title'},'📊 시가총액 비교 ($B)'),e('div',{className:'chart-wrap'},e('canvas',{ref:c1}))),
+    e('div',{className:'card'},e('div',{className:'section-title'},'📈 RSI 현황 (🟢<50 진입 | 🟡50~70 중립 | 🔴>70 과열)'),e('div',{className:'chart-wrap'},e('canvas',{ref:c2}))),
+    e('div',{className:'card'},e('div',{className:'section-title'},'🕸️ 멀티배거 레이더 (Anna Yartseva 8항목)'),e('div',{className:'chart-wrap',style:{height:280}},e('canvas',{ref:c3})))
+  );
 }
 
-function StrategyTab() {
-  return e('div',null,
+function TabMultibagger() {
+  var sel = useState(0); var idx = sel[0]; var setSel = sel[1];
+  var s = STOCKS[idx];
+  return e('div',{style:{padding:'16px'}},
     e('div',{className:'card'},
-      e('div',{className:'card-title'},'투자 우선순위'),
-      e('div',{className:'insight-box'},'🎯 전략: LITE·COHR 대신 그 기업들이 쓰는 소재·플랫폼(EO 폴리머·광 인터포저)의 소형주를 선점'),
-      [
-        {rank:'①',ticker:'LWLG',text:'EO 폴리머 소재 — 가장 덜 알려진 병목. RSI 47 진입 최적 구간. TSEM 파트너십, $70M 현금. 아직 수익화 전이나 2027 양산 시 대형 재평가.',timing:'지금',tcls:'t-now'},
-        {rank:'②',ticker:'POET',text:'광 인터포저 — $50M 수주+Foxconn CPO 공급 임박. $2.5B 시총 대비 업사이드 최대. 수익화 확인 시 $10B+ 트리거.',timing:'지금',tcls:'t-now'},
-        {rank:'③',ticker:'AXTI',text:'InP 기판 원자재 — 여전히 성장 중이나 이미 5418% 상승. 중국 STAR Market 상장 가치 분리 모멘텀 기다려 분할 진입.',timing:'조정후',tcls:'t-after'},
-        {rank:'④',ticker:'FN',text:'광 모듈 제조 수혜 — 광 포토닉스 생산량 폭증 직결. 대형주 대비 상대적 P/E 저평가. 실질 이익 기반.',timing:'분할',tcls:'t-after'},
-        {rank:'⑤',ticker:'COHR',text:'업계 지배자이나 $74B 대형주. 멀티배거 어려움. 참고용.',timing:'참고',tcls:'t-ref'},
-        {rank:'⑥',ticker:'LITE',text:'NVIDIA $2B 파트너십 확인된 위치이나 $69B 대형주. 멀티배거 어려움. 참고용.',timing:'참고',tcls:'t-ref'}
-      ].map(function(p,i){return e('div',{key:i,className:'priority-row'},e('div',{className:'pr-rank'},p.rank),e('div',{className:'pr-ticker'},p.ticker),e('div',{className:'pr-text'},p.text),e('span',{className:'pr-timing '+p.tcls},p.timing));})
+      e('div',{className:'section-title'},'Anna Yartseva 멀티배거 8항목 분석'),
+      e('div',{style:{marginBottom:12}},
+        e('select',{value:idx,onChange:function(ev){setSel(parseInt(ev.target.value));}},
+          STOCKS.map(function(st,i){return e('option',{key:i,value:i},st.ticker+' — '+st.name);})
+        )
+      ),
+      e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12,padding:'10px',background:'#0f1e2e',borderRadius:8}},
+        e('span',{style:{fontSize:15,fontWeight:700,color:'#67e8f9'}},s.ticker+' — '+s.name),
+        e('span',{style:{fontSize:20,fontWeight:800,color:s.multi>=6?'#22c55e':s.multi>=5?'#f59e0b':'#ef4444'}},s.multi+'/8')
+      ),
+      e('div',{className:'multi-grid'},
+        s.m8.map(function(item,i){
+          return e('div',{key:i,className:'multi-item '+(item.ok?'multi-item-ok':'multi-item-warn')},
+            e('div',{className:'multi-label'},item.label),
+            e('div',{className:'multi-val '+(item.ok?'val-ok':'val-warn')},(item.ok?'✅ ':'⚠️ ')+item.val)
+          );
+        })
+      )
+    ),
+    e('div',{className:'card'},e('div',{className:'section-title'},'상세 분석'),e('div',{style:{fontSize:13,color:'#e2e8f0',lineHeight:1.7}},s.detail))
+  );
+}
+
+function TabStrategy() {
+  return e('div',{style:{padding:'16px'}},
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'🏆 우선순위 순위표'),
+      STOCKS.map(function(s,i){
+        return e('div',{key:i,className:'rank-row'},
+          e('div',{className:'rank-num'},i+1),
+          e('div',{style:{flex:1}},
+            e('div',{style:{display:'flex',justifyContent:'space-between'}},e('span',{style:{fontWeight:700,color:'#67e8f9'}},s.ticker),e('span',{style:{fontSize:12,color:'#64748b'}},s.cap)),
+            e('div',{style:{fontSize:12,color:'#e2e8f0',marginTop:2}},s.point),
+            e(MultiBar,{val:s.multi})
+          )
+        );
+      })
     ),
     e('div',{className:'card'},
-      e('div',{className:'card-title'},'촉매 & 리스크'),
-      e('div',{className:'section-h'},'상승 촉매'),
-      e('div',{className:'insight-box'},'💡 AI 데이터센터 광 인터커넥트 시장: 2024 $16B → 2030 $34~41B 성장\n🚀 실리콘 포토닉스: 2025 $3B → 2032 $12~16B 성장\n⚡ 800G → 1.6T → 3.2T 전환 가속 → 기존 구리 완전 대체 타임라인 단축\n🔬 Co-Packaged Optics(CPO): GPU와 광 모듈 직접 통합 → POET 광 인터포저 필수'),
-      e('div',{className:'section-h'},'주요 리스크'),
-      e('div',{className:'risk-box'},'⚠️ LWLG·POET: 아직 수익화 전 → 양산 지연 시 주가 급락 가능\n⚠️ AXTI: 이미 5000%+ 상승, 고점에서 진입 시 큰 손실\n⚠️ 광 포토닉스 섹터 전반 이미 과열 — 2차 조정 후 진입 분산 필요\n⚠️ 미중 관계 악화 시 InP 수출 규제 재발 → AXTI 직격'),
-      e('div',{className:'section-h'},'포트폴리오 제안'),
-      e('div',{className:'warn-box'},'혁신(50%): LWLG + POET — 아직 덜 알려진 진짜 병목, 지금이 기회\n성장(35%): AXTI + FN — 이미 올랐지만 성장 지속, 조정 후 분할\n참고(15%): COHR + LITE — 대형주 벤치마크, 멀티배거 기대 어려움')
+      e('div',{className:'section-title'},'🎯 핵심 촉매 vs 리스크'),
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'종목'),e('th',null,'핵심 촉매'),e('th',null,'리스크'))),
+        e('tbody',null,STOCKS.map(function(s,i){return e('tr',{key:i},e('td',{style:{fontWeight:700,color:'#67e8f9'}},s.ticker),e('td',{style:{fontSize:11,color:'#86efac'}},s.catalyst.substring(0,38)+'...'),e('td',{style:{fontSize:11,color:'#fca5a5'}},s.risk.substring(0,35)+'...'));}))
+      )
     ),
     e('div',{className:'card'},
-      e('div',{className:'card-title'},'심층 분석 안내'),
-      e('div',{className:'insight-box'},'💡 개별 종목 심층 분석:\n"[티커] 분석해줘" 라고 말씀해주세요.\n예: "POET 분석해줘", "LWLG 분석해줘", "AXTI 분석해줘"\n→ 7개 섹션 분석 + 대시보드 생성 + 인덱스 자동 등록')
+      e('div',{className:'section-title'},'💼 포트폴리오 제안 (공격형 기준)'),
+      e('div',{className:'portfolio-card'},
+        e('div',{style:{fontWeight:700,color:'#67e8f9',marginBottom:8}},'병목 핵심 포지션 (45%)'),
+        e('div',{style:{fontSize:13,lineHeight:1.8}},
+          e('span',{style:{color:'#fbbf24',fontWeight:700}},'AXTI 20%'),' — InP 기판 최상류 병목, 미중 갈등 헤지 프리미엄',e('br',null),
+          e('span',{style:{color:'#fbbf24',fontWeight:700}},'LITE 25%'),' — EML 레이저 독점 + NVIDIA $2B, 고점 대비 조정 중'
+        )
+      ),
+      e('div',{className:'portfolio-card'},
+        e('div',{style:{fontWeight:700,color:'#67e8f9',marginBottom:8}},'중류 성장 포지션 (30%)'),
+        e('div',{style:{fontSize:13,lineHeight:1.8}},
+          e('span',{style:{color:'#06b6d4',fontWeight:700}},'POET 15%'),' — CPO 인터포저 특허 소형주 (고위험 고보상)',e('br',null),
+          e('span',{style:{color:'#06b6d4',fontWeight:700}},'MTSI 15%'),' — 광IC 드라이버 안정 수혜'
+        )
+      ),
+      e('div',{className:'portfolio-card'},
+        e('div',{style:{fontWeight:700,color:'#67e8f9',marginBottom:8}},'안정 앵커 포지션 (25%)'),
+        e('div',{style:{fontSize:13,lineHeight:1.8}},
+          e('span',{style:{color:'#94a3b8',fontWeight:700}},'FN 25%'),' — 광트랜시버 계약제조 세계 1위, 리스크 최소·안정 성장'
+        )
+      )
+    ),
+    e('div',{className:'card'},
+      e('div',{className:'section-title'},'📌 InP 병목 심화 모니터링 포인트'),
+      ['NVIDIA CPO 로드맵 공개 시점 → AXTI·LITE 직접 수혜 확정','미중 갈등 확대 시 InP 수출 통제 → AXTI 전략 자산 프리미엄 급등','POET 3.2T 광엔진 샘플 출하(2026 4Q 목표) → 양산 확정 시 멀티배거 트리거','800G → 1.6T 트랜시버 업그레이드 사이클 → MTSI·FN 수혜 직결'].map(function(t,i){
+        return e('div',{key:i,className:'catalyst-item'},e('span',{style:{fontSize:14,color:'#06b6d4'}},'🔵'),e('span',{style:{fontSize:13}},t));
+      })
     )
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+function App() {
+  var tabSt = useState(0); var tab = tabSt[0]; var setTab = tabSt[1];
+  var content;
+  if (tab===0) content = e(TabValorchain,null);
+  else if (tab===1) content = e(TabTech,null);
+  else if (tab===2) content = e(TabStocks,null);
+  else if (tab===3) content = e(TabCharts,null);
+  else if (tab===4) content = e(TabMultibagger,null);
+  else content = e(TabStrategy,null);
+  return e('div',null,
+    e('div',{className:'header'},
+      e('a',{href:'https://disntm90.github.io/disntm90/',className:'back-link'},'← 목록으로'),
+      e('div',{style:{marginTop:12,display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}},
+        e('div',null,
+          e('h1',{style:{fontSize:22,fontWeight:900,color:'#67e8f9'}},'🔵 광포토닉스 종목발굴'),
+          e('div',{style:{fontSize:13,color:'#64748b',marginTop:4}},'탑다운 × 밸류체인 | 2026.05.29 | NVIDIA $4B 포토닉스 베팅 촉매')
+        ),
+        e('div',{style:{textAlign:'right'}},
+          e('div',{style:{fontSize:13,color:'#06b6d4',fontWeight:700}},'발굴 5종목'),
+          e('div',{style:{fontSize:11,color:'#64748b'}},'시장 CAGR 29% → $28.75B(2034)')
+        )
+      ),
+      e('div',{style:{display:'flex',gap:8,flexWrap:'wrap',marginTop:12,paddingBottom:16}},
+        e('span',{className:'badge badge-cyan'},'#광포토닉스'),
+        e('span',{className:'badge badge-green'},'#NVIDIA$4B'),
+        e('span',{className:'badge badge-yellow'},'#InP병목'),
+        e('span',{className:'badge badge-gray'},'#CPO전환')
+      )
+    ),
+    e('div',{className:'tab-bar'},
+      TABS.map(function(t,i){return e('button',{key:i,className:'tab-btn'+(tab===i?' active':''),onClick:function(){setTab(i);}},t);})
+    ),
+    content
+  );
+}
+
+var root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(e(App,null));
 </script>
 </body>
 </html>
