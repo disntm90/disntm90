@@ -92,8 +92,8 @@ const API   = `https://api.github.com/repos/${OWNER}/${REPO}/contents/?ref=gh-pa
 const CACHE_KEY = 'idx_v1';
 const CACHE_TTL = 5 * 60 * 1000;
 
-// {ticker}-{YYYYMMDD}.html 또는 {ticker}-{YYYYMMDD}-v2.html
-const FILE_RE = /^([a-zA-Z]+)-(\d{8})(-v\d+)?\.html$/;
+// {ticker}-{YYYYMMDD}.html 또는 {name}-{name}-{YYYYMMDD}.html (발굴 대시보드 포함)
+const FILE_RE = /^(.+?)-(\d{8})(-v\d+)?\.html$/;
 
 const PALETTE = ['#06b6d4','#22c55e','#f59e0b','#a855f7','#f97316','#3b82f6','#ec4899'];
 const tickerColor = t => PALETTE[
@@ -145,6 +145,8 @@ function render(items) {
     const verTag = d.ver
       ? `<span style="color:#7a90aa;font-size:13px;font-weight:400">${d.ver}</span>`
       : '';
+    const isDiscovery = d.ticker.toLowerCase().includes('discovery');
+    const label = isDiscovery ? '🔍 종목발굴 대시보드' : '📈 인터랙티브 분석 대시보드';
     return `
       <a href="${BASE}${d.filename}" class="card" target="_blank" rel="noopener noreferrer">
         <div class="card-top">
@@ -152,8 +154,8 @@ function render(items) {
           <span class="date-chip">${fmtDate(d.date)}</span>
         </div>
         <div class="card-bottom">
-          <span class="card-label">📈 인터랙티브 분석 대시보드</span>
-          <button class="view-btn">분석 보기 →</button>
+          <span class="card-label">${label}</span>
+          <button class="view-btn">보기 →</button>
         </div>
       </a>`;
   }).join('');
