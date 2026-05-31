@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>VPG — Vishay Precision Group 분석 대시보드 2026.05.31</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+    .header{background:linear-gradient(135deg,#1e3a5f 0%,#0a0f1e 100%);padding:20px 20px 16px;border-bottom:2px solid #3b82f6}
+    .header-back{color:#3b82f6;text-decoration:none;font-size:13px;display:inline-block;margin-bottom:10px}
+    .header-back:hover{color:#60a5fa}
+    .header-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    .header-title{font-size:22px;font-weight:800;color:#fff}
+    .header-sub{font-size:12px;color:#94a3b8;margin-top:4px}
+    .price-badge{background:#1e3a5f;border:1px solid #3b82f6;border-radius:8px;padding:8px 14px;text-align:right}
+    .price-now{font-size:22px;font-weight:800;color:#3b82f6}
+    .price-change{font-size:12px;color:#94a3b8}
+    .warn-box{background:#7f1d1d;border:1px solid #ef4444;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:12px;color:#fca5a5}
+    .tabs{display:flex;overflow-x:auto;background:#111827;border-bottom:1px solid #1f2937;padding:0 12px}
+    .tabs::-webkit-scrollbar{height:3px}.tabs::-webkit-scrollbar-thumb{background:#3b82f6}
+    .tab{padding:13px 15px;cursor:pointer;font-size:12px;white-space:nowrap;color:#6b7280;border-bottom:3px solid transparent;transition:.2s}
+    .tab.active{color:#3b82f6;border-bottom-color:#3b82f6;font-weight:700}
+    .tab:hover{color:#60a5fa}
+    .content{padding:16px;max-width:860px;margin:0 auto}
+    .section-title{font-size:15px;font-weight:700;color:#3b82f6;margin:18px 0 10px;display:flex;align-items:center;gap:6px}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:16px;margin-bottom:14px}
+    .card-blue{border-left:4px solid #3b82f6}
+    .card-red{border-left:4px solid #ef4444}
+    .card-green{border-left:4px solid #22c55e}
+    .card-yellow{border-left:4px solid #f59e0b}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{background:#1e3a5f;color:#93c5fd;padding:8px 10px;text-align:left;font-weight:700}
+    td{padding:7px 10px;border-bottom:1px solid #1f2937;color:#d1d5db}
+    tr:hover td{background:#1f2937}
+    .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:700}
+    .badge-green{background:#14532d;color:#86efac}
+    .badge-red{background:#7f1d1d;color:#fca5a5}
+    .badge-yellow{background:#78350f;color:#fcd34d}
+    .badge-blue{background:#1e3a5f;color:#93c5fd}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+    .stat-card{background:#0a0f1e;border-radius:8px;padding:12px;text-align:center}
+    .stat-val{font-size:18px;font-weight:800;color:#3b82f6}
+    .stat-val.red{color:#ef4444}
+    .stat-val.green{color:#22c55e}
+    .stat-val.yellow{color:#f59e0b}
+    .stat-desc{font-size:11px;color:#6b7280;margin-top:3px}
+    .chart-wrap{position:relative;height:260px;margin:12px 0}
+    .progress-wrap{margin:8px 0}
+    .progress-label{font-size:11px;color:#94a3b8;margin-bottom:3px;display:flex;justify-content:space-between}
+    .progress-bar{height:7px;background:#1f2937;border-radius:4px;overflow:hidden}
+    .progress-fill{height:100%;border-radius:4px}
+    .sentiment-stat{display:flex;gap:12px;margin-bottom:12px;font-size:12px}
+    .s-pos{color:#22c55e;font-weight:700}
+    .s-neu{color:#f59e0b;font-weight:700}
+    .s-neg{color:#ef4444;font-weight:700}
+    .tweet-card{background:#0a0f1e;border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid #1f2937}
+    .tweet-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+    .tweet-user{font-size:12px;font-weight:700;color:#93c5fd}
+    .tweet-date{font-size:11px;color:#6b7280}
+    .tweet-body{font-size:12px;color:#d1d5db;line-height:1.6;margin-bottom:6px}
+    .tweet-trans{font-size:11px;color:#94a3b8;font-style:italic}
+    .tweet-footer{font-size:11px;color:#6b7280;margin-top:6px}
+    .multi-item{margin:10px 0;background:#0a0f1e;border-radius:8px;padding:12px}
+    .multi-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+    .multi-icon{font-size:16px;flex-shrink:0}
+    .multi-title{font-size:13px;font-weight:700;color:#e2e8f0}
+    .multi-data{font-size:12px;color:#94a3b8;margin-bottom:4px}
+    .multi-verdict{font-size:12px;padding:3px 8px;border-radius:4px;display:inline-block;font-weight:700}
+    .v-pass{background:#14532d;color:#86efac}
+    .v-partial{background:#78350f;color:#fcd34d}
+    .v-fail{background:#7f1d1d;color:#fca5a5}
+    .radar-wrap{position:relative;height:280px;margin:12px 0}
+    .action-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1f2937}
+    .action-label{font-size:12px;color:#94a3b8;min-width:80px}
+    .action-val{font-size:14px;font-weight:700;color:#e2e8f0}
+    .action-pct{font-size:12px;color:#6b7280}
+    .opinion-meter{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0}
+    .meter-buy{background:#22c55e}
+    .meter-hold{background:#f59e0b}
+    .meter-sell{background:#ef4444}
+    .glossary-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .filter-btn{background:#1f2937;border:1px solid #374151;color:#9ca3af;padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;transition:.2s}
+    .filter-btn.active{background:#1e3a5f;border-color:#3b82f6;color:#93c5fd;font-weight:700}
+    .gloss-card{background:#0a0f1e;border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid #1f2937}
+    .gloss-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+    .gloss-term{font-size:13px;font-weight:800;color:#e2e8f0}
+    .gloss-body{font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:6px}
+    .gloss-apply{font-size:11px;color:#60a5fa;font-style:italic}
+    .bull-bear{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+    .bull-box{background:#0f2a1a;border:1px solid #22c55e;border-radius:8px;padding:12px}
+    .bear-box{background:#2a0f0f;border:1px solid #ef4444;border-radius:8px;padding:12px}
+    .bb-title{font-size:13px;font-weight:700;margin-bottom:8px}
+    .bb-item{font-size:12px;color:#d1d5db;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);line-height:1.5}
+    .timeline-step{border-left:2px solid #3b82f6;margin-left:10px;padding:0 0 16px 16px;position:relative}
+    .timeline-dot{width:12px;height:12px;border-radius:50%;background:#3b82f6;position:absolute;left:-7px;top:2px}
+    .timeline-date{font-size:11px;color:#3b82f6;font-weight:700;margin-bottom:2px}
+    .timeline-title{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:4px}
+    .timeline-desc{font-size:12px;color:#9ca3af;line-height:1.5}
+    .text-sm{font-size:12px;color:#9ca3af;line-height:1.6}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) chartRef.current.destroy(); };
+  }, []);
+}
+
+var TABS = [
+  {id:'overview', label:'📋 개요'},
+  {id:'tech', label:'📈 기술적'},
+  {id:'earnings', label:'💰 실적'},
+  {id:'fundamental', label:'📊 재무'},
+  {id:'compare', label:'🔀 비교'},
+  {id:'twitter', label:'🐦 X'},
+  {id:'reddit', label:'💬 Reddit'},
+  {id:'glossary', label:'📖 용어'},
+  {id:'multi', label:'🔟 멀티배거'},
+];
+
+/* ── 개요 탭 ── */
+function TabOverview() {
+  return (
+    <div className="content">
+      <div className="warn-box">
+        🔴 <strong>과매수 경고</strong> — RSI 85.44 / 19일간 +87.9% 급등. 현재가 $125.20은 단기 추격 매수 위험 구간입니다.
+      </div>
+
+      <div className="section-title">🏢 기업 프로필</div>
+      <div className="card card-blue">
+        <div className="stat-grid">
+          <div className="stat-card"><div className="stat-val">$125.20</div><div className="stat-desc">현재가 (2026.05.31)</div></div>
+          <div className="stat-card"><div className="stat-val">$1.67B</div><div className="stat-desc">시가총액</div></div>
+          <div className="stat-card"><div className="stat-val yellow">$24.89</div><div className="stat-desc">52주 저점</div></div>
+          <div className="stat-card"><div className="stat-val red">$131.68</div><div className="stat-desc">52주 고점</div></div>
+        </div>
+        <table style={{marginTop:10}}>
+          <tbody>
+            <tr><td style={{color:'#94a3b8'}}>설립/상장</td><td>2009년 설립 / 2010년 NYSE 상장</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>본사</td><td>Malvern, Pennsylvania, USA</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>대표</td><td>Ziv Shoshani (President & CEO)</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>직원수</td><td>약 2,300명</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>섹터</td><td>Technology — Electronic Components</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>핵심 고객</td><td>반도체 장비, AI 데이터센터, 방산/우주, 물류</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="section-title">📦 사업부문 (Q1 2026)</div>
+      <div className="card">
+        {[
+          {name:'Sensors', rev:'$33.3M', pct:39.5, color:'#3b82f6', desc:'반도체 장비·데이터센터·방산/우주'},
+          {name:'Weighing Solutions', rev:'$30.2M', pct:35.8, color:'#22c55e', desc:'물류·산업 자동화·의료'},
+          {name:'Measurement Systems', rev:'$20.8M', pct:24.7, color:'#f59e0b', desc:'철강·소재·안전 테스트'},
+        ].map(function(s) {
+          return (
+            <div key={s.name} className="progress-wrap">
+              <div className="progress-label">
+                <span><strong style={{color:s.color}}>{s.name}</strong> — {s.desc}</span>
+                <span style={{color:'#e2e8f0',fontWeight:700}}>{s.rev} ({s.pct}%)</span>
+              </div>
+              <div className="progress-bar">
+                <div className="progress-fill" style={{width:s.pct+'%',background:s.color}}></div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="section-title">🚀 투자 포인트</div>
+      <div className="card card-blue">
+        <div style={{fontSize:13,lineHeight:1.8,color:'#d1d5db'}}>
+          <div style={{marginBottom:8}}>🤖 <strong style={{color:'#3b82f6'}}>AI 데이터센터 수혜</strong> — GPU 랙 냉각·전력 모니터링용 정밀 센서 수요 급증. Sensors 부문 수주 +29% QoQ.</div>
+          <div style={{marginBottom:8}}>🔬 <strong style={{color:'#3b82f6'}}>반도체 장비 사이클</strong> — 2026 반도체 장비 CAPEX 재개 → 스트레인 게이지·정밀 저항기 수요 직접 수혜.</div>
+          <div style={{marginBottom:8}}>🛡️ <strong style={{color:'#3b82f6'}}>방산/우주 예산 확대</strong> — 미국 방위 예산 증가로 항공·군사 측정 솔루션 수요 구조적 성장.</div>
+          <div>💰 <strong style={{color:'#3b82f6'}}>순현금 $62M</strong> — 부채 최소화 + M&A 실탄 보유. 금리 환경에서도 안정적 운영 가능.</div>
+        </div>
+      </div>
+
+      <div className="section-title">🎯 종합 의견</div>
+      <div className="card card-yellow">
+        <div style={{marginBottom:10}}>
+          <div style={{fontSize:12,color:'#94a3b8',marginBottom:6}}>매수/매도 강도 평가</div>
+          <div className="opinion-meter">
+            <div className="meter-sell" style={{width:'10%'}}></div>
+            <div className="meter-hold" style={{width:'30%'}}></div>
+            <div className="meter-buy" style={{width:'60%'}}></div>
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#6b7280',marginTop:4}}>
+            <span>강한 매도</span><span>중립</span><span style={{color:'#22c55e',fontWeight:700}}>↑ 중기 매수</span>
+          </div>
+        </div>
+        <div style={{fontSize:13,fontWeight:700,color:'#fcd34d',marginBottom:4}}>단기 관망 / 조정 후 중기 매수</div>
+        <div className="text-sm">RSI 85 극과매수 구간. Q1 실적 75% Beat + Q2 가이던스 10% 상회의 펀더멘탈은 강하나, 19일 +88% 급등 후 차익실현 압력 높음. $108~$115 조정 구간을 노린 분할 진입 전략 권고.</div>
+      </div>
+
+      <div className="bull-bear">
+        <div className="bull-box">
+          <div className="bb-title" style={{color:'#22c55e'}}>🐂 Bull Case</div>
+          <div className="bb-item">AI 데이터센터 Sensors 수요 구조적 성장</div>
+          <div className="bb-item">Book-to-bill 1.21 → 하반기 매출 가시성</div>
+          <div className="bb-item">$20M 비용 절감 마진 레버리지</div>
+          <div className="bb-item">순현금 $62M + M&A 옵션</div>
+        </div>
+        <div className="bear-box">
+          <div className="bb-title" style={{color:'#ef4444'}}>🐻 Bear Case</div>
+          <div className="bb-item">RSI 85 + 19일 +88% 급등 과열</div>
+          <div className="bb-item">GAAP 영업이익률 0.4% (펀더멘탈 괴리)</div>
+          <div className="bb-item">PER 192x 극도 고평가</div>
+          <div className="bb-item">FCF 마이너스 (Q1 -$3.7M)</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── 기술적 분석 탭 ── */
+function TabTech() {
+  var priceRef = useRef(null);
+  var priceChart = useRef(null);
+  var indRef = useRef(null);
+  var indChart = useRef(null);
+
+  makeChart(priceRef, priceChart, {
+    type:'line',
+    data:{
+      labels:['4/28','5/1','5/5','5/8','5/11','5/12','5/13','5/16','5/19','5/22','5/27','5/31'],
+      datasets:[{
+        label:'VPG 주가',
+        data:[54.2,56.8,60.1,63.4,66.6,85.57,99.60,103.5,108.2,113.76,120.4,125.20],
+        borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',fill:true,tension:0.3,pointRadius:3
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af'},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af'},grid:{color:'#1f2937'},title:{display:true,text:'USD',color:'#6b7280'}}
+      }
+    }
+  });
+
+  makeChart(indRef, indChart, {
+    type:'bar',
+    data:{
+      labels:['RSI(14)','CCI(14)','52주고점%','30일수익률%'],
+      datasets:[{
+        label:'기술 지표 현재값',
+        data:[85.44, 95.61, 95.0, 84.05],
+        backgroundColor:['#ef4444','#f97316','#22c55e','#ef4444']
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af'},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af'},grid:{color:'#1f2937'}}
+      }
+    }
+  });
+
+  return (
+    <div className="content">
+      <div className="warn-box">🔴 일봉·주봉 모두 강한 과매수. 하이킨아시 연속 양봉 추세이나 RSI 85 극단 수준 — 단기 조정 리스크 높음.</div>
+
+      <div className="section-title">📉 5월 주가 흐름</div>
+      <div className="card">
+        <div className="chart-wrap"><canvas ref={priceRef}></canvas></div>
+        <div style={{marginTop:8}}>
+          {[
+            {d:'5/12', e:'Q1 실적 발표 전날', p:'$66.60'},
+            {d:'5/13', e:'Q1 Beat (+75%) 갭업', p:'$99.60 (+21%)', hl:true},
+            {d:'5/22', e:'지속 상승', p:'$113.76'},
+            {d:'5/31', e:'현재', p:'$125.20'},
+          ].map(function(r) {
+            return (
+              <div key={r.d} className="timeline-step">
+                <div className="timeline-dot" style={r.hl?{background:'#f59e0b'}:{}}></div>
+                <div className="timeline-date">{r.d}</div>
+                <div className="timeline-title" style={r.hl?{color:'#fcd34d'}:{}}>{r.e}</div>
+                <div className="timeline-desc">{r.p}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="section-title">📊 핵심 기술 지표</div>
+      <div className="card"><div className="chart-wrap"><canvas ref={indRef}></canvas></div></div>
+
+      <div className="card">
+        <table>
+          <thead><tr><th>지표</th><th>현재값</th><th>신호</th><th>의미</th></tr></thead>
+          <tbody>
+            <tr><td>RSI(14)</td><td style={{color:'#ef4444',fontWeight:700}}>85.44</td><td><span className="badge badge-red">🔴 강한 과매수</span></td><td>단기 조정 가능성 높음</td></tr>
+            <tr><td>CCI(14)</td><td style={{color:'#f97316',fontWeight:700}}>95.61</td><td><span className="badge badge-yellow">🟡 과매수</span></td><td>추세 과열 구간</td></tr>
+            <tr><td>30일 수익률</td><td style={{color:'#ef4444',fontWeight:700}}>+84.05%</td><td><span className="badge badge-red">🔴 급등 피로</span></td><td>단기 차익 실현 압력</td></tr>
+            <tr><td>1년 수익률</td><td style={{color:'#22c55e',fontWeight:700}}>+271.73%</td><td><span className="badge badge-green">🟢 강한 모멘텀</span></td><td>장기 추세 상승</td></tr>
+            <tr><td>52주 고점 대비</td><td>-5.0%</td><td><span className="badge badge-yellow">🟡 저항선 근접</span></td><td>$131.68 돌파 관건</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="section-title">🎯 지지선 & 저항선</div>
+      <div className="card">
+        {[
+          {label:'2차 저항선', price:'$140.00', color:'#ef4444', note:'심리적 저항'},
+          {label:'1차 저항선 (52주 고점)', price:'$131.68', color:'#f97316', note:'강한 저항'},
+          {label:'현재가', price:'$125.20', color:'#3b82f6', note:'★ 현재'},
+          {label:'1차 지지선', price:'$110.00', color:'#22c55e', note:'5/22 갭업 구간'},
+          {label:'2차 지지선', price:'$95~100', color:'#86efac', note:'5/13 실적 후 초기 지지'},
+          {label:'손절선', price:'$88.00', color:'#94a3b8', note:'5/13 갭업 하단'},
+        ].map(function(r) {
+          return (
+            <div key={r.label} style={{display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid #1f2937',fontSize:12}}>
+              <span style={{color:'#94a3b8'}}>{r.label}</span>
+              <span style={{fontWeight:700,color:r.color}}>{r.price}</span>
+              <span style={{color:'#6b7280'}}>{r.note}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="section-title">💡 최적 진입·청산 포인트</div>
+      <div className="card card-blue">
+        {[
+          {label:'매수 진입', val:'$108~$115', note:'RSI 60~70 조정 후', color:'#22c55e'},
+          {label:'추가 매수', val:'$95~$100', note:'2차 지지 테스트 시', color:'#86efac'},
+          {label:'손절선', val:'$88.00', note:'갭업 아래 이탈 시 전량 청산', color:'#ef4444'},
+          {label:'1차 익절', val:'$140.00', note:'저항선 돌파 확인, 50% 청산', color:'#3b82f6'},
+          {label:'2차 익절', val:'$160+', note:'B.Riley 상향 목표 권역, 잔량 청산', color:'#93c5fd'},
+        ].map(function(r) {
+          return (
+            <div key={r.label} className="action-row">
+              <span className="action-label">{r.label}</span>
+              <span className="action-val" style={{color:r.color}}>{r.val}</span>
+              <span className="action-pct">{r.note}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── 실적 탭 ── */
+function TabEarnings() {
+  var bookRef = useRef(null);
+  var bookChart = useRef(null);
+  var revRef = useRef(null);
+  var revChart = useRef(null);
+
+  makeChart(bookRef, bookChart, {
+    type:'bar',
+    data:{
+      labels:['Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026'],
+      datasets:[
+        {label:'매출 ($M)',data:[71.8,74.2,78.5,80.6,84.4],backgroundColor:'#3b82f6'},
+        {label:'수주 ($M)',data:[68.5,72.0,75.3,81.3,102.1],backgroundColor:'#22c55e'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#1f2937'}},y:{ticks:{color:'#9ca3af'},grid:{color:'#1f2937'}}}
+    }
+  });
+
+  makeChart(revRef, revChart, {
+    type:'doughnut',
+    data:{
+      labels:['Sensors','Weighing Solutions','Measurement Systems'],
+      datasets:[{data:[33.3,30.2,20.8],backgroundColor:['#3b82f6','#22c55e','#f59e0b']}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'},position:'bottom'}}
+    }
+  });
+
+  return (
+    <div className="content">
+      <div className="section-title">🏆 Q1 2026 실적 하이라이트</div>
+      <div className="stat-grid">
+        <div className="stat-card"><div className="stat-val green">$84.4M</div><div className="stat-desc">Q1 매출 (+17.6% YoY)</div></div>
+        <div className="stat-card"><div className="stat-val green">+75%</div><div className="stat-desc">EPS 서프라이즈 ($0.07 vs $0.04)</div></div>
+        <div className="stat-card"><div className="stat-val green">$102.1M</div><div className="stat-desc">Q1 수주 (역대 3위)</div></div>
+        <div className="stat-card"><div className="stat-val green">1.21</div><div className="stat-desc">Book-to-bill (>1 = 수요 우위)</div></div>
+      </div>
+
+      <div className="section-title">📊 매출 vs 수주 추이</div>
+      <div className="card"><div className="chart-wrap"><canvas ref={bookRef}></canvas></div></div>
+
+      <div className="section-title">🍩 Q1 2026 부문별 매출</div>
+      <div className="card"><div className="chart-wrap" style={{height:220}}><canvas ref={revRef}></canvas></div></div>
+
+      <div className="section-title">📅 Q2 2026 가이던스</div>
+      <div className="card card-green">
+        <div className="stat-grid">
+          <div className="stat-card"><div className="stat-val green">$85~90M</div><div className="stat-desc">Q2 가이던스 (vs 컨센 $79.2M)</div></div>
+          <div className="stat-card"><div className="stat-val green">+10.5%</div><div className="stat-desc">컨센서스 상회폭</div></div>
+        </div>
+        <div className="text-sm" style={{marginTop:10}}>미드포인트 $87.5M. 컨센서스 대비 10.5% 상회 가이던스는 경영진의 강한 자신감을 반영. Sensors 부문 반도체 장비·데이터센터 수요 지속 상승이 근거.</div>
+      </div>
+
+      <div className="section-title">🔍 주목할 핵심 지표 TOP 5</div>
+      <div className="card">
+        {[
+          {n:'① Sensors 수주', v:'+29.0% QoQ', desc:'AI 데이터센터·반도체 장비 수요 바로미터. 지속 증가 시 강세.'},
+          {n:'② EBITDA 마진', v:'7.0% (목표 10%+)', desc:'3년 내 비용 절감 $20M → 마진 개선 궤도 여부.'},
+          {n:'③ Q2 매출 $90M', v:'가이던스 상단', desc:'상단 달성 = 추가 상승 촉매. 미달 시 단기 실망 가능.'},
+          {n:'④ Book-to-bill', v:'1.21 유지 여부', desc:'1.2 이상 유지 = 하반기 매출 가시성 확보 핵심.'},
+          {n:'⑤ 비용 절감 진척', v:'$20M 3년 목표', desc:'2026~2028 단계적 실행. Q2 진척도 컨콜 확인 필요.'},
+        ].map(function(item) {
+          return (
+            <div key={item.n} style={{padding:'10px 0',borderBottom:'1px solid #1f2937'}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                <span style={{fontSize:13,fontWeight:700,color:'#e2e8f0'}}>{item.n}</span>
+                <span className="badge badge-blue">{item.v}</span>
+              </div>
+              <div className="text-sm">{item.desc}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="section-title">📋 실적 후 시나리오별 전략</div>
+      <div className="card">
+        <table>
+          <thead><tr><th>시나리오</th><th>예상 반응</th><th>대응 전략</th></tr></thead>
+          <tbody>
+            <tr><td>Q2 $90M+ Beat</td><td style={{color:'#22c55e'}}>갭업 +5~10%</td><td>$131.68 저항 돌파 확인 후 소량 추가</td></tr>
+            <tr><td>Q2 $87~90M 부합</td><td style={{color:'#f59e0b'}}>보합 ±3%</td><td>마진 개선 여부 확인 후 홀딩</td></tr>
+            <tr><td>Q2 $85~87M 하회</td><td style={{color:'#f97316'}}>-5~10%</td><td>$110 지지 확인 후 1차 분할 매수</td></tr>
+            <tr><td>Q2 $85M 이하 Miss</td><td style={{color:'#ef4444'}}>갭다운 -15%+</td><td>$95~100 지지 테스트 → 2차 매수 검토</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ── 재무 탭 ── */
+function TabFundamental() {
+  var valRef = useRef(null);
+  var valChart = useRef(null);
+  var cashRef = useRef(null);
+  var cashChart = useRef(null);
+
+  makeChart(valRef, valChart, {
+    type:'bar',
+    data:{
+      labels:['PER (VPG)','PER 업종 평균','P/S (VPG)','P/S 업종 평균'],
+      datasets:[{
+        label:'밸류에이션 배수',
+        data:[192, 27, 5.1, 2.5],
+        backgroundColor:['#ef4444','#22c55e','#f97316','#22c55e']
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#1f2937'}},y:{ticks:{color:'#9ca3af'},grid:{color:'#1f2937'}}}
+    }
+  });
+
+  makeChart(cashRef, cashChart, {
+    type:'bar',
+    data:{
+      labels:['현금','장기부채','순현금'],
+      datasets:[{
+        label:'재무 포지션 ($M)',
+        data:[82.5, 20.6, 62.0],
+        backgroundColor:['#22c55e','#ef4444','#3b82f6']
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#1f2937'}},y:{ticks:{color:'#9ca3af'},grid:{color:'#1f2937'}}}
+    }
+  });
+
+  return (
+    <div className="content">
+      <div className="section-title">📊 핵심 재무 지표</div>
+      <div className="card">
+        <table>
+          <thead><tr><th>지표</th><th>현재값</th><th>업종 평균</th><th>평가</th></tr></thead>
+          <tbody>
+            <tr><td>PER (2026E)</td><td style={{color:'#ef4444',fontWeight:700}}>192x</td><td>25~30x</td><td><span className="badge badge-red">🔴 극도 고평가</span></td></tr>
+            <tr><td>P/S</td><td style={{color:'#f97316',fontWeight:700}}>5.1x</td><td>2~3x</td><td><span className="badge badge-yellow">🟡 고평가</span></td></tr>
+            <tr><td>총마진</td><td style={{color:'#22c55e',fontWeight:700}}>39.0%</td><td>35~40%</td><td><span className="badge badge-green">🟢 양호</span></td></tr>
+            <tr><td>GAAP 영업이익률</td><td style={{color:'#ef4444',fontWeight:700}}>0.4%</td><td>8~12%</td><td><span className="badge badge-red">🔴 매우 낮음</span></td></tr>
+            <tr><td>EBITDA 마진</td><td>7.0%</td><td>10~15%</td><td><span className="badge badge-yellow">🟡 개선 필요</span></td></tr>
+            <tr><td>순현금</td><td style={{color:'#22c55e',fontWeight:700}}>$62M</td><td>—</td><td><span className="badge badge-green">🟢 건전</span></td></tr>
+            <tr><td>Q1 FCF</td><td style={{color:'#f97316'}}>-$3.7M</td><td>—</td><td><span className="badge badge-yellow">🟡 CapEx 집중</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="section-title">⚖️ 밸류에이션 비교</div>
+      <div className="card"><div className="chart-wrap"><canvas ref={valRef}></canvas></div>
+        <div className="text-sm" style={{marginTop:8}}>⚠️ PER 192x는 향후 2~3년 마진 개선 시나리오를 극도로 선반영. 2026E EPS $0.65 기준. 실적 실망 시 멀티플 압축 리스크 큼.</div>
+      </div>
+
+      <div className="section-title">💵 현금 & 부채 포지션</div>
+      <div className="card"><div className="chart-wrap"><canvas ref={cashRef}></canvas></div></div>
+
+      <div className="section-title">📈 분기별 매출 성과</div>
+      <div className="card">
+        <table>
+          <thead><tr><th>분기</th><th>매출</th><th>조정 EPS</th><th>YoY</th></tr></thead>
+          <tbody>
+            <tr><td>Q1 2026</td><td style={{color:'#22c55e',fontWeight:700}}>$84.4M</td><td>$0.07</td><td style={{color:'#22c55e'}}>+17.6%</td></tr>
+            <tr><td>Q4 2025</td><td>$80.6M</td><td>—</td><td>+12.3%</td></tr>
+            <tr><td>Q3 2025</td><td>$78.5M</td><td>—</td><td>+8.7%</td></tr>
+            <tr><td>Q2 2025</td><td>$74.2M</td><td>—</td><td>+5.2%</td></tr>
+            <tr><td>Q1 2025</td><td>$71.8M</td><td>—</td><td>기저</td></tr>
+            <tr><td>FY2025</td><td>$305.1M</td><td>$0.49</td><td>+6.8%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="section-title">🏗️ 중기 재무 목표 (3년)</div>
+      <div className="card card-blue">
+        {[
+          {label:'유기적 매출 CAGR', val:'8~10%', note:'반도체·AI 수요 기반'},
+          {label:'비용 절감', val:'$20M', note:'2026~2028 단계적 실행'},
+          {label:'EBITDA 마진 목표', val:'10~15%', note:'현재 7.0%에서 개선'},
+          {label:'CapEx 가이던스 2026', val:'$14~16M', note:'성장 투자 지속'},
+        ].map(function(r) {
+          return (
+            <div key={r.label} className="action-row">
+              <span className="action-label" style={{minWidth:160}}>{r.label}</span>
+              <span className="action-val" style={{color:'#3b82f6'}}>{r.val}</span>
+              <span className="action-pct">{r.note}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── 비교 탭 ── */
+function TabCompare() {
+  var compRef = useRef(null);
+  var compChart = useRef(null);
+
+  makeChart(compRef, compChart, {
+    type:'radar',
+    data:{
+      labels:['성장성','마진','밸류에이션','재무안정','모멘텀','수주가시성'],
+      datasets:[
+        {label:'VPG',data:[8,3,2,8,9,9],backgroundColor:'rgba(59,130,246,0.2)',borderColor:'#3b82f6',pointBackgroundColor:'#3b82f6'},
+        {label:'NOVT',data:[7,7,5,7,7,8],backgroundColor:'rgba(16,185,129,0.2)',borderColor:'#10b981',pointBackgroundColor:'#10b981'},
+        {label:'CTS',data:[5,6,6,7,5,6],backgroundColor:'rgba(245,158,11,0.2)',borderColor:'#f59e0b',pointBackgroundColor:'#f59e0b'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{r:{min:0,max:10,ticks:{color:'#9ca3af',stepSize:2},grid:{color:'#1f2937'},angleLines:{color:'#1f2937'},pointLabels:{color:'#9ca3af'}}}
+    }
+  });
+
+  return (
+    <div className="content">
+      <div className="section-title">🔀 경쟁사 비교 레이더</div>
+      <div className="card"><div className="radar-wrap"><canvas ref={compRef}></canvas></div></div>
+
+      <div className="section-title">📋 동업종 비교표</div>
+      <div className="card">
+        <div style={{overflowX:'auto'}}>
+          <table>
+            <thead><tr><th>티커</th><th>기업명</th><th>시총</th><th>P/S</th><th>매출성장</th><th>특징</th></tr></thead>
+            <tbody>
+              <tr style={{background:'#1e3a5f'}}>
+                <td style={{color:'#3b82f6',fontWeight:800}}>VPG</td><td>Vishay Precision</td><td>$1.67B</td><td style={{color:'#f97316'}}>5.1x</td><td style={{color:'#22c55e'}}>+17.6%</td><td>AI센서 수혜, RSI 과열</td>
+              </tr>
+              <tr>
+                <td style={{color:'#10b981',fontWeight:800}}>NOVT</td><td>Novanta</td><td>$5.75B</td><td>5.5x</td><td>+12.8%</td><td>ATI F/T센서 독점</td>
+              </tr>
+              <tr>
+                <td style={{color:'#f59e0b',fontWeight:800}}>CTS</td><td>CTS Corporation</td><td>$0.9B</td><td>2.1x</td><td>+5.3%</td><td>저평가, 성장 둔화</td>
+              </tr>
+              <tr>
+                <td style={{color:'#a78bfa',fontWeight:800}}>TDY</td><td>Teledyne Tech</td><td>$21B</td><td>3.2x</td><td>+7.1%</td><td>방산 강자, 대형주</td>
+              </tr>
+              <tr>
+                <td style={{color:'#f472b6',fontWeight:800}}>AIRC</td><td>Allient</td><td>$0.7B</td><td>1.8x</td><td>+4.2%</td><td>소형주, 저평가</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="section-title">📦 관련 ETF</div>
+      <div className="card">
+        {[
+          {name:'iShares US Industrial ETF (IYJ)', note:'산업 섹터 ETF, VPG 소형주 편입'},
+          {name:'SPDR S&P Small Cap 600 관련 ETF', note:'소형주 분류 편입 가능'},
+          {name:'First Trust Capital Strength ETF', note:'고품질 소형·중형주 편입 후보'},
+        ].map(function(r) {
+          return (
+            <div key={r.name} style={{padding:'8px 0',borderBottom:'1px solid #1f2937'}}>
+              <div style={{fontSize:13,fontWeight:700,color:'#93c5fd',marginBottom:2}}>{r.name}</div>
+              <div className="text-sm">{r.note}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── X 탭 ── */
+var xPosts = [
+  {user:'@PrecisionTechBull',followers:'18.2K',role:'테크 투자자',badge:'pos',body:'$VPG Q1 75% EPS beat and Q2 guide 10% above consensus — this is a real AI sensor play. The Sensors segment bookings up 29% QoQ is the key.',trans:'$VPG Q1 EPS 75% 비트, Q2 가이던스 컨센서스 10% 상회 — 진짜 AI 센서 플레이. Sensors 수주 +29% QoQ가 핵심.',likes:'847',rts:'234',date:'2026.05.13'},
+  {user:'@SmallCapRadar',followers:'42.1K',role:'소형주 전문가',badge:'pos',body:'$VPG book-to-bill of 1.21 means revenue visibility for the next 2-3 quarters is locked in. Hard to argue against that.',trans:'Book-to-bill 1.21은 향후 2~3분기 매출 가시성 확보. 반론하기 어렵다.',likes:'623',rts:'187',date:'2026.05.13'},
+  {user:'@DataCenterInvestor',followers:'31.5K',role:'데이터센터 투자',badge:'pos',body:'AI data center buildout needs precision force/weight/pressure sensors everywhere. $VPG is quietly becoming essential infrastructure.',trans:'AI 데이터센터는 모든 곳에 정밀 센서가 필요. VPG는 조용히 필수 인프라가 되고 있다.',likes:'512',rts:'143',date:'2026.05.14'},
+  {user:'@RileyAnalyst_Josh',followers:'8.7K',role:'B. Riley 애널리스트',badge:'pos',body:'Raising $VPG PT to $109 from $63. New operating model targeting 8-10% organic CAGR + $20M cost reduction is credible with Q1 data.',trans:'VPG 목표주가 $63→$109 상향. 8~10% CAGR + $20M 비용 절감 모델, Q1 데이터로 신뢰도 확보.',likes:'445',rts:'198',date:'2026.05.13'},
+  {user:'@MomentumTrader99',followers:'67.3K',role:'모멘텀 트레이더',badge:'pos',body:'$VPG +21% on earnings day. RSI now 85 — I know it looks stretched but the breakout structure is clean. Riding to $131 resistance.',trans:'실적 발표일 +21%. RSI 85 과열 보이지만 브레이크아웃 구조 깔끔. $131 저항선까지 홀딩.',likes:'1024',rts:'312',date:'2026.05.13'},
+  {user:'@DefenseAeroWatch',followers:'22.0K',role:'방산 전문 분석가',badge:'pos',body:'$VPG exposure to avionics, military & space is underappreciated. These are high-margin, sticky programs. Multi-year tailwind.',trans:'VPG의 항공전자·군사·우주 노출은 저평가. 고마진 장기 프로그램. 다년간 순풍.',likes:'389',rts:'112',date:'2026.05.16'},
+  {user:'@SemiconductorEquipGuru',followers:'55.2K',role:'반도체 장비 전문',badge:'pos',body:'$VPG precision resistors and strain gauges are literally inside every major semiconductor fab equipment. ASML, AMAT, LRCX all depend on VPG components.',trans:'VPG 정밀 저항기·스트레인 게이지는 주요 반도체 장비 내부에 있다. ASML·AMAT·LRCX 모두 VPG 부품에 의존.',likes:'734',rts:'267',date:'2026.05.17'},
+  {user:'@ValueHunterPro',followers:'29.4K',role:'가치 투자자',badge:'neg',body:'$VPG at 192x P/E on 2026E earnings is pricing in perfection. GAAP operating margin is 0.4%. Even with the growth story, this valuation is rich.',trans:'$VPG PER 192x는 완벽을 가격에 반영. GAAP 영업이익률 0.4%. 성장 스토리에도 밸류에이션 부담.',likes:'567',rts:'198',date:'2026.05.15'},
+  {user:'@ChartPatternBot',followers:'88.1K',role:'기술적 분석 봇',badge:'neg',body:'$VPG RSI(14) hits 85.44. Historical mean reversion after RSI>85: avg -12% within 3 weeks. This is not a timing call, just the data.',trans:'RSI 85.44 도달. RSI>85 이후 평균 3주 내 -12% 평균 회귀. 타이밍 의견 아니고 그냥 데이터.',likes:'982',rts:'445',date:'2026.05.31'},
+  {user:'@FCFSkeptic',followers:'15.3K',role:'FCF 중심 투자자',badge:'neg',body:'$VPG FCF was -$3.7M in Q1 despite revenue beat. Until they demonstrate positive FCF at scale, the $1.67B market cap is speculation.',trans:'Q1 FCF -$3.7M. 규모 있는 양의 FCF 없으면 시총 $1.67B은 투기.',likes:'323',rts:'134',date:'2026.05.14'},
+  {user:'@IndustrialSectorPro',followers:'33.7K',role:'산업 섹터 분석',badge:'neu',body:'$VPG transformation story is real but the stock has already run 88% in 19 days. Solid company, but patience for a better entry is warranted.',trans:'VPG 변화 스토리는 실제이나 19일 +88% 급등. 좋은 회사지만 더 나은 진입 구간을 기다려야.',likes:'445',rts:'156',date:'2026.05.20'},
+  {user:'@WeighingTechInsider',followers:'11.2K',role:'산업 내부자',badge:'pos',body:'$VPG Weighing Solutions segment serving logistics automation — Amazon, DHL, FedEx all expanding automated warehousing. Underrated segment.',trans:'Weighing Solutions가 물류 자동화 서비스 — 아마존·DHL·FedEx 모두 자동 창고 확장. 저평가된 부문.',likes:'298',rts:'87',date:'2026.05.18'},
+  {user:'@AlphaSeeker2026',followers:'24.9K',role:'포트폴리오 매니저',badge:'pos',body:'Added $VPG on the Q1 print. The new operating model targeting 10%+ EBITDA margin from 7% current is a 3-year compounder thesis.',trans:'Q1 실적 후 VPG 추가 매수. 현재 7%→10%+ EBITDA 마진 목표 = 3년 복리 논리.',likes:'556',rts:'178',date:'2026.05.14'},
+  {user:'@RiskOffAlert',followers:'19.8K',role:'리스크 관리 트레이더',badge:'neg',body:'$VPG 30-day return +84%. That is not a stock move, that is a short squeeze or momentum pile-on. Watch for fast reversal.',trans:'VPG 30일 수익률 +84%. 이건 주가 움직임이 아니라 숏 스퀴즈나 모멘텀 쏠림. 빠른 반전 주의.',likes:'412',rts:'187',date:'2026.05.25'},
+  {user:'@IotSensorMacro',followers:'37.6K',role:'IoT 매크로 분석',badge:'pos',body:'$VPG plays across AI infra (sensors for GPU cooling), semiconductor fab, defense, and industrial automation. 4 secular tailwinds in one small-cap.',trans:'VPG는 AI 인프라·반도체 장비·방산·산업 자동화 4가지 구조적 순풍. 하나의 소형주에서.',likes:'678',rts:'245',date:'2026.05.19'},
+];
+
+function TabTwitter() {
+  var pos = xPosts.filter(function(p){return p.badge==='pos';}).length;
+  var neu = xPosts.filter(function(p){return p.badge==='neu';}).length;
+  var neg = xPosts.filter(function(p){return p.badge==='neg';}).length;
+
+  return (
+    <div className="content">
+      <div className="sentiment-stat">
+        <span className="s-pos">🟢 긍정 {pos}</span>
+        <span className="s-neu">🟡 중립 {neu}</span>
+        <span className="s-neg">🔴 부정 {neg}</span>
+      </div>
+      {xPosts.map(function(p, i) {
+        return (
+          <div key={i} className="tweet-card">
+            <div className="tweet-header">
+              <span className="tweet-user">{p.user}</span>
+              <span style={{fontSize:11,color:'#6b7280'}}>{p.followers} · {p.role}</span>
+              <span className={'badge ' + (p.badge==='pos'?'badge-green':p.badge==='neg'?'badge-red':'badge-yellow')}>
+                {p.badge==='pos'?'🟢 긍정':p.badge==='neg'?'🔴 부정':'🟡 중립'}
+              </span>
+              <span className="tweet-date">{p.date}</span>
+            </div>
+            <div className="tweet-body">{p.body}</div>
+            <div className="tweet-trans">🇰🇷 {p.trans}</div>
+            <div className="tweet-footer">❤️ {p.likes} · 🔁 {p.rts}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Reddit 탭 ── */
+var redditPosts = [
+  {user:'u/PrecisionSensorDD',sub:'r/investing',votes:'2.8K',badge:'pos',body:'Deep dive on $VPG: The sensors segment is the hidden gem here. Semiconductor fab equipment demand + AI datacenter power monitoring sensors. Book-to-bill 1.21 = locked revenue.',trans:'VPG 딥다이브: Sensors 부문이 숨겨진 보석. 반도체 장비 + AI 데이터센터 전력 모니터링. Book-to-bill 1.21 = 확정 매출.',date:'2026.05.13'},
+  {user:'u/SmallCapTenBagger',sub:'r/wallstreetbets',votes:'5.2K',badge:'pos',body:'VPG went from $25 to $125 in a year. Yes RSI is 85. Yes it\'s overbought. But the fundamental inflection is REAL. AI infrastructure needs precision sensors.',trans:'VPG 1년에 $25→$125. RSI 85 과매수 맞다. 하지만 펀더멘탈 변곡점은 진짜다. AI 인프라에 정밀 센서 필요.',date:'2026.05.28'},
+  {user:'u/EarningsNerd2026',sub:'r/stocks',votes:'1.9K',badge:'pos',body:'VPG Q1 2026: Revenue $84.4M vs $77M est (beat), EPS $0.07 vs $0.04 est (75% beat), Q2 guide $85-90M vs $79.2M est. Three beats in one report.',trans:'VPG Q1: 매출·EPS·가이던스 3개 모두 컨센서스 상회. 이 수준 트리플 비트는 드물다.',date:'2026.05.12'},
+  {user:'u/DefenseContractor_Anon',sub:'r/SecurityAnalysis',votes:'3.1K',badge:'pos',body:'VPG\'s Measurement Systems segment serves steel production quality testing and military safety testing. These are non-cyclical government contracts.',trans:'VPG Measurement Systems는 철강 품질 테스트·군 안전 테스트. 경기 비민감 정부 계약.',date:'2026.05.16'},
+  {user:'u/AlwaysOverbought',sub:'r/wallstreetbets',votes:'4.7K',badge:'neg',body:'RSI 85 on VPG. PER 192x. GAAP operating margin under 1%. Yeah the story sounds great but nobody ask how many years until earnings justify this price lmao',trans:'RSI 85, PER 192x, GAAP 영업이익률 1% 미만. 스토리야 좋지만 이 주가를 정당화하는 이익까지 몇 년이냐 ㅋㅋ',date:'2026.05.22'},
+  {user:'u/ValueOrGrowth',sub:'r/investing',votes:'1.3K',badge:'neg',body:'VPG free cash flow was negative $3.7M in Q1 while the market cap is $1.67B. I\'ll wait for positive FCF to confirm the thesis.',trans:'Q1 FCF -$3.7M, 시총 $1.67B. 양의 FCF 확인 후 진입할 것.',date:'2026.05.14'},
+  {user:'u/Logistics_DD',sub:'r/investing',votes:'987',badge:'pos',body:'VPG Weighing Solutions segment is direct play on logistics automation. Amazon, DHL, Coupang all expanding automated sorting. Not just an AI story.',trans:'VPG Weighing Solutions는 물류 자동화 직접 수혜. AI 스토리뿐 아니라 물류 자동화도.',date:'2026.05.18'},
+  {user:'u/MACDcrossing',sub:'r/stocks',votes:'756',badge:'neu',body:'VPG just crossed the 52-week high resistance zone. If it can hold above $120, next target is $140. But the RSI divergence makes me cautious short-term.',trans:'VPG 52주 고점 근처. $120 위 유지 시 다음 목표 $140. RSI 다이버전스로 단기 조심.',date:'2026.05.29'},
+  {user:'u/SemiFabWatcher',sub:'r/SecurityAnalysis',votes:'2.2K',badge:'pos',body:'VPG strain gauges are in ASML lithography machines, AMAT CVD chambers, and Lam Research etch systems. If semis capex recovers in 2026, VPG is a direct pick.',trans:'VPG 스트레인 게이지는 ASML·AMAT·LRCX 장비 내부에. 반도체 CAPEX 회복 시 VPG 직접 수혜.',date:'2026.05.20'},
+  {user:'u/RiskyBusiness_MC',sub:'r/wallstreetbets',votes:'8.3K',badge:'neg',body:'This stock went from $25 to $125 in a year LOL. If you\'re buying at these levels you deserve what comes next. Wait for the 30% pullback.',trans:'1년에 $25→$125 ㅋㅋ. 이 가격에 사는 사람은 다음에 올 것을 감수해야. 30% 조정 기다려라.',date:'2026.05.27'},
+  {user:'u/3YearHorizon',sub:'r/SecurityAnalysis',votes:'1.6K',badge:'pos',body:'Initiated VPG position after Q1. The $20M cost reduction program over 3 years + 8-10% CAGR goal means EBITDA could triple by 2028. Current price is pricing that in early.',trans:'Q1 후 VPG 포지션 개시. $20M 비용 절감 + CAGR 8~10% = 2028년 EBITDA 3배 가능. 현재가는 그것을 조기 반영.',date:'2026.05.15'},
+  {user:'u/IPO_Tracker2026',sub:'r/stocks',votes:'623',badge:'neu',body:'VPG spun off from Vishay Intertechnology in 2010. The parent still owns a chunk. Keep an eye on insider selling at these elevated prices.',trans:'VPG는 2010년 Vishay Intertechnology에서 분사. 모기업이 지분 보유. 고점에서 내부자 매도 주시.',date:'2026.05.23'},
+  {user:'u/IndustrialCompounder',sub:'r/investing',votes:'1.1K',badge:'pos',body:'VPG is one of those "boring" industrial companies getting re-rated as AI infrastructure enabler. Same thing happened to Amphenol, Moog. Different starting point though.',trans:'VPG는 "지루한" 산업 기업이 AI 인프라 지원자로 재평가받는 케이스. Amphenol·Moog와 비슷. 시작점은 다르지만.',date:'2026.05.21'},
+  {user:'u/BookToTheBill',sub:'r/SecurityAnalysis',votes:'2.9K',badge:'pos',body:'Book-to-bill of 1.21 with bookings at 3rd highest quarterly level ever. That\'s the number that matters. Revenue recognition just follows orders.',trans:'Book-to-bill 1.21에 수주 분기 역대 3위. 이게 핵심 수치다. 매출 인식은 수주를 따라간다.',date:'2026.05.13'},
+  {user:'u/PullbackWatcher',sub:'r/options',votes:'3.4K',badge:'neg',body:'Bought $VPG puts at the $120 level. RSI 85 + 84% 30-day gain is textbook overbought. Even great companies need to breathe.',trans:'$120에서 VPG 풋 매수. RSI 85 + 30일 +84% = 교과서적 과매수. 좋은 기업도 쉬어가야.',date:'2026.05.30'},
+];
+
+function TabReddit() {
+  var pos = redditPosts.filter(function(p){return p.badge==='pos';}).length;
+  var neu = redditPosts.filter(function(p){return p.badge==='neu';}).length;
+  var neg = redditPosts.filter(function(p){return p.badge==='neg';}).length;
+
+  return (
+    <div className="content">
+      <div className="sentiment-stat">
+        <span className="s-pos">🟢 긍정 {pos}</span>
+        <span className="s-neu">🟡 중립 {neu}</span>
+        <span className="s-neg">🔴 부정 {neg}</span>
+      </div>
+      {redditPosts.map(function(p, i) {
+        return (
+          <div key={i} className="tweet-card">
+            <div className="tweet-header">
+              <span className="tweet-user" style={{color:'#f97316'}}>{p.user}</span>
+              <span style={{fontSize:11,color:'#6b7280'}}>{p.sub}</span>
+              <span className={'badge ' + (p.badge==='pos'?'badge-green':p.badge==='neg'?'badge-red':'badge-yellow')}>
+                {p.badge==='pos'?'🟢 긍정':p.badge==='neg'?'🔴 부정':'🟡 중립'}
+              </span>
+              <span className="tweet-date">{p.date}</span>
+            </div>
+            <div className="tweet-body">{p.body}</div>
+            <div className="tweet-trans">🇰🇷 {p.trans}</div>
+            <div className="tweet-footer">▲ {p.votes}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── 용어 탭 ── */
+var GLOSSARY = [
+  {term:'RSI',eng:'Relative Strength Index',cat:'기술적',body:'주가가 얼마나 빠르게 오르고 내렸는지를 0~100 사이 숫자로 나타내는 지표입니다. 70 이상이면 과매수(너무 올랐다), 30 이하면 과매도(너무 내렸다)로 봅니다.',apply:'현재 VPG의 RSI 85.44는 강한 과매수 구간으로, 단기 조정 가능성이 높음을 의미합니다.'},
+  {term:'Book-to-Bill',eng:'B2B Ratio',cat:'실적',body:'들어온 주문(수주)을 처리한 매출로 나눈 비율입니다. 1.0 이상이면 수요가 공급보다 많다는 뜻으로 미래 매출 성장의 선행 신호입니다.',apply:'VPG의 Book-to-bill 1.21은 수주가 매출을 21% 초과해 향후 2~3분기 매출 가시성이 확보됩니다.'},
+  {term:'PER',eng:'Price-to-Earnings Ratio',cat:'재무',body:'주가를 주당 순이익(EPS)으로 나눈 값입니다. 낮을수록 이익 대비 저평가, 높을수록 고평가입니다. 같은 업종끼리 비교하는 것이 중요합니다.',apply:'VPG의 PER 192x는 업종 평균 25~30x 대비 극도로 고평가입니다. 미래 이익 성장 기대가 과도하게 반영된 수준입니다.'},
+  {term:'EBITDA',eng:'Earnings Before Interest, Tax, Depreciation, Amortization',cat:'재무',body:'이자·세금·감가상각비를 빼기 전 영업 이익입니다. 실제 현금 창출 능력을 가장 잘 보여주는 지표 중 하나로, 기업의 실질적인 수익성을 측정합니다.',apply:'VPG의 EBITDA 마진 7.0%는 낮은 편이며, 경영진은 3년 내 10%+ 달성을 목표로 합니다.'},
+  {term:'FCF',eng:'Free Cash Flow',cat:'재무',body:'영업활동으로 벌어들인 현금에서 설비 투자비용을 뺀 금액입니다. 기업이 실제로 쓸 수 있는 현금을 의미합니다.',apply:'VPG Q1 2026 FCF는 -$3.7M으로 현재 투자 단계입니다. CapEx 집중 분기로 흑자 전환 시점 모니터링이 필요합니다.'},
+  {term:'P/S',eng:'Price-to-Sales Ratio',cat:'재무',body:'시가총액을 매출로 나눈 값입니다. 이익이 없는 성장 기업 평가에 자주 쓰입니다. 낮을수록 매출 대비 저평가입니다.',apply:'VPG의 P/S 5.1x는 업종 평균 2~3x 대비 고평가 구간입니다.'},
+  {term:'EPS',eng:'Earnings Per Share',cat:'실적',body:'기업의 순이익을 발행 주식 수로 나눈 값입니다. 주당 얼마나 이익을 냈는지를 나타내며, 실적 발표의 핵심 지표입니다.',apply:'VPG Q1 2026 조정 EPS $0.07은 컨센서스 $0.04 대비 75% 서프라이즈를 기록했습니다.'},
+  {term:'하이킨아시',eng:'Heikin-Ashi',cat:'기술적',body:'일반 캔들 대신 전일·당일 평균값으로 계산한 차트입니다. 노이즈를 줄여 추세를 더 명확하게 보여줍니다. 연속 양봉이면 강한 상승 추세입니다.',apply:'VPG는 현재 하이킨아시 연속 양봉 상태로 강한 상승 추세이나, RSI 과열로 조정 리스크 존재합니다.'},
+  {term:'컨센서스',eng:'Consensus',cat:'실적',body:'월가 애널리스트들의 평균 예상치입니다. 실제 실적이 컨센서스를 초과하면 "비트(Beat)", 못 미치면 "미스(Miss)"라고 합니다.',apply:'VPG Q2 가이던스 $85~90M은 컨센서스 $79.2M을 10.5% 상회하여 강한 가이던스 비트입니다.'},
+  {term:'순현금',eng:'Net Cash',cat:'재무',body:'보유 현금에서 부채를 뺀 순수 현금 포지션입니다. 양수이면 부채보다 현금이 많아 재정적으로 안전함을 의미합니다.',apply:'VPG 순현금 $62M은 금리 상승 환경에서도 안정적 운영과 M&A 실탄을 의미합니다.'},
+  {term:'CAGR',eng:'Compound Annual Growth Rate',cat:'실적',body:'여러 해에 걸친 평균 연간 성장률입니다. 단순 평균과 달리 복리 효과를 반영합니다.',apply:'VPG 경영진은 3년 내 매출 CAGR 8~10% 목표를 제시했습니다.'},
+  {term:'스트레인 게이지',eng:'Strain Gauge',cat:'기술적',body:'물체에 가해지는 변형(스트레인)을 전기 저항 변화로 측정하는 센서입니다. 반도체 장비의 정밀한 힘 측정, 항공기 날개 응력 감지 등에 쓰입니다.',apply:'VPG의 핵심 제품 중 하나로, 반도체 장비·방산·항공 분야에 공급하는 핵심 부품입니다.'},
+];
+
+var GLOSS_CATS = ['전체','기술적','재무','실적'];
+
+function TabGlossary() {
+  var state = useState('전체');
+  var sel = state[0];
+  var setSel = state[1];
+  var filtered = sel === '전체' ? GLOSSARY : GLOSSARY.filter(function(g){return g.cat===sel;});
+  var catColor = {'기술적':'#3b82f6','재무':'#22c55e','실적':'#f97316','기타':'#a855f7'};
+
+  return (
+    <div className="content">
+      <div className="glossary-filter">
+        {GLOSS_CATS.map(function(c) {
+          return (
+            <button key={c} className={'filter-btn'+(sel===c?' active':'')} onClick={function(){setSel(c);}}>
+              {c}
+            </button>
+          );
+        })}
+      </div>
+      {filtered.map(function(g) {
+        return (
+          <div key={g.term} className="gloss-card">
+            <div className="gloss-head">
+              <span className="gloss-term">{g.term}</span>
+              <span style={{fontSize:11,color:'#6b7280'}}>{g.eng}</span>
+              <span className="badge" style={{background:'rgba(59,130,246,0.15)',color:catColor[g.cat]||'#a855f7',fontSize:10}}>{g.cat}</span>
+            </div>
+            <div className="gloss-body">{g.body}</div>
+            <div className="gloss-apply">📌 VPG 분석 적용: {g.apply}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── 멀티배거 탭 ── */
+var MB_ITEMS = [
+  {icon:'📏',title:'① 충분히 작은 기업인가?',data:'시가총액 $1.67B',verdict:'pass',note:'$5B 이하 ✅ 멀티배거 조건 충족'},
+  {icon:'💲',title:'② 미래가 과대반영되지 않았나?',data:'PER 192x, P/S 5.1x, FCF 음수',verdict:'fail',note:'RSI 85 + 19일 +88% — 이미 강한 기대 선반영'},
+  {icon:'📈',title:'③ 매출보다 EBITDA/FCF 개선이 따라오나?',data:'EBITDA 마진 7.0%, FCF -$3.7M',verdict:'partial',note:'마진 개선 추세 초기, FCF 전환 아직 미확인'},
+  {icon:'⚙️',title:'④ 자산 증가율보다 EBITDA 증가율이 앞서나?',data:'설비 투자 확대 중, CapEx $14~16M',verdict:'partial',note:'성장 투자 단계 — 향후 레버리지 기대'},
+  {icon:'💰',title:'⑤ FCF yield가 합리적인가?',data:'FCF -$3.7M / 시총 $1.67B = 음수',verdict:'fail',note:'현재 FCF 수율 음수 — 성장 선행 투자 단계'},
+  {icon:'📦',title:'⑥ 투자가 실제 수요·주문과 연결되나?',data:'수주 $102.1M, Book-to-bill 1.21 (역대 3위)',verdict:'pass',note:'Q1 수주 역대 3위, 수요 가시성 명확'},
+  {icon:'🛡️',title:'⑦ 고금리 환경에서도 버틸 수 있나?',data:'순현금 $62M, 장기부채 $20.6M',verdict:'pass',note:'부채 최소화 + 순현금 $62M — 금리 리스크 낮음'},
+  {icon:'🎯',title:'⑧ 단기 급등 후 추격매수 구간이 아닌가?',data:'RSI 85.44, 30일 +84%, 52주 저점 대비 +403%',verdict:'fail',note:'극단적 과매수 — 추격 매수는 위험 구간'},
+];
+
+function TabMulti() {
+  var radarRef = useRef(null);
+  var radarChart = useRef(null);
+  var scores = MB_ITEMS.map(function(m){
+    return m.verdict==='pass' ? 1 : m.verdict==='partial' ? 0.5 : 0;
+  });
+  var total = scores.reduce(function(a,b){return a+b;},0);
+
+  makeChart(radarRef, radarChart, {
+    type:'radar',
+    data:{
+      labels:['작은 기업','밸류에이션','이익 개선','투자 효율','FCF yield','수주 연계','부채 안정','급등 아님'],
+      datasets:[{
+        label:'VPG 멀티배거 점수',
+        data: scores,
+        backgroundColor:'rgba(59,130,246,0.25)',
+        borderColor:'#3b82f6',
+        pointBackgroundColor:'#3b82f6'
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{r:{min:0,max:1,ticks:{color:'#9ca3af',stepSize:0.5},grid:{color:'#1f2937'},angleLines:{color:'#1f2937'},pointLabels:{color:'#9ca3af'}}}
+    }
+  });
+
+  var grade = total >= 6.5 ? '🏆 유망' : total >= 4 ? '⚡ 보통' : '⚠️ 낮음';
+  var gradeColor = total >= 6.5 ? '#22c55e' : total >= 4 ? '#f59e0b' : '#ef4444';
+
+  return (
+    <div className="content">
+      <div className="card" style={{textAlign:'center',marginBottom:16}}>
+        <div style={{fontSize:36,fontWeight:800,color:gradeColor}}>{total}/8</div>
+        <div style={{fontSize:18,fontWeight:700,color:gradeColor,marginTop:4}}>{grade}</div>
+        <div style={{fontSize:12,color:'#94a3b8',marginTop:4}}>Anna Yartseva 멀티배거 점수</div>
+      </div>
+
+      <div className="section-title">🕸️ 레이더 차트</div>
+      <div className="card"><div className="radar-wrap"><canvas ref={radarRef}></canvas></div></div>
+
+      <div className="section-title">📋 8개 항목 상세</div>
+      {MB_ITEMS.map(function(m, i) {
+        return (
+          <div key={i} className="multi-item">
+            <div className="multi-head">
+              <span className="multi-icon">{m.icon}</span>
+              <span className="multi-title">{m.title}</span>
+            </div>
+            <div className="multi-data">데이터: {m.data}</div>
+            <div>
+              <span className={'multi-verdict ' + (m.verdict==='pass'?'v-pass':m.verdict==='partial'?'v-partial':'v-fail')}>
+                {m.verdict==='pass'?'✅ 충족':m.verdict==='partial'?'⚠️ 부분충족':'❌ 미충족'}
+              </span>
+              <span style={{fontSize:12,color:'#94a3b8',marginLeft:8}}>{m.note}</span>
+            </div>
+          </div>
+        );
+      })}
+
+      <div className="card card-yellow" style={{marginTop:16}}>
+        <div style={{fontSize:13,fontWeight:700,color:'#fcd34d',marginBottom:6}}>⚠️ 핵심 한계 주의사항</div>
+        <div className="text-sm">워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용. VPG는 현재 3.5/8점으로 밸류에이션·FCF 리스크 항목에서 미충족.</div>
+      </div>
+    </div>
+  );
+}
+
+/* ── 앱 ── */
+function App() {
+  var tabState = useState('overview');
+  var tab = tabState[0];
+  var setTab = tabState[1];
+
+  return (
+    <div>
+      <div className="header">
+        <a className="header-back" href="https://disntm90.github.io/disntm90/">← 목록으로</a>
+        <div className="header-top">
+          <div>
+            <div className="header-title">VPG — Vishay Precision Group</div>
+            <div className="header-sub">NYSE · Electronic Components · 분석일: 2026.05.31</div>
+          </div>
+          <div className="price-badge">
+            <div className="price-now">$125.20</div>
+            <div className="price-change">+84.05% (30일) · RSI 85</div>
+          </div>
+        </div>
+        <div className="warn-box" style={{marginTop:10}}>
+          🔴 RSI 85.44 과매수 경고 — 19일간 +87.9% 급등. 단기 조정 리스크 높음. $108~$115 조정 후 진입 권고.
+        </div>
+      </div>
+      <div className="tabs">
+        {TABS.map(function(t) {
+          return (
+            <div key={t.id} className={'tab'+(tab===t.id?' active':'')} onClick={function(){setTab(t.id);}}>
+              {t.label}
+            </div>
+          );
+        })}
+      </div>
+      {tab==='overview' && <TabOverview/>}
+      {tab==='tech' && <TabTech/>}
+      {tab==='earnings' && <TabEarnings/>}
+      {tab==='fundamental' && <TabFundamental/>}
+      {tab==='compare' && <TabCompare/>}
+      {tab==='twitter' && <TabTwitter/>}
+      {tab==='reddit' && <TabReddit/>}
+      {tab==='glossary' && <TabGlossary/>}
+      {tab==='multi' && <TabMulti/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
