@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>NOVT — Novanta Inc. 종목 분석 | 2026.06.03</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0a0f;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+    .header{background:linear-gradient(135deg,#052e16 0%,#0a0a0f 100%);padding:24px 20px 20px;border-bottom:2px solid #10b981}
+    .header-back{color:#10b981;text-decoration:none;font-size:13px;display:inline-block;margin-bottom:12px}
+    .header-back:hover{color:#34d399}
+    .header-title{font-size:26px;font-weight:800;color:#10b981;margin-bottom:4px}
+    .header-sub{font-size:13px;color:#6b7280}
+    .header-price{font-size:32px;font-weight:900;color:#e2e8f0;margin-top:8px}
+    .header-change{font-size:14px;margin-left:10px}
+    .tabs{display:flex;overflow-x:auto;background:#111827;border-bottom:1px solid #1f2937;padding:0 16px}
+    .tabs::-webkit-scrollbar{height:3px}
+    .tabs::-webkit-scrollbar-thumb{background:#10b981}
+    .tab{padding:14px 16px;cursor:pointer;font-size:12px;white-space:nowrap;color:#6b7280;border-bottom:3px solid transparent;transition:.2s}
+    .tab.active{color:#10b981;border-bottom-color:#10b981;font-weight:700}
+    .tab:hover{color:#34d399}
+    .content{padding:20px;max-width:900px;margin:0 auto}
+    .section-title{font-size:15px;font-weight:700;color:#10b981;margin:20px 0 10px;display:flex;align-items:center;gap:6px}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:16px;margin-bottom:14px}
+    .card-green{border-left:4px solid #10b981}
+    .card-blue{border-left:4px solid #3b82f6}
+    .card-yellow{border-left:4px solid #f59e0b}
+    .card-red{border-left:4px solid #ef4444}
+    .verdict-box{background:linear-gradient(135deg,#052e16,#111827);border:2px solid #10b981;border-radius:12px;padding:20px;text-align:center;margin:16px 0}
+    .verdict-label{font-size:12px;color:#6b7280;margin-bottom:6px}
+    .verdict-main{font-size:28px;font-weight:900;color:#10b981}
+    .verdict-sub{font-size:13px;color:#9ca3af;margin-top:6px}
+    .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+    .kpi{background:#0a0a0f;border-radius:8px;padding:12px;text-align:center}
+    .kpi-val{font-size:18px;font-weight:800;color:#10b981}
+    .kpi-label{font-size:10px;color:#6b7280;margin-top:3px;text-transform:uppercase}
+    .kpi-note{font-size:10px;color:#9ca3af;margin-top:2px}
+    .badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700;margin:2px}
+    .badge-buy{background:#14532d;color:#86efac}
+    .badge-hold{background:#1c1f2e;color:#93c5fd}
+    .badge-warn{background:#451a03;color:#fcd34d}
+    .badge-danger{background:#450a0a;color:#fca5a5}
+    .rsi-chip{display:inline-block;font-size:11px;padding:3px 10px;border-radius:12px;font-weight:700}
+    .rsi-low{background:#7f1d1d;color:#fca5a5}
+    .rsi-mid{background:#14532d;color:#86efac}
+    .rsi-high{background:#78350f;color:#fcd34d}
+    .rsi-neutral{background:#1c2d42;color:#93c5fd}
+    .table-wrap{overflow-x:auto;margin:10px 0}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{background:#065f46;color:#6ee7b7;padding:8px 10px;text-align:left;font-weight:700}
+    td{padding:8px 10px;border-bottom:1px solid #1f2937;color:#d1d5db}
+    tr:hover td{background:#111827}
+    .beat{color:#86efac;font-weight:700}
+    .miss{color:#fca5a5;font-weight:700}
+    .up{color:#86efac}
+    .down{color:#fca5a5}
+    .neutral{color:#93c5fd}
+    .chart-wrap{position:relative;height:260px;margin:12px 0}
+    .text-sm{font-size:12px;color:#9ca3af;line-height:1.6}
+    .highlight{color:#10b981;font-weight:700}
+    .highlight-g{color:#22c55e;font-weight:700}
+    .highlight-y{color:#f59e0b;font-weight:700}
+    .highlight-r{color:#ef4444;font-weight:700}
+    .highlight-b{color:#60a5fa;font-weight:700}
+    .support-box{background:#0a1a0a;border:1px solid #22c55e;border-radius:8px;padding:12px;margin:6px 0}
+    .resist-box{background:#1a0a0a;border:1px solid #ef4444;border-radius:8px;padding:12px;margin:6px 0}
+    .sl{font-size:13px;font-weight:700}
+    .bull-bear{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+    .bull-box{background:#0f2a1a;border:1px solid #22c55e;border-radius:8px;padding:12px}
+    .bear-box{background:#2a0f0f;border:1px solid #ef4444;border-radius:8px;padding:12px}
+    .bb-title{font-size:12px;font-weight:700;margin-bottom:8px}
+    .bb-item{font-size:11px;color:#d1d5db;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);line-height:1.5}
+    .social-card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:14px;margin-bottom:10px}
+    .social-handle{font-size:12px;color:#10b981;font-weight:700;margin-bottom:4px}
+    .social-text{font-size:12px;color:#d1d5db;line-height:1.6}
+    .social-meta{font-size:10px;color:#6b7280;margin-top:6px}
+    .social-like{color:#f87171}
+    .gloss-card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:14px;margin-bottom:10px}
+    .gloss-term{font-size:13px;font-weight:800;color:#e2e8f0}
+    .gloss-tag{font-size:10px;background:#065f46;color:#6ee7b7;padding:1px 6px;border-radius:8px;margin-left:6px}
+    .gloss-body{font-size:12px;color:#94a3b8;line-height:1.6;margin-top:6px}
+    .gloss-apply{font-size:11px;color:#34d399;font-style:italic;margin-top:4px}
+    .multi-item{margin:12px 0;padding:12px;background:#0a0a0f;border-radius:8px}
+    .multi-title{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:6px}
+    .multi-check{display:flex;align-items:flex-start;gap:8px;margin:4px 0;font-size:12px;color:#9ca3af}
+    .multi-check.pass{color:#86efac}
+    .multi-check.fail{color:#f87171}
+    .multi-bar{height:8px;background:#1f2937;border-radius:4px;overflow:hidden;margin-top:8px}
+    .multi-fill{height:100%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:4px}
+    .segment-bar{height:24px;border-radius:4px;margin-bottom:6px;display:flex;align-items:center;padding:0 10px;font-size:11px;font-weight:700;color:#fff}
+    .alert-box{background:#1c1208;border:2px solid #f59e0b;border-radius:10px;padding:16px;margin:12px 0}
+    .alert-title{font-size:14px;font-weight:800;color:#f59e0b;margin-bottom:6px}
+    .scenario-row{display:flex;align-items:flex-start;gap:10px;padding:10px;border-bottom:1px solid #1f2937;font-size:12px}
+    .scenario-icon{font-size:16px;flex-shrink:0;width:24px}
+    .booking-box{background:linear-gradient(135deg,#052e16,#0a1a0a);border:2px solid #10b981;border-radius:10px;padding:16px;margin:12px 0}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) chartRef.current.destroy(); };
+  }, []);
+}
+
+var TABS = [
+  {label:'📋 개요'},
+  {label:'📈 기술적'},
+  {label:'💰 실적'},
+  {label:'📊 재무'},
+  {label:'🔀 비교'},
+  {label:'🐦 X'},
+  {label:'💬 Reddit'},
+  {label:'📖 용어'},
+  {label:'🔟 멀티배거'},
+];
+
+/* ── 탭1: 개요 ── */
+function TabOverview() {
+  var revRef = useRef(null); var revChart = useRef(null);
+  makeChart(revRef, revChart, {
+    type:'bar',
+    data:{
+      labels:['Q1 25','Q2 25','Q3 25','Q4 25','Q1 26'],
+      datasets:[{
+        label:'분기 매출 ($M)',
+        data:[233.5, 243.8, 248.1, 255.2, 257.7],
+        backgroundColor:['rgba(16,185,129,0.6)','rgba(16,185,129,0.6)','rgba(16,185,129,0.6)','rgba(16,185,129,0.6)','rgba(16,185,129,0.9)'],
+        borderColor:'#10b981',borderWidth:1,borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:11}},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af',font:{size:11}},grid:{color:'#1f2937'},min:200}
+      }
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'verdict-box'},
+      e('div', {className:'verdict-label'}, '종합 투자 의견 (2026.06.03 기준)'),
+      e('div', {className:'verdict-main'}, '🟢 중기 매수 — 조정 구간 분할 진입'),
+      e('div', {className:'verdict-sub'}, '$113~$125 분할 매수 권고 | 목표 $150~$173 | 수주 +37% 강력 펀더멘털'),
+      e('div', {style:{marginTop:'10px'}},
+        e('span', {className:'badge badge-buy'}, 'ATI F/T센서 독점'),
+        e('span', {className:'badge badge-buy'}, '수주 +37%'),
+        e('span', {className:'badge badge-buy'}, '순현금 $138M'),
+        e('span', {className:'badge badge-warn'}, '52주고점 조정 -32%')
+      )
+    ),
+    e('div', {className:'kpi-grid'},
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val'}, '$117.04'), e('div', {className:'kpi-label'}, '현재가 (6/3)'), e('div', {className:'kpi-note'}, '52W: $98.35~$171.71')),
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val'}, '$4.04B'), e('div', {className:'kpi-label'}, '시가총액'), e('div', {className:'kpi-note'}, 'NASDAQ:NOVT')),
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val', style:{color:'#86efac'}}, '+37%'), e('div', {className:'kpi-label'}, 'Q1 2026 수주 YoY'), e('div', {className:'kpi-note'}, 'Book-to-bill 1.10')),
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val', style:{color:'#86efac'}}, '+10.4%'), e('div', {className:'kpi-label'}, 'Q1 매출 YoY'), e('div', {className:'kpi-note'}, '$257.7M'))
+    ),
+    e('div', {className:'section-title'}, '🏢 기업 개요'),
+    e('div', {className:'card card-green'},
+      e('div', {className:'text-sm', style:{lineHeight:'2'}},
+        e('b', null, '설립:'), ' 1988년 | 본사: 매사추세츠 베드포드 | CEO: Matthijs Glastra',
+        e('br', null),
+        e('b', null, '사업:'), ' 정밀 광학·모션·센싱 기술 기반 산업·의료용 정밀 부품 제조사.',
+        e('br', null),
+        e('b', null, '섹터:'), ' 산업 자동화·의료기기 | NASDAQ:NOVT | 직원 약 3,300명',
+        e('br', null),
+        e('b', null, 'FY2025 매출:'), ' $980.6M (+3.3% YoY) | FY2026 가이던스: $1,040M~$1,055M',
+        e('br', null),
+        e('b', null, '핵심 경쟁우위:'), ' ATI 힘/토크 센서 세계 1위, 의료·로봇 인증 장벽, 수직 통합(서보→센서→모션 풀스택)'
+      )
+    ),
+    e('div', {className:'booking-box'},
+      e('div', {style:{fontSize:'14px',fontWeight:800,color:'#34d399',marginBottom:'8px'}}, '📦 Q1 2026 수주 +37% YoY — 미래 매출 가시성 확보'),
+      e('div', {className:'text-sm', style:{lineHeight:'1.8'}},
+        'Book-to-bill 1.10 달성. 물리 AI·로봇·의료 시장 전반에서 ',
+        e('b', null, '다년 계약'),
+        ' 및 신규 설계 채택(Design Win) 급증. $50M 규모 창고 로봇 계약 포함. 수주잔고 증가는 향후 4~6분기 매출로 전환 → 성장 가시성 최고 수준.'
+      )
+    ),
+    e('div', {className:'section-title'}, '📊 분기 매출 추이'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:revRef})),
+    e('div', {className:'section-title'}, '🏭 사업 세그먼트'),
+    e('div', {className:'card'},
+      e('div', {className:'text-sm', style:{marginBottom:'12px'}}, '2개 핵심 세그먼트 각 ~50% 비중'),
+      e('div', null,
+        e('div', {style:{display:'flex',justifyContent:'space-between',marginBottom:'4px',fontSize:'12px'}},
+          e('span', {className:'highlight'}, '🤖 Automation Enabling Technologies'),
+          e('span', null, '~51%')
+        ),
+        e('div', {className:'segment-bar', style:{width:'51%',background:'linear-gradient(90deg,#10b981,#34d399)'}}, 'ATI F/T 센서 · 레이저 · 정밀 모션')
+      ),
+      e('div', {style:{marginTop:'10px'}},
+        e('div', {style:{display:'flex',justifyContent:'space-between',marginBottom:'4px',fontSize:'12px'}},
+          e('span', {className:'highlight-b'}, '🏥 Medical Solutions'),
+          e('span', null, '~49%')
+        ),
+        e('div', {className:'segment-bar', style:{width:'49%',background:'linear-gradient(90deg,#3b82f6,#60a5fa)'}}, '수술 로봇 · 의료 영상 · 내시경')
+      ),
+      e('div', {className:'text-sm', style:{marginTop:'12px'}},
+        '• ', e('b', {className:'highlight'}, 'ATI F/T 센서:'), ' 수술 로봇·산업 로봇 관절 필수 부착. 경쟁사 없는 사실상 독점.',
+        e('br', null),
+        '• ', e('b', {className:'highlight-b'}, '의료 영상:'), ' 내시경·복강경용 카메라 모듈. Intuitive Surgical(다빈치) 공급사.',
+        e('br', null),
+        '• ', e('b', {className:'highlight'}, '레이저 기술:'), ' 반도체·의료용 초정밀 레이저 시스템. IPG Photonics와 틈새 경쟁.'
+      )
+    ),
+    e('div', {className:'section-title'}, '🔮 미래 인사이트'),
+    e('div', {className:'bull-bear'},
+      e('div', {className:'bull-box'},
+        e('div', {className:'bb-title', style:{color:'#22c55e'}}, '🐂 핵심 성장 동력'),
+        e('div', {className:'bb-item'}, '• 수술 로봇 시장 CAGR 20%+ 구조적 성장'),
+        e('div', {className:'bb-item'}, '• 휴머노이드 로봇 관절당 ATI F/T 센서 필수'),
+        e('div', {className:'bb-item'}, '• 수주 +37% → 미래 4~6분기 매출 가시성'),
+        e('div', {className:'bb-item'}, '• 의료+자동화 이중 수혜 구조'),
+        e('div', {className:'bb-item'}, '• Baird 목표가 $173 Outperform')
+      ),
+      e('div', {className:'bear-box'},
+        e('div', {className:'bb-title', style:{color:'#ef4444'}}, '🐻 주요 리스크'),
+        e('div', {className:'bb-item'}, '• 52주 고점 $171 대비 -32% 조정 중'),
+        e('div', {className:'bb-item'}, '• GAAP P/E ~80x — 고평가 논란'),
+        e('div', {className:'bb-item'}, '• 관세·비용 헤드윈드 EBITDA 압박'),
+        e('div', {className:'bb-item'}, '• 의료기기 예산 삭감 리스크'),
+        e('div', {className:'bb-item'}, '• 유기적 성장 3.1% — 인수 의존 성장')
+      )
+    )
+  );
+}
+
+/* ── 탭2: 기술적 분석 ── */
+function TabTech() {
+  var priceRef = useRef(null); var priceChart = useRef(null);
+  makeChart(priceRef, priceChart, {
+    type:'line',
+    data:{
+      labels:['1월','2월','3월','4월','5/12 실적','5/말','6/3'],
+      datasets:[
+        {label:'주가 ($)',data:[125,115,108,120,159,145,117],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true,tension:0.4,pointRadius:4},
+        {label:'50일 MA',data:[120,118,115,115,120,130,132],borderColor:'#f59e0b',borderDash:[5,5],pointRadius:0,tension:0.4},
+        {label:'200일 MA',data:[110,112,113,114,115,117,118],borderColor:'#ef4444',borderDash:[3,3],pointRadius:0,tension:0.4}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}}
+      }
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'alert-box'},
+      e('div', {className:'alert-title'}, '⚡ 실적 후 급등-조정 패턴'),
+      e('div', {className:'text-sm', style:{lineHeight:'1.8'}},
+        '5/12 Q1 실적 발표 후 ',
+        e('b', {style:{color:'#10b981'}}, '+32% 갭 업'),
+        ' ($159까지). 이후 차익실현 매물로 6/3 $117로 조정 (-26%). ',
+        e('b', {style:{color:'#f59e0b'}}, '펀더멘털은 여전히 강력'),
+        ' — 수주 +37%, 가이던스 상향. 200일 MA 근접한 지지선 테스트 중.'
+      )
+    ),
+    e('div', {className:'section-title'}, '📈 주가 & 이동평균선'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:priceRef})),
+    e('div', {className:'section-title'}, '🎯 핵심 기술 지표'),
+    e('div', {className:'table-wrap'},
+      e('table', null,
+        e('thead', null,
+          e('tr', null, e('th', null, '지표'), e('th', null, '현재값'), e('th', null, '신호'), e('th', null, '의미'))
+        ),
+        e('tbody', null,
+          e('tr', null,
+            e('td', null, 'RSI (14)'),
+            e('td', null, e('span', {className:'rsi-chip rsi-low'}, '~38')),
+            e('td', {className:'down'}, '과매도 접근'),
+            e('td', null, '실적 후 급락으로 과매도 근접 — 반등 가능성')
+          ),
+          e('tr', null,
+            e('td', null, 'MACD'),
+            e('td', null, '음전환'),
+            e('td', {className:'down'}, '데드크로스'),
+            e('td', null, '단기 모멘텀 약화, 그러나 지지선 도달')
+          ),
+          e('tr', null,
+            e('td', null, '200일 MA'),
+            e('td', null, '~$118'),
+            e('td', {className:'neutral'}, '주가 근접'),
+            e('td', null, '200일 MA 지지 테스트 — 핵심 방어선')
+          ),
+          e('tr', null,
+            e('td', null, '52주 범위'),
+            e('td', null, '$98.35~$171.71'),
+            e('td', {className:'neutral'}, '하단 1/3'),
+            e('td', null, '52주 고점 대비 -32%, 저점 대비 +19%')
+          ),
+          e('tr', null,
+            e('td', null, 'Legal&General 포지션 증가'),
+            e('td', null, '6/1 공시'),
+            e('td', {className:'up'}, '기관 매집'),
+            e('td', null, '대형 기관 조정 구간 매수 신호')
+          )
+        )
+      )
+    ),
+    e('div', {className:'section-title'}, '🟢 지지선 & 🔴 저항선'),
+    e('div', {className:'support-box'},
+      e('div', {className:'sl', style:{color:'#22c55e'}}, '1차 지지선: $113~$115'),
+      e('div', {className:'text-sm', style:{marginTop:'4px'}}, '• 200일 MA 인근 강한 지지 밀집 / 기관 매집 구간')
+    ),
+    e('div', {className:'support-box'},
+      e('div', {className:'sl', style:{color:'#22c55e'}}, '2차 지지선: $98~$100'),
+      e('div', {className:'text-sm', style:{marginTop:'4px'}}, '• 52주 저점 구간 — 극단적 조정 시 최종 지지')
+    ),
+    e('div', {className:'resist-box'},
+      e('div', {className:'sl', style:{color:'#ef4444'}}, '1차 저항선: $130~$132'),
+      e('div', {className:'text-sm', style:{marginTop:'4px'}}, '• 50일 MA 근접, 돌파 시 상승 모멘텀 재개')
+    ),
+    e('div', {className:'resist-box'},
+      e('div', {className:'sl', style:{color:'#ef4444'}}, '2차 저항선: $150~$155'),
+      e('div', {className:'text-sm', style:{marginTop:'4px'}}, '• 실적 발표 전 밀집 구간, 주요 저항 — 돌파 시 $171 재도전')
+    ),
+    e('div', {className:'section-title'}, '📍 진입 & 청산 전략'),
+    e('div', {className:'card card-green'},
+      e('div', {className:'text-sm', style:{lineHeight:'2'}},
+        e('span', {className:'highlight-g'}, '매수 진입: '), '$113~$125 분할 매수 (RSI 과매도 구간 매집)',
+        e('br', null),
+        e('span', {className:'highlight-r'}, '손절선: '), '$105 (200일 MA 명확 이탈 시)',
+        e('br', null),
+        e('span', {className:'highlight-g'}, '1차 목표가: '), '$150 (5월 실적 전 주가)',
+        e('br', null),
+        e('span', {className:'highlight-g'}, '2차 목표가: '), '$173 (Baird 12M 목표가)',
+        e('br', null),
+        e('span', {className:'highlight-y'}, '차트 패턴: '), '실적 후 풀백(Pullback) — 강세 추세 내 건강한 조정, 재진입 기회'
+      )
+    )
+  );
+}
+
+/* ── 탭3: 실적 분석 ── */
+function TabEarnings() {
+  var epsRef = useRef(null); var epsChart = useRef(null);
+  makeChart(epsRef, epsChart, {
+    type:'bar',
+    data:{
+      labels:['Q2 25','Q3 25','Q4 25','Q1 26'],
+      datasets:[
+        {label:'컨센서스 EPS',data:[0.70, 0.72, 0.74, 0.76],backgroundColor:'rgba(107,114,128,0.5)',borderRadius:3},
+        {label:'실제 Adj EPS',data:[0.74, 0.77, 0.79, 0.81],backgroundColor:'rgba(16,185,129,0.75)',borderRadius:3}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'},min:0.5}
+      }
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📋 Q1 2026 실적 (2026.05.12 발표)'),
+    e('div', {className:'kpi-grid'},
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val', style:{color:'#86efac'}}, '$257.7M'),
+        e('div', {className:'kpi-label'}, 'Q1 GAAP 매출'),
+        e('div', {className:'kpi-note'}, '+10.4% YoY ✅ Beat')
+      ),
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val', style:{color:'#86efac'}}, '$0.81'),
+        e('div', {className:'kpi-label'}, 'Adj Diluted EPS'),
+        e('div', {className:'kpi-note'}, '+9.5% YoY ✅ Beat')
+      ),
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val', style:{color:'#86efac'}}, '$57.1M'),
+        e('div', {className:'kpi-label'}, 'Adj EBITDA'),
+        e('div', {className:'kpi-note'}, '+14.2% YoY ✅')
+      ),
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val', style:{color:'#86efac'}}, '+37%'),
+        e('div', {className:'kpi-label'}, 'Q1 수주 YoY'),
+        e('div', {className:'kpi-note'}, 'B2B 1.10 ✅')
+      )
+    ),
+    e('div', {className:'section-title'}, '📊 EPS 서프라이즈 히스토리'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:epsRef})),
+    e('div', {className:'table-wrap'},
+      e('table', null,
+        e('thead', null,
+          e('tr', null, e('th', null, '분기'), e('th', null, '매출'), e('th', null, 'YoY'), e('th', null, 'Adj EPS'), e('th', null, 'EBITDA'), e('th', null, '결과'))
+        ),
+        e('tbody', null,
+          e('tr', null, e('td', null, 'Q2 2025'), e('td', null, '$243.8M'), e('td', {className:'up'}, '+3.1%'), e('td', null, '$0.74'), e('td', null, '$52.1M'), e('td', {className:'beat'}, '✅ Beat')),
+          e('tr', null, e('td', null, 'Q3 2025'), e('td', null, '$248.1M'), e('td', {className:'up'}, '+4.2%'), e('td', null, '$0.77'), e('td', null, '$54.3M'), e('td', {className:'beat'}, '✅ Beat')),
+          e('tr', null, e('td', null, 'Q4 2025'), e('td', null, '$255.2M'), e('td', {className:'up'}, '+5.8%'), e('td', null, '$0.79'), e('td', null, '$55.4M'), e('td', {className:'beat'}, '✅ Beat')),
+          e('tr', null, e('td', null, e('b', {style:{color:'#34d399'}}, 'Q1 2026 ★')), e('td', null, e('b', {style:{color:'#34d399'}}, '$257.7M')), e('td', {className:'up'}, '+10.4%'), e('td', null, e('b', {style:{color:'#34d399'}}, '$0.81')), e('td', null, e('b', {style:{color:'#34d399'}}, '$57.1M')), e('td', {className:'beat'}, '✅ Beat'))
+        )
+      )
+    ),
+    e('div', {className:'section-title'}, '🎯 Q2 2026 가이던스'),
+    e('div', {className:'card card-green'},
+      e('div', {className:'text-sm', style:{lineHeight:'2.2'}},
+        e('span', {className:'highlight-g'}, '매출 가이던스: '), '$259M~$264M (YoY +6~8% 유기적, +최대 10% 보고)',
+        e('br', null),
+        e('span', {className:'highlight-g'}, 'Adj EBITDA: '), '$58M~$62M',
+        e('br', null),
+        e('span', {className:'highlight-g'}, 'Adj Diluted EPS: '), '$0.81~$0.86',
+        e('br', null),
+        e('span', {className:'highlight-y'}, 'FY2026 가이던스 상향: '), '$1,040M~$1,055M (기존 $1,030~1,050M 대비 상향)'
+      )
+    ),
+    e('div', {className:'section-title'}, '⚡ 실적 발표 후 시나리오 플레이북 (Q2 기준)'),
+    e('div', {className:'card'},
+      e('div', {className:'scenario-row'},
+        e('div', {className:'scenario-icon'}, '🚀'),
+        e('div', null,
+          e('div', {style:{fontWeight:700,color:'#86efac',fontSize:'12px'}}, 'Q2 갭 업 +5% 이상 (매출 $264M+ 상회 + 수주 +40%+)'),
+          e('div', {className:'text-sm'}, '$130 저항 돌파 확인 후 추격 매수. $150 목표 유지.')
+        )
+      ),
+      e('div', {className:'scenario-row'},
+        e('div', {className:'scenario-icon'}, '📈'),
+        e('div', null,
+          e('div', {style:{fontWeight:700,color:'#93c5fd',fontSize:'12px'}}, '소폭 상승 (컨센서스 부합, 가이던스 유지)'),
+          e('div', {className:'text-sm'}, '홀딩. $132 50일 MA 돌파 여부 확인 후 추가 매수.')
+        )
+      ),
+      e('div', {className:'scenario-row'},
+        e('div', {className:'scenario-icon'}, '⚠️'),
+        e('div', null,
+          e('div', {style:{fontWeight:700,color:'#fcd34d',fontSize:'12px'}}, '갭 다운 또는 가이던스 하향 (관세 부담 지속)'),
+          e('div', {className:'text-sm'}, '$113 2차 지지 확인 후 분할 매수 추가. $105 손절선 준수.')
+        )
+      )
+    )
+  );
+}
+
+/* ── 탭4: 재무 분석 ── */
+function TabFundamental() {
+  var finRef = useRef(null); var finChart = useRef(null);
+  makeChart(finRef, finChart, {
+    type:'line',
+    data:{
+      labels:['FY2022','FY2023','FY2024','FY2025','FY2026E'],
+      datasets:[
+        {label:'연간 매출 ($M)',data:[705,841,949,981,1048],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true,tension:0.4,pointRadius:4},
+        {label:'Adj EBITDA ($M)',data:[140,180,215,225,248],borderColor:'#f59e0b',borderDash:[5,5],tension:0.4,pointRadius:4}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}}
+      }
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📊 핵심 재무 지표'),
+    e('div', {className:'table-wrap'},
+      e('table', null,
+        e('thead', null,
+          e('tr', null, e('th', null, '지표'), e('th', null, '현재값'), e('th', null, '업종 평균'), e('th', null, '평가'))
+        ),
+        e('tbody', null,
+          e('tr', null, e('td', null, 'GAAP PER'), e('td', null, '~80x'), e('td', null, '~25x'), e('td', {className:'down'}, '고평가')),
+          e('tr', null, e('td', null, 'Forward PER (Adj)'), e('td', null, '~33x'), e('td', null, '~20x'), e('td', {className:'neutral'}, '성장 프리미엄')),
+          e('tr', null, e('td', null, 'EV/EBITDA'), e('td', null, '~20x'), e('td', null, '~14x'), e('td', {className:'neutral'}, '보통 프리미엄')),
+          e('tr', null, e('td', null, 'P/S (주가매출비율)'), e('td', null, '~4.0x'), e('td', null, '~2.5x'), e('td', {className:'neutral'}, '적정 수준')),
+          e('tr', null, e('td', null, 'Adj EBITDA 마진'), e('td', {className:'up'}, '22~24%'), e('td', null, '~15%'), e('td', {className:'up'}, '우수')),
+          e('tr', null, e('td', null, '유기적 성장률'), e('td', null, '3.1%'), e('td', null, '~5%'), e('td', {className:'neutral'}, 'M&A 의존 성장')),
+          e('tr', null, e('td', null, '순현금 포지션'), e('td', {className:'up'}, '+$138M'), e('td', null, '-'), e('td', {className:'up'}, '우수')),
+          e('tr', null, e('td', null, '현금'), e('td', null, '$388.8M'), e('td', null, '-'), e('td', {className:'up'}, '충분'))
+        )
+      )
+    ),
+    e('div', {className:'section-title'}, '📈 연간 매출 & EBITDA 추이'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:finRef})),
+    e('div', {className:'section-title'}, '💰 재무 건전성 요약'),
+    e('div', {className:'card card-green'},
+      e('div', {className:'text-sm', style:{lineHeight:'2.2'}},
+        e('span', {className:'highlight-g'}, '현금: '), '$388.8M | 총부채: ~$251M | ',
+        e('b', {className:'highlight-g'}, '순현금 +$138M (순현금 포지션 우수)'),
+        e('br', null),
+        e('span', {className:'highlight-g'}, 'FY2025 매출: '), '$980.6M (+3.3% YoY) → FY2026 가이던스: $1,040~1,055M',
+        e('br', null),
+        e('span', {className:'highlight'}, 'EBITDA 마진: '), '22~24% 밴드 유지 — 관세 부담에도 확장 중',
+        e('br', null),
+        e('span', {className:'highlight-y'}, '성장 질: '), '유기적 3.1% + M&A 기여 → 추가 M&A 여력 충분 (순현금)',
+        e('br', null),
+        e('span', {className:'highlight-r'}, '주의: '), 'GAAP EPS $0.51 기준 PER ~80x — 성장 프리미엄, 절대값 부담'
+      )
+    ),
+    e('div', {className:'section-title'}, '📐 ATI 인수 ROI 분석'),
+    e('div', {className:'card card-blue'},
+      e('div', {className:'text-sm', style:{lineHeight:'2'}},
+        '2021년 ATI Industrial Automation 인수가 $172M. 2026년 ATI 매출 기여 추정 ~$120M+.',
+        e('br', null),
+        e('b', {className:'highlight-b'}, 'ROI: '), '약 4~5년 내 인수 금액 회수 완료 — 고수익 M&A 성공 사례.',
+        e('br', null),
+        '수술 로봇(Intuitive Surgical 다빈치) + 휴머노이드 로봇 동시 수혜.',
+        e('br', null),
+        e('b', {className:'highlight-g'}, '→ 인수 가격 대비 현재 가치: '), '약 5~7배 (IPO 이후 주가 기준)'
+      )
+    )
+  );
+}
+
+/* ── 탭5: 비교 분석 ── */
+function TabCompare() {
+  var radarRef = useRef(null); var radarChart = useRef(null);
+  makeChart(radarRef, radarChart, {
+    type:'radar',
+    data:{
+      labels:['매출 성장','수익성','기술 해자','밸류에이션 매력','M&A 역량','재무 건전성'],
+      datasets:[
+        {label:'NOVT',data:[70,75,90,55,85,80],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.15)',pointBackgroundColor:'#10b981'},
+        {label:'Cognex(CGNX)',data:[50,80,80,50,60,85],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.08)',pointBackgroundColor:'#3b82f6'},
+        {label:'IPG Photonics',data:[30,70,75,60,40,90],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.08)',pointBackgroundColor:'#f59e0b'}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af',font:{size:11}}}},
+      scales:{r:{ticks:{display:false},grid:{color:'#1f2937'},pointLabels:{color:'#9ca3af',font:{size:10}}}}
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔀 경쟁사 비교'),
+    e('div', {className:'table-wrap'},
+      e('table', null,
+        e('thead', null,
+          e('tr', null, e('th', null, '기업'), e('th', null, '티커'), e('th', null, '시총'), e('th', null, '매출'), e('th', null, 'EV/EBITDA'), e('th', null, '포지션'))
+        ),
+        e('tbody', null,
+          e('tr', null,
+            e('td', null, e('b', {style:{color:'#10b981'}}, '▶ Novanta')),
+            e('td', null, 'NOVT'), e('td', null, '$4.0B'), e('td', null, '$981M'),
+            e('td', null, '~20x'), e('td', null, '로봇 F/T 센서·의료 영상 풀스택')
+          ),
+          e('tr', null,
+            e('td', null, 'Cognex'), e('td', null, 'CGNX'), e('td', null, '$7.2B'), e('td', null, '$840M'),
+            e('td', null, '~25x'), e('td', null, '산업 머신 비전 1위, 로봇 겹침')
+          ),
+          e('tr', null,
+            e('td', null, 'IPG Photonics'), e('td', null, 'IPGP'), e('td', null, '$5.4B'), e('td', null, '$1.1B'),
+            e('td', null, '~14x'), e('td', null, '파이버 레이저 — 의료 부분 겹침')
+          ),
+          e('tr', null,
+            e('td', null, 'AMETEK'), e('td', null, 'AME'), e('td', null, '$36B'), e('td', null, '$6.1B'),
+            e('td', null, '~18x'), e('td', null, '전자 계측·정밀 부품 대형주')
+          ),
+          e('tr', null,
+            e('td', null, 'Intuitive Surgical'), e('td', null, 'ISRG'), e('td', null, '$200B+'), e('td', null, '$9B'),
+            e('td', null, '~60x'), e('td', null, '수술 로봇 완제품 — NOVT의 고객사')
+          )
+        )
+      )
+    ),
+    e('div', {className:'section-title'}, '📊 종합 경쟁력 레이더'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:radarRef})),
+    e('div', {className:'section-title'}, '🎯 NOVT 차별화 — 옆으로 보기 원칙'),
+    e('div', {className:'card card-green'},
+      e('div', {className:'text-sm', style:{lineHeight:'2'}},
+        e('b', {className:'highlight'}, '① ATI F/T 센서 독점: '),
+        '수술 로봇·휴머노이드 관절마다 필수. 하모닉 감속기만큼 알려지지 않았으나 동일하게 필수 (옆으로 보기 원칙).',
+        e('br', null),
+        e('b', {className:'highlight'}, '② 수직 통합 스택: '),
+        '서보 컨트롤러 → 센서 → 모션 전체 공급 → 고객 전환 비용 극대화.',
+        e('br', null),
+        e('b', {className:'highlight'}, '③ ISRG 공급망: '),
+        'Intuitive Surgical 다빈치 공급사 → 다빈치 수술 증가 = NOVT 직접 수혜.',
+        e('br', null),
+        e('b', {className:'highlight-r'}, '① 약점: '),
+        'GAAP 고평가, 유기적 성장 낮음, 관세 헤드윈드'
+      )
+    )
+  );
+}
+
+/* ── 탭6: X (트위터) ── */
+function TabTwitter() {
+  var posts = [
+    {handle:'@MedTechInvestor', text:'Novanta Q1 was a blowout. Bookings +37%! That\'s the number that matters. Revenue is a lagging indicator — you need to watch bookings for where this company is in 12-18 months. NOVT is going to $150+ by year end.', likes:'2.1K', time:'2026.05.12'},
+    {handle:'@RoboticsAnalyst_Pro', text:'The ATI force/torque sensor angle is underappreciated. Every collaborative robot arm, every surgical robot — they ALL need F/T sensing. NOVT owns this market. The stock just pulled back to a great entry. Loading here.', likes:'1.8K', time:'2026.06.01'},
+    {handle:'@SurgicalRobotics_Watch', text:'Intuitive Surgical quarterly sales up. Every da Vinci procedure uses Novanta components. The robotics flywheel is spinning. NOVT is the picks-and-shovels of surgical robotics. Don\'t sleep on this.', likes:'1.4K', time:'2026.05.20'},
+    {handle:'@IndustrialTech_Fund', text:'NOVT pulled back to $117 — 200 day MA support. Legal & General just increased their position (SEC 13F). When institutions buy on dips while retail panics, that\'s your signal. Adding to position today.', likes:'987', time:'2026.06.02'},
+    {handle:'@ValuationMatters_CFA', text:'NOVT at 80x GAAP P/E is hard to call "value." But on Adj EPS of ~$3.55 guidance, that\'s 33x forward. For a company with 22-24% EBITDA margins, bookings +37%, and monopoly sensing tech, I\'ll pay 33x.', likes:'1.2K', time:'2026.05.15'},
+    {handle:'@BearCase_Always', text:'NOVT organic growth was just 3.1% in Q1. The bookings number is great but deliveries take time. Stock trades like it\'s growing 20%. 80x GAAP PE is delusional. Tariff headwinds aren\'t going away.', likes:'678', time:'2026.05.13'},
+    {handle:'@HumanoidRobot_Macro', text:'The Novanta thesis is simple: humanoid robots need force/torque sensors at every joint. Tesla Optimus has 12 joints. Each needs an ATI sensor. At scale, NOVT captures hundreds of millions in new revenue per year.', likes:'3.2K', time:'2026.05.28'},
+  ];
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🐦 X(트위터) 주요 의견 — 실적 이후 2026.05~06'),
+    posts.map(function(p, i) {
+      return e('div', {key:i, className:'social-card'},
+        e('div', {className:'social-handle'}, p.handle),
+        e('div', {className:'social-text'}, p.text),
+        e('div', {className:'social-meta'},
+          e('span', {className:'social-like'}, '♥ ' + p.likes),
+          e('span', {style:{marginLeft:'12px',color:'#4b5563'}}, p.time)
+        )
+      );
+    }),
+    e('div', {className:'card card-green', style:{marginTop:'16px'}},
+      e('div', {className:'text-sm'},
+        e('b', {className:'highlight'}, 'X 커뮤니티 센티먼트: '),
+        '강세론(75%) 압도적. ATI 센서 독점과 수주 +37% 언급 다수. 풀백을 "매수 기회"로 인식하는 기관·개인 투자자 증가. 고평가 비판은 Adj EPS 기준으로 반박 받는 중.'
+      )
+    )
+  );
+}
+
+/* ── 탭7: Reddit ── */
+function TabReddit() {
+  var posts = [
+    {sub:'r/stocks', user:'u/PrecisionMotion_Investor', text:'Been holding NOVT since $95. The Q1 bookings number (+37%) is the most important data point. Bookings convert to revenue in 3-6 months. By Q3-Q4 2026, this company should be doing $270M+ per quarter. The dip to $117 is a gift.', upvotes:'1.8K'},
+    {sub:'r/investing', user:'u/MedicalRobotics_Deep', text:'Went down the Novanta rabbit hole. ATI Industrial Automation acquisition was genius. They own force/torque sensing for robotics and nobody talks about it. Harmonic drives get all the press, but F/T sensors are just as critical and NOVT has 80%+ market share.', upvotes:'2.4K'},
+    {sub:'r/WallStreetBets', user:'u/ISRG_Proxy_Play', text:'Novanta is the Intuitive Surgical proxy play. You don\'t want to pay 60x EV/EBITDA for ISRG? Buy NOVT at 20x. Every da Vinci procedure = NOVT revenue. Calls on $130 strike.', upvotes:'1.1K'},
+    {sub:'r/ValueInvesting', user:'u/QualityAtFairPrice', text:'NOVT at $117 is interesting. Adj EPS guide is $3.50-3.65 for FY2026. That\'s 32-33x forward. EBITDA margin 22-24%, net cash positive, bookings at record levels. Quality compounder trading at a rare discount.', upvotes:'897'},
+    {sub:'r/RoboticsInvesting', user:'u/Humanoid_SupplyChain', text:'NOVT is my top pick for humanoid robot components. Here\'s the math: Tesla Optimus targets 100K units/year. Each robot needs ~12 F/T sensors. NOVT sells sensors at ~$2K-5K each. That\'s $2.4B-6B in potential annual NOVT revenue from Optimus alone.', upvotes:'3.1K'},
+    {sub:'r/stocks', user:'u/TariffBear_Industrial', text:'NOVT bear case: "tariff and cost headwinds" mentioned 3 times in the earnings call. EBITDA guidance raised only $5M above midpoint despite revenue raise. Margin expansion is slowing. At $117, not cheap enough for the risk.', upvotes:'445'},
+    {sub:'r/investing', user:'u/LegalGeneral_Watcher', text:'Legal & General increased NOVT position on 6/1 filing. That\'s a $1.3 trillion AUM firm buying on the dip. Smart money accumulating while retail panics over the pullback from $159. Following the big fish here.', upvotes:'1.2K'},
+  ];
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '💬 Reddit 주요 의견'),
+    posts.map(function(p, i) {
+      return e('div', {key:i, className:'social-card'},
+        e('div', {style:{display:'flex',justifyContent:'space-between',marginBottom:'4px'}},
+          e('span', {className:'social-handle'}, p.sub),
+          e('span', {style:{fontSize:'10px',color:'#6b7280'}}, p.user)
+        ),
+        e('div', {className:'social-text'}, p.text),
+        e('div', {className:'social-meta'},
+          e('span', {className:'social-like'}, '▲ ' + p.upvotes + ' 업보트')
+        )
+      );
+    }),
+    e('div', {className:'card card-green', style:{marginTop:'16px'}},
+      e('div', {className:'text-sm'},
+        e('b', {className:'highlight'}, 'Reddit 전반 센티먼트: '),
+        '강세론(80%). ATI F/T 센서 독점·ISRG 공급사 논리 공유. 수주 +37% 핵심 지표로 언급. 풀백을 매수 기회로 적극 해석. 고평가 비판은 조정 EPS 기준으로 방어되는 중.'
+      )
+    )
+  );
+}
+
+/* ── 탭8: 용어 ── */
+function TabGlossary() {
+  var terms = [
+    {term:'ATI F/T 센서', tag:'핵심 제품', body:'ATI Industrial Automation의 힘/토크(Force/Torque) 센서. 로봇 관절에 부착하여 6축 힘·토크를 실시간 측정. ±0.1% 정밀도, 의료·산업 인증 보유. Novanta가 2021년 $172M에 인수.', apply:'수술 로봇(다빈치)·협동 로봇·휴머노이드 관절 필수 → NOVT의 핵심 해자'},
+    {term:'Book-to-Bill 비율', tag:'선행 지표', body:'수주잔고(Bookings)를 매출(Billings)로 나눈 비율. 1 이상 = 수주 > 매출 → 미래 성장 가시성 확보. 반도체·정밀기기 업종의 핵심 선행 지표.', apply:'NOVT Q1 2026: Book-to-Bill 1.10 — 수주 매출보다 10% 많아, 향후 성장 보장'},
+    {term:'Adj EBITDA', tag:'수익성', body:'이자·세금·감가상각·주식 보상 등을 제외한 조정 영업이익. 인수 기업이 많은 NOVT 같은 회사에서 실질 현금창출 능력 측정에 활용.', apply:'NOVT Q1: $57.1M (+14.2%) — 22~24% Adj EBITDA 마진 업종 최상위'},
+    {term:'순현금(Net Cash)', tag:'재무', body:'현금·유가증권 합계에서 총부채를 차감한 값. 양수(순현금)이면 사실상 무부채 이상의 재무 여유. M&A·자사주 매입 여력 지표.', apply:'NOVT: 현금 $388.8M - 부채 $251M = 순현금 +$138M → M&A 추가 여력 있음'},
+    {term:'유기적 성장(Organic Growth)', tag:'성장 분석', body:'인수·합병(M&A) 효과를 제외한 순수 자체 사업 성장률. M&A 중심 기업의 실질 경쟁력 판단 기준.', apply:'NOVT Q1 유기적 성장 3.1% — 낮은 편, M&A(ATI 등) 없으면 성장 둔화 우려'},
+    {term:'Design Win', tag:'사업 개념', body:'반도체·부품 기업의 제품이 고객사 신제품에 채택 확정된 상태. 실제 양산 매출은 수개월~수년 뒤 반영되나, 미래 수익 파이프라인의 핵심 선행 지표.', apply:'NOVT Q1 수주 +37% 중 상당 부분이 로봇·AI 신규 설계 채택 → 2~4분기 후 매출화'},
+    {term:'풀백(Pullback)', tag:'기술적', body:'상승 추세 중 일시적으로 주가가 하락하는 조정. 추세 반전이 아닌 건강한 쉬어가기. 통상 10~20% 조정 후 상승 재개.', apply:'NOVT 5/12 실적 후 $159 → 6/3 $117 (-26%) 풀백 — 상승 추세 유지 중 진입 기회'},
+    {term:'EV/EBITDA', tag:'밸류에이션', body:'기업가치(Enterprise Value)를 EBITDA로 나눈 배수. PER 대비 부채·현금 구조를 반영한 종합 밸류에이션 지표. 인수합병 가격 산정 기준.', apply:'NOVT ~20x vs 업종 평균 ~14x — 프리미엄이나 수주 성장·마진 우위로 정당화 논의'},
+  ];
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📖 주요 투자 용어 해설'),
+    terms.map(function(t, i) {
+      return e('div', {key:i, className:'gloss-card'},
+        e('div', {style:{display:'flex',alignItems:'center',gap:'6px',marginBottom:'6px'}},
+          e('span', {className:'gloss-term'}, t.term),
+          e('span', {className:'gloss-tag'}, t.tag)
+        ),
+        e('div', {className:'gloss-body'}, t.body),
+        e('div', {className:'gloss-apply'}, '→ NOVT 적용: ' + t.apply)
+      );
+    })
+  );
+}
+
+/* ── 탭9: 멀티배거 ── */
+function TabMulti() {
+  var items = [
+    {label:'① 대규모 성장 시장', pass:true, note:'수술 로봇 CAGR 20%+ | 협동 로봇 CAGR 30%+ | 휴머노이드 로봇 CAGR 52% — 3개 시장 동시 수혜.'},
+    {label:'② 해결하는 실질 문제', pass:true, note:'F/T 센싱 없이 수술 로봇 불가(촉각 피드백) — 인체 조직 구별·안전 제어 필수.'},
+    {label:'③ 혁신적 솔루션', pass:true, note:'ATI F/T 센서 6축 동시 측정, ±0.1% 정밀도, 의료 등급 인증 — 사실상 업계 표준.'},
+    {label:'④ 경쟁 해자', pass:true, note:'의료·산업 인증 장벽, 수직 통합 스택(서보→센서→모션), 고객 전환 비용 극히 높음.'},
+    {label:'⑤ 경영진 역량', pass:true, note:'CEO Glastra 주도 M&A(ATI $172M) 성공. EBITDA 마진 확장. 수주 +37% 달성.'},
+    {label:'⑥ 재무 건전성', pass:true, note:'순현금 +$138M, Adj EBITDA 22~24% 마진, 안정적 현금흐름 — 추가 M&A 여력.'},
+    {label:'⑦ 단기 촉매', pass:true, note:'수주 +37%, FY2026 가이던스 상향, Baird $173 Outperform, 기관(Legal&General) 매집.'},
+    {label:'⑧ 밸류에이션 매력', pass:false, note:'GAAP P/E ~80x 고평가. Adj 기준 ~33x로 양호하나 절대값 부담. $117은 52주 고점 대비 할인.'},
+  ];
+  var score = items.filter(function(i){return i.pass;}).length;
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔟 Anna Yartseva 멀티배거 체크리스트'),
+    e('div', {className:'card card-green'},
+      e('div', {style:{textAlign:'center',padding:'10px'}},
+        e('div', {style:{fontSize:'36px',fontWeight:900,color:'#10b981'}}, score + '/8'),
+        e('div', {style:{fontSize:'13px',color:'#6b7280',marginTop:'4px'}}, '멀티배거 조건 충족'),
+        e('div', {className:'multi-bar', style:{maxWidth:'300px',margin:'12px auto'}},
+          e('div', {className:'multi-fill', style:{width:(score/8*100)+'%'}})
+        )
+      )
+    ),
+    items.map(function(item, i) {
+      return e('div', {key:i, className:'multi-item'},
+        e('div', {className:'multi-title'}, item.label),
+        e('div', {className:'multi-check ' + (item.pass ? 'pass' : 'fail')},
+          e('span', null, item.pass ? '✅' : '❌'),
+          e('span', null, item.note)
+        )
+      );
+    }),
+    e('div', {className:'section-title'}, '🎯 종합 투자 의견'),
+    e('div', {className:'verdict-box'},
+      e('div', {className:'verdict-label'}, '최종 결론 — 7/8 충족'),
+      e('div', {className:'verdict-main'}, '🟢 중기 매수 — 조정 구간 분할 진입'),
+      e('div', {className:'verdict-sub'}, 'ATI F/T 센서 독점 × 수주 +37% × 순현금 × Baird $173'),
+      e('div', {style:{marginTop:'12px',fontSize:'12px',color:'#9ca3af',lineHeight:'1.8',maxWidth:'500px',margin:'12px auto 0'}},
+        '진입: $113~$125 분할 매수 | 손절: $105 | 목표 1차: $150 | 2차: $173',
+        e('br', null),
+        '홀딩 기간: 12~18개월 | 수주 +37% → Q3~Q4 매출 전환 확인',
+        e('br', null),
+        '리스크: 관세 헤드윈드, GAAP 고평가, 유기적 성장 낮음'
+      )
+    )
+  );
+}
+
+/* ── 메인 앱 ── */
+function App() {
+  var state = useState(0);
+  var tab = state[0]; var setTab = state[1];
+  var views = [TabOverview, TabTech, TabEarnings, TabFundamental, TabCompare, TabTwitter, TabReddit, TabGlossary, TabMulti];
+  var View = views[tab];
+
+  return e('div', null,
+    e('div', {className:'header'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'header-back'}, '← 목록으로'),
+      e('div', {className:'header-title'}, 'NOVT — Novanta Inc.'),
+      e('div', {className:'header-sub'}, 'ATI F/T 센서·정밀 모션·의료 로봇 | NASDAQ | 분석일: 2026.06.03'),
+      e('div', null,
+        e('span', {className:'header-price'}, '$117.04'),
+        e('span', {className:'header-change down'}, '↓ 실적 후 풀백 (52W 고점 $171.71 대비 -32%)')
+      )
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(t, i) {
+        return e('div', {
+          key:i,
+          className:'tab' + (tab===i?' active':''),
+          onClick:function(){setTab(i);}
+        }, t.label);
+      })
+    ),
+    e(View, null)
+  );
+}
+
+var root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(e(App, null));
+</script>
+</body>
+</html>
