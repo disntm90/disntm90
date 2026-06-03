@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>MSTU — T-Rex 2X Long MSTR ETF 분석 대시보드 2026.06.03</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0a00;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+    .header{background:linear-gradient(135deg,#451a03 0%,#0a0a00 100%);padding:20px 20px 16px;border-bottom:2px solid #f97316}
+    .header-back{color:#f97316;text-decoration:none;font-size:13px;display:inline-block;margin-bottom:10px}
+    .header-back:hover{color:#fb923c}
+    .header-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    .header-title{font-size:22px;font-weight:800;color:#fff}
+    .header-sub{font-size:12px;color:#94a3b8;margin-top:4px}
+    .price-badge{background:#1c0a00;border:1px solid #f97316;border-radius:8px;padding:8px 14px;text-align:right}
+    .price-now{font-size:22px;font-weight:800;color:#f97316}
+    .price-change{font-size:12px;color:#ef4444}
+    .danger-box{background:#450a0a;border:2px solid #ef4444;border-radius:8px;padding:12px 14px;margin:12px 0;font-size:12px;color:#fca5a5;line-height:1.7}
+    .warn-box{background:#431407;border:1px solid #f97316;border-radius:8px;padding:10px 14px;margin:10px 0;font-size:12px;color:#fdba74}
+    .tabs{display:flex;overflow-x:auto;background:#111007;border-bottom:1px solid #292019;padding:0 12px}
+    .tabs::-webkit-scrollbar{height:3px}.tabs::-webkit-scrollbar-thumb{background:#f97316}
+    .tab{padding:13px 15px;cursor:pointer;font-size:12px;white-space:nowrap;color:#6b7280;border-bottom:3px solid transparent;transition:.2s}
+    .tab.active{color:#f97316;border-bottom-color:#f97316;font-weight:700}
+    .tab:hover{color:#fb923c}
+    .content{padding:16px;max-width:860px;margin:0 auto}
+    .section-title{font-size:15px;font-weight:700;color:#f97316;margin:18px 0 10px;display:flex;align-items:center;gap:6px}
+    .card{background:#111007;border:1px solid #292019;border-radius:10px;padding:16px;margin-bottom:14px}
+    .card-orange{border-left:4px solid #f97316}
+    .card-red{border-left:4px solid #ef4444}
+    .card-green{border-left:4px solid #22c55e}
+    .card-yellow{border-left:4px solid #f59e0b}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{background:#1c0a00;color:#fdba74;padding:8px 10px;text-align:left;font-weight:700}
+    td{padding:7px 10px;border-bottom:1px solid #292019;color:#d1d5db}
+    tr:hover td{background:#1c0a00}
+    .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:700}
+    .badge-red{background:#7f1d1d;color:#fca5a5}
+    .badge-orange{background:#431407;color:#fdba74}
+    .badge-green{background:#14532d;color:#86efac}
+    .badge-yellow{background:#78350f;color:#fcd34d}
+    .badge-gray{background:#1f2937;color:#9ca3af}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+    .stat-card{background:#0a0a00;border-radius:8px;padding:12px;text-align:center;border:1px solid #292019}
+    .stat-val{font-size:18px;font-weight:800;color:#f97316}
+    .stat-val.red{color:#ef4444}
+    .stat-val.green{color:#22c55e}
+    .stat-val.gray{color:#9ca3af}
+    .stat-desc{font-size:11px;color:#6b7280;margin-top:3px}
+    .chart-wrap{position:relative;height:260px;margin:12px 0}
+    .progress-wrap{margin:8px 0}
+    .progress-label{font-size:11px;color:#94a3b8;margin-bottom:3px;display:flex;justify-content:space-between}
+    .progress-bar{height:8px;background:#292019;border-radius:4px;overflow:hidden}
+    .progress-fill{height:100%;border-radius:4px}
+    .tweet-card{background:#0a0a00;border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid #292019}
+    .tweet-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+    .tweet-user{font-size:12px;font-weight:700;color:#fdba74}
+    .tweet-date{font-size:11px;color:#6b7280}
+    .tweet-body{font-size:12px;color:#d1d5db;line-height:1.6;margin-bottom:5px}
+    .tweet-trans{font-size:11px;color:#94a3b8;font-style:italic}
+    .tweet-footer{font-size:11px;color:#6b7280;margin-top:5px}
+    .multi-item{margin:10px 0;background:#0a0a00;border-radius:8px;padding:12px;border:1px solid #292019}
+    .multi-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+    .multi-title{font-size:13px;font-weight:700;color:#e2e8f0}
+    .multi-data{font-size:12px;color:#94a3b8;margin-bottom:4px}
+    .multi-verdict{font-size:12px;padding:3px 8px;border-radius:4px;display:inline-block;font-weight:700}
+    .v-pass{background:#14532d;color:#86efac}
+    .v-partial{background:#78350f;color:#fcd34d}
+    .v-fail{background:#7f1d1d;color:#fca5a5}
+    .sentiment-stat{display:flex;gap:12px;margin-bottom:12px;font-size:12px}
+    .s-pos{color:#22c55e;font-weight:700}
+    .s-neu{color:#f59e0b;font-weight:700}
+    .s-neg{color:#ef4444;font-weight:700}
+    .action-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #292019}
+    .action-label{font-size:12px;color:#94a3b8;min-width:90px}
+    .action-val{font-size:14px;font-weight:700;color:#e2e8f0}
+    .action-note{font-size:12px;color:#6b7280}
+    .bull-bear{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+    .bull-box{background:#0f2a1a;border:1px solid #22c55e;border-radius:8px;padding:12px}
+    .bear-box{background:#2a0f0f;border:1px solid #ef4444;border-radius:8px;padding:12px}
+    .bb-title{font-size:13px;font-weight:700;margin-bottom:8px}
+    .bb-item{font-size:12px;color:#d1d5db;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);line-height:1.5}
+    .radar-wrap{position:relative;height:280px;margin:12px 0}
+    .opinion-meter{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0}
+    .meter-sell{background:#ef4444}
+    .meter-hold{background:#f59e0b}
+    .meter-buy{background:#22c55e}
+    .glossary-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .filter-btn{background:#1c0a00;border:1px solid #374151;color:#9ca3af;padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;transition:.2s}
+    .filter-btn.active{background:#431407;border-color:#f97316;color:#fdba74;font-weight:700}
+    .gloss-card{background:#0a0a00;border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid #292019}
+    .gloss-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+    .gloss-term{font-size:13px;font-weight:800;color:#e2e8f0}
+    .gloss-body{font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:5px}
+    .gloss-apply{font-size:11px;color:#fb923c;font-style:italic}
+    .text-sm{font-size:12px;color:#9ca3af;line-height:1.6}
+    .decay-viz{display:flex;align-items:flex-end;gap:6px;height:120px;margin:12px 0}
+    .decay-bar{flex:1;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;justify-content:center;font-size:10px;color:#fff;font-weight:700;padding-bottom:3px;min-height:6px}
+    .btc-scenario{border-radius:8px;padding:12px;margin-bottom:10px}
+    .scen-bull{background:#0f2a1a;border:1px solid #22c55e}
+    .scen-base{background:#1c1200;border:1px solid #f59e0b}
+    .scen-bear{background:#2a0f0f;border:1px solid #ef4444}
+    .scen-title{font-size:13px;font-weight:700;margin-bottom:6px}
+    .scen-data{display:flex;gap:16px;flex-wrap:wrap;font-size:12px}
+    .scen-item{display:flex;flex-direction:column;gap:2px}
+    .scen-label{color:#6b7280;font-size:11px}
+    .scen-val{font-weight:700;color:#e2e8f0}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) chartRef.current.destroy(); };
+  }, []);
+}
+
+var TABS = [
+  {id:'overview', label:'📋 개요'},
+  {id:'tech', label:'📈 기술적'},
+  {id:'mstr', label:'₿ MSTR 분석'},
+  {id:'bitcoin', label:'🟠 비트코인'},
+  {id:'risk', label:'⚠️ 리스크'},
+  {id:'twitter', label:'🐦 X'},
+  {id:'reddit', label:'💬 Reddit'},
+  {id:'glossary', label:'📖 용어'},
+  {id:'multi', label:'🔟 멀티배거'},
+];
+
+function TabOverview() {
+  return (
+    <div className="content">
+      <div className="danger-box">
+        ⛔ <strong>초고위험 레버리지 ETF 경고</strong><br/>
+        MSTU는 일일 2배 레버리지 ETF로 단기 트레이딩 전용 상품입니다.<br/>
+        • 장기 보유 시 <strong>Volatility Decay(변동성 감쇠)</strong>로 BTC 우상향에도 NAV 침식<br/>
+        • 최대 낙폭 <strong>-98.58%</strong> 기록 (2026.02.05)<br/>
+        • 현재 52주 고점 대비 <strong>-95.97%</strong>
+      </div>
+
+      <div className="section-title">📊 ETF 기본 정보</div>
+      <div className="card card-orange">
+        <div className="stat-grid">
+          <div className="stat-card"><div className="stat-val">$4.34</div><div className="stat-desc">현재가 (2026.06.02)</div></div>
+          <div className="stat-card"><div className="stat-val red">-94.03%</div><div className="stat-desc">연간 수익률</div></div>
+          <div className="stat-card"><div className="stat-val red">$107.60</div><div className="stat-desc">52주 고점 (현재 -96%)</div></div>
+          <div className="stat-card"><div className="stat-val gray">$3.40</div><div className="stat-desc">52주 저점</div></div>
+        </div>
+        <table style={{marginTop:12}}>
+          <tbody>
+            <tr><td style={{color:'#94a3b8'}}>정식명</td><td>T-Rex 2X Long MSTR Daily Target ETF</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>운용사</td><td>REX Shares</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>거래소</td><td>CBOE (BATS)</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>설정일</td><td>2024.09.18 (약 1.7년)</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>AUM</td><td>~$473M</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>운용 보수</td><td>1.05% (레버리지 비용 별도)</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>구조</td><td>스왑 계약으로 MSTR 일일 200% 노출</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>최대 낙폭</td><td style={{color:'#ef4444',fontWeight:700}}>-98.58% (2026.02.05)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="section-title">🔗 MSTU → MSTR → BTC 연결 구조</div>
+      <div className="card">
+        <div style={{fontSize:13,lineHeight:2.2,color:'#d1d5db'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+            <span style={{background:'#431407',color:'#fdba74',padding:'4px 12px',borderRadius:6,fontWeight:700}}>비트코인 BTC</span>
+            <span style={{color:'#6b7280',fontSize:16}}>→</span>
+            <span style={{background:'#1c1200',color:'#fcd34d',padding:'4px 12px',borderRadius:6,fontWeight:700}}>MSTR (1x)</span>
+            <span style={{color:'#6b7280',fontSize:16}}>→</span>
+            <span style={{background:'#2a0f0f',color:'#fca5a5',padding:'4px 12px',borderRadius:6,fontWeight:700}}>MSTU (2x 일별)</span>
+          </div>
+          <div style={{marginTop:10,fontSize:12,color:'#9ca3af'}}>
+            BTC +10% → MSTR ~+15~20% (BTC 대비 프리미엄) → MSTU ~+30~40% (이론상)<br/>
+            BTC -10% → MSTR ~-15~20% → MSTU ~-30~40% (하루 기준)<br/>
+            <span style={{color:'#ef4444'}}>⚠️ 복리 효과로 기간이 길어질수록 위 계산과 실제 결과 크게 차이남</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="section-title">🎯 종합 의견</div>
+      <div className="card card-yellow">
+        <div style={{marginBottom:10}}>
+          <div style={{fontSize:12,color:'#94a3b8',marginBottom:6}}>투자 적합성 평가</div>
+          <div className="opinion-meter">
+            <div className="meter-sell" style={{width:'50%'}}></div>
+            <div className="meter-hold" style={{width:'30%'}}></div>
+            <div className="meter-buy" style={{width:'20%'}}></div>
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#6b7280',marginTop:4}}>
+            <span style={{color:'#ef4444',fontWeight:700}}>↑ 장기 보유자 회피</span>
+            <span>단기 트레이더</span>
+            <span style={{color:'#22c55e'}}>BTC 강세론자</span>
+          </div>
+        </div>
+        <div style={{fontSize:13,fontWeight:700,color:'#fcd34d',marginBottom:4}}>중립 (단기 트레이더 한정) / 장기 보유 강하게 비권고</div>
+        <div className="text-sm">
+          MSTU는 일일 리밸런싱 레버리지 ETF로, 비트코인 방향성에 단기 배팅하는 트레이더에게만 적합합니다.
+          장기 보유 시 Volatility Decay로 인해 BTC가 결국 올라도 손실 가능.
+          BTC 강세 단기 시나리오($80K+) 시에만 한정된 비중으로 트레이딩 접근 권장.
+        </div>
+      </div>
+
+      <div className="bull-bear">
+        <div className="bull-box">
+          <div className="bb-title" style={{color:'#22c55e'}}>🐂 Bull Case</div>
+          <div className="bb-item">BTC $80K+ 돌파 시 단기 급반등</div>
+          <div className="bb-item">비트코인 ETF 기관 자금 유입 지속</div>
+          <div className="bb-item">52주 저점 $3.40 근처 기술적 반등</div>
+          <div className="bb-item">MSTR BTC Yield 9.4% 누적 성과</div>
+        </div>
+        <div className="bear-box">
+          <div className="bb-title" style={{color:'#ef4444'}}>🐻 Bear Case</div>
+          <div className="bb-item">Volatility Decay 장기 구조적 손실</div>
+          <div className="bb-item">BTC $68K 이하 추가 하락 시 청산 위기</div>
+          <div className="bb-item">MSTR Q1 $12.5B 손실 = 펀더멘탈 약화</div>
+          <div className="bb-item">레버리지 ETF 특성상 0 접근 가능</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabTech() {
+  var priceRef = useRef(null);
+  var priceChart = useRef(null);
+  var perfRef = useRef(null);
+  var perfChart = useRef(null);
+
+  makeChart(priceRef, priceChart, {
+    type:'line',
+    data:{
+      labels:['2024-09','2024-11','2025-01','2025-03','2025-05','2025-07','2025-09','2025-11','2026-01','2026-03','2026-05','2026-06'],
+      datasets:[
+        {label:'MSTU 가격',data:[100,107.6,85,62,48,35,28,22,15,8.2,5.1,4.34],borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.1)',fill:true,tension:0.3,yAxisID:'y'},
+        {label:'BTC ($K)',data:[60,70,95,85,95,85,90,98,88,78,74,77],borderColor:'#f59e0b',backgroundColor:'transparent',tension:0.3,yAxisID:'y1'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af'},grid:{color:'#292019'}},
+        y:{ticks:{color:'#f97316'},grid:{color:'#292019'},position:'left',title:{display:true,text:'MSTU ($)',color:'#f97316'}},
+        y1:{ticks:{color:'#f59e0b'},grid:{display:false},position:'right',title:{display:true,text:'BTC ($K)',color:'#f59e0b'}}
+      }
+    }
+  });
+
+  makeChart(perfRef, perfChart, {
+    type:'bar',
+    data:{
+      labels:['1주','1개월','3개월','6개월','1년'],
+      datasets:[{
+        label:'MSTU 수익률 (%)',
+        data:[-14.9,-27.28,-68,-85,-94.03],
+        backgroundColor:['#ef4444','#ef4444','#ef4444','#ef4444','#7f1d1d']
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#292019'}},y:{ticks:{color:'#9ca3af'},grid:{color:'#292019'}}}
+    }
+  });
+
+  return (
+    <div className="content">
+      <div className="warn-box">⚠️ MSTU는 레버리지 ETF로 기술적 지표가 일반 주식과 다르게 작동합니다. RSI 등 지표 해석 시 주의 필요.</div>
+
+      <div className="section-title">📉 MSTU vs BTC 가격 추이</div>
+      <div className="card"><div className="chart-wrap" style={{height:280}}><canvas ref={priceRef}></canvas></div></div>
+
+      <div className="section-title">📊 기간별 수익률</div>
+      <div className="card"><div className="chart-wrap"><canvas ref={perfRef}></canvas></div></div>
+
+      <div className="section-title">🔢 핵심 기술 지표</div>
+      <div className="card">
+        <table>
+          <thead><tr><th>지표</th><th>현재값</th><th>신호</th><th>의미</th></tr></thead>
+          <tbody>
+            <tr><td>RSI(14)</td><td style={{color:'#f59e0b',fontWeight:700}}>57.2</td><td><span className="badge badge-yellow">🟡 중립</span></td><td>과매도 반등 모색 중</td></tr>
+            <tr><td>최대 낙폭</td><td style={{color:'#ef4444',fontWeight:700}}>-98.58%</td><td><span className="badge badge-red">🔴 극단</span></td><td>2026.02.05 기록</td></tr>
+            <tr><td>현재 낙폭</td><td style={{color:'#ef4444',fontWeight:700}}>-96.89%</td><td><span className="badge badge-red">🔴 미회복</span></td><td>최대 낙폭에서 미회복</td></tr>
+            <tr><td>1개월 수익률</td><td style={{color:'#ef4444',fontWeight:700}}>-27.28%</td><td><span className="badge badge-red">🔴 하락</span></td><td>단기 약세</td></tr>
+            <tr><td>연간 수익률</td><td style={{color:'#ef4444',fontWeight:700}}>-94.03%</td><td><span className="badge badge-red">🔴 강한 하락</span></td><td>레버리지 감쇠 효과 극대화</td></tr>
+            <tr><td>Beta vs S&P500</td><td style={{fontWeight:700}}>4.89</td><td><span className="badge badge-orange">🟠 초고변동성</span></td><td>시장 대비 5배 변동성</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="section-title">🎯 지지·저항 구간</div>
+      <div className="card">
+        {[
+          {label:'심리적 저항', price:'$10.00', color:'#ef4444', note:'회복 시 1차 목표'},
+          {label:'단기 저항', price:'$6.00~$7.00', color:'#f97316', note:'최근 반등 실패 구간'},
+          {label:'현재가', price:'$4.34', color:'#f97316', note:'★ 현재'},
+          {label:'1차 지지', price:'$3.80~$4.00', color:'#22c55e', note:'최근 저점 구간'},
+          {label:'52주 저점', price:'$3.40', color:'#86efac', note:'강한 지지선'},
+          {label:'경고선', price:'$2.00 이하', color:'#94a3b8', note:'NAV 극단적 침식 구간'},
+        ].map(function(r) {
+          return (
+            <div key={r.label} style={{display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid #292019',fontSize:12}}>
+              <span style={{color:'#94a3b8'}}>{r.label}</span>
+              <span style={{fontWeight:700,color:r.color}}>{r.price}</span>
+              <span style={{color:'#6b7280'}}>{r.note}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TabMSTR() {
+  var mstrRef = useRef(null);
+  var mstrChart = useRef(null);
+  var btcRef = useRef(null);
+  var btcChart = useRef(null);
+
+  makeChart(mstrRef, mstrChart, {
+    type:'bar',
+    data:{
+      labels:['Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026'],
+      datasets:[
+        {label:'매출 ($M)',data:[111.1,116.1,116.1,120.0,124.3],backgroundColor:'#f97316',yAxisID:'y'},
+        {label:'순손익 ($B)',data:[-0.5,1.2,-2.5,-3.8,-12.54],backgroundColor:function(ctx){return ctx.raw < 0 ? '#ef4444':'#22c55e';},yAxisID:'y1'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af'},grid:{color:'#292019'}},
+        y:{ticks:{color:'#f97316'},grid:{color:'#292019'},position:'left',title:{display:true,text:'매출($M)',color:'#f97316'}},
+        y1:{ticks:{color:'#ef4444'},grid:{display:false},position:'right',title:{display:true,text:'손익($B)',color:'#ef4444'}}
+      }
+    }
+  });
+
+  makeChart(btcRef, btcChart, {
+    type:'bar',
+    data:{
+      labels:['2024 Q1','2024 Q3','2025 Q1','2025 Q3','2026 Q1(5/3)'],
+      datasets:[{label:'BTC 보유량',data:[214246,252220,478740,597325,818334],backgroundColor:'#f59e0b'}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#292019'}},y:{ticks:{color:'#9ca3af'},grid:{color:'#292019'}}}
+    }
+  });
+
+  return (
+    <div className="content">
+      <div className="section-title">₿ MSTR 핵심 지표</div>
+      <div className="stat-grid">
+        <div className="stat-card"><div className="stat-val">$133.88</div><div className="stat-desc">MSTR 현재가</div></div>
+        <div className="stat-card"><div className="stat-val red">-64.9%</div><div className="stat-desc">52주 수익률</div></div>
+        <div className="stat-card"><div className="stat-val" style={{color:'#f59e0b'}}>818,334</div><div className="stat-desc">BTC 보유 (5/3 기준)</div></div>
+        <div className="stat-card"><div className="stat-val" style={{color:'#f59e0b'}}>$75,537</div><div className="stat-desc">평균 BTC 매입가</div></div>
+      </div>
+
+      <div className="section-title">📊 MSTR 분기 실적</div>
+      <div className="card"><div className="chart-wrap" style={{height:280}}><canvas ref={mstrRef}></canvas></div>
+        <div className="warn-box" style={{marginTop:8}}>⚠️ Q1 2026 순손실 $12.54B — BTC 가격 $87K→$68K 하락으로 공정가치 평가 손실 반영. GAAP 기준 대규모 손실이나 BTC Yield(보유량 증가) 기준은 +9.4% 양호.</div>
+      </div>
+
+      <div className="section-title">📈 BTC 누적 보유량 추이</div>
+      <div className="card"><div className="chart-wrap"><canvas ref={btcRef}></canvas></div></div>
+
+      <div className="section-title">🏗️ MicroStrategy 비트코인 전략</div>
+      <div className="card card-orange">
+        <table>
+          <tbody>
+            <tr><td style={{color:'#94a3b8'}}>전략 명칭</td><td>Bitcoin Treasury Company (세계 최초)</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>핵심 KPI</td><td>BTC Yield (주당 BTC 증가율) — YTD +9.4%</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>자금 조달</td><td>주식·채권 발행 → BTC 매입 (2026 YTD $11.68B)</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>Q1 2026 BTC 증가</td><td>+63,410 BTC ($4.97B 가치 상승)</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>목표</td><td>7년 내 주당 BTC 2배 — 장기 가치 창출</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>리스크</td><td>비트코인 가격 하락 시 배당 충당 위해 BTC 매도 가능성</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="section-title">🔍 MSTR 투자 포인트 vs 리스크</div>
+      <div className="bull-bear">
+        <div className="bull-box">
+          <div className="bb-title" style={{color:'#22c55e'}}>MSTR 강점</div>
+          <div className="bb-item">세계 최대 기업 BTC 보유 (818,334개)</div>
+          <div className="bb-item">BTC Yield 9.4% YTD — 주당 BTC 증가</div>
+          <div className="bb-item">비트코인 ETF 대비 레버리지 노출 제공</div>
+          <div className="bb-item">2026 YTD $11.68B 자본 조달 성공</div>
+        </div>
+        <div className="bear-box">
+          <div className="bb-title" style={{color:'#ef4444'}}>MSTR 리스크</div>
+          <div className="bb-item">Q1 $12.54B GAAP 손실 (BTC 하락)</div>
+          <div className="bb-item">EPS -$38.25 vs 컨센 -$18.98 (Miss)</div>
+          <div className="bb-item">BTC 매도 가능성 (배당 지급용)</div>
+          <div className="bb-item">내부자 $7.2M 주식 매도 (순매수 없음)</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabBitcoin() {
+  var btcPriceRef = useRef(null);
+  var btcPriceChart = useRef(null);
+
+  makeChart(btcPriceRef, btcPriceChart, {
+    type:'line',
+    data:{
+      labels:['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06(현재)'],
+      datasets:[{
+        label:'BTC 가격 ($K)',
+        data:[87,68,72,75,74,77],
+        borderColor:'#f59e0b',
+        backgroundColor:'rgba(245,158,11,0.1)',
+        fill:true,tension:0.3,pointRadius:4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#292019'}},y:{ticks:{color:'#9ca3af'},grid:{color:'#292019'},title:{display:true,text:'USD ($K)',color:'#6b7280'}}}
+    }
+  });
+
+  return (
+    <div className="content">
+      <div className="section-title">🟠 비트코인 가격 추이 (2026)</div>
+      <div className="card"><div className="chart-wrap"><canvas ref={btcPriceRef}></canvas></div></div>
+
+      <div className="section-title">🔮 BTC 6월 가격 시나리오</div>
+      <div className="btc-scenario scen-bull">
+        <div className="scen-title" style={{color:'#22c55e'}}>🐂 Bull Case (확률 30%)</div>
+        <div className="scen-data">
+          <div className="scen-item"><span className="scen-label">BTC 목표</span><span className="scen-val" style={{color:'#22c55e'}}>$84,000+</span></div>
+          <div className="scen-item"><span className="scen-label">MSTR 예상</span><span className="scen-val" style={{color:'#22c55e'}}>+30~50%</span></div>
+          <div className="scen-item"><span className="scen-label">MSTU 예상</span><span className="scen-val" style={{color:'#22c55e'}}>+60~100%</span></div>
+          <div className="scen-item"><span className="scen-label">MSTU 목표가</span><span className="scen-val" style={{color:'#22c55e'}}>$7~$8</span></div>
+        </div>
+        <div className="text-sm" style={{marginTop:8}}>BTC $77K 지지 확인 → $84K 돌파 시. 기관 ETF 자금 유입 + 반감기 효과 지속.</div>
+      </div>
+      <div className="btc-scenario scen-base" style={{marginTop:10}}>
+        <div className="scen-title" style={{color:'#f59e0b'}}>⚖️ Base Case (확률 50%)</div>
+        <div className="scen-data">
+          <div className="scen-item"><span className="scen-label">BTC 범위</span><span className="scen-val" style={{color:'#f59e0b'}}>$72,000~$80,000</span></div>
+          <div className="scen-item"><span className="scen-label">MSTR 예상</span><span className="scen-val" style={{color:'#f59e0b'}}>±10%</span></div>
+          <div className="scen-item"><span className="scen-label">MSTU 예상</span><span className="scen-val" style={{color:'#f59e0b'}}>±20%</span></div>
+          <div className="scen-item"><span className="scen-label">MSTU 범위</span><span className="scen-val" style={{color:'#f59e0b'}}>$3.5~$5.5</span></div>
+        </div>
+        <div className="text-sm" style={{marginTop:8}}>BTC $75K 중심 횡보. Volatility Decay 진행 중 → MSTU 점진적 NAV 침식.</div>
+      </div>
+      <div className="btc-scenario scen-bear" style={{marginTop:10}}>
+        <div className="scen-title" style={{color:'#ef4444'}}>🐻 Bear Case (확률 20%)</div>
+        <div className="scen-data">
+          <div className="scen-item"><span className="scen-label">BTC 목표</span><span className="scen-val" style={{color:'#ef4444'}}>$68,000 이하</span></div>
+          <div className="scen-item"><span className="scen-label">MSTR 예상</span><span className="scen-val" style={{color:'#ef4444'}}>-20~30%</span></div>
+          <div className="scen-item"><span className="scen-label">MSTU 예상</span><span className="scen-val" style={{color:'#ef4444'}}>-40~60%</span></div>
+          <div className="scen-item"><span className="scen-label">MSTU 목표가</span><span className="scen-val" style={{color:'#ef4444'}}>$1.5~$2.5</span></div>
+        </div>
+        <div className="text-sm" style={{marginTop:8}}>BTC $72K 지지 붕괴 시. MSTR BTC 매도 뉴스 + 시장 불안 연동.</div>
+      </div>
+
+      <div className="section-title">📊 비트코인 핵심 지표 (2026.06)</div>
+      <div className="card">
+        <table>
+          <tbody>
+            <tr><td style={{color:'#94a3b8'}}>현재가</td><td style={{fontWeight:700,color:'#f59e0b'}}>~$77,000</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>2026 고점</td><td>~$87,000 (1월)</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>2026 저점</td><td style={{color:'#ef4444'}}>~$68,000 (2월)</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>주요 지지선</td><td>$72,000~$75,000</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>주요 저항선</td><td>$80,000~$84,000</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>6월 예측 범위</td><td>$69,700~$84,000</td></tr>
+            <tr><td style={{color:'#94a3b8'}}>기관 ETF 유입</td><td style={{color:'#22c55e'}}>지속 증가 중</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function TabRisk() {
+  var decayRef = useRef(null);
+  var decayChart = useRef(null);
+
+  makeChart(decayRef, decayChart, {
+    type:'line',
+    data:{
+      labels:['Day 0','1개월','3개월','6개월','1년','2년'],
+      datasets:[
+        {label:'MSTU (2x, 변동성 30%)',data:[100,92,78,60,36,13],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true,tension:0.3},
+        {label:'MSTR (1x, 변동성 30%)',data:[100,96,88,78,60,37],borderColor:'#f97316',backgroundColor:'transparent',tension:0.3},
+        {label:'BTC (기준, 변동성 20%)',data:[100,97,92,85,72,52],borderColor:'#f59e0b',backgroundColor:'transparent',tension:0.3},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.raw+'%';}}}},
+      scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#292019'}},y:{ticks:{color:'#9ca3af'},grid:{color:'#292019'},title:{display:true,text:'가치 보존율 (%)',color:'#6b7280'}}}
+    }
+  });
+
+  return (
+    <div className="content">
+      <div className="danger-box">
+        ⛔ <strong>Volatility Decay 경고 — 레버리지 ETF의 숨겨진 함정</strong><br/>
+        BTC가 장기 우상향해도 MSTU는 변동성만 높으면 지속적으로 손실 가능합니다.
+      </div>
+
+      <div className="section-title">📉 Volatility Decay 시뮬레이션</div>
+      <div className="card">
+        <div className="text-sm" style={{marginBottom:8}}>가정: BTC 변동성 20%, MSTR 변동성 30% (기초자산 횡보 시나리오)</div>
+        <div className="chart-wrap"><canvas ref={decayRef}></canvas></div>
+        <div className="warn-box" style={{marginTop:8}}>🔑 핵심: BTC가 횡보해도 MSTU는 1년 후 -64%, 2년 후 -87%까지 손실 가능. 장기 보유 = 구조적 손실.</div>
+      </div>
+
+      <div className="section-title">⚠️ 핵심 리스크 목록</div>
+      <div className="card">
+        {[
+          {icon:'📉',title:'Volatility Decay',level:'🔴 최고',desc:'가장 큰 구조적 리스크. 일일 리밸런싱 특성상 횡보 또는 왕복 등락 시 가치 침식. BTC가 +10%/-10% 반복 시 MSTU는 -2% 손실.'},
+          {icon:'⚡',title:'레버리지 청산 리스크',level:'🔴 높음',desc:'BTC 하루 -50% 이상 시 펀드 청산 가능성. 극단적 블랙스완 이벤트(거래소 해킹, 규제 긴급 조치) 시.'},
+          {icon:'₿',title:'MSTR BTC 매도 리스크',level:'🔴 높음',desc:'MSTR이 배당 충당 위해 BTC 매도 검토 중. 매도 발표 시 MSTR·MSTU 동반 급락 가능.'},
+          {icon:'💸',title:'고비용 구조',level:'🟠 중간',desc:'운용보수 1.05% + 스왑 비용(연 3~5% 추가). 실질 연간 비용 4~6% — 장기 보유 시 심각한 마찰 비용.'},
+          {icon:'📊',title:'NAV 괴리 리스크',level:'🟠 중간',desc:'고변동성 장에서 ETF 시장가와 NAV 사이 괴리 발생. 패닉 시 시장가가 NAV 대비 대폭 할인 거래 가능.'},
+          {icon:'🏛️',title:'규제 리스크',level:'🟡 낮음',desc:'SEC의 레버리지 암호화폐 ETF 규제 강화 가능성. 펀드 구조 변경 또는 청산 강제 사태 가능.'},
+        ].map(function(r) {
+          return (
+            <div key={r.title} style={{padding:'12px 0',borderBottom:'1px solid #292019'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                <span style={{fontSize:16}}>{r.icon}</span>
+                <span style={{fontSize:13,fontWeight:700,color:'#e2e8f0'}}>{r.title}</span>
+                <span style={{fontSize:11,padding:'2px 6px',borderRadius:10,background:'#292019',color:'#94a3b8'}}>{r.level}</span>
+              </div>
+              <div className="text-sm">{r.desc}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="section-title">💡 MSTU 대신 고려할 대안</div>
+      <div className="card">
+        <table>
+          <thead><tr><th>상품</th><th>레버리지</th><th>특징</th><th>적합 대상</th></tr></thead>
+          <tbody>
+            <tr><td style={{color:'#22c55e',fontWeight:700}}>IBIT</td><td>1x</td><td>블랙록 비트코인 현물 ETF</td><td>장기 BTC 노출</td></tr>
+            <tr><td style={{color:'#22c55e',fontWeight:700}}>MSTR</td><td>약 1.5~2x</td><td>BTC 보유 기업 직접 투자</td><td>BTC+소프트웨어 노출</td></tr>
+            <tr><td style={{color:'#f59e0b',fontWeight:700}}>MSTX</td><td>2x</td><td>Defiance 2x MSTR ETF</td><td>MSTU 유사 경쟁 상품</td></tr>
+            <tr><td style={{color:'#f97316',fontWeight:700}}>MSTU</td><td>2x</td><td>T-Rex 2x MSTR ETF</td><td>단기 트레이더 한정</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+var xPosts = [
+  {user:'@BTCLeverageKing',followers:'28.4K',role:'레버리지 트레이더',badge:'pos',body:'$MSTU at $4.34 with BTC bouncing off $75K support. If BTC breaks $80K this week, MSTU could easily double. High risk, high reward.',trans:'$MSTU $4.34, BTC $75K 지지선 반등 중. 이번 주 $80K 돌파 시 MSTU 2배 가능. 고위험 고수익.',likes:'1,243',rts:'387',date:'2026.06.01'},
+  {user:'@CryptoMacroWatcher',followers:'67.2K',role:'매크로 암호화폐 분석',badge:'neg',body:'$MSTU has lost 96% from its highs. The volatility decay is destroying value faster than BTC can recover. This is not an investment, it\'s a short-term gamble.',trans:'$MSTU 고점 대비 -96%. 변동성 감쇠가 BTC 회복보다 빠르게 가치를 파괴. 투자가 아니라 단기 도박.',likes:'2,891',rts:'934',date:'2026.05.30'},
+  {user:'@SaylorFanboy2026',followers:'15.3K',role:'MSTR 강세론자',badge:'pos',body:'Buying more $MSTU here. Michael Saylor never sells. 818,334 Bitcoin, the largest corporate holder. If BTC goes to 100K, MSTU recovers massively.',trans:'여기서 $MSTU 추가 매수. 세일러는 절대 안 판다. 818,334 BTC 세계 최대 기업 보유. BTC $100K 가면 MSTU 대규모 회복.',likes:'876',rts:'243',date:'2026.06.02'},
+  {user:'@ETFRiskAlert',followers:'44.1K',role:'ETF 리스크 전문가',badge:'neg',body:'Reminder: $MSTU expense ratio 1.05% + hidden swap costs ~3-5%. You\'re paying 4-6% annually just to hold this. Add volatility decay and it\'s a wealth destruction machine.',trans:'$MSTU 운용보수 1.05% + 숨겨진 스왑 비용 3~5%. 보유만 해도 연 4~6% 비용. 변동성 감쇠까지 더하면 자산 파괴 기계.',likes:'3,456',rts:'1,287',date:'2026.05.28'},
+  {user:'@BitcoinDegen99',followers:'9.8K',role:'암호화폐 트레이더',badge:'pos',body:'$MSTU from $107 to $4 in one year lmao. But also potentially from $4 back to $40 if BTC goes from $77K to $85K. Options are limited. YOLO.',trans:'$MSTU 1년에 $107→$4 ㅋㅋ. 하지만 BTC $77K→$85K 가면 $4→$40 가능. 선택지 없음. 올인.',likes:'4,521',rts:'1,893',date:'2026.05.31'},
+  {user:'@MSTRResearch',followers:'33.7K',role:'MSTR 분석 계정',badge:'neu',body:'$MSTR Q1 2026 loss was $12.54B but the BTC Yield was +9.4% YTD. Two ways to look at the same company. GAAP loss is accounting. BTC Yield is the real metric.',trans:'MSTR Q1 손실 $12.54B이지만 BTC Yield +9.4% YTD. 같은 회사를 보는 두 가지 관점. GAAP 손실은 회계. BTC Yield가 진짜 지표.',likes:'1,678',rts:'456',date:'2026.05.06'},
+  {user:'@LeverageDecay',followers:'21.5K',role:'파생상품 트레이더',badge:'neg',body:'People ask why $MSTU is down 96% while MSTR is only down 65%. THIS is volatility decay in action. Daily rebalancing costs you massively in choppy markets.',trans:'MSTR -65%인데 $MSTU -96% 이유를 묻는 사람들. 이것이 변동성 감쇠. 일일 리밸런싱이 변동성 장에서 막대한 비용 발생.',likes:'5,234',rts:'2,104',date:'2026.05.20'},
+  {user:'@BTCTreasury2026',followers:'18.9K',role:'비트코인 재무 전략 분석',badge:'pos',body:'$MSTR just disclosed 843,706 BTC holdings. At $77K BTC that\'s $65B in BTC alone vs $1.8B market cap of software business. MSTU is a play on this.',trans:'MSTR 843,706 BTC 공시. BTC $77K 기준 $65B 규모. 소프트웨어 사업가치 $1.8B 대비. MSTU는 이 배팅.',likes:'789',rts:'234',date:'2026.06.01'},
+  {user:'@NeverHoldLeveraged',followers:'56.8K',role:'금융 교육 계정',badge:'neg',body:'PSA: $MSTU is NOT a long-term investment. It is a daily trading tool. The fund itself says this. Holding for weeks/months = guaranteed underperformance vs 2x of MSTR.',trans:'공지: $MSTU는 장기 투자 상품이 아님. 일별 트레이딩 도구. 펀드 자체가 이렇게 명시. 주/월 단위 보유 = MSTR 2배 대비 필연적 저성과.',likes:'7,890',rts:'3,456',date:'2026.05.15'},
+  {user:'@TradeTheMove',followers:'12.4K',role:'단기 모멘텀 트레이더',badge:'pos',body:'Got a small $MSTU position for the BTC $77K support play. Tight stop at $3.80. If BTC fails support I\'m out immediately. This is purely technical.',trans:'BTC $77K 지지선 플레이로 소규모 $MSTU 포지션. 손절 $3.80. 지지 실패 즉시 청산. 순수 기술적 접근.',likes:'432',rts:'123',date:'2026.06.02'},
+  {user:'@CryptoSkeptic_X',followers:'39.2K',role:'암호화폐 회의론자',badge:'neg',body:'$MSTR sold 32 BTC last week for dividends. The Bitcoin Treasury Company is now... selling Bitcoin? Saylor\'s credibility with MSTU holders is at stake.',trans:'$MSTR 지난주 배당 위해 32 BTC 매도. 비트코인 재무 전략 기업이 비트코인을 판다고? MSTU 투자자에 대한 세일러 신뢰도 위기.',likes:'2,345',rts:'987',date:'2026.06.01'},
+  {user:'@AlphaDecay',followers:'7.6K',role:'퀀트 트레이더',badge:'neg',body:'$MSTU annualized alpha vs S&P500 is -14%. Beta is 4.89. This is the definition of high risk, low reward. You\'re taking 5x the market risk for negative alpha.',trans:'$MSTU 연환산 알파 -14%, 베타 4.89. 고위험 저수익의 정의. 시장 대비 5배 위험 감수하고 음의 알파.',likes:'1,234',rts:'567',date:'2026.05.25'},
+  {user:'@BTCBullRun2026',followers:'24.1K',role:'비트코인 강세론자',badge:'pos',body:'Mark my words: BTC $100K by Q4 2026. $MSTU could 10x from here. Yes it\'s levered, yes decay exists, but for a 6-month trade this is asymmetric.',trans:'내 말 기억해: BTC Q4 2026 $100K. $MSTU 여기서 10배 가능. 레버리지·감쇠 맞음. 하지만 6개월 트레이드로 비대칭 수익.',likes:'3,456',rts:'1,234',date:'2026.06.02'},
+  {user:'@MSTUDailyTrader',followers:'5.2K',role:'MSTU 데이트레이더',badge:'pos',body:'Made +23% on $MSTU today riding BTC pop from $75K to $77K. Got out at close. Never holding overnight with this thing.',trans:'오늘 BTC $75K→$77K 반등 타고 $MSTU +23% 수익. 장마감에 전량 청산. 이 상품은 절대 오버나이트 없음.',likes:'567',rts:'145',date:'2026.05.28'},
+  {user:'@InstitutionalCrypto',followers:'82.3K',role:'기관 암호화폐 전략',badge:'neu',body:'$MSTU\'s $473M AUM is surprisingly resilient given the -96% drawdown. Retail never gives up on leverage. Will be interesting to see if BTC breakout revives this.',trans:'$MSTU AUM $473M은 -96% 낙폭 감안하면 놀랍도록 견조. 개미는 레버리지를 포기 안 함. BTC 브레이크아웃이 이를 살릴지 흥미로울 것.',likes:'1,987',rts:'678',date:'2026.06.03'},
+];
+
+var redditPosts = [
+  {user:'u/LeverageOrDeath',sub:'r/wallstreetbets',votes:'12.4K',badge:'neg',body:'MSTU went from $107 to $4 in a year. That\'s a 96% loss. Meanwhile BTC only lost 12% over the same period. This is what volatility decay does to leveraged ETFs. Don\'t hold them.',trans:'MSTU 1년에 $107→$4 (-96%). BTC는 같은 기간 -12%. 변동성 감쇠가 레버리지 ETF에 미치는 영향. 장기 보유 금지.',date:'2026.05.20'},
+  {user:'u/SaylorArmy2026',sub:'r/CryptoCurrency',votes:'3.4K',badge:'pos',body:'Adding MSTU at these prices. 818K Bitcoin held by MSTR, BTC at $77K support. Risk-reward is actually great here for a short-term trade.',trans:'이 가격에 MSTU 추가. MSTR 818K BTC 보유, BTC $77K 지지선. 단기 트레이드로 위험-보상 비율 실제로 좋음.',date:'2026.06.01'},
+  {user:'u/ETFResearchNerd',sub:'r/investing',votes:'5.6K',badge:'neg',body:'Deep dive on MSTU: 1.05% expense ratio + ~4% swap costs = 5% annual drag before any price movement. MSTR needs to beat S&P by 5% just to break even vs holding MSTR directly.',trans:'MSTU 딥다이브: 운용보수 1.05% + 스왑 비용 ~4% = 연 5% 마찰. MSTR 직접 보유 대비 손익분기점 위해 MSTR이 S&P 대비 5% 이상 아웃퍼폼 필요.',date:'2026.05.15'},
+  {user:'u/BTCProxy_Play',sub:'r/options',votes:'2.1K',badge:'pos',body:'MSTU options play: Bought $5 calls expiring July. If BTC breaks $80K, MSTU could be at $7-8. Defined risk, asymmetric upside.',trans:'MSTU 옵션 플레이: $5 콜 7월 만기 매수. BTC $80K 돌파 시 MSTU $7~8 가능. 정해진 리스크, 비대칭 상승.',date:'2026.06.02'},
+  {user:'u/MSTRFundamentalDD',sub:'r/SecurityAnalysis',votes:'4.3K',badge:'neu',body:'MSTR Q1 2026: $12.54B GAAP loss looks scary but BTC Yield of 9.4% is what matters. They added 63,410 BTC. If you believe BTC goes up, MSTR (and MSTU) is still a bet.',trans:'MSTR Q1: $12.54B GAAP 손실 무섭지만 BTC Yield 9.4%가 핵심. 63,410 BTC 추가. BTC 상승 믿으면 MSTR(MSTU)은 여전히 배팅 대상.',date:'2026.05.07'},
+  {user:'u/NeverHoldLeverage',sub:'r/personalfinance',votes:'8.9K',badge:'neg',body:'MSTU held from October 2024 (inception) to now has lost 95.7%. MSTR held same period is down 64%. The leverage multiplied the downside way more than the small upside days.',trans:'MSTU 2024년 10월(설정) 이후 현재 -95.7%. MSTR 같은 기간 -64%. 레버리지가 상승일 소폭 이익 대비 하락일 손실을 훨씬 크게 확대.',date:'2026.05.25'},
+  {user:'u/DegenLeveragePlay',sub:'r/wallstreetbets',votes:'6.7K',badge:'pos',body:'MSTU $4 is a gift. Max drawdown was 98.58% on Feb 5. We\'re still near those lows. BTC at $77K is not $68K anymore. Loading up 🚀',trans:'MSTU $4는 선물. 최대 낙폭 2/5일 -98.58%. 여전히 저점 근처. BTC $77K, $68K 아님. 줍줍 중 🚀',date:'2026.06.02'},
+  {user:'u/QuantLeverageResearch',sub:'r/SecurityAnalysis',votes:'3.2K',badge:'neg',body:'MSTU beta vs S&P500 is 4.89 with R² of only 0.23. That means high risk but the correlation to S&P is actually low. It\'s correlated to BTC, not S&P. Risk-adjusted returns are terrible.',trans:'MSTU 베타 4.89, R² 0.23. 고위험이나 S&P 상관관계 낮음. BTC에 상관. 위험 조정 수익률 최악.',date:'2026.05.22'},
+  {user:'u/MicroStrategyBullcase',sub:'r/CryptoCurrency',votes:'1.8K',badge:'pos',body:'Let\'s put this in perspective: MSTR holds $65B worth of Bitcoin, has $11.68B in capital raised in 2026 alone. The business is an ATM machine for Bitcoin accumulation.',trans:'관점 정리: MSTR은 $65B BTC 보유, 2026년만 $11.68B 자본 조달. 비즈니스는 비트코인 축적 ATM 기계.',date:'2026.05.10'},
+  {user:'u/BTC100K_Thesis',sub:'r/Bitcoin',votes:'2.9K',badge:'pos',body:'If Bitcoin hits $100K by year end (still very possible), MSTU from $4 to ~$15-20 easily. That\'s 4-5x in 6 months. Yes it\'s speculative, but the asymmetry is there.',trans:'연말 BTC $100K 시(여전히 가능), MSTU $4→$15~20 쉽게. 6개월 4~5배. 투기적이지만 비대칭성 있음.',date:'2026.06.01'},
+  {user:'u/AntiLeverageETF',sub:'r/investing',votes:'11.2K',badge:'neg',body:'For the love of all that is holy, please do not buy leveraged ETFs as long-term holdings. MSTU, TQQQ, SOXL — they all work the same way. They WILL decay to zero given enough time.',trans:'제발 레버리지 ETF를 장기 보유하지 마세요. MSTU, TQQQ, SOXL 다 동일. 시간이 충분하면 결국 0에 수렴.',date:'2026.05.18'},
+  {user:'u/BTCSellThesis',sub:'r/CryptoCurrency',votes:'2.3K',badge:'neg',body:'MSTR announced it may sell Bitcoin to fund dividends. This is a massive red flag. The core thesis of MSTU is that MSTR never sells Bitcoin. That thesis is breaking.',trans:'MSTR이 배당 위해 BTC 매도 가능성 발표. 거대한 적신호. MSTU의 핵심 논리는 MSTR이 BTC를 팔지 않는다는 것. 그 논리가 무너지고 있음.',date:'2026.05.06'},
+  {user:'u/TradingNotInvesting',sub:'r/options',votes:'1.4K',badge:'neu',body:'MSTU is not a stock or an investment. It\'s a trading instrument. Treat it as such. 1-3 day holds max. Cut losses fast. Never fall in love with a leveraged ETF.',trans:'MSTU는 주식도 투자도 아님. 트레이딩 도구. 그렇게 다뤄야. 최대 1~3일 보유. 빠른 손절. 레버리지 ETF에 절대 애착 갖지 말 것.',date:'2026.05.28'},
+  {user:'u/LeverageFomo',sub:'r/wallstreetbets',votes:'3.6K',badge:'pos',body:'I turned $500 into $4,200 trading $MSTU in May alone. Buy the BTC dips, sell the pops, never hold overnight. Day trading this thing is actually fun.',trans:'5월에만 $MSTU 트레이딩으로 $500→$4,200. BTC 저점 매수, 반등 매도, 오버나이트 없음. 데이트레이딩은 재밌음.',date:'2026.06.01'},
+  {user:'u/ETFDecayExplained',sub:'r/investing',votes:'4.5K',badge:'neg',body:'Simple math: MSTR goes +10% then -10%. Net = -1%. MSTU 2x: +20% then -20%. Net = -4%. Do this 100 times and MSTU is nearly zero while MSTR is almost flat. Decay is real.',trans:'간단 계산: MSTR +10% 후 -10% = 순 -1%. MSTU 2x: +20% 후 -20% = 순 -4%. 100번 반복하면 MSTU 거의 0, MSTR 거의 보합. 감쇠는 실재.',date:'2026.05.12'},
+];
+
+function TabTwitter() {
+  var pos = xPosts.filter(function(p){return p.badge==='pos';}).length;
+  var neu = xPosts.filter(function(p){return p.badge==='neu';}).length;
+  var neg = xPosts.filter(function(p){return p.badge==='neg';}).length;
+  return (
+    <div className="content">
+      <div className="sentiment-stat">
+        <span className="s-pos">🟢 긍정 {pos}</span>
+        <span className="s-neu">🟡 중립 {neu}</span>
+        <span className="s-neg">🔴 부정 {neg}</span>
+      </div>
+      {xPosts.map(function(p,i){
+        return (
+          <div key={i} className="tweet-card">
+            <div className="tweet-header">
+              <span className="tweet-user">{p.user}</span>
+              <span style={{fontSize:11,color:'#6b7280'}}>{p.followers} · {p.role}</span>
+              <span className={'badge '+(p.badge==='pos'?'badge-green':p.badge==='neg'?'badge-red':'badge-yellow')}>
+                {p.badge==='pos'?'🟢 긍정':p.badge==='neg'?'🔴 부정':'🟡 중립'}
+              </span>
+              <span className="tweet-date">{p.date}</span>
+            </div>
+            <div className="tweet-body">{p.body}</div>
+            <div className="tweet-trans">🇰🇷 {p.trans}</div>
+            <div className="tweet-footer">❤️ {p.likes} · 🔁 {p.rts}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TabReddit() {
+  var pos = redditPosts.filter(function(p){return p.badge==='pos';}).length;
+  var neu = redditPosts.filter(function(p){return p.badge==='neu';}).length;
+  var neg = redditPosts.filter(function(p){return p.badge==='neg';}).length;
+  return (
+    <div className="content">
+      <div className="sentiment-stat">
+        <span className="s-pos">🟢 긍정 {pos}</span>
+        <span className="s-neu">🟡 중립 {neu}</span>
+        <span className="s-neg">🔴 부정 {neg}</span>
+      </div>
+      {redditPosts.map(function(p,i){
+        return (
+          <div key={i} className="tweet-card">
+            <div className="tweet-header">
+              <span className="tweet-user" style={{color:'#f97316'}}>{p.user}</span>
+              <span style={{fontSize:11,color:'#6b7280'}}>{p.sub}</span>
+              <span className={'badge '+(p.badge==='pos'?'badge-green':p.badge==='neg'?'badge-red':'badge-yellow')}>
+                {p.badge==='pos'?'🟢 긍정':p.badge==='neg'?'🔴 부정':'🟡 중립'}
+              </span>
+              <span className="tweet-date">{p.date}</span>
+            </div>
+            <div className="tweet-body">{p.body}</div>
+            <div className="tweet-trans">🇰🇷 {p.trans}</div>
+            <div className="tweet-footer">▲ {p.votes}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+var GLOSSARY = [
+  {term:'레버리지 ETF',eng:'Leveraged ETF',cat:'기술적',body:'일반 지수나 주식의 수익률을 2배·3배로 추종하는 상장지수펀드입니다. 매일 목표 배수를 맞추기 위해 내부적으로 리밸런싱합니다. 단기 방향성 배팅에 적합합니다.',apply:'MSTU는 MSTR의 일일 수익률 2배를 목표로 합니다. 장기 보유 시 심각한 가치 손실 발생.'},
+  {term:'Volatility Decay',eng:'변동성 감쇠',cat:'기술적',body:'레버리지 ETF에서 변동성이 높을 때 발생하는 구조적 가치 손실입니다. 예: +10% → -10% 반복 시 기초자산은 거의 보합이지만 2x ETF는 -4% 손실이 누적됩니다.',apply:'MSTU의 -96.89% 하락의 주요 원인. BTC가 회복해도 MSTU가 따라가지 못하는 핵심 이유.'},
+  {term:'NAV',eng:'Net Asset Value',cat:'재무',body:'펀드의 순자산가치입니다. 보유 자산에서 부채를 뺀 총 가치를 발행 좌수로 나눈 값입니다. ETF 시장가와 NAV가 괴리될 때 차익거래 기회가 발생합니다.',apply:'MSTU NAV: 2026.06.01 기준 $5.4 (-11.78% 변동). 시장가 $4.34와 차이 발생 가능.'},
+  {term:'BTC Yield',eng:'비트코인 수익률',cat:'실적',body:'MicroStrategy가 자체 개발한 KPI로, 완전 희석 주당 비트코인 보유량의 변화율입니다. 주식 발행으로 BTC를 매입해 주당 BTC를 늘리는 전략의 성과 지표입니다.',apply:'MSTR Q1 2026 BTC Yield +9.4% = 주당 BTC 9.4% 증가. GAAP 손실과 별개로 전략 성과 측정.'},
+  {term:'일일 리밸런싱',eng:'Daily Rebalancing',cat:'기술적',body:'레버리지 ETF가 매 거래일 종료 후 목표 레버리지를 유지하기 위해 포지션을 조정하는 과정입니다. 이 과정에서 변동성이 높을수록 거래 비용과 Volatility Decay가 누적됩니다.',apply:'MSTU는 매일 MSTR 2x 노출을 맞추기 위해 리밸런싱. 장기 보유 시 이 비용이 복리로 누적됨.'},
+  {term:'최대 낙폭',eng:'Maximum Drawdown',cat:'기술적',body:'특정 기간 고점에서 저점까지의 최대 손실폭입니다. 리스크 관리에서 가장 중요한 지표 중 하나로, 최악의 시나리오를 보여줍니다.',apply:'MSTU 최대 낙폭 -98.58% (2026.02.05). 초기 투자자 100만원 → 1.4만원 수준.'},
+  {term:'스왑 계약',eng:'Swap Agreement',cat:'재무',body:'두 당사자가 미래 현금흐름을 교환하기로 합의하는 파생상품 계약입니다. MSTU는 스왑을 통해 MSTR 주가 변동에 2배 노출됩니다.',apply:'MSTU의 16개 보유 종목 대부분은 스왑 계약. 실제 MSTR 주식 보유 비율은 낮음.'},
+  {term:'운용보수',eng:'Expense Ratio',cat:'재무',body:'ETF 운용에 드는 연간 비용을 NAV 대비 비율로 나타낸 것입니다. 투자자가 명시적으로 지불하지 않고 NAV에서 자동으로 차감됩니다.',apply:'MSTU 운용보수 1.05% + 스왑 비용 3~5% = 실질 연간 비용 4~6%. 장기 보유 시 큰 부담.'},
+  {term:'베타',eng:'Beta',cat:'기술적',body:'시장(보통 S&P500) 대비 변동성 비율입니다. 베타 1 = 시장과 동일, 2 = 2배 변동성. 높을수록 위험하지만 상승 시 더 많은 이익도 가능합니다.',apply:'MSTU 베타 4.89 = S&P500 대비 약 5배 변동성. 시장 하락 시 5배 손실 가능.'},
+  {term:'알파',eng:'Alpha',cat:'재무',body:'시장 대비 초과 수익률입니다. 알파가 양수이면 시장 대비 더 좋은 성과, 음수이면 더 나쁜 성과입니다. 리스크 조정 후 기여를 의미합니다.',apply:'MSTU 연환산 알파 -13.99% = 같은 위험 수준 대비 시장보다 연 14% 손실 발생.'},
+  {term:'Book-to-Bill',eng:'수주 대 매출 비율',cat:'실적',body:'들어온 수주를 처리된 매출로 나눈 비율입니다. (MSTU에는 직접 적용되지 않으나 MSTR의 소프트웨어 사업 분석에 참고 가능)',apply:'MSTR 소프트웨어 사업(MSTU 기초) 이해용 참고 지표.'},
+  {term:'내재 변동성',eng:'Implied Volatility',cat:'기술적',body:'옵션 가격에 내포된 미래 변동성 예측치입니다. 높을수록 시장이 큰 가격 변동을 예상합니다. 레버리지 ETF의 Volatility Decay와 직결됩니다.',apply:'MSTR 내재 변동성이 높을수록 MSTU의 Volatility Decay 속도가 빠름.'},
+];
+
+var GLOSS_CATS = ['전체','기술적','재무','실적'];
+
+function TabGlossary() {
+  var state = useState('전체');
+  var sel = state[0];
+  var setSel = state[1];
+  var filtered = sel === '전체' ? GLOSSARY : GLOSSARY.filter(function(g){return g.cat===sel;});
+  var catColor = {'기술적':'#3b82f6','재무':'#22c55e','실적':'#f97316','기타':'#a855f7'};
+  return (
+    <div className="content">
+      <div className="glossary-filter">
+        {GLOSS_CATS.map(function(c){
+          return <button key={c} className={'filter-btn'+(sel===c?' active':'')} onClick={function(){setSel(c);}}>{c}</button>;
+        })}
+      </div>
+      {filtered.map(function(g){
+        return (
+          <div key={g.term} className="gloss-card">
+            <div className="gloss-head">
+              <span className="gloss-term">{g.term}</span>
+              <span style={{fontSize:11,color:'#6b7280'}}>{g.eng}</span>
+              <span className="badge" style={{background:'rgba(249,115,22,0.15)',color:catColor[g.cat]||'#a855f7',fontSize:10}}>{g.cat}</span>
+            </div>
+            <div className="gloss-body">{g.body}</div>
+            <div className="gloss-apply">📌 MSTU 분석 적용: {g.apply}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+var MB_ITEMS = [
+  {icon:'📏',title:'① 충분히 작은 기업인가?',data:'AUM $473M (ETF 기준)',verdict:'partial',note:'ETF 구조상 일반 시총 개념 다름. AUM 중소형 레버리지 ETF'},
+  {icon:'💲',title:'② 미래가 과대반영되지 않았나?',data:'NAV $5.4, 고점 $107.60 대비 -95.97%',verdict:'partial',note:'이미 극단적 하락 — 오히려 역발상 관점에선 반영 충분'},
+  {icon:'📈',title:'③ 매출보다 EBITDA/FCF 개선이 따라오나?',data:'ETF 구조 — 해당 없음 (스왑 비용 구조)',verdict:'fail',note:'레버리지 ETF는 이익 창출 기업이 아님'},
+  {icon:'⚙️',title:'④ 자산 증가율보다 EBITDA 증가율이 앞서나?',data:'ETF 구조 — 해당 없음',verdict:'fail',note:'기초자산(MSTR·BTC) 가격 추종 구조'},
+  {icon:'💰',title:'⑤ FCF yield가 합리적인가?',data:'ETF 구조 — FCF 개념 없음',verdict:'fail',note:'레버리지 비용이 구조적으로 NAV 침식'},
+  {icon:'📦',title:'⑥ 투자가 실제 수요·주문과 연결되나?',data:'MSTR BTC Yield +9.4% YTD, 수주 818K BTC',verdict:'pass',note:'기초자산 MSTR의 BTC 축적 전략 수요와 연결'},
+  {icon:'🛡️',title:'⑦ 고금리 환경에서도 버틸 수 있나?',data:'ETF: 스왑 비용 금리 연동 / MSTR: 순현금 포지션',verdict:'partial',note:'금리 상승 시 스왑 비용 증가 → MSTU NAV 추가 침식'},
+  {icon:'🎯',title:'⑧ 단기 급등 후 추격매수 구간이 아닌가?',data:'RSI 57.2, 고점 대비 -96%, 저점 근처',verdict:'pass',note:'오히려 역발상 관점 — 극단적 과매도 후 반등 구간'},
+];
+
+function TabMulti() {
+  var radarRef = useRef(null);
+  var radarChart = useRef(null);
+  var scores = MB_ITEMS.map(function(m){return m.verdict==='pass'?1:m.verdict==='partial'?0.5:0;});
+  var total = scores.reduce(function(a,b){return a+b;},0);
+
+  makeChart(radarRef, radarChart, {
+    type:'radar',
+    data:{
+      labels:['소형 ETF','가격 반영','이익 개선','투자 효율','FCF','수요 연결','부채 안정','급등 아님'],
+      datasets:[{
+        label:'MSTU 멀티배거 점수 (ETF 조정)',
+        data:scores,
+        backgroundColor:'rgba(249,115,22,0.2)',
+        borderColor:'#f97316',
+        pointBackgroundColor:'#f97316'
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{r:{min:0,max:1,ticks:{color:'#9ca3af',stepSize:0.5},grid:{color:'#292019'},angleLines:{color:'#292019'},pointLabels:{color:'#9ca3af'}}}
+    }
+  });
+
+  var grade = total >= 6.5 ? '🏆 유망' : total >= 4 ? '⚡ 보통' : '⚠️ 낮음';
+  var gradeColor = total >= 6.5 ? '#22c55e' : total >= 4 ? '#f59e0b' : '#ef4444';
+
+  return (
+    <div className="content">
+      <div className="warn-box">⚠️ 멀티배거 8항목은 성장 기업 분석 도구입니다. MSTU는 레버리지 ETF로 일부 항목이 구조적으로 해당 없음(N/A). 기초자산 MSTR 관점으로 조정 적용합니다.</div>
+
+      <div className="card" style={{textAlign:'center',marginBottom:16}}>
+        <div style={{fontSize:36,fontWeight:800,color:gradeColor}}>{total}/8</div>
+        <div style={{fontSize:18,fontWeight:700,color:gradeColor,marginTop:4}}>{grade}</div>
+        <div style={{fontSize:12,color:'#94a3b8',marginTop:4}}>Anna Yartseva 멀티배거 점수 (ETF 조정 적용)</div>
+      </div>
+
+      <div className="section-title">🕸️ 레이더 차트</div>
+      <div className="card"><div className="radar-wrap"><canvas ref={radarRef}></canvas></div></div>
+
+      <div className="section-title">📋 8개 항목 상세</div>
+      {MB_ITEMS.map(function(m,i){
+        return (
+          <div key={i} className="multi-item">
+            <div className="multi-head">
+              <span style={{fontSize:16}}>{m.icon}</span>
+              <span className="multi-title">{m.title}</span>
+            </div>
+            <div className="multi-data">데이터: {m.data}</div>
+            <div>
+              <span className={'multi-verdict '+(m.verdict==='pass'?'v-pass':m.verdict==='partial'?'v-partial':'v-fail')}>
+                {m.verdict==='pass'?'✅ 충족':m.verdict==='partial'?'⚠️ 부분충족':'❌ 미충족'}
+              </span>
+              <span style={{fontSize:12,color:'#94a3b8',marginLeft:8}}>{m.note}</span>
+            </div>
+          </div>
+        );
+      })}
+
+      <div className="card card-red" style={{marginTop:16}}>
+        <div style={{fontSize:13,fontWeight:700,color:'#fca5a5',marginBottom:6}}>⛔ 핵심 한계 주의사항</div>
+        <div className="text-sm">멀티배거 8항목은 성장 기업 분석 프레임워크입니다. MSTU는 레버리지 ETF로 이 프레임워크의 적용 범위가 제한됩니다. 3/8점은 ETF 구조상 해당 없는 항목 때문이며, BTC 강세론과 단기 반등 관점에서만 의미 있는 지표입니다. 참고용으로만 활용하세요.</div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  var tabState = useState('overview');
+  var tab = tabState[0];
+  var setTab = tabState[1];
+  return (
+    <div>
+      <div className="header">
+        <a className="header-back" href="https://disntm90.github.io/disntm90/">← 목록으로</a>
+        <div className="header-top">
+          <div>
+            <div className="header-title">MSTU — T-Rex 2X Long MSTR ETF</div>
+            <div className="header-sub">CBOE(BATS) · 레버리지 ETF · 분석일: 2026.06.03</div>
+          </div>
+          <div className="price-badge">
+            <div className="price-now">$4.34</div>
+            <div className="price-change">52주 고점 $107.60 대비 -95.97%</div>
+          </div>
+        </div>
+        <div className="danger-box" style={{marginTop:10}}>
+          ⛔ 초고위험 레버리지 ETF — 장기 보유 시 Volatility Decay로 BTC 우상향에도 NAV 손실 가능. 단기 트레이딩 전용 상품. 최대 낙폭 -98.58% (2026.02.05)
+        </div>
+      </div>
+      <div className="tabs">
+        {TABS.map(function(t){
+          return <div key={t.id} className={'tab'+(tab===t.id?' active':'')} onClick={function(){setTab(t.id);}}>{t.label}</div>;
+        })}
+      </div>
+      {tab==='overview' && <TabOverview/>}
+      {tab==='tech' && <TabTech/>}
+      {tab==='mstr' && <TabMSTR/>}
+      {tab==='bitcoin' && <TabBitcoin/>}
+      {tab==='risk' && <TabRisk/>}
+      {tab==='twitter' && <TabTwitter/>}
+      {tab==='reddit' && <TabReddit/>}
+      {tab==='glossary' && <TabGlossary/>}
+      {tab==='multi' && <TabMulti/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
