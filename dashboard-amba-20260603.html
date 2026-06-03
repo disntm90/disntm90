@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>AMBA — Ambarella 종목 분석 | 2026.06.03</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0a0f;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+    .header{background:linear-gradient(135deg,#0c1a3a 0%,#0a0a0f 100%);padding:24px 20px 20px;border-bottom:2px solid #3b82f6}
+    .header-back{color:#3b82f6;text-decoration:none;font-size:13px;display:inline-block;margin-bottom:12px}
+    .header-back:hover{color:#60a5fa}
+    .header-title{font-size:26px;font-weight:800;color:#3b82f6;margin-bottom:4px}
+    .header-sub{font-size:13px;color:#6b7280}
+    .header-price{font-size:32px;font-weight:900;color:#e2e8f0;margin-top:8px}
+    .header-change{font-size:14px;margin-left:10px}
+    .tabs{display:flex;overflow-x:auto;background:#111827;border-bottom:1px solid #1f2937;padding:0 16px}
+    .tabs::-webkit-scrollbar{height:3px}
+    .tabs::-webkit-scrollbar-thumb{background:#3b82f6}
+    .tab{padding:14px 16px;cursor:pointer;font-size:12px;white-space:nowrap;color:#6b7280;border-bottom:3px solid transparent;transition:.2s}
+    .tab.active{color:#3b82f6;border-bottom-color:#3b82f6;font-weight:700}
+    .tab:hover{color:#60a5fa}
+    .content{padding:20px;max-width:900px;margin:0 auto}
+    .section-title{font-size:15px;font-weight:700;color:#3b82f6;margin:20px 0 10px;display:flex;align-items:center;gap:6px}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:16px;margin-bottom:14px}
+    .card-blue{border-left:4px solid #3b82f6}
+    .card-green{border-left:4px solid #22c55e}
+    .card-red{border-left:4px solid #ef4444}
+    .card-yellow{border-left:4px solid #f59e0b}
+    .verdict-box{background:linear-gradient(135deg,#0c1a3a,#111827);border:2px solid #3b82f6;border-radius:12px;padding:20px;text-align:center;margin:16px 0}
+    .verdict-label{font-size:12px;color:#6b7280;margin-bottom:6px}
+    .verdict-main{font-size:28px;font-weight:900;color:#3b82f6}
+    .verdict-sub{font-size:13px;color:#9ca3af;margin-top:6px}
+    .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+    .kpi{background:#0a0a0f;border-radius:8px;padding:12px;text-align:center}
+    .kpi-val{font-size:18px;font-weight:800;color:#3b82f6}
+    .kpi-label{font-size:10px;color:#6b7280;margin-top:3px;text-transform:uppercase}
+    .kpi-note{font-size:10px;color:#9ca3af;margin-top:2px}
+    .price-row{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0;font-size:12px}
+    .price-item{display:flex;flex-direction:column;gap:2px}
+    .price-label{color:#6b7280;font-size:10px;text-transform:uppercase}
+    .price-val{color:#e2e8f0;font-weight:700}
+    .badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700;margin:2px}
+    .badge-buy{background:#14532d;color:#86efac}
+    .badge-hold{background:#1c1f2e;color:#93c5fd}
+    .badge-warn{background:#451a03;color:#fcd34d}
+    .badge-danger{background:#450a0a;color:#fca5a5}
+    .rsi-chip{display:inline-block;font-size:11px;padding:3px 10px;border-radius:12px;font-weight:700}
+    .rsi-low{background:#7f1d1d;color:#fca5a5}
+    .rsi-mid{background:#14532d;color:#86efac}
+    .rsi-high{background:#78350f;color:#fcd34d}
+    .rsi-neutral{background:#1c2d42;color:#93c5fd}
+    .table-wrap{overflow-x:auto;margin:10px 0}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{background:#1e3a5f;color:#93c5fd;padding:8px 10px;text-align:left;font-weight:700}
+    td{padding:8px 10px;border-bottom:1px solid #1f2937;color:#d1d5db}
+    tr:hover td{background:#111827}
+    .beat{color:#86efac;font-weight:700}
+    .miss{color:#fca5a5;font-weight:700}
+    .up{color:#86efac}
+    .down{color:#fca5a5}
+    .neutral{color:#93c5fd}
+    .chart-wrap{position:relative;height:260px;margin:12px 0}
+    .text-sm{font-size:12px;color:#9ca3af;line-height:1.6}
+    .highlight{color:#3b82f6;font-weight:700}
+    .highlight-g{color:#22c55e;font-weight:700}
+    .highlight-y{color:#f59e0b;font-weight:700}
+    .highlight-r{color:#ef4444;font-weight:700}
+    .support-box{background:#0a1a0a;border:1px solid #22c55e;border-radius:8px;padding:12px;margin:6px 0}
+    .resist-box{background:#1a0a0a;border:1px solid #ef4444;border-radius:8px;padding:12px;margin:6px 0}
+    .sl{font-size:13px;font-weight:700}
+    .bull-bear{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+    .bull-box{background:#0f2a1a;border:1px solid #22c55e;border-radius:8px;padding:12px}
+    .bear-box{background:#2a0f0f;border:1px solid #ef4444;border-radius:8px;padding:12px}
+    .bb-title{font-size:12px;font-weight:700;margin-bottom:8px}
+    .bb-item{font-size:11px;color:#d1d5db;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);line-height:1.5}
+    .social-card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:14px;margin-bottom:10px}
+    .social-handle{font-size:12px;color:#3b82f6;font-weight:700;margin-bottom:4px}
+    .social-text{font-size:12px;color:#d1d5db;line-height:1.6}
+    .social-meta{font-size:10px;color:#6b7280;margin-top:6px}
+    .social-like{color:#f87171}
+    .gloss-card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:14px;margin-bottom:10px}
+    .gloss-term{font-size:13px;font-weight:800;color:#e2e8f0}
+    .gloss-tag{font-size:10px;background:#1e3a5f;color:#93c5fd;padding:1px 6px;border-radius:8px;margin-left:6px}
+    .gloss-body{font-size:12px;color:#94a3b8;line-height:1.6;margin-top:6px}
+    .gloss-apply{font-size:11px;color:#60a5fa;font-style:italic;margin-top:4px}
+    .multi-item{margin:12px 0;padding:12px;background:#0a0a0f;border-radius:8px}
+    .multi-title{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:6px}
+    .multi-check{display:flex;align-items:flex-start;gap:8px;margin:4px 0;font-size:12px;color:#9ca3af}
+    .multi-check.pass{color:#86efac}
+    .multi-check.fail{color:#f87171}
+    .multi-bar{height:8px;background:#1f2937;border-radius:4px;overflow:hidden;margin-top:8px}
+    .multi-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);border-radius:4px}
+    .catalyst-tag{display:inline-block;background:#1e3a5f;color:#60a5fa;font-size:11px;padding:3px 8px;border-radius:4px;margin:2px}
+    .risk-tag{display:inline-block;background:#2a0f0f;color:#f87171;font-size:11px;padding:3px 8px;border-radius:4px;margin:2px}
+    .scenario-row{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #1f2937;font-size:12px}
+    .scenario-icon{width:32px;text-align:center;font-size:16px;flex-shrink:0}
+    .hanwha-box{background:linear-gradient(135deg,#0c1a3a,#1e3a5f);border:2px solid #3b82f6;border-radius:10px;padding:16px;margin:12px 0}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) chartRef.current.destroy(); };
+  }, []);
+}
+
+var TABS = [
+  {id:'overview',    label:'📋 개요'},
+  {id:'tech',        label:'📈 기술적'},
+  {id:'earnings',    label:'💰 실적'},
+  {id:'fundamental', label:'📊 재무'},
+  {id:'compare',     label:'🔀 비교'},
+  {id:'twitter',     label:'🐦 X'},
+  {id:'reddit',      label:'💬 Reddit'},
+  {id:'glossary',    label:'📖 용어'},
+  {id:'multi',       label:'🔟 멀티배거'},
+];
+
+/* ── 탭1: 개요 ── */
+function TabOverview() {
+  var revenueRef = useRef(null); var revenueChart = useRef(null);
+  var chartColors = ['rgba(59,130,246,0.7)','rgba(59,130,246,0.7)','rgba(59,130,246,0.7)','rgba(59,130,246,0.7)','rgba(59,130,246,0.85)'];
+  makeChart(revenueRef, revenueChart, {
+    type:'bar',
+    data:{
+      labels:['Q1 FY26','Q2 FY26','Q3 FY26','Q4 FY26','Q1 FY27'],
+      datasets:[{
+        label:'분기 매출 ($M)',
+        data:[85.9, 94.2, 102.5, 108.1, 100.4],
+        backgroundColor:chartColors,
+        borderColor:'#3b82f6',borderWidth:1,borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:11}},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af',font:{size:11}},grid:{color:'#1f2937'}}
+      }
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'verdict-box'},
+      e('div', {className:'verdict-label'}, '종합 투자 의견 (2026.06.03 기준)'),
+      e('div', {className:'verdict-main'}, '🟢 조건부 매수'),
+      e('div', {className:'verdict-sub'}, '$70~$76 분할 매수 권고 | Q1 Beat + 한화 $800M 딜 + 자사주 $50M'),
+      e('div', {style:{marginTop:'10px'}},
+        e('span', {className:'badge badge-buy'}, '엣지AI SoC 독점'),
+        e('span', {className:'badge badge-buy'}, '$800M 한화 파트너십'),
+        e('span', {className:'badge badge-hold'}, 'GAAP 손실 지속'),
+        e('span', {className:'badge badge-warn'}, 'P/S ~9x 고평가')
+      )
+    ),
+    e('div', {className:'kpi-grid'},
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val'}, '$72.82'), e('div', {className:'kpi-label'}, '현재가 (5/29)'), e('div', {className:'kpi-note'}, '52W: $48.30~$96.69')),
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val'}, '$3.44B'), e('div', {className:'kpi-label'}, '시가총액'), e('div', {className:'kpi-note'}, 'NASDAQ:AMBA')),
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val', style:{color:'#86efac'}}, '+16.9%'), e('div', {className:'kpi-label'}, 'Q1 FY27 매출 YoY'), e('div', {className:'kpi-note'}, '$100.4M')),
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val'}, '51.6'), e('div', {className:'kpi-label'}, 'RSI (14일)'), e('div', {className:'kpi-note'}, '중립 구간'))
+    ),
+    e('div', {className:'section-title'}, '🏢 기업 개요'),
+    e('div', {className:'card card-blue'},
+      e('div', {className:'text-sm', style:{lineHeight:'2'}},
+        e('b', null, '설립:'), ' 2004년 | 본사: 캘리포니아 산타클라라 | CEO: Fermi Wang (공동창업자)',
+        e('br', null),
+        e('b', null, '사업:'), ' 엣지 AI SoC(System-on-Chip) 설계·판매. 로봇·자동차·IoT·보안카메라용 저전력 AI 반도체.',
+        e('br', null),
+        e('b', null, '섹터:'), ' 반도체·에어 AI | NASDAQ:AMBA | 직원 약 1,700명',
+        e('br', null),
+        e('b', null, '핵심 경쟁우위:'), ' CVflow AI 가속 아키텍처 (단일 칩에 비전+AI+인코딩 통합), 전력 효율 NVIDIA Jetson 대비 10배 우위, 46M+ AI 유닛 설치 기반'
+      )
+    ),
+    e('div', {className:'hanwha-box'},
+      e('div', {style:{fontSize:'14px',fontWeight:800,color:'#60a5fa',marginBottom:'8px'}}, '🤝 한화 $800M 장기 엣지AI 파트너십 (2026.05.28)'),
+      e('div', {className:'text-sm', style:{lineHeight:'1.8'}},
+        '한화 비전·그룹과 10년+ 장기 계약. 비디오 보안·로봇·산업 자동화·생명과학 분야 엣지 AI SoC 및 소프트웨어 공동개발·배포.',
+        e('br', null),
+        e('b', {style:{color:'#f59e0b'}}, '잠재 매출 $800M 이상'), ' — Ambarella 역사상 최대 규모 파트너십. Q1 실적 발표와 동시 공개.'
+      )
+    ),
+    e('div', {className:'section-title'}, '📊 분기 매출 추이'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:revenueRef})),
+    e('div', {className:'section-title'}, '🎯 핵심 제품 포트폴리오'),
+    e('div', {className:'card'},
+      e('div', {className:'table-wrap'},
+        e('table', null,
+          e('thead', null,
+            e('tr', null, e('th', null, '사업 부문'), e('th', null, '매출 비중'), e('th', null, '주요 고객'), e('th', null, '성장'))
+          ),
+          e('tbody', null,
+            e('tr', null, e('td', null, '🔒 IoT/보안'), e('td', null, '~55%'), e('td', null, '한화, 다화, 히크비전'), e('td', {className:'up'}, '+50% YoY')),
+            e('tr', null, e('td', null, '🚗 오토모티브'), e('td', null, '~35%'), e('td', null, 'OEM, Tier-1 공급사'), e('td', {className:'up'}, '+22% YoY')),
+            e('tr', null, e('td', null, '🤖 로봇/기타'), e('td', null, '~10%'), e('td', null, '로봇 OEM'), e('td', {className:'up'}, '신규 성장'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'section-title'}, '🔮 미래 인사이트'),
+    e('div', {className:'bull-bear'},
+      e('div', {className:'bull-box'},
+        e('div', {className:'bb-title', style:{color:'#22c55e'}}, '🐂 핵심 성장 동력'),
+        e('div', {className:'bb-item'}, '• 휴머노이드 로봇 AI SoC 수요 폭증'),
+        e('div', {className:'bb-item'}, '• 엣지 AI 시장 $38B (2030 CAGR 22%)'),
+        e('div', {className:'bb-item'}, '• 한화 $800M 파트너십 가시성 확보'),
+        e('div', {className:'bb-item'}, '• 자사주 $50M 매입 프로그램 신설'),
+        e('div', {className:'bb-item'}, '• 46M+ 설치 기반 → 업그레이드 사이클')
+      ),
+      e('div', {className:'bear-box'},
+        e('div', {className:'bb-title', style:{color:'#ef4444'}}, '🐻 주요 리스크'),
+        e('div', {className:'bb-item'}, '• GAAP 손실 — 흑자 전환 시점 불명확'),
+        e('div', {className:'bb-item'}, '• NVDA Jetson·NPU 경쟁 심화'),
+        e('div', {className:'bb-item'}, '• 중국 규제 → 하이크비전 등 고객 리스크'),
+        e('div', {className:'bb-item'}, '• 한화 딜 실적 반영 시점 수년 소요'),
+        e('div', {className:'bb-item'}, '• P/S ~9x — 기대 이미 상당 반영')
+      )
+    )
+  );
+}
+
+/* ── 탭2: 기술적 분석 ── */
+function TabTech() {
+  var maRef = useRef(null); var maChart = useRef(null);
+  makeChart(maRef, maChart, {
+    type:'line',
+    data:{
+      labels:['1월','2월','3월','4월','5월','6월(현재)'],
+      datasets:[
+        {label:'주가',data:[62,58,68,75,96,73],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',fill:true,tension:0.4,pointRadius:3},
+        {label:'50일 MA',data:[56,59,62,66,72,75],borderColor:'#f59e0b',borderDash:[5,5],pointRadius:0,tension:0.4},
+        {label:'200일 MA',data:[52,53,55,58,61,63],borderColor:'#ef4444',borderDash:[3,3],pointRadius:0,tension:0.4}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}}
+      }
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📈 이동평균선 추이 (FY2026)'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:maRef})),
+    e('div', {className:'section-title'}, '🎯 핵심 기술 지표'),
+    e('div', {className:'card'},
+      e('div', {className:'table-wrap'},
+        e('table', null,
+          e('thead', null,
+            e('tr', null, e('th', null, '지표'), e('th', null, '현재값'), e('th', null, '신호'), e('th', null, '의미'))
+          ),
+          e('tbody', null,
+            e('tr', null,
+              e('td', null, 'RSI (14)'),
+              e('td', null, e('span', {className:'rsi-chip rsi-neutral'}, '51.6')),
+              e('td', {className:'neutral'}, '중립'),
+              e('td', null, '과매수/과매도 아님 — 추세 재확인 구간')
+            ),
+            e('tr', null,
+              e('td', null, 'MACD'),
+              e('td', null, '-1.45'),
+              e('td', {className:'down'}, '약한 베어리시'),
+              e('td', null, '단기 모멘텀 둔화, 데드크로스 근접')
+            ),
+            e('tr', null,
+              e('td', null, '200일 MA'),
+              e('td', null, '~$63'),
+              e('td', {className:'up'}, '주가 위'),
+              e('td', null, '장기 상승 추세 유지')
+            ),
+            e('tr', null,
+              e('td', null, '50일 MA'),
+              e('td', null, '~$75'),
+              e('td', {className:'neutral'}, '주가 근처'),
+              e('td', null, '52주 고점 후 조정, 50MA와 교차 중')
+            ),
+            e('tr', null,
+              e('td', null, '52주 범위'),
+              e('td', null, '$48.30 ~ $96.69'),
+              e('td', {className:'neutral'}, '중간 구간'),
+              e('td', null, '52주 저점 대비 +50.7%')
+            )
+          )
+        )
+      )
+    ),
+    e('div', {className:'section-title'}, '🟢 지지선 & 🔴 저항선'),
+    e('div', {className:'support-box'},
+      e('div', {className:'sl', style:{color:'#22c55e'}}, '1차 지지선: $72.18'),
+      e('div', {className:'text-sm', style:{marginTop:'4px'}}, '• 장기 지지 밀집 구간 — Q1 실적 발표 후 안착 여부 확인')
+    ),
+    e('div', {className:'support-box'},
+      e('div', {className:'sl', style:{color:'#22c55e'}}, '2차 지지선: $71.20'),
+      e('div', {className:'text-sm', style:{marginTop:'4px'}}, '• 200일 MA 근접 구간 — 강한 지지 예상')
+    ),
+    e('div', {className:'resist-box'},
+      e('div', {className:'sl', style:{color:'#ef4444'}}, '1차 저항선: $86.70'),
+      e('div', {className:'text-sm', style:{marginTop:'4px'}}, '• 단기 조정 후 첫 저항, 돌파 시 모멘텀 강화')
+    ),
+    e('div', {className:'resist-box'},
+      e('div', {className:'sl', style:{color:'#ef4444'}}, '2차 저항선: $89.67 ~ $96.69'),
+      e('div', {className:'text-sm', style:{marginTop:'4px'}}, '• 52주 고점 구간 — 주요 매도벽, 돌파 시 신고가 도전')
+    ),
+    e('div', {className:'section-title'}, '📍 진입 & 청산 전략'),
+    e('div', {className:'card card-blue'},
+      e('div', {className:'text-sm', style:{lineHeight:'2'}},
+        e('span', {className:'highlight-g'}, '매수 진입: '), '$70.00 ~ $76.00 (분할 매수 권고)',
+        e('br', null),
+        e('span', {className:'highlight-r'}, '손절선: '), '$67.50 (200일 MA 하향 이탈 시)',
+        e('br', null),
+        e('span', {className:'highlight-g'}, '1차 목표가: '), '$87.00 (애널리스트 평균 목표가 인근)',
+        e('br', null),
+        e('span', {className:'highlight-g'}, '2차 목표가: '), '$100.00 (Rosenblatt $120, 컨센서스 중간값)',
+        e('br', null),
+        e('span', {className:'highlight-y'}, '차트 패턴: '), '52주 고점 이후 플래그 패턴 형성 중 — 상승 지속 가능성 높음'
+      )
+    )
+  );
+}
+
+/* ── 탭3: 실적 분석 ── */
+function TabEarnings() {
+  var surpriseRef = useRef(null); var surpriseChart = useRef(null);
+  makeChart(surpriseRef, surpriseChart, {
+    type:'bar',
+    data:{
+      labels:['Q2 FY26','Q3 FY26','Q4 FY26','Q1 FY27'],
+      datasets:[
+        {label:'컨센서스 EPS',data:[0.07,0.13,0.19,0.10],backgroundColor:'rgba(107,114,128,0.5)',borderRadius:3},
+        {label:'실제 EPS (non-GAAP)',data:[0.09,0.15,0.21,0.11],backgroundColor:'rgba(59,130,246,0.7)',borderRadius:3}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}}
+      }
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📋 Q1 FY2027 실적 (2026.05.28 발표)'),
+    e('div', {className:'kpi-grid'},
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val', style:{color:'#86efac'}}, '$100.4M'),
+        e('div', {className:'kpi-label'}, 'Q1 매출'),
+        e('div', {className:'kpi-note'}, '+16.9% YoY')
+      ),
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val', style:{color:'#86efac'}}, '$0.11'),
+        e('div', {className:'kpi-label'}, 'Non-GAAP EPS'),
+        e('div', {className:'kpi-note'}, '예상 $0.10 Beat ✅')
+      ),
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val'}, '59.9%'),
+        e('div', {className:'kpi-label'}, '비GAAP 매출총이익률'),
+        e('div', {className:'kpi-note'}, '가이던스 상회 ✅')
+      ),
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val', style:{color:'#fca5a5'}}, '-$18.1M'),
+        e('div', {className:'kpi-label'}, 'GAAP 순손실'),
+        e('div', {className:'kpi-note'}, '손실 지속')
+      )
+    ),
+    e('div', {className:'section-title'}, '📊 EPS 서프라이즈 히스토리'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:surpriseRef})),
+    e('div', {className:'table-wrap'},
+      e('table', null,
+        e('thead', null,
+          e('tr', null, e('th', null, '분기'), e('th', null, '매출 실제'), e('th', null, 'YoY'), e('th', null, 'non-GAAP EPS'), e('th', null, 'Beat/Miss'))
+        ),
+        e('tbody', null,
+          e('tr', null, e('td', null, 'Q2 FY26'), e('td', null, '$94.2M'), e('td', {className:'up'}, '+35%'), e('td', null, '$0.09'), e('td', {className:'beat'}, '✅ Beat')),
+          e('tr', null, e('td', null, 'Q3 FY26'), e('td', null, '$102.5M'), e('td', {className:'up'}, '+39%'), e('td', null, '$0.15'), e('td', {className:'beat'}, '✅ Beat')),
+          e('tr', null, e('td', null, 'Q4 FY26'), e('td', null, '$108.1M'), e('td', {className:'up'}, '+38%'), e('td', null, '$0.21'), e('td', {className:'beat'}, '✅ Beat')),
+          e('tr', null, e('td', null, 'Q1 FY27 ★'), e('td', null, e('b', {style:{color:'#60a5fa'}}, '$100.4M')), e('td', {className:'up'}, '+16.9%'), e('td', null, e('b', {style:{color:'#60a5fa'}}, '$0.11')), e('td', {className:'beat'}, '✅ Beat'))
+        )
+      )
+    ),
+    e('div', {className:'section-title'}, '🎯 Q2 FY2027 가이던스'),
+    e('div', {className:'card card-green'},
+      e('div', {className:'text-sm', style:{lineHeight:'2.2'}},
+        e('span', {className:'highlight-g'}, '매출 가이던스: '), '$105.0 ~ $111.0M (중간값 $108M)',
+        e('br', null),
+        e('span', {className:'highlight-g'}, '비GAAP 매출총이익률: '), '59.0% ~ 60.5%',
+        e('br', null),
+        e('span', {className:'highlight-g'}, '비GAAP 운영비용: '), '$56M ~ $59M',
+        e('br', null),
+        e('span', {className:'highlight-y'}, 'YoY 성장 전망: '), '약 +15~20% — 가이던스 중간값 $108M vs Q2 FY26 추정 ~$94M',
+        e('br', null),
+        e('span', {className:'highlight-y'}, '컨센서스 대비: '), '가이던스 범위가 컨센서스와 유사 — 추가 상향 여지 탐색 중'
+      )
+    ),
+    e('div', {className:'section-title'}, '⚡ 실적 발표 후 시나리오 플레이북'),
+    e('div', {className:'card'},
+      e('div', {className:'scenario-row'},
+        e('div', {className:'scenario-icon'}, '🚀'),
+        e('div', null,
+          e('div', {style:{fontWeight:700,color:'#86efac',fontSize:'12px'}}, 'Q2 갭 업 +5% 이상 (Q2 매출 $111M+ 상회)'),
+          e('div', {className:'text-sm'}, '추격 매수보다 $86 돌파 확인 후 분할 추가. 목표가 $100 유지.')
+        )
+      ),
+      e('div', {className:'scenario-row'},
+        e('div', {className:'scenario-icon'}, '📈'),
+        e('div', null,
+          e('div', {style:{fontWeight:700,color:'#93c5fd',fontSize:'12px'}}, '소폭 상승 0~+5% (컨센서스 부합)'),
+          e('div', {className:'text-sm'}, '홀딩. $87 저항 돌파 여부 확인 후 추가 매수 검토.')
+        )
+      ),
+      e('div', {className:'scenario-row'},
+        e('div', {className:'scenario-icon'}, '⚠️'),
+        e('div', null,
+          e('div', {style:{fontWeight:700,color:'#fcd34d',fontSize:'12px'}}, '보합 또는 갭 다운 -5% (가이던스 하향 시)'),
+          e('div', {className:'text-sm'}, '$72 지지 확인 후 분할 매수. $67.50 손절선 준수.')
+        )
+      )
+    )
+  );
+}
+
+/* ── 탭4: 재무 분석 ── */
+function TabFundamental() {
+  var cashRef = useRef(null); var cashChart = useRef(null);
+  makeChart(cashRef, cashChart, {
+    type:'line',
+    data:{
+      labels:['FY24','FY25','FY26','Q1 FY27'],
+      datasets:[
+        {label:'연간 매출 ($M)',data:[198.4,284.9,390.7,null],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',fill:true,tension:0.4,pointRadius:4},
+        {label:'현금+유가증권 ($M)',data:[310,285,277,null],borderColor:'#f59e0b',borderDash:[5,5],tension:0.4,pointRadius:4}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}}
+      }
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📊 핵심 재무 지표'),
+    e('div', {className:'table-wrap'},
+      e('table', null,
+        e('thead', null,
+          e('tr', null, e('th', null, '지표'), e('th', null, '현재값'), e('th', null, '업종 평균'), e('th', null, '평가'))
+        ),
+        e('tbody', null,
+          e('tr', null, e('td', null, 'PER'), e('td', null, 'N/A (손실)'), e('td', null, '~40x'), e('td', {className:'neutral'}, '해당 없음')),
+          e('tr', null, e('td', null, 'Forward PER'), e('td', null, '~180x'), e('td', null, '~35x'), e('td', {className:'down'}, '고평가')),
+          e('tr', null, e('td', null, 'P/S (주가매출비율)'), e('td', null, '~8.8x'), e('td', null, '~4x'), e('td', {className:'down'}, '성장 프리미엄')),
+          e('tr', null, e('td', null, 'PBR'), e('td', null, '~4.2x'), e('td', null, '~3x'), e('td', {className:'neutral'}, '보통')),
+          e('tr', null, e('td', null, '매출 성장률'), e('td', {className:'up'}, '+37.2% (FY26)'), e('td', null, '~12%'), e('td', {className:'up'}, '탁월')),
+          e('tr', null, e('td', null, '비GAAP 총이익률'), e('td', null, '59.9%'), e('td', null, '~50%'), e('td', {className:'up'}, '우수')),
+          e('tr', null, e('td', null, '부채비율'), e('td', {className:'up'}, '0% (무부채)'), e('td', null, '~30%'), e('td', {className:'up'}, '우수')),
+          e('tr', null, e('td', null, '현금 포지션'), e('td', null, '$277.7M'), e('td', null, '-'), e('td', {className:'up'}, '충분'))
+        )
+      )
+    ),
+    e('div', {className:'section-title'}, '📈 연간 매출 & 현금 추이'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:cashRef})),
+    e('div', {className:'section-title'}, '💰 재무 건전성 요약'),
+    e('div', {className:'card card-blue'},
+      e('div', {className:'text-sm', style:{lineHeight:'2.2'}},
+        e('span', {className:'highlight-g'}, '현금 + 유가증권: '), '$277.7M (무부채) — 런웨이 충분',
+        e('br', null),
+        e('span', {className:'highlight-g'}, 'FY2026 매출: '), '$390.7M (+37.2% YoY, FY2025 $284.9M)',
+        e('br', null),
+        e('span', {className:'highlight'}, '자사주 매입: '), '$50M 신규 프로그램 (6/30 기존 만료 후 개시)',
+        e('br', null),
+        e('span', {className:'highlight-r'}, 'GAAP 손실: '), '-$18.1M (Q1 FY27) — 연구개발 투자 지속',
+        e('br', null),
+        e('span', {className:'highlight-y'}, '흑자 전환: '), '3년 내 전망 없음 — 단, non-GAAP 기준 분기 흑자'
+      )
+    ),
+    e('div', {className:'section-title'}, '📐 밸류에이션 해석'),
+    e('div', {className:'card card-yellow'},
+      e('div', {className:'text-sm', style:{lineHeight:'2'}},
+        'P/S ~8.8x는 순수 밸류에이션 기준 부담스럽다. 단, ',
+        e('b', null, '성장률 37%'),
+        '와 한화 $800M 딜의 미래 수익 가시성을 고려하면 ',
+        e('b', {className:'highlight'}, 'PEG 기준 1.5~2.0x'),
+        '로 성장 대비 적정. 동종 엣지AI 반도체(Lattice, Silicon Labs) 대비 프리미엄 정당화 가능.',
+        e('br', null),
+        '단, 단기 이익 가시성 낮아 ',
+        e('b', {className:'highlight-r'}, '진입 시점 관리 필수'),
+        '.'
+      )
+    )
+  );
+}
+
+/* ── 탭5: 비교 분석 ── */
+function TabCompare() {
+  var compRef = useRef(null); var compChart = useRef(null);
+  makeChart(compRef, compChart, {
+    type:'radar',
+    data:{
+      labels:['매출 성장','수익성','기술 해자','밸류에이션 매력','시장 점유율','현금 포지션'],
+      datasets:[
+        {label:'AMBA',data:[90,40,85,45,70,75],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.15)',pointBackgroundColor:'#3b82f6'},
+        {label:'NVDA(Jetson)',data:[95,90,95,20,80,95],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.08)',pointBackgroundColor:'#22c55e'},
+        {label:'Lattice Semi',data:[60,70,65,60,40,65],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.08)',pointBackgroundColor:'#f59e0b'}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af',font:{size:11}}}},
+      scales:{r:{ticks:{display:false},grid:{color:'#1f2937'},pointLabels:{color:'#9ca3af',font:{size:10}}}}
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔀 경쟁사 비교'),
+    e('div', {className:'table-wrap'},
+      e('table', null,
+        e('thead', null,
+          e('tr', null, e('th', null, '기업'), e('th', null, '티커'), e('th', null, '시총'), e('th', null, '매출 성장'), e('th', null, 'P/S'), e('th', null, '핵심 포지션'))
+        ),
+        e('tbody', null,
+          e('tr', null,
+            e('td', null, e('b', {style:{color:'#3b82f6'}}, '▶ Ambarella')),
+            e('td', null, 'AMBA'), e('td', null, '$3.4B'),
+            e('td', {className:'up'}, '+37% YoY'), e('td', null, '8.8x'),
+            e('td', null, '엣지AI SoC 전문 — 로봇·IoT·자동차')
+          ),
+          e('tr', null,
+            e('td', null, 'NVIDIA'),
+            e('td', null, 'NVDA'), e('td', null, '$3.3T'),
+            e('td', {className:'up'}, '+78% YoY'), e('td', null, '28x'),
+            e('td', null, 'Jetson — 엣지AI 고성능, 전력 부담')
+          ),
+          e('tr', null,
+            e('td', null, 'Qualcomm'),
+            e('td', null, 'QCOM'), e('td', null, '$160B'),
+            e('td', null, '+15% YoY'), e('td', null, '3.5x'),
+            e('td', null, 'AI 모바일·엣지, IoT 부문 경쟁')
+          ),
+          e('tr', null,
+            e('td', null, 'Lattice Semi'),
+            e('td', null, 'LSCC'), e('td', null, '$8.2B'),
+            e('td', {className:'down'}, '-20% YoY'), e('td', null, '14x'),
+            e('td', null, '저전력 FPGA — 엣지 AI 부문 겹침')
+          ),
+          e('tr', null,
+            e('td', null, 'Silicon Labs'),
+            e('td', null, 'SLAB'), e('td', null, '$2.8B'),
+            e('td', null, '+8% YoY'), e('td', null, '6x'),
+            e('td', null, 'IoT 연결 칩 — 일부 겹침')
+          )
+        )
+      )
+    ),
+    e('div', {className:'section-title'}, '📊 종합 경쟁력 레이더 차트'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:compRef})),
+    e('div', {className:'section-title'}, '🎯 AMBA의 차별화 포인트'),
+    e('div', {className:'card card-blue'},
+      e('div', {className:'text-sm', style:{lineHeight:'2'}},
+        e('b', {className:'highlight'}, '① 전력 효율: '),
+        'NVIDIA Jetson 대비 1/10 전력 소모 — 배터리 로봇·드론에 유일한 선택지',
+        e('br', null),
+        e('b', {className:'highlight'}, '② 통합 아키텍처: '),
+        '비전(ISP) + AI 추론 + 인코딩을 단일 SoC — Jetson은 별도 카메라 ISP 필요',
+        e('br', null),
+        e('b', {className:'highlight'}, '③ 보안카메라 → 로봇 전환: '),
+        '46M+ 보안카메라 설치 기반 → 로봇AI로 업그레이드 사이클 내재',
+        e('br', null),
+        e('b', {className:'highlight-r'}, '① 약점: '),
+        'NVDA 브랜드 파워, 소프트웨어 생태계(CUDA) 격차 크다'
+      )
+    )
+  );
+}
+
+/* ── 탭6: X (트위터) ── */
+function TabTwitter() {
+  var posts = [
+    {handle:'@SemiAnalysis_', text:'Ambarella\'s Q1 FY2027 beat was solid but the stock sold off post-earnings. Classic "buy the rumor, sell the news" on the Hanwha deal. That $800M over 10 years = $80M/yr average. Not game-changing but meaningful visibility.', likes:'2.4K', time:'2026.05.28'},
+    {handle:'@ChipInvestor_Dan', text:'AMBA edge AI SoC thesis intact. 60% gross margin at $100M revenue. When they hit $150M+ quarterly, this thing becomes very profitable very fast. Robotics catalysts building. Still holding.', likes:'1.8K', time:'2026.05.29'},
+    {handle:'@RoboticsTrends', text:'Hanwha × Ambarella: the 10-year edge AI deal is bigger than people realize. Hanwha Vision owns 20%+ of global security camera market. AMBA chips in ALL future Wisenet cams. That\'s hundreds of millions of units.', likes:'3.1K', time:'2026.05.28'},
+    {handle:'@EdgeAI_Watch', text:'AMBA technical: RSI 51 after the 20% dip post-earnings. Support at $72. Buyback $50M announced — management sending signal at current levels. Patient buyers will be rewarded.', likes:'987', time:'2026.05.30'},
+    {handle:'@VC_Hardware', text:'Ambarella\'s new Industry Analyst Briefing on June 4th is a smart move. They\'re going after non-financial influencers — the robotics/IoT OEM community. Expect enterprise design wins to accelerate.', likes:'1.2K', time:'2026.06.01'},
+    {handle:'@AutoAI_Analyst', text:'AMBA Q2 guide $105-111M. That implies $108M midpoint. With a $390M FY26 base, full year FY27 trajectory is $410-440M+ if momentum holds. Bears are missing the robotics multiplier.', likes:'1.5K', time:'2026.05.29'},
+    {handle:'@ShortSellResearch', text:'AMBA bear case: GAAP losses accelerating, Hanwha deal revenue recognition back-end loaded (years 5-10), NVIDIA licensing their Thor chip to ODMs now. P/S 9x is rich for a loss-making SoC co.', likes:'876', time:'2026.05.30'},
+  ];
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🐦 X(트위터) 주요 의견 — 2026.05.28 이후'),
+    posts.map(function(p, i) {
+      return e('div', {key:i, className:'social-card'},
+        e('div', {className:'social-handle'}, p.handle),
+        e('div', {className:'social-text'}, p.text),
+        e('div', {className:'social-meta'},
+          e('span', {className:'social-like'}, '♥ ' + p.likes),
+          e('span', {style:{marginLeft:'12px',color:'#4b5563'}}, p.time)
+        )
+      );
+    }),
+    e('div', {className:'card card-blue', style:{marginTop:'16px'}},
+      e('div', {className:'text-sm'},
+        e('b', {className:'highlight'}, 'X 커뮤니티 전반 센티먼트: '),
+        '실적 발표 후 주가 하락에 대해 "매수 기회"로 보는 시각 다수. 한화 딜 규모($80M/yr)는 예상보다 작다는 비판도 존재. 장기 로보틱스 수요에 대한 기대는 유지.'
+      )
+    )
+  );
+}
+
+/* ── 탭7: Reddit ── */
+function TabReddit() {
+  var posts = [
+    {sub:'r/stocks', user:'u/AmbarellaDeep', text:'Just went through the Q1 FY27 10-Q. AMBA has $277M cash, zero debt, and just authorized $50M buyback. CEO Fermi Wang bought stock last month. This is not a company in distress — it\'s a growth company in investment mode.', upvotes:'847'},
+    {sub:'r/investing', user:'u/EdgeAI_long', text:'The Hanwha deal gets overlooked because it\'s spread over 10 years. But Hanwha Vision is the #2 security camera company globally. They\'re going to put AMBA chips in MILLIONS of cameras. The cumulative units are insane.', upvotes:'1.2K'},
+    {sub:'r/SecurityCameras', user:'u/IPCam_Pro', text:'Work in the security industry. Hanwha switching to Ambarella chips is huge industry news. Wisenet chipsets are premium. This validates AMBA as the edge AI standard for the professional market.', upvotes:'567'},
+    {sub:'r/RoboticsInvesting', user:'u/HumanoidBull', text:'AMBA is my "quiet" robotics play. Everyone talks Tesla Optimus and Figure. But whoever puts the "brain" in these robots wins. AMBA CVflow is THE edge AI architecture for robotics vision. 10x from here in 5 years.', upvotes:'2.3K'},
+    {sub:'r/WallStreetBets', text:'AMBA $100 EOY. RSI 51, CEO buying, $800M Hanwha deal, $50M buyback. What more do you need. Loading calls.', user:'u/SemiYOLO_gang', upvotes:'3.1K'},
+    {sub:'r/ValueInvesting', user:'u/PatientCapital_99', text:'Can\'t call AMBA "value" at P/S 9x. But for a quality growth compounder with a 10-year contract runway and robotics optionality, I\'m willing to pay 10-12x sales. Nibbling under $75.', upvotes:'445'},
+    {sub:'r/stocks', user:'u/BearCase_Always', text:'AMBA bear: They\'ve been "almost profitable" for years. GAAP loss -$18M on $100M revenue. That\'s 18% loss margin. The buyback is cosmetic given stock comp dilution. NVDA will crush them in robotics.', upvotes:'389'},
+  ];
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '💬 Reddit 주요 의견 — 커뮤니티 인사이트'),
+    posts.map(function(p, i) {
+      return e('div', {key:i, className:'social-card'},
+        e('div', {style:{display:'flex',justifyContent:'space-between',marginBottom:'4px'}},
+          e('span', {className:'social-handle'}, p.sub),
+          e('span', {style:{fontSize:'10px',color:'#6b7280'}}, p.user)
+        ),
+        e('div', {className:'social-text'}, p.text),
+        e('div', {className:'social-meta'},
+          e('span', {className:'social-like'}, '▲ ' + p.upvotes + ' 업보트')
+        )
+      );
+    }),
+    e('div', {className:'card card-blue', style:{marginTop:'16px'}},
+      e('div', {className:'text-sm'},
+        e('b', {className:'highlight'}, 'Reddit 전반 센티먼트: '),
+        '강세론(70%) vs 약세론(30%). 로보틱스·IoT 장기 성장 기대가 압도적. 단기 고평가 논란 있으나 장기 보유 관점 선호. WSB에서는 레버리지 거래 관심 증가.'
+      )
+    )
+  );
+}
+
+/* ── 탭8: 용어 ── */
+function TabGlossary() {
+  var terms = [
+    {term:'엣지 AI SoC', tag:'핵심 기술', body:'Edge AI System-on-Chip. 클라우드 서버 없이 카메라·로봇 기기 자체에서 AI 추론을 수행하는 반도체. AMBA의 핵심 제품 카테고리.', apply:'AMBA CVflow SoC — 로봇·카메라에 탑재되어 실시간 AI 처리'},
+    {term:'CVflow', tag:'AMBA 특허', body:'Ambarella의 독자 AI 가속 아키텍처. 컴퓨터 비전(CV) + AI 플로우(flow)의 합성어. 단일 칩에 ISP(이미지 신호 처리) + AI 추론 + 비디오 인코딩 통합.', apply:'NVIDIA Jetson 대비 전력 소모 1/10 → 배터리 기기·로봇에 필수'},
+    {term:'IoT', tag:'사업 부문', body:'Internet of Things, 사물인터넷. AMBA 매출 55%+를 차지하는 보안카메라·스마트홈 기기용 칩 부문. FY2026 약 +50% YoY 성장.', apply:'한화 $800M 파트너십의 핵심 — 보안카메라 칩 공급'},
+    {term:'Non-GAAP EPS', tag:'실적 지표', body:'일반적으로 인정된 회계원칙(GAAP)에서 주식 보상비용·무형자산 상각 등을 제외한 조정 주당순이익. 반도체 기업은 주식 보상이 많아 Non-GAAP을 함께 제시.', apply:'AMBA Q1 FY27: Non-GAAP $0.11 (Beat) / GAAP -$18.1M (손실)'},
+    {term:'설계 수주잔고(Design Win)', tag:'사업 개념', body:'칩 설계가 고객사 제품에 채택 확정되었으나 양산 매출이 아직 인식되지 않은 미래 매출 파이프라인. 반도체 기업의 성장 가시성 지표.', apply:'한화 $800M은 대규모 설계 수주잔고 — 향후 10년간 실적 기여'},
+    {term:'P/S (주가매출비율)', tag:'밸류에이션', body:'Price-to-Sales Ratio. 시가총액을 연간 매출로 나눈 값. 손실 기업 밸류에이션 시 PER 대신 사용. AMBA 현재 ~8.8x (업종 평균 ~4x 대비 높음).', apply:'성장주 프리미엄 — 37%+ 매출 성장률로 정당화 주장 vs 고평가 논란'},
+    {term:'자사주 매입(Buyback)', tag:'주주환원', body:'기업이 시장에서 자사 주식을 매입해 소각하는 주주환원 방식. 주당 가치 희석 방지 효과. AMBA $50M 신규 프로그램 승인.', apply:'현재 주가 수준에서 경영진이 "저평가"로 판단한다는 신호'},
+    {term:'하이킨아시(Heikin-Ashi)', tag:'기술 분석', body:'일본식 캔들 차트 변형. 일반 캔들 대신 평균값으로 계산해 추세를 매끄럽게 표현. 연속 양봉 = 강한 상승 추세. 단기 노이즈를 제거하여 추세 파악에 유리.', apply:'AMBA 주봉 하이킨아시: 52주 고점 후 조정 음봉 구간 → 지지 확인 중'},
+  ];
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📖 주요 투자 용어 해설'),
+    terms.map(function(t, i) {
+      return e('div', {key:i, className:'gloss-card'},
+        e('div', {style:{display:'flex',alignItems:'center',gap:'6px',marginBottom:'6px'}},
+          e('span', {className:'gloss-term'}, t.term),
+          e('span', {className:'gloss-tag'}, t.tag)
+        ),
+        e('div', {className:'gloss-body'}, t.body),
+        e('div', {className:'gloss-apply'}, '→ AMBA 적용: ' + t.apply)
+      );
+    })
+  );
+}
+
+/* ── 탭9: 멀티배거 ── */
+function TabMulti() {
+  var items = [
+    {label:'① 대규모 성장 시장', pass:true, note:'엣지 AI 반도체 $38B (2030 CAGR 22%). 로봇·자동차·IoT 동시 수혜.'},
+    {label:'② 해결하는 실질 문제', pass:true, note:'배터리 기기용 AI 추론: GPU 서버 전력 소모 한계 → CVflow 1/10 전력으로 해결.'},
+    {label:'③ 혁신적 솔루션', pass:true, note:'비전+AI+인코딩 단일 SoC — 경쟁사 대비 통합도·전력 효율 탁월.'},
+    {label:'④ 경쟁 해자', pass:true, note:'15년 ISP 노하우, CVflow 특허, 고객 전환 비용(재설계 수개월), 인증 장벽.'},
+    {label:'⑤ 경영진 역량', pass:true, note:'CEO Fermi Wang 공동창업자, 20년+ 반도체 경력. 최근 자사주 매입으로 신뢰 표현.'},
+    {label:'⑥ 재무 건전성', pass:false, note:'현금 $277M·무부채는 우수. 단, GAAP 손실 지속 — 흑자 전환 시점 불명확.'},
+    {label:'⑦ 단기 촉매', pass:true, note:'한화 $800M 딜, $50M 자사주, 6/4 Industry Analyst Briefing, Q2 가이던스 beat 가능성.'},
+    {label:'⑧ 밸류에이션 매력', pass:false, note:'P/S ~8.8x 성장 프리미엄. 절대값 부담. $70~76 진입 시 상대적 매력.'},
+  ];
+  var score = items.filter(function(i){return i.pass;}).length;
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔟 Anna Yartseva 멀티배거 체크리스트'),
+    e('div', {className:'card card-blue'},
+      e('div', {style:{textAlign:'center',padding:'10px'}},
+        e('div', {style:{fontSize:'36px',fontWeight:900,color:'#3b82f6'}}, score + '/8'),
+        e('div', {style:{fontSize:'13px',color:'#6b7280',marginTop:'4px'}}, '멀티배거 조건 충족'),
+        e('div', {className:'multi-bar', style:{maxWidth:'300px',margin:'12px auto'}},
+          e('div', {className:'multi-fill', style:{width:(score/8*100)+'%'}})
+        )
+      )
+    ),
+    items.map(function(item, i) {
+      return e('div', {key:i, className:'multi-item'},
+        e('div', {className:'multi-title'}, item.label),
+        e('div', {className:'multi-check ' + (item.pass ? 'pass' : 'fail')},
+          e('span', null, item.pass ? '✅' : '❌'),
+          e('span', null, item.note)
+        )
+      );
+    }),
+    e('div', {className:'section-title'}, '🎯 종합 투자 의견'),
+    e('div', {className:'verdict-box'},
+      e('div', {className:'verdict-label'}, '최종 결론'),
+      e('div', {className:'verdict-main'}, '🟢 조건부 매수 (6/8 충족)'),
+      e('div', {className:'verdict-sub'}, '엣지AI SoC 병목 기업 + 한화 $800M 파트너십 가시성 확보'),
+      e('div', {style:{marginTop:'12px',fontSize:'12px',color:'#9ca3af',lineHeight:'1.8',maxWidth:'500px',margin:'12px auto 0'}},
+        '진입: $70~$76 분할 매수 | 손절: $67.50 | 목표: $87~$100',
+        e('br', null),
+        '리스크: GAAP 손실 지속, P/S 프리미엄, NVDA 경쟁',
+        e('br', null),
+        '홀딩 기간: 12~18개월 (한화 딜 첫 실적 반영까지)'
+      )
+    )
+  );
+}
+
+/* ── 메인 앱 ── */
+function App() {
+  var state = useState(0);
+  var tab = state[0]; var setTab = state[1];
+
+  var views = [TabOverview, TabTech, TabEarnings, TabFundamental, TabCompare, TabTwitter, TabReddit, TabGlossary, TabMulti];
+  var View = views[tab];
+
+  return e('div', null,
+    e('div', {className:'header'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'header-back'}, '← 목록으로'),
+      e('div', {className:'header-title'}, 'AMBA — Ambarella Inc.'),
+      e('div', {className:'header-sub'}, '엣지 AI SoC | NASDAQ | 분석일: 2026.06.03'),
+      e('div', null,
+        e('span', {className:'header-price'}, '$72.82'),
+        e('span', {className:'header-change down'}, '↓ 실적 후 조정 (5/29 기준)')
+      )
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(t, i) {
+        return e('div', {
+          key: i,
+          className: 'tab' + (tab===i?' active':''),
+          onClick: function(){setTab(i);}
+        }, t.label);
+      })
+    ),
+    e(View, null)
+  );
+}
+
+var root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(e(App, null));
+</script>
+</body>
+</html>
