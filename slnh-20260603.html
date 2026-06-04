@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>SLNH — 솔루나홀딩스 프로젝트 포트폴리오 | 2026.06.03</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#060d0a;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+    .header{background:linear-gradient(135deg,#052e16 0%,#0a2010 50%,#060d0a 100%);padding:24px 20px 20px;border-bottom:2px solid #22c55e}
+    .header-back{color:#22c55e;text-decoration:none;font-size:13px;display:inline-block;margin-bottom:12px}
+    .header-back:hover{color:#4ade80}
+    .header-title{font-size:24px;font-weight:800;color:#22c55e;margin-bottom:2px}
+    .header-sub{font-size:12px;color:#6b7280;margin-bottom:8px}
+    .header-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .hbadge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:12px;font-weight:700}
+    .hbadge-g{background:#14532d;color:#86efac}
+    .hbadge-b{background:#1e3a5f;color:#93c5fd}
+    .hbadge-y{background:#451a03;color:#fcd34d}
+    .tabs{display:flex;overflow-x:auto;background:#0f1a12;border-bottom:1px solid #1f2937;padding:0 16px}
+    .tabs::-webkit-scrollbar{height:3px}
+    .tabs::-webkit-scrollbar-thumb{background:#22c55e}
+    .tab{padding:14px 16px;cursor:pointer;font-size:12px;white-space:nowrap;color:#6b7280;border-bottom:3px solid transparent;transition:.2s}
+    .tab.active{color:#22c55e;border-bottom-color:#22c55e;font-weight:700}
+    .tab:hover{color:#4ade80}
+    .content{padding:20px;max-width:960px;margin:0 auto}
+    .section-title{font-size:15px;font-weight:700;color:#22c55e;margin:20px 0 10px;display:flex;align-items:center;gap:6px}
+    .card{background:#0f1a12;border:1px solid #1f2937;border-radius:12px;padding:16px;margin-bottom:14px}
+    .card-op{border-left:4px solid #22c55e}
+    .card-dev{border-left:4px solid #3b82f6}
+    .card-pilot{border-left:4px solid #f59e0b}
+    .card-plan{border-left:4px solid #6b7280}
+    .proj-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+    .proj-name{font-size:16px;font-weight:800;color:#e2e8f0}
+    .proj-mw{font-size:22px;font-weight:900;color:#22c55e}
+    .status-chip{display:inline-block;font-size:11px;padding:3px 10px;border-radius:12px;font-weight:700}
+    .status-op{background:#14532d;color:#86efac}
+    .status-dev{background:#1e3a5f;color:#93c5fd}
+    .status-pilot{background:#451a03;color:#fcd34d}
+    .status-plan{background:#1f2937;color:#9ca3af}
+    .proj-meta{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0;font-size:12px}
+    .meta-item{display:flex;flex-direction:column;gap:2px}
+    .meta-label{color:#6b7280;font-size:10px;text-transform:uppercase}
+    .meta-val{color:#e2e8f0;font-weight:600}
+    .partner-tag{display:inline-block;background:#1a2a1a;border:1px solid #22c55e;color:#86efac;font-size:11px;padding:2px 8px;border-radius:4px;margin:2px}
+    .partner-tag-b{display:inline-block;background:#1a1a2a;border:1px solid #3b82f6;color:#93c5fd;font-size:11px;padding:2px 8px;border-radius:4px;margin:2px}
+    .partner-tag-y{display:inline-block;background:#2a1a0a;border:1px solid #f59e0b;color:#fcd34d;font-size:11px;padding:2px 8px;border-radius:4px;margin:2px}
+    .mw-bar-wrap{margin:10px 0}
+    .mw-bar-label{font-size:10px;color:#6b7280;margin-bottom:3px}
+    .mw-bar-bg{height:12px;background:#1f2937;border-radius:6px;overflow:hidden}
+    .mw-bar-fill{height:100%;border-radius:6px;transition:width .6s}
+    .mw-fill-op{background:linear-gradient(90deg,#22c55e,#4ade80)}
+    .mw-fill-dev{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+    .mw-fill-pilot{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+    .text-sm{font-size:12px;color:#9ca3af;line-height:1.6}
+    .highlight{color:#22c55e;font-weight:700}
+    .highlight-b{color:#60a5fa;font-weight:700}
+    .highlight-y{color:#f59e0b;font-weight:700}
+    .highlight-r{color:#ef4444;font-weight:700}
+    .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+    .kpi{background:#060d0a;border-radius:8px;padding:12px;text-align:center}
+    .kpi-val{font-size:18px;font-weight:800;color:#22c55e}
+    .kpi-label{font-size:10px;color:#6b7280;margin-top:3px;text-transform:uppercase}
+    .kpi-note{font-size:10px;color:#9ca3af;margin-top:2px}
+    .table-wrap{overflow-x:auto;margin:10px 0}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{background:#0f2a1a;color:#4ade80;padding:8px 10px;text-align:left;font-weight:700}
+    td{padding:8px 10px;border-bottom:1px solid #1f2937;color:#d1d5db}
+    tr:hover td{background:#0f1a12}
+    .chart-wrap{position:relative;height:260px;margin:12px 0}
+    .timeline-wrap{padding:0 0 0 16px}
+    .tl-step{border-left:2px solid #22c55e;padding:0 0 20px 20px;position:relative}
+    .tl-step:last-child{padding-bottom:0;border-left-color:transparent}
+    .tl-dot{width:12px;height:12px;border-radius:50%;position:absolute;left:-7px;top:2px}
+    .tl-dot-op{background:#22c55e}
+    .tl-dot-dev{background:#3b82f6}
+    .tl-dot-plan{background:#6b7280}
+    .tl-date{font-size:11px;font-weight:700;margin-bottom:2px}
+    .tl-date-op{color:#22c55e}
+    .tl-date-dev{color:#60a5fa}
+    .tl-date-plan{color:#6b7280}
+    .tl-title{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:4px}
+    .tl-desc{font-size:12px;color:#9ca3af;line-height:1.5}
+    .partner-card{background:#0f1a12;border:1px solid #1f2937;border-radius:10px;padding:16px;margin-bottom:12px}
+    .partner-logo{font-size:20px;margin-right:8px}
+    .partner-name{font-size:15px;font-weight:800;color:#e2e8f0}
+    .partner-role{font-size:11px;color:#22c55e;margin-top:2px}
+    .partner-detail{font-size:12px;color:#9ca3af;line-height:1.6;margin-top:8px}
+    .rev-box{background:linear-gradient(135deg,#0a2010,#0f1a12);border:2px solid #22c55e;border-radius:12px;padding:20px;margin:12px 0}
+    .rev-title{font-size:14px;font-weight:800;color:#4ade80;margin-bottom:12px}
+    .proj-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+    .proj-mini{background:#060d0a;border-radius:8px;padding:12px;text-align:center}
+    .proj-mini-name{font-size:11px;color:#6b7280;text-transform:uppercase}
+    .proj-mini-mw{font-size:22px;font-weight:900}
+    .proj-mini-status{font-size:10px;margin-top:3px}
+    .up{color:#86efac}
+    .pipeline-stat{display:flex;justify-content:'space-between';align-items:center;padding:8px 0;border-bottom:1px solid #1f2937;font-size:12px}
+    .helios-box{background:#1a1210;border:1px solid #f59e0b;border-radius:10px;padding:14px;margin:12px 0}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(ref, chartRef, cfg) {
+  useEffect(function() {
+    if (!ref.current) return;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(ref.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) chartRef.current.destroy(); };
+  }, []);
+}
+
+var TABS = [
+  {label:'🗺️ 포트폴리오'},
+  {label:'⚡ 운영 프로젝트'},
+  {label:'🚀 개발 프로젝트'},
+  {label:'🤝 파트너십'},
+  {label:'💰 매출 & 재무'},
+  {label:'📅 로드맵'},
+];
+
+/* ── 탭1: 포트폴리오 개요 ── */
+function TabPortfolio() {
+  var capRef = useRef(null); var capChart = useRef(null);
+  makeChart(capRef, capChart, {
+    type:'bar',
+    data:{
+      labels:['Kati 1','Dorothy 1A','Dorothy 1B','Dorothy 2','Kati 2 Ph.1','Dorothy 3','Grace'],
+      datasets:[{
+        label:'MW',
+        data:[83,25,25,48,100,300,2],
+        backgroundColor:['#22c55e','#22c55e','#22c55e','#22c55e','#3b82f6','#3b82f6','#f59e0b'],
+        borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'},title:{display:true,text:'MW',color:'#6b7280',font:{size:11}}}
+      }
+    }
+  });
+
+  var projects = [
+    {name:'Project Kati 1', mw:83, status:'운영', statusClass:'status-op', fillClass:'mw-fill-op', maxMw:350, usecase:'BTC 채굴 호스팅', partner:'Galaxy Digital'},
+    {name:'Project Dorothy 1A', mw:25, status:'운영', statusClass:'status-op', fillClass:'mw-fill-op', maxMw:350, usecase:'BTC 호스팅', partner:'Blockware 外'},
+    {name:'Project Dorothy 1B', mw:25, status:'운영', statusClass:'status-op', fillClass:'mw-fill-op', maxMw:350, usecase:'BTC 자체 채굴', partner:'자체 운영'},
+    {name:'Project Dorothy 2', mw:48, status:'운영', statusClass:'status-op', fillClass:'mw-fill-op', maxMw:350, usecase:'BTC 호스팅', partner:'외부 고객사'},
+    {name:'Project Kati 2 (Phase 1)', mw:100, status:'개발 중', statusClass:'status-dev', fillClass:'mw-fill-dev', maxMw:350, usecase:'AI/HPC 호스팅', partner:'Metrobloks + 잠재 임차인 3社'},
+    {name:'Project Kati 2 (Full)', mw:350, status:'계획', statusClass:'status-plan', fillClass:'mw-fill-dev', maxMw:350, usecase:'AI 캠퍼스 7개 빌딩', partner:'Metrobloks'},
+    {name:'Project Dorothy 3', mw:300, status:'개발 초기', statusClass:'status-dev', fillClass:'mw-fill-dev', maxMw:350, usecase:'AI/HPC 캠퍼스', partner:'Briscoe Wind 150MW'},
+    {name:'Project Grace', mw:2, status:'파일럿', statusClass:'status-pilot', fillClass:'mw-fill-pilot', maxMw:350, usecase:'AI 전력관리 실증', partner:'Siemens'},
+  ];
+
+  return e('div', {className:'content'},
+    e('div', {className:'kpi-grid'},
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val'}, '181 MW'),
+        e('div', {className:'kpi-label'}, '총 운영 용량'),
+        e('div', {className:'kpi-note'}, 'Kati 1 + Dorothy 1A/1B/2')
+      ),
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val', style:{color:'#60a5fa'}}, '652+ MW'),
+        e('div', {className:'kpi-label'}, '개발 파이프라인'),
+        e('div', {className:'kpi-note'}, 'Kati 2 + Dorothy 3 + Grace')
+      ),
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val', style:{color:'#fcd34d'}}, '4.3 GW'),
+        e('div', {className:'kpi-label'}, '총 프로젝트 파이프라인'),
+        e('div', {className:'kpi-note'}, 'IPP 파트너십 포함')
+      ),
+      e('div', {className:'kpi'},
+        e('div', {className:'kpi-val', style:{color:'#86efac'}}, '+58%'),
+        e('div', {className:'kpi-label'}, 'Q1 2026 매출 YoY'),
+        e('div', {className:'kpi-note'}, '$9.4M (4분기 연속 성장)')
+      )
+    ),
+    e('div', {className:'section-title'}, '📊 프로젝트별 MW 규모'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:capRef})),
+    e('div', {className:'text-sm', style:{textAlign:'center',marginBottom:'16px'}},
+      e('span', {style:{color:'#22c55e',marginRight:'12px'}}, '■ 운영 중'),
+      e('span', {style:{color:'#3b82f6',marginRight:'12px'}}, '■ 개발/계획'),
+      e('span', {style:{color:'#f59e0b'}}, '■ 파일럿')
+    ),
+    e('div', {className:'section-title'}, '📋 프로젝트 전체 현황'),
+    projects.map(function(p, i) {
+      return e('div', {key:i, className:'card'},
+        e('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:'6px',marginBottom:'6px'}},
+          e('span', {style:{fontWeight:700,fontSize:'13px',color:'#e2e8f0'}}, p.name),
+          e('div', {style:{display:'flex',gap:'6px',alignItems:'center'}},
+            e('span', {style:{fontWeight:800,color:'#22c55e',fontSize:'15px'}}, p.mw + ' MW'),
+            e('span', {className:'status-chip ' + p.statusClass}, p.status)
+          )
+        ),
+        e('div', {className:'mw-bar-wrap'},
+          e('div', {className:'mw-bar-label'}, p.mw + ' MW / 350 MW (최대 캠퍼스 비교)'),
+          e('div', {className:'mw-bar-bg'},
+            e('div', {className:'mw-bar-fill ' + p.fillClass, style:{width:Math.min(p.mw/350*100,100)+'%'}})
+          )
+        ),
+        e('div', {className:'text-sm', style:{marginTop:'4px'}},
+          e('span', {style:{color:'#6b7280'}}, '용도: '), p.usecase, '  ',
+          e('span', {style:{color:'#6b7280'}}, '파트너: '), p.partner
+        )
+      );
+    })
+  );
+}
+
+/* ── 탭2: 운영 프로젝트 ── */
+function TabOperational() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '⚡ Project Kati 1 — 83 MW (텍사스 남부)'),
+    e('div', {className:'card card-op'},
+      e('div', {className:'proj-header'},
+        e('div', null,
+          e('div', {className:'proj-name'}, 'Project Kati 1'),
+          e('div', {className:'text-sm', style:{marginTop:'3px'}}, '텍사스 남부 | 풍력 에너지 기반 데이터센터')
+        ),
+        e('div', {style:{textAlign:'right'}},
+          e('div', {className:'proj-mw'}, '83 MW'),
+          e('span', {className:'status-chip status-op'}, '✅ 운영 중')
+        )
+      ),
+      e('div', {className:'proj-meta'},
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '구성'), e('span', {className:'meta-val'}, 'Kati 1A (48MW) + Kati 1B (35MW)')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '에너지화'), e('span', {className:'meta-val'}, '2026.02 시작, Q2 2026 완전 가동')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '용도'), e('span', {className:'meta-val'}, 'BTC 채굴 호스팅')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '전력원'), e('span', {className:'meta-val'}, '풍력(재생에너지)'))
+      ),
+      e('div', {style:{margin:'8px 0'}},
+        e('span', {className:'partner-tag'}, '🤝 Galaxy Digital — 48MW (역대 최대 단일 고객)'),
+        e('span', {className:'partner-tag'}, '전체 83MW 완전 가동')
+      ),
+      e('div', {className:'text-sm', style:{marginTop:'8px'}},
+        'Galaxy Digital이 Texas Panhandle의 자사 ', e('b', {style:{color:'#fcd34d'}}, 'Helios 캠퍼스'),
+        '에서 BTC 채굴기를 Kati 1으로 이전. Galaxy Helios는 AI/HPC 시설로 전환 중.',
+        e('br', null),
+        '→ Kati 1A(48MW): Q1~Q2 2026 3단계 에너지화 완료 | Kati 1B(35MW): Q3 2026 완료 목표'
+      )
+    ),
+    e('div', {className:'section-title'}, '⚡ Project Dorothy 1A — 25 MW (웨스트 텍사스)'),
+    e('div', {className:'card card-op'},
+      e('div', {className:'proj-header'},
+        e('div', null, e('div', {className:'proj-name'}, 'Project Dorothy 1A'), e('div', {className:'text-sm', style:{marginTop:'3px'}}, '웨스트 텍사스 | BTC 호스팅')),
+        e('div', {style:{textAlign:'right'}}, e('div', {className:'proj-mw'}, '25 MW'), e('span', {className:'status-chip status-op'}, '✅ 운영 중'))
+      ),
+      e('div', {className:'proj-meta'},
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '소유권'), e('span', {className:'meta-val'}, '100% (2026.04.15 완전 인수)')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '인수 금액'), e('span', {className:'meta-val'}, '$16.5M')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '용도'), e('span', {className:'meta-val'}, 'BTC 외부 호스팅'))
+      ),
+      e('span', {className:'partner-tag'}, '🤝 Blockware (+17MW 확장)'),
+      e('div', {className:'text-sm', style:{marginTop:'8px'}},
+        '2026.04 완전 소유권 확보로 수직 통합 가속화. Dorothy 1A 100% 인수는 AI 캠퍼스 개발 전략의 일환. Blockware와 4번째 확장 계약으로 총 17MW+ 호스팅 용량 달성.'
+      )
+    ),
+    e('div', {className:'section-title'}, '⚡ Project Dorothy 1B & 2 (웨스트 텍사스)'),
+    e('div', {className:'card card-op'},
+      e('div', {className:'proj-header'},
+        e('div', null, e('div', {className:'proj-name'}, 'Project Dorothy 1B + Dorothy 2')),
+        e('div', {style:{textAlign:'right'}}, e('div', {className:'proj-mw'}, '73 MW'), e('span', {className:'status-chip status-op'}, '✅ 운영 중'))
+      ),
+      e('div', {className:'proj-meta'},
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, 'Dorothy 1B'), e('span', {className:'meta-val'}, '25MW — 자체 BTC 채굴')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, 'Dorothy 2'), e('span', {className:'meta-val'}, '48MW — BTC 호스팅')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '1B 인수'), e('span', {className:'meta-val'}, '2026.05.19 (Navitas Global 49% → $8.8M)'))
+      ),
+      e('div', {className:'text-sm', style:{marginTop:'8px'}},
+        'Dorothy 2는 완전 가동 완료. Q1 2026 매출 성장의 핵심 기여자. Dorothy 1B는 100% 소유권 달성(Navitas Global 잔여 지분 인수).'
+      )
+    ),
+    e('div', {className:'section-title'}, '📊 운영 사이트 총계'),
+    e('div', {className:'card'},
+      e('div', {className:'table-wrap'},
+        e('table', null,
+          e('thead', null,
+            e('tr', null, e('th', null, '프로젝트'), e('th', null, 'MW'), e('th', null, '주요 고객'), e('th', null, '용도'), e('th', null, '전력원'))
+          ),
+          e('tbody', null,
+            e('tr', null, e('td', null, 'Kati 1A'), e('td', null, e('b', {style:{color:'#22c55e'}}, '48 MW')), e('td', null, 'Galaxy Digital'), e('td', null, 'BTC 채굴'), e('td', null, '풍력')),
+            e('tr', null, e('td', null, 'Kati 1B'), e('td', null, e('b', {style:{color:'#22c55e'}}, '35 MW')), e('td', null, 'Galaxy Digital 外'), e('td', null, 'BTC 채굴'), e('td', null, '풍력')),
+            e('tr', null, e('td', null, 'Dorothy 1A'), e('td', null, e('b', {style:{color:'#22c55e'}}, '25 MW')), e('td', null, 'Blockware 外'), e('td', null, 'BTC 호스팅'), e('td', null, '풍력')),
+            e('tr', null, e('td', null, 'Dorothy 1B'), e('td', null, e('b', {style:{color:'#22c55e'}}, '25 MW')), e('td', null, '자체 운영'), e('td', null, 'BTC 자체채굴'), e('td', null, '풍력')),
+            e('tr', null, e('td', null, 'Dorothy 2'), e('td', null, e('b', {style:{color:'#22c55e'}}, '48 MW')), e('td', null, '외부 고객'), e('td', null, 'BTC 호스팅'), e('td', null, '풍력')),
+            e('tr', null,
+              e('td', null, e('b', null, '합계')),
+              e('td', null, e('b', {style:{color:'#22c55e',fontSize:'14px'}}, '181 MW')),
+              e('td', null, '—'), e('td', null, '—'), e('td', null, '100% 재생에너지')
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── 탭3: 개발 프로젝트 ── */
+function TabDevelopment() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🚀 Project Kati 2 — 350 MW AI 캠퍼스 (텍사스 남부)'),
+    e('div', {className:'card card-dev'},
+      e('div', {className:'proj-header'},
+        e('div', null,
+          e('div', {className:'proj-name'}, 'Project Kati 2 — 350MW AI 캠퍼스'),
+          e('div', {className:'text-sm', style:{marginTop:'3px'}}, '텍사스 남부 | 7개 빌딩 | Critical IT Tier 3')
+        ),
+        e('div', {style:{textAlign:'right'}},
+          e('div', {className:'proj-mw', style:{color:'#60a5fa'}}, '350 MW'),
+          e('span', {className:'status-chip status-dev'}, '🔨 개발 중')
+        )
+      ),
+      e('div', {className:'proj-meta'},
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, 'Phase 1'), e('span', {className:'meta-val'}, '100MW Critical IT')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '구조'), e('span', {className:'meta-val'}, '7개 빌딩 분산 캠퍼스')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '부지'), e('span', {className:'meta-val'}, '500에이커+ 추가 확보')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '입주 협상'), e('span', {className:'meta-val'}, '잠재 단일 임차인 3社 협상 중'))
+      ),
+      e('div', {style:{margin:'8px 0'}},
+        e('span', {className:'partner-tag-b'}, '🤝 Metrobloks (100MW+ AI/HPC 파트너)'),
+        e('span', {className:'partner-tag-b'}, 'Phase 1 설계 서비스 RFP 진행 중')
+      ),
+      e('div', {className:'text-sm', style:{marginTop:'8px',lineHeight:'1.8'}},
+        e('b', {className:'highlight-b'}, '개발 단계:'), ' Phase 1(100MW) 30% 개략 설계(Schematic Design) 진행',
+        e('br', null),
+        e('b', {className:'highlight-b'}, '발전 용량:'), ' Kati 2 사이트는 Kati 1(83MW) 인근, 350MW 전력 공급 기반 확보',
+        e('br', null),
+        e('b', {className:'highlight-b'}, '타임라인:'), ' Phase 1(100MW) 2027년 가동 목표',
+        e('br', null),
+        e('b', {className:'highlight-b'}, '예상 매출(Phase 1):'), ' AI/HPC 호스팅 $25~45M/년 (업계 평균 단가 기준 추정)',
+        e('br', null),
+        e('b', {className:'highlight-b'}, '전체 캠퍼스 완성 시:'), ' $80~150M/년 잠재 매출 (350MW AI 호스팅 기준)'
+      )
+    ),
+    e('div', {className:'section-title'}, '🚀 Project Dorothy 3 — 300 MW AI 캠퍼스 (웨스트 텍사스)'),
+    e('div', {className:'card card-dev'},
+      e('div', {className:'proj-header'},
+        e('div', null, e('div', {className:'proj-name'}, 'Project Dorothy 3'), e('div', {className:'text-sm', style:{marginTop:'3px'}}, '웨스트 텍사스 | AI/HPC 전용 캠퍼스')),
+        e('div', {style:{textAlign:'right'}}, e('div', {className:'proj-mw', style:{color:'#60a5fa'}}, '300+ MW'), e('span', {className:'status-chip status-dev'}, '🔨 개발 초기'))
+      ),
+      e('div', {className:'proj-meta'},
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '전력원'), e('span', {className:'meta-val'}, 'Briscoe Wind Farm 150MW')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '인수 금액'), e('span', {className:'meta-val'}, '$53M (2026)')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '수직 통합'), e('span', {className:'meta-val'}, '풍력→데이터센터 일체화'))
+      ),
+      e('div', {style:{margin:'8px 0'}},
+        e('span', {className:'partner-tag-b'}, '⚡ Briscoe Wind Farm 150MW (자체 소유)')
+      ),
+      e('div', {className:'text-sm', style:{marginTop:'8px',lineHeight:'1.8'}},
+        e('b', {className:'highlight-b'}, 'Year-1 Adj EBITDA:'), ' $6M~$11M (회사 발표)',
+        e('br', null),
+        e('b', {className:'highlight-b'}, '연간 매출 목표:'), ' $20.0M~$24.4M (회사 발표)',
+        e('br', null),
+        e('b', {className:'highlight-b'}, '전략 의미:'), ' Dorothy 1A/1B/2(98MW) → Dorothy 3(300MW) 확장으로 Dorothy 캠퍼스 400MW 규모화'
+      )
+    ),
+    e('div', {className:'section-title'}, '🧪 Project Grace — 2 MW AI 전력관리 파일럿 (텍사스)'),
+    e('div', {className:'card card-pilot'},
+      e('div', {className:'proj-header'},
+        e('div', null, e('div', {className:'proj-name'}, 'Project Grace'), e('div', {className:'text-sm', style:{marginTop:'3px'}}, '텍사스 | 재생에너지 AI 컴퓨팅 파일럿')),
+        e('div', {style:{textAlign:'right'}}, e('div', {className:'proj-mw', style:{color:'#f59e0b'}}, '2 MW'), e('span', {className:'status-chip status-pilot'}, '🧪 파일럿'))
+      ),
+      e('div', {className:'proj-meta'},
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '파트너'), e('span', {className:'meta-val'}, 'Siemens (MOU)')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '목표'), e('span', {className:'meta-val'}, 'AI 부하 ERCOT 그리드 검증')),
+        e('div', {className:'meta-item'}, e('span', {className:'meta-label'}, '진행'), e('span', {className:'meta-val'}, '기술 시뮬레이션 최종화'))
+      ),
+      e('div', {style:{margin:'8px 0'}},
+        e('span', {className:'partner-tag-y'}, '🤝 Siemens — 전력 인프라·제어·모니터링')
+      ),
+      e('div', {className:'text-sm', style:{marginTop:'8px',lineHeight:'1.8'}},
+        e('b', {className:'highlight-y'}, '핵심 과제:'), ' GPU 기반 AI 컴퓨팅의 급변하는 전력 수요를 재생에너지로 직접(behind-the-meter) 공급 시 ERCOT 그리드 안정성 검증.',
+        e('br', null),
+        e('b', {className:'highlight-y'}, '전략 의미:'), ' 성공 시 Kati 2(350MW), Dorothy 3(300MW) AI 캠퍼스에 복제 가능한 운영 청사진(Blueprint) 확보.',
+        e('br', null),
+        e('b', {className:'highlight-y'}, '현황:'), ' OEM 파트너와 기술 시뮬레이션 최종화, LVRT(저전압 보상 기능) 요건 충족 검증 중'
+      )
+    )
+  );
+}
+
+/* ── 탭4: 파트너십 ── */
+function TabPartnership() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🤝 핵심 파트너십 현황'),
+    e('div', {className:'partner-card'},
+      e('div', {style:{display:'flex',alignItems:'center',marginBottom:'4px'}},
+        e('span', {className:'partner-logo'}, '🌌'),
+        e('div', null,
+          e('div', {className:'partner-name'}, 'Galaxy Digital'),
+          e('div', {className:'partner-role'}, 'Project Kati 1 — 48MW 최대 단일 고객')
+        )
+      ),
+      e('div', {className:'partner-detail'},
+        e('b', {style:{color:'#22c55e'}}, '계약 내용: '), '48MW 풍력 기반 BTC 채굴 호스팅 (솔루나 역대 최대 단일 계약)',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '배경: '), 'Galaxy의 Texas Panhandle ', e('b', null, 'Helios 캠퍼스'), '에서 BTC 채굴기를 Kati 1으로 이전. Galaxy Helios는 AI/HPC 시설로 전환 중.',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '에너지화: '), '2026 Q1~Q3 단계적 완료',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '전략 의미: '), '대형 기관급 BTC 채굴사와의 장기 계약 → 83MW 전체 용량 가동 보장'
+      )
+    ),
+    e('div', {className:'helios-box'},
+      e('div', {style:{fontWeight:800,color:'#f59e0b',fontSize:'14px',marginBottom:'6px'}}, '📌 Galaxy Helios 캠퍼스 관계 정리'),
+      e('div', {className:'text-sm', style:{lineHeight:'2'}},
+        '• ', e('b', null, 'Helios = Galaxy Digital 자체 캠퍼스'), ' (솔루나 소유 아님)',
+        e('br', null),
+        '• Galaxy는 Helios에서 AI/HPC로 전환하면서 BTC 채굴기를 솔루나 Kati 1으로 이전',
+        e('br', null),
+        '• 솔루나는 이 이전 규모(48MW)의 수혜자 → Kati 1 완전 가동 달성',
+        e('br', null),
+        '• Galaxy-솔루나 관계: 호스팅 고객사 (솔루나 = 인프라 제공자)'
+      )
+    ),
+    e('div', {className:'partner-card'},
+      e('div', {style:{display:'flex',alignItems:'center',marginBottom:'4px'}},
+        e('span', {className:'partner-logo'}, '🏗️'),
+        e('div', null,
+          e('div', {className:'partner-name'}, 'Metrobloks'),
+          e('div', {className:'partner-role'}, 'Project Kati 2 — 350MW AI 캠퍼스 공동 개발')
+        )
+      ),
+      e('div', {className:'partner-detail'},
+        e('b', {style:{color:'#22c55e'}}, '계약 내용: '), '100MW+ AI/HPC 용량 공동 개발, 350MW Tier 3 AI 캠퍼스 설계·시공',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '역할: '), '데이터센터 모듈형 설계 전문사 — AI 워크로드에 최적화된 모듈 아키텍처',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '진행: '), 'Phase 1(100MW) 30% 설계 완료, 설계 서비스 RFP 진행 중',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '목표: '), '잠재 단일 임차인 3社와 Pre-Lease 협상 (전체 350MW 선계약 목표)'
+      )
+    ),
+    e('div', {className:'partner-card'},
+      e('div', {style:{display:'flex',alignItems:'center',marginBottom:'4px'}},
+        e('span', {className:'partner-logo'}, '⚡'),
+        e('div', null,
+          e('div', {className:'partner-name'}, 'Siemens'),
+          e('div', {className:'partner-role'}, 'Project Grace — 2MW AI 전력관리 파일럿')
+        )
+      ),
+      e('div', {className:'partner-detail'},
+        e('b', {style:{color:'#22c55e'}}, '계약 내용: '), '비구속적 MOU — 2MW 재생에너지 AI 컴퓨팅 파일럿',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '역할: '), '전력 인프라·제어·모니터링 시스템 제공. ERCOT 그리드 안정성 검증',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '의미: '), '재생에너지 직접 연결 AI 데이터센터의 표준 운영 청사진 개발',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '향후: '), '성공 시 Kati 2, Dorothy 3 등 대형 캠퍼스에 복제 적용'
+      )
+    ),
+    e('div', {className:'partner-card'},
+      e('div', {style:{display:'flex',alignItems:'center',marginBottom:'4px'}},
+        e('span', {className:'partner-logo'}, '🔋'),
+        e('div', null,
+          e('div', {className:'partner-name'}, 'Blockware'),
+          e('div', {className:'partner-role'}, 'Project Dorothy 1A — BTC 호스팅 4회 확장')
+        )
+      ),
+      e('div', {className:'partner-detail'},
+        e('b', {style:{color:'#22c55e'}}, '계약 내용: '), '4회에 걸친 순차적 호스팅 확장, 총 17MW+ 달성',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '의미: '), '안정적인 장기 BTC 호스팅 고객사 — Dorothy 1A 수익 가시성 확보',
+        e('br', null),
+        e('b', {style:{color:'#22c55e'}}, '전략: '), '재생에너지 BTC 채굴 인프라의 높은 재계약률 입증'
+      )
+    )
+  );
+}
+
+/* ── 탭5: 매출 & 재무 ── */
+function TabFinancial() {
+  var revRef = useRef(null); var revChart = useRef(null);
+  var mixRef = useRef(null); var mixChart = useRef(null);
+
+  makeChart(revRef, revChart, {
+    type:'bar',
+    data:{
+      labels:['Q1 25','Q2 25','Q3 25','Q4 25','Q1 26'],
+      datasets:[
+        {label:'데이터 호스팅',data:[2.1,2.8,3.9,5.2,6.7],backgroundColor:'rgba(34,197,94,0.8)',borderRadius:3},
+        {label:'BTC 채굴',data:[3.6,3.2,2.8,2.9,2.2],backgroundColor:'rgba(249,115,22,0.7)',borderRadius:3}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'}},
+        y:{ticks:{color:'#9ca3af',font:{size:10}},grid:{color:'#1f2937'},stacked:true},
+        x2:{stacked:true}
+      }
+    }
+  });
+
+  makeChart(mixRef, mixChart, {
+    type:'doughnut',
+    data:{
+      labels:['데이터 호스팅 $6.7M','BTC 채굴 $2.2M','기타 $0.5M'],
+      datasets:[{data:[6.7,2.2,0.5],backgroundColor:['rgba(34,197,94,0.8)','rgba(249,115,22,0.7)','rgba(100,116,139,0.7)'],borderWidth:1,borderColor:'#060d0a'}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#9ca3af',font:{size:11}},position:'bottom'}}
+    }
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '💰 Q1 2026 매출 실적'),
+    e('div', {className:'kpi-grid'},
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val'}, '$9.4M'), e('div', {className:'kpi-label'}, 'Q1 2026 총매출'), e('div', {className:'kpi-note'}, '+58% YoY / 4분기 연속 성장')),
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val', style:{color:'#86efac'}}, '$6.7M'), e('div', {className:'kpi-label'}, '데이터 호스팅 매출'), e('div', {className:'kpi-note'}, '71% 비중')),
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val', style:{color:'#f97316'}}, '$2.2M'), e('div', {className:'kpi-label'}, 'BTC 채굴 매출'), e('div', {className:'kpi-note'}, '23% 비중')),
+      e('div', {className:'kpi'}, e('div', {className:'kpi-val', style:{color:'#fca5a5'}}, '-$17.9M'), e('div', {className:'kpi-label'}, 'Q1 순손실'), e('div', {className:'kpi-note'}, 'SBC $10.2M 포함'))
+    ),
+    e('div', {className:'section-title'}, '📊 분기별 매출 스택 차트'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:revRef})),
+    e('div', {className:'section-title'}, '🥧 Q1 2026 매출 믹스'),
+    e('div', {className:'chart-wrap', style:{height:'220px'}}, e('canvas', {ref:mixRef})),
+    e('div', {className:'section-title'}, '🎯 2026~2027 매출 가이던스 & 전망'),
+    e('div', {className:'rev-box'},
+      e('div', {className:'rev-title'}, '📈 회사 공식 가이던스 & 프로젝트별 추정'),
+      e('div', {className:'table-wrap'},
+        e('table', null,
+          e('thead', null,
+            e('tr', null, e('th', null, '항목'), e('th', null, '2026 전망'), e('th', null, '2027 전망'), e('th', null, '근거'))
+          ),
+          e('tbody', null,
+            e('tr', null, e('td', null, 'FY 총매출 (회사 발표)'), e('td', {style:{color:'#86efac',fontWeight:700}}, '$55M~$148M'), e('td', null, '미발표'), e('td', null, '파이프라인 가동 시나리오')),
+            e('tr', null, e('td', null, 'Dorothy 3 (연간)'), e('td', null, '$20~24.4M'), e('td', {style:{color:'#86efac'}}, '확대'), e('td', null, '회사 공식 발표')),
+            e('tr', null, e('td', null, 'Dorothy 3 Year-1 EBITDA'), e('td', {style:{color:'#86efac'}}, '$6~11M'), e('td', null, '—'), e('td', null, '회사 공식 발표')),
+            e('tr', null, e('td', null, 'Kati 1 (83MW 풀 가동)'), e('td', {style:{color:'#86efac'}}, '$12~18M'), e('td', {style:{color:'#86efac'}}, '유지'), e('td', null, 'Q3 2026 완전가동 후')),
+            e('tr', null, e('td', null, 'Kati 2 Ph.1 (100MW)'), e('td', null, '준비 중'), e('td', {style:{color:'#60a5fa'}}, '$25~45M (추정)'), e('td', null, '2027 가동 목표')),
+            e('tr', null, e('td', null, '운영 현금'), e('td', {style:{color:'#86efac'}}, '$86M 보유'), e('td', null, '—'), e('td', null, 'Q1 2026 말 기준'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card card-op', style:{marginTop:'8px'}},
+      e('div', {className:'text-sm', style:{lineHeight:'2'}},
+        e('b', {className:'highlight'}, '성장 동력: '),
+        'Kati 1 Q3 2026 완전 가동(83MW) + Dorothy 3 매출화($20~24M) + Kati 2 Phase 1 착공',
+        e('br', null),
+        e('b', {className:'highlight-b'}, '전략 전환: '),
+        'BTC 채굴 호스팅 → AI/HPC 호스팅 믹스 이동 (AI 단가 BTC 대비 2~4배)',
+        e('br', null),
+        e('b', {className:'highlight-r'}, '리스크: '),
+        '운영 손실 지속(SBC 높음), 개발 프로젝트 일정 지연 가능성, BTC 가격 의존도'
+      )
+    )
+  );
+}
+
+/* ── 탭6: 로드맵 ── */
+function TabRoadmap() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📅 2025~2027 개발 타임라인'),
+    e('div', {className:'timeline-wrap'},
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-op'}),
+        e('div', {className:'tl-date tl-date-op'}, '2025.08'),
+        e('div', {className:'tl-title'}, 'Galaxy Digital 48MW Kati 1 파트너십 체결'),
+        e('div', {className:'tl-desc'}, '솔루나 역대 최대 단일 계약. Galaxy Helios에서 BTC 채굴기 이전 결정. Kati 1 83MW 풀 가동 기반 확보.')
+      ),
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-op'}),
+        e('div', {className:'tl-date tl-date-op'}, '2026.02'),
+        e('div', {className:'tl-title'}, 'Project Kati 1 에너지화 시작 — 83MW 가동 개시'),
+        e('div', {className:'tl-desc'}, '솔루나 역대 최대 사이트 에너지화. Kati 1A(48MW) 3단계 가동 시작. Q1 2026 매출 +58% YoY 달성의 핵심 동력.')
+      ),
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-op'}),
+        e('div', {className:'tl-date tl-date-op'}, '2026.02'),
+        e('div', {className:'tl-title'}, 'Kati 2 350MW AI 캠퍼스 발표 — Metrobloks 파트너십'),
+        e('div', {className:'tl-desc'}, '7개 빌딩 Critical IT Tier 3 AI 캠퍼스 설계 착수. 잠재 단일 임차인 3社와 협상 시작. 500에이커+ 추가 부지 확보.')
+      ),
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-op'}),
+        e('div', {className:'tl-date tl-date-op'}, '2026.04'),
+        e('div', {className:'tl-title'}, 'Dorothy 1A 100% 소유권 취득 ($16.5M)'),
+        e('div', {className:'tl-desc'}, '수직 통합 전략 가속화. AI 캠퍼스 개발을 위한 Dorothy 부지 완전 확보. Blockware 4번째 확장으로 17MW+ 호스팅 달성.')
+      ),
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-op'}),
+        e('div', {className:'tl-date tl-date-op'}, '2026.04~05'),
+        e('div', {className:'tl-title'}, 'Briscoe Wind Farm 150MW 인수 ($53M) + Dorothy 1B 100% 완성'),
+        e('div', {className:'tl-desc'}, 'Dorothy 3(300MW) AI 캠퍼스를 위한 전력 기반 확보. Dorothy 1B Navitas 잔여 49% 인수($8.8M) — Dorothy 캠퍼스 완전 소유. Year-1 EBITDA $6~11M, 매출 $20~24.4M 가이던스 발표.')
+      ),
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-op'}),
+        e('div', {className:'tl-date tl-date-op'}, '2026.05'),
+        e('div', {className:'tl-title'}, 'Q1 2026 실적 발표 — 매출 $9.4M (+58% YoY)'),
+        e('div', {className:'tl-desc'}, '4분기 연속 순차 매출 성장. 데이터 호스팅 $6.7M(71%), BTC 채굴 $2.2M(23%). 캐시 $86M. 4.3GW 파이프라인 확인.')
+      ),
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-dev'}),
+        e('div', {className:'tl-date tl-date-dev'}, '2026 Q3 (목표)'),
+        e('div', {className:'tl-title'}, 'Kati 1B 35MW 에너지화 완료 — 총 83MW 가동'),
+        e('div', {className:'tl-desc'}, 'Kati 1 전체 83MW 완전 가동. 연간 호스팅 매출 $12~18M 수준 기대. Galaxy Digital 전체 48MW 계약 실현.')
+      ),
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-dev'}),
+        e('div', {className:'tl-date tl-date-dev'}, '2026 H2 (목표)'),
+        e('div', {className:'tl-title'}, 'Project Grace 2MW 파일럿 완료 — Siemens'),
+        e('div', {className:'tl-desc'}, 'AI 부하 ERCOT 그리드 안정성 검증. 성공 시 대형 캠퍼스(Kati 2, Dorothy 3) 전력 관리 청사진 확보.')
+      ),
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-dev'}),
+        e('div', {className:'tl-date tl-date-dev'}, '2026 H2~2027 (목표)'),
+        e('div', {className:'tl-title'}, 'Dorothy 3 300MW 착공 — Briscoe Wind 전력 기반'),
+        e('div', {className:'tl-desc'}, '$20~24.4M 연간 매출, $6~11M EBITDA 가이던스. 웨스트 텍사스 AI 캠퍼스 1단계 착공 예정.')
+      ),
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-plan'}),
+        e('div', {className:'tl-date tl-date-plan'}, '2027 (목표)'),
+        e('div', {className:'tl-title'}, 'Kati 2 Phase 1 — 100MW AI 캠퍼스 가동'),
+        e('div', {className:'tl-desc'}, '350MW 전체 캠퍼스의 Phase 1(100MW) 가동. 잠재 단일 임차인 계약 체결 필요. 추정 매출 $25~45M(Phase 1 기준).')
+      ),
+      e('div', {className:'tl-step'},
+        e('div', {className:'tl-dot tl-dot-plan'}),
+        e('div', {className:'tl-date tl-date-plan'}, '2027~2028 (장기)'),
+        e('div', {className:'tl-title'}, 'Kati 2 전체 350MW + Dorothy 3 확장 — 총 1GW+ 달성'),
+        e('div', {className:'tl-desc'}, '전체 파이프라인 1GW+ 가동 시 연간 매출 $100~200M 잠재 (AI/HPC 단가 기준). 4.3GW 장기 파이프라인으로 지속 성장.')
+      )
+    ),
+    e('div', {className:'section-title'}, '📊 MW 규모 성장 시나리오'),
+    e('div', {className:'card'},
+      e('div', {className:'table-wrap'},
+        e('table', null,
+          e('thead', null,
+            e('tr', null, e('th', null, '시기'), e('th', null, '운영 MW'), e('th', null, '추가 프로젝트'), e('th', null, '예상 연간 매출'))
+          ),
+          e('tbody', null,
+            e('tr', null, e('td', null, '현재 (2026 Q2)'), e('td', {style:{color:'#22c55e',fontWeight:700}}, '~165MW'), e('td', null, 'Kati 1A 완료'), e('td', null, '$35~45M (연환산)')),
+            e('tr', null, e('td', null, '2026 Q4'), e('td', {style:{color:'#22c55e',fontWeight:700}}, '181MW'), e('td', null, 'Kati 1B 완료'), e('td', null, '$45~60M')),
+            e('tr', null, e('td', null, '2027 H1'), e('td', {style:{color:'#60a5fa',fontWeight:700}}, '281MW+'), e('td', null, 'Kati 2 Ph.1 100MW 가동'), e('td', null, '$70~100M')),
+            e('tr', null, e('td', null, '2027~2028'), e('td', {style:{color:'#60a5fa',fontWeight:700}}, '500MW+'), e('td', null, 'Dorothy 3 착공·Kati 2 확장'), e('td', null, '$120~180M'))
+          )
+        )
+      ),
+      e('div', {className:'text-sm', style:{marginTop:'8px',color:'#6b7280'}},
+        '* 매출 추정은 AI/HPC 호스팅 단가($250~450/kW-월) 기준. BTC 가격·단가 변동에 따라 변동 가능.'
+      )
+    )
+  );
+}
+
+/* ── 메인 앱 ── */
+function App() {
+  var state = useState(0);
+  var tab = state[0]; var setTab = state[1];
+  var views = [TabPortfolio, TabOperational, TabDevelopment, TabPartnership, TabFinancial, TabRoadmap];
+  var View = views[tab];
+
+  return e('div', null,
+    e('div', {className:'header'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'header-back'}, '← 목록으로'),
+      e('div', {className:'header-title'}, '🌱 솔루나홀딩스 (SLNH) — 프로젝트 포트폴리오'),
+      e('div', {className:'header-sub'}, '재생에너지 기반 AI/HPC·BTC 채굴 데이터센터 | 분석일: 2026.06.03'),
+      e('div', {className:'header-badges'},
+        e('span', {className:'hbadge hbadge-g'}, '운영: 181 MW'),
+        e('span', {className:'hbadge hbadge-b'}, '개발: 650+ MW'),
+        e('span', {className:'hbadge hbadge-y'}, '파이프라인: 4.3 GW'),
+        e('span', {className:'hbadge hbadge-g'}, 'Q1 매출 +58% YoY')
+      )
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(t, i) {
+        return e('div', {
+          key:i,
+          className:'tab' + (tab===i?' active':''),
+          onClick:function(){setTab(i);}
+        }, t.label);
+      })
+    ),
+    e(View, null)
+  );
+}
+
+var root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(e(App, null));
+</script>
+</body>
+</html>
