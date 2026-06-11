@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TEM — Tempus AI 종목 분석 대시보드</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;font-size:14px}
+  a{color:#3b82f6;text-decoration:none}
+  .back-link{display:inline-block;padding:8px 16px;margin:12px 16px;background:#1e293b;border-radius:8px;font-size:13px;color:#94a3b8}
+  .back-link:hover{background:#334155;color:#e2e8f0}
+  .header{padding:16px;border-bottom:1px solid #1e293b}
+  .ticker{font-size:28px;font-weight:800;color:#3b82f6}
+  .company{font-size:14px;color:#94a3b8;margin-top:2px}
+  .price-row{display:flex;align-items:baseline;gap:10px;margin-top:8px}
+  .price{font-size:32px;font-weight:700;color:#e2e8f0}
+  .chg-pos{color:#22c55e;font-size:16px}
+  .chg-neg{color:#ef4444;font-size:16px}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+  .b-blue{background:#1e3a5f;color:#60a5fa}
+  .b-green{background:#14532d;color:#4ade80}
+  .b-yellow{background:#713f12;color:#fbbf24}
+  .b-red{background:#450a0a;color:#f87171}
+  .b-purple{background:#3b1d6e;color:#c084fc}
+  .b-gray{background:#1e293b;color:#94a3b8}
+  .tabs{display:flex;overflow-x:auto;background:#0f172a;border-bottom:1px solid #1e293b;padding:0 8px}
+  .tabs::-webkit-scrollbar{height:3px}
+  .tabs::-webkit-scrollbar-track{background:#0f172a}
+  .tabs::-webkit-scrollbar-thumb{background:#334155;border-radius:2px}
+  .tab{padding:12px 14px;font-size:12px;cursor:pointer;white-space:nowrap;color:#64748b;border-bottom:2px solid transparent;transition:all .2s}
+  .tab.active{color:#3b82f6;border-bottom-color:#3b82f6}
+  .tab:hover{color:#94a3b8}
+  .content{padding:16px;max-width:680px;margin:0 auto}
+  .section-title{font-size:16px;font-weight:700;color:#e2e8f0;margin:20px 0 10px;border-left:3px solid #3b82f6;padding-left:10px}
+  .card{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:14px;margin-bottom:12px}
+  .card-title{font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:8px}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{background:#1e293b;border-radius:8px;padding:10px}
+  .kpi-label{font-size:10px;color:#64748b;margin-bottom:3px}
+  .kpi-value{font-size:16px;font-weight:700;color:#e2e8f0}
+  .kpi-sub{font-size:10px;color:#94a3b8;margin-top:2px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#1e293b;padding:8px 6px;text-align:left;color:#94a3b8;font-weight:600;font-size:11px}
+  td{padding:8px 6px;border-bottom:1px solid #1e293b;color:#e2e8f0}
+  tr:hover td{background:#1e293b22}
+  .chart-wrap{position:relative;height:220px;margin:12px 0}
+  .alert-box{background:#1a0a0a;border:1px solid #ef4444;border-radius:8px;padding:12px;margin:12px 0}
+  .alert-title{color:#f87171;font-size:13px;font-weight:700;margin-bottom:4px}
+  .alert-body{color:#fca5a5;font-size:12px;line-height:1.6}
+  .info-box{background:#0a1628;border:1px solid #1e3a5f;border-radius:8px;padding:12px;margin:12px 0}
+  .info-title{color:#60a5fa;font-size:13px;font-weight:700;margin-bottom:4px}
+  .info-body{color:#93c5fd;font-size:12px;line-height:1.6}
+  .warn-box{background:#1a1200;border:1px solid #d97706;border-radius:8px;padding:12px;margin:12px 0}
+  .warn-title{color:#fbbf24;font-size:13px;font-weight:700;margin-bottom:4px}
+  .warn-body{color:#fcd34d;font-size:12px;line-height:1.6}
+  .opinion-card{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+  .opinion-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .opinion-user{font-size:12px;font-weight:700;color:#3b82f6}
+  .opinion-meta{font-size:10px;color:#64748b}
+  .opinion-body{font-size:12px;color:#cbd5e1;line-height:1.5;margin-bottom:6px}
+  .opinion-footer{display:flex;gap:8px;font-size:10px;color:#64748b}
+  .sent-pos{background:#14532d;color:#4ade80;padding:2px 7px;border-radius:8px;font-size:10px}
+  .sent-neu{background:#1c2a3a;color:#93c5fd;padding:2px 7px;border-radius:8px;font-size:10px}
+  .sent-neg{background:#450a0a;color:#f87171;padding:2px 7px;border-radius:8px;font-size:10px}
+  .sent-summary{display:flex;gap:10px;margin-bottom:12px;font-size:12px}
+  .progress-bar{height:6px;background:#1e293b;border-radius:3px;overflow:hidden;margin-top:4px}
+  .progress-fill{height:100%;background:#3b82f6;border-radius:3px}
+  .score-big{font-size:48px;font-weight:800;text-align:center;padding:16px 0}
+  .check-card{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+  .check-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+  .check-q{font-size:12px;font-weight:600;color:#e2e8f0;flex:1}
+  .check-icon{font-size:18px;flex-shrink:0}
+  .check-data{font-size:11px;color:#94a3b8;margin-bottom:4px}
+  .check-verdict{font-size:11px;font-weight:600}
+  .v-pass{color:#4ade80}
+  .v-partial{color:#fbbf24}
+  .v-fail{color:#f87171}
+  .term-card{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+  .term-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .term-name{font-size:13px;font-weight:700;color:#e2e8f0}
+  .term-body{font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:6px}
+  .term-example{font-size:11px;color:#60a5fa;font-style:italic;border-left:2px solid #3b82f6;padding-left:8px}
+  .filter-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .filter-btn{padding:4px 12px;border-radius:16px;font-size:11px;cursor:pointer;border:1px solid #334155;background:#1e293b;color:#94a3b8;transition:all .2s}
+  .filter-btn.active{background:#1e3a5f;color:#60a5fa;border-color:#3b82f6}
+  .action-table{width:100%}
+  .action-table td{font-size:12px}
+  .val-green{color:#4ade80;font-weight:700}
+  .val-red{color:#f87171;font-weight:700}
+  .val-yellow{color:#fbbf24;font-weight:700}
+  .val-blue{color:#60a5fa;font-weight:700}
+  .divider{height:1px;background:#1e293b;margin:16px 0}
+  .radar-wrap{position:relative;height:250px;margin:12px 0}
+  .comp-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e293b22;font-size:12px}
+  .comp-name{color:#94a3b8;flex:1}
+  .comp-val{font-weight:700;color:#e2e8f0;width:60px;text-align:right}
+  .comp-bar-wrap{flex:2;margin:0 8px}
+  .comp-bar{height:6px;background:#3b82f6;border-radius:3px}
+</style>
+</head>
+<body>
+<a class="back-link" href="https://disntm90.github.io/disntm90/">← 목록으로</a>
+
+<div id="root"></div>
+
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(canvasRef, chartRef, cfg) {
+  useEffect(function() {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(canvasRef.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+/* ── 수익 추이 차트 ── */
+function RevenueChart() {
+  var ref = useRef(null);
+  var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'bar',
+    data: {
+      labels: ['Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026'],
+      datasets: [
+        { label: '진단(Diagnostics)', data: [193.8, 205.0, 225.0, 248.0, 261.1], backgroundColor: '#3b82f6' },
+        { label: '데이터&앱', data: [61.9, 68.0, 76.0, 82.0, 87.0], backgroundColor: '#8b5cf6' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color:'#94a3b8', font:{size:10} } } },
+      scales: {
+        x: { stacked:true, ticks:{color:'#64748b',font:{size:10}}, grid:{color:'#1e293b'} },
+        y: { stacked:true, ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v+'M'}}, grid:{color:'#1e293b'} }
+      }
+    }
+  });
+  return e('div',{className:'chart-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 순손실 추이 ── */
+function LossChart() {
+  var ref = useRef(null);
+  var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'line',
+    data: {
+      labels: ['Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026'],
+      datasets: [
+        { label: '순손실(Net Loss)', data: [-68, -72, -80, -91, -125.9], borderColor:'#ef4444', backgroundColor:'#ef444422', fill:true, tension:0.4, pointRadius:4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{color:'#94a3b8',font:{size:10}} } },
+      scales: {
+        x: { ticks:{color:'#64748b',font:{size:10}}, grid:{color:'#1e293b'} },
+        y: { ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v+'M'}}, grid:{color:'#1e293b'} }
+      }
+    }
+  });
+  return e('div',{className:'chart-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 가이던스 바 차트 ── */
+function GuidanceChart() {
+  var ref = useRef(null);
+  var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'bar',
+    data: {
+      labels: ['2023 실적','2024 실적','2025 실적','2026 가이던스'],
+      datasets: [
+        { label: '연간 매출 ($M)', data: [532, 693, 1272, 1595], backgroundColor: ['#334155','#475569','#3b82f6','#22c55e'] }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{color:'#94a3b8',font:{size:10}} } },
+      scales: {
+        x: { ticks:{color:'#64748b',font:{size:10}}, grid:{color:'#1e293b'} },
+        y: { ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v+'M'}}, grid:{color:'#1e293b'} }
+      }
+    }
+  });
+  return e('div',{className:'chart-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 애널리스트 분포 도넛 ── */
+function AnalystChart() {
+  var ref = useRef(null);
+  var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'doughnut',
+    data: {
+      labels: ['Strong Buy','Buy','Hold','Sell'],
+      datasets: [{ data: [8, 4, 4, 1], backgroundColor:['#16a34a','#22c55e','#f59e0b','#ef4444'], borderWidth:0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{color:'#94a3b8',font:{size:11}}, position:'right' } }
+    }
+  });
+  return e('div',{className:'chart-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 멀티배거 레이더 ── */
+function RadarChart() {
+  var ref = useRef(null);
+  var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'radar',
+    data: {
+      labels: ['규모','밸류에이션','수익질','자산효율','FCF','수주잔고','재무건전성','진입시점'],
+      datasets: [{
+        label: 'TEM',
+        data: [0.5, 0.5, 0.5, 0.5, 0, 1, 0.5, 1],
+        borderColor: '#3b82f6', backgroundColor: '#3b82f622', pointBackgroundColor: '#3b82f6', pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{color:'#94a3b8',font:{size:10}} } },
+      scales: {
+        r: {
+          min:0, max:1,
+          ticks: { display:false },
+          grid: { color:'#1e293b' },
+          pointLabels: { color:'#94a3b8', font:{size:10} },
+          angleLines: { color:'#1e293b' }
+        }
+      }
+    }
+  });
+  return e('div',{className:'radar-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 가격 비교 차트 ── */
+function PriceCompChart() {
+  var ref = useRef(null);
+  var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'bar',
+    data: {
+      labels: ['TEM','EXAS','NTRA','ILMN','PACB'],
+      datasets: [
+        { label: '현재가($)', data: [51.66, 32.40, 148.50, 104.20, 5.80], backgroundColor:['#3b82f6','#475569','#475569','#475569','#475569'] },
+        { label: '목표가($)', data: [67.20, 42.00, 170.00, 128.00, 8.50], backgroundColor:['#93c5fd','#94a3b8','#94a3b8','#94a3b8','#94a3b8'] }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{ labels:{color:'#94a3b8',font:{size:10}} } },
+      scales: {
+        x:{ ticks:{color:'#64748b',font:{size:10}}, grid:{color:'#1e293b'} },
+        y:{ ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v}}, grid:{color:'#1e293b'} }
+      }
+    }
+  });
+  return e('div',{className:'chart-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 탭 컴포넌트 ── */
+function Overview() {
+  return e('div',{className:'content'},
+    e('div',{className:'kpi-grid'},
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'현재가'), e('div',{className:'kpi-value'},'$51.66'), e('div',{className:'kpi-sub'},'2026-06-10 기준')),
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'시가총액'), e('div',{className:'kpi-value'},'$7.2B'), e('div',{className:'kpi-sub'},'약 1.39억 주')),
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'52주 범위'), e('div',{className:'kpi-value'},'$41.73'), e('div',{className:'kpi-sub'},'~ $104.32')),
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'RSI (14)'), e('div',{className:'kpi-value','style':{color:'#fbbf24'}},'~45'), e('div',{className:'kpi-sub'},'중립-약세 구간')),
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'Q1 2026 매출'), e('div',{className:'kpi-value'},'$348.1M'), e('div',{className:'kpi-sub'},'+36% YoY')),
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'FY2026 가이던스'), e('div',{className:'kpi-value','style':{color:'#4ade80'}},'$1.59B'), e('div',{className:'kpi-sub'},'~25% 성장'))
+    ),
+
+    e('div',{className:'section-title'},'기업 개요'),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'Tempus AI, Inc. (NASDAQ: TEM)'),
+      e('p',{style:{fontSize:'12px',lineHeight:'1.8',color:'#cbd5e1'}},
+        'Tempus AI는 2015년 Eric Lefkofsky(전 Groupon CEO)가 설립한 AI 기반 정밀 의료 플랫폼 기업입니다. ',
+        '세계 최대 규모의 임상·분자 데이터 라이브러리(환자 4,500만 명+ 비식별화 데이터, 시퀀싱 데이터 보유 환자 150만 명+)를 구축하여 ',
+        '암 유전체 진단 및 AI 기반 신약 개발 가속화를 핵심 사업으로 운영합니다. ',
+        '2024년 6월 나스닥 상장, 현재 1,200여 명의 직원을 보유하고 있습니다.'
+      )
+    ),
+
+    e('div',{className:'section-title'},'사업 부문별 매출 비중'),
+    e('div',{className:'card'},
+      e('div',{className:'comp-row'}, e('div',{className:'comp-name'},'진단(Diagnostics) — xT, xF, xR 유전체 검사'), e('div',{className:'comp-val'},'75%')),
+      e('div',{className:'progress-bar'}, e('div',{className:'progress-fill',style:{width:'75%'}})),
+      e('div',{style:{height:'8px'}}),
+      e('div',{className:'comp-row'}, e('div',{className:'comp-name'},'데이터&애플리케이션 — 제약사 파트너십, 임상시험'), e('div',{className:'comp-val'},'25%')),
+      e('div',{className:'progress-bar'}, e('div',{className:'progress-fill',style:{width:'25%',background:'#8b5cf6'}}))
+    ),
+
+    e('div',{className:'section-title'},'핵심 촉매 (2026년)'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'날짜'), e('th',null,'이벤트'), e('th',null,'의미'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'2026.03.03'), e('td',null,'Merck 전략 협력 체결'), e('td',{style:{color:'#4ade80'}},'🟢 매우 긍정')),
+          e('tr',null, e('td',null,'2026.05.05'), e('td',null,'Q1 2026 실적 발표 (Beat+Raise)'), e('td',{style:{color:'#4ade80'}},'🟢 긍정')),
+          e('tr',null, e('td',null,'2026.05.31'), e('td',null,'Lens 차세대 에이전틱 AI 플랫폼 공개'), e('td',{style:{color:'#4ade80'}},'🟢 긍정')),
+          e('tr',null, e('td',null,'2026.06.01'), e('td',null,'ASCO 연례 학술대회 — 멀티모달 암 모델 결과'), e('td',{style:{color:'#4ade80'}},'🟢 긍정')),
+          e('tr',null, e('td',null,'2026.06.04'), e('td',null,'FDA xT CDx 고형암 승인 → 주가 +9.81%'), e('td',{style:{color:'#4ade80'}},'🟢 강력 긍정')),
+          e('tr',null, e('td',null,'2026.06.04'), e('td',null,'BMS 협력 확대 — 5개 암·신경과학 프로그램'), e('td',{style:{color:'#4ade80'}},'🟢 긍정')),
+          e('tr',null, e('td',null,'2026.06.04'), e('td',null,'$400M 전환사채 발행 (Upsized)'), e('td',{style:{color:'#fbbf24'}},'🟡 중립(희석 우려)')),
+          e('tr',null, e('td',null,'2026 TIME'), e('td',null,'TIME 2026 영향력 있는 헬스케어 기업 선정'), e('td',{style:{color:'#4ade80'}},'🟢 브랜드 가치'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'미래 인사이트 & 10년 비전'),
+    e('div',{className:'card'},
+      e('p',{style:{fontSize:'12px',lineHeight:'1.8',color:'#cbd5e1',marginBottom:'8px'}},
+        '🔬 Tempus는 "정밀 의료의 AWS(아마존 웹 서비스)"를 목표로 합니다. ',
+        '임상 데이터를 클라우드 인프라처럼 제공하여 제약사·병원·연구기관의 AI 신약 개발을 가속화하는 플랫폼 비즈니스입니다.'
+      ),
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'기간'), e('th',null,'핵심 목표'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'1년 (2026)'), e('td',null,'매출 $1.59B, Adj EBITDA $65M 흑자 전환 시작')),
+          e('tr',null, e('td',null,'3년 (2028)'), e('td',null,'데이터&앱 부문 비중 40%→ 고마진 전환, GAAP 흑자 근접')),
+          e('tr',null, e('td',null,'5년 (2030)'), e('td',null,'항암 외 신경과학·심장 영역 확대, 글로벌 시장 진출'))
+        )
+      )
+    ),
+
+    e('div',{className:'warn-box'},
+      e('div',{className:'warn-title'},'⚠️ 핵심 리스크'),
+      e('div',{className:'warn-body'},
+        '① 공매도 비율 30.5% — 시장 내 하락 베팅 매우 높음\n',
+        '② 순손실 확대: -$125.9M (Q1 2026) vs -$68M (Q1 2025), YoY 85% 증가\n',
+        '③ $400M 전환사채 — 희석 잠재적 압력\n',
+        '④ 내부자 순매도 $19M (최근 12개월)\n',
+        '⑤ 50일 MA < 200일 MA (데스크로스 상태)'
+      )
+    )
+  );
+}
+
+function Technical() {
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'하이킨아시 (Heikin-Ashi) 분석'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'기간'), e('th',null,'추세'), e('th',null,'신호'), e('th',null,'근거'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'일봉'), e('td',{style:{color:'#4ade80'}},'단기 반등'), e('td',null,'중립'), e('td',null,'FDA 승인 후 +9.8% 갭업, 단기 상승')),
+          e('tr',null, e('td',null,'주봉'), e('td',{style:{color:'#ef4444'}},'하락 추세'), e('td',{style:{color:'#fbbf24'}},'약세'), e('td',null,'52W 고점($104)에서 50% 하락, 연속 음봉')),
+          e('tr',null, e('td',null,'월봉'), e('td',{style:{color:'#fbbf24'}},'조정 중'), e('td',null,'중립'), e('td',null,'IPO 이후 조정 국면, 저점 테스트 중'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'핵심 기술 지표'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'지표'), e('th',null,'현재값'), e('th',null,'신호'), e('th',null,'의미'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'RSI (14)'), e('td',{style:{color:'#fbbf24'}},'~45'), e('td',null,'중립-약세'), e('td',null,'과매도 아님, 방향성 불분명')),
+          e('tr',null, e('td',null,'MACD'), e('td',{style:{color:'#fbbf24'}},'중립/약세'), e('td',null,'데드크로스'), e('td',null,'중기 하락 모멘텀 지속 중')),
+          e('tr',null, e('td',null,'200일 MA'), e('td',null,'$57.4'), e('td',{style:{color:'#ef4444'}},'현재가 아래'), e('td',null,'장기 하락 추세 — 현재가 $51.66 미달')),
+          e('tr',null, e('td',null,'50일 MA'), e('td',null,'$50.3'), e('td',{style:{color:'#4ade80'}},'현재가 위'), e('td',null,'단기 지지선 역할, 소폭 우위')),
+          e('tr',null, e('td',null,'볼린저밴드'), e('td',null,'$42~$60'), e('td',null,'중앙대'), e('td',null,'밴드 중간 → 방향성 미결정')),
+          e('tr',null, e('td',null,'공매도 비율'), e('td',{style:{color:'#ef4444'}},'30.5%'), e('td',{style:{color:'#ef4444'}},'극도 위험'), e('td',null,'숏 스퀴즈 가능성 OR 추가 하락 리스크'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'지지선 & 저항선'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'구분'), e('th',null,'가격'), e('th',null,'근거'))),
+        e('tbody',null,
+          e('tr',null, e('td',{style:{color:'#ef4444'}},'2차 저항'), e('td',null,'$65~68'), e('td',null,'애널리스트 평균 목표가, 구 지지선')),
+          e('tr',null, e('td',{style:{color:'#ef4444'}},'1차 저항'), e('td',null,'$56.82'), e('td',null,'볼린저 상단, 200일 MA 근처')),
+          e('tr',null, e('td',{style:{color:'#4ade80'}},'현재가'), e('td',{style:{fontWeight:'700'}},'$51.66'), e('td',null,'50일 MA($50.3) 약간 상회')),
+          e('tr',null, e('td',{style:{color:'#4ade80'}},'1차 지지'), e('td',null,'$49.43~$50.30'), e('td',null,'50일 MA, 단기 클러스터')),
+          e('tr',null, e('td',{style:{color:'#4ade80'}},'2차 지지'), e('td',null,'$42.41~$44'), e('td',null,'52주 저점 부근, 강한 지지'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'차트 패턴 & 진입 전략'),
+    e('div',{className:'card'},
+      e('p',{style:{fontSize:'12px',lineHeight:'1.7',color:'#cbd5e1',marginBottom:'10px'}},
+        '📉 현재: 2023년 IPO 후 장기 하락 채널 내 반등 시도 중. 6월 4일 FDA 승인으로 갭업 후 $49~56 구간 내 횡보 예상.\n',
+        '📊 패턴: 52주 고점($104) 대비 50% 이상 조정 완료, 저점($41.73) 대비 반등 중 — 이중 바닥 형성 가능성 탐색 중.'
+      ),
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'구분'), e('th',null,'가격'), e('th',null,'조건'))),
+        e('tbody',null,
+          e('tr',null, e('td',{className:'val-blue'},'매수 진입'), e('td',null,'$49~53'), e('td',null,'50일 MA 지지 확인 후')),
+          e('tr',null, e('td',{className:'val-red'},'손절선'), e('td',null,'$44 이탈'), e('td',null,'2차 지지 붕괴 시')),
+          e('tr',null, e('td',{className:'val-green'},'1차 목표'), e('td',null,'$62~65'), e('td',null,'200일 MA 회복 시')),
+          e('tr',null, e('td',{className:'val-green'},'2차 목표'), e('td',null,'$75~85'), e('td',null,'상승 추세 전환 + 실적 개선 확인 시'))
+        )
+      )
+    )
+  );
+}
+
+function Earnings() {
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'Q1 2026 실적 요약 (2026.05.05 발표)'),
+    e('div',{className:'card'},
+      e('div',{className:'kpi-grid'},
+        e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'매출'), e('div',{className:'kpi-value','style':{color:'#4ade80'}},'$348.1M'), e('div',{className:'kpi-sub'},'+36.1% YoY ✅ Beat')),
+        e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'매출총이익'), e('div',{className:'kpi-value'},'$222.0M'), e('div',{className:'kpi-sub'},'마진 63.8% (+3.0pp)')),
+        e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'순손실'), e('div',{className:'kpi-value','style':{color:'#ef4444'}},'-$125.9M'), e('div',{className:'kpi-sub'},'vs -$68M YoY ↑확대')),
+        e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'Adj EBITDA'), e('div',{className:'kpi-value','style':{color:'#4ade80'}},'흑자 진행'), e('div',{className:'kpi-sub'},'FY2026 $65M 목표 유지'))
+      )
+    ),
+
+    e('div',{className:'section-title'},'사업 부문별 실적'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'부문'), e('th',null,'Q1 2026 매출'), e('th',null,'YoY 성장'), e('th',null,'비고'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'진단(Diagnostics)'), e('td',{className:'val-blue'},'$261.1M'), e('td',{className:'val-green'},'+34.7%'), e('td',null,'xT·xF·xR 검사 볼륨 증가')),
+          e('tr',null, e('td',null,'데이터&앱'), e('td',{className:'val-blue'},'$87.0M'), e('td',{className:'val-green'},'+40.5%'), e('td',null,'파트너십 확대, 고마진 성장'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'분기별 매출 추이'),
+    e(RevenueChart,null),
+
+    e('div',{className:'section-title'},'순손실 추이 (적자 확대 추이)'),
+    e(LossChart,null),
+
+    e('div',{className:'section-title'},'연간 매출 성장 궤적'),
+    e(GuidanceChart,null),
+
+    e('div',{className:'section-title'},'실적 서프라이즈 히스토리'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'분기'), e('th',null,'매출 예상'), e('th',null,'매출 실제'), e('th',null,'서프라이즈'), e('th',null,'주가 반응'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'Q1 2026'), e('td',null,'~$330M'), e('td',{className:'val-green'},'$348.1M'), e('td',{className:'val-green'},'+5.5%'), e('td',{className:'val-green'},'+6~8%')),
+          e('tr',null, e('td',null,'Q4 2025'), e('td',null,'~$355M'), e('td',{className:'val-green'},'$372M'), e('td',{className:'val-green'},'+4.8%'), e('td',{className:'val-green'},'+3%')),
+          e('tr',null, e('td',null,'Q3 2025'), e('td',null,'~$295M'), e('td',{className:'val-green'},'$311M'), e('td',{className:'val-green'},'+5.4%'), e('td',{className:'val-green'},'+4%')),
+          e('tr',null, e('td',null,'Q2 2025'), e('td',null,'~$265M'), e('td',{className:'val-green'},'$275M'), e('td',{className:'val-green'},'+3.8%'), e('td',null,'보합'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'다음 실적 발표 컨센서스'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'항목'), e('th',null,'컨센서스'), e('th',null,'참고'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'발표 예정일'), e('td',null,'2026년 8월 초 (예상)'), e('td',null,'Q2 2026')),
+          e('tr',null, e('td',null,'Q2 매출 컨센서스'), e('td',{className:'val-blue'},'~$380~395M'), e('td',null,'+35~37% YoY 예상')),
+          e('tr',null, e('td',null,'FY2026 가이던스'), e('td',{className:'val-green'},'$1.59~1.60B'), e('td',null,'경영진 상향 유지')),
+          e('tr',null, e('td',null,'FY2026 Adj EBITDA'), e('td',{className:'val-green'},'~$65M'), e('td',null,'연간 흑자 첫 달성 목표'))
+        )
+      )
+    ),
+
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'💡 실적 핵심 관전 포인트'),
+      e('div',{className:'info-body'},
+        '① 데이터&앱 부문 성장률 — 고마진 부문이 40%+ 성장 유지 여부\n',
+        '② Adj EBITDA 진행 상황 — $65M 목표 향한 분기별 개선폭\n',
+        '③ Merck·BMS 계약의 매출 인식 시점 — 2026 후반 반영 예상\n',
+        '④ 전환사채 $400M 활용 계획 — M&A? 운영자금?\n',
+        '⑤ FDA 추가 승인 파이프라인 — xT CDx 이후 신규 적응증'
+      )
+    )
+  );
+}
+
+function Fundamental() {
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'핵심 재무 지표'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'지표'), e('th',null,'현재값'), e('th',null,'업종 평균'), e('th',null,'평가'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'PER'), e('td',{style:{color:'#94a3b8'}},'N/A (적자)'), e('td',null,'N/A'), e('td',null,'적자 기업 — PSR 적용')),
+          e('tr',null, e('td',null,'PSR (주가매출비율)'), e('td',{className:'val-yellow'},'~4.5x'), e('td',null,'6~8x'), e('td',{className:'val-green'},'상대 저평가')),
+          e('tr',null, e('td',null,'EV/매출'), e('td',{className:'val-yellow'},'~4.8x'), e('td',null,'5~7x'), e('td',{className:'val-green'},'합리적')),
+          e('tr',null, e('td',null,'매출 성장률 YoY'), e('td',{className:'val-green'},'+36%'), e('td',null,'15~20%'), e('td',{className:'val-green'},'강한 초과 성장')),
+          e('tr',null, e('td',null,'매출총이익률'), e('td',{className:'val-green'},'63.8%'), e('td',null,'50~60%'), e('td',{className:'val-green'},'우수')),
+          e('tr',null, e('td',null,'순손실률'), e('td',{className:'val-red'},'-36.2%'), e('td',null,'-'), e('td',{className:'val-red'},'적자 심화 — 주의')),
+          e('tr',null, e('td',null,'현금 포지션'), e('td',null,'$400M+ (전환사채 포함)'), e('td',null,'-'), e('td',{className:'val-green'},'충분한 런웨이')),
+          e('tr',null, e('td',null,'부채비율'), e('td',{className:'val_yellow'},'중간'), e('td',null,'-'), e('td',{className:'val_yellow'},'전환사채 $400M 추가 후 주의')),
+          e('tr',null, e('td',null,'공매도 비율'), e('td',{className:'val-red'},'30.5%'), e('td',null,'5~10%'), e('td',{className:'val-red'},'극도로 높음'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'현금흐름 & 재무 건전성'),
+    e('div',{className:'card'},
+      e('p',{style:{fontSize:'12px',lineHeight:'1.7',color:'#cbd5e1'}},
+        '• FCF (잉여현금흐름): 현재 음수, 2026년 Adj EBITDA $65M 흑자 목표로 개선 중\n',
+        '• 전환사채 $400M (2026.06.04 upsized): 운전자본 확충 및 전략적 M&A 재원 확보\n',
+        '• 주식 기반 보상(SBC): Q1 $56.3M — GAAP 손실의 주요 요인\n',
+        '• 유가증권 미실현 손실: Q1 -$32.3M — 비현금 항목'
+      )
+    ),
+
+    e('div',{className:'section-title'},'기관 투자자 동향'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'항목'), e('th',null,'현황'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'헤지펀드 보유 수'), e('td',{className:'val-green'},'41개 (+28% QoQ)')),
+          e('tr',null, e('td',null,'기관 보유 비중'), e('td',null,'증가 추세')),
+          e('tr',null, e('td',null,'내부자 동향'), e('td',{className:'val-red'},'순매도 -$19M (최근 12개월)')),
+          e('tr',null, e('td',null,'공매도 비율'), e('td',{className:'val-red'},'30.5% of float (매우 높음)'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'애널리스트 레이팅 분포'),
+    e(AnalystChart,null),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'의견'), e('th',null,'수'), e('th',null,'목표주가 범위'))),
+        e('tbody',null,
+          e('tr',null, e('td',{className:'val-green'},'Strong Buy'), e('td',null,'8'), e('td',null,'$70~$100')),
+          e('tr',null, e('td',{className:'val-green'},'Buy'), e('td',null,'4'), e('td',null,'$60~$75')),
+          e('tr',null, e('td',{className:'val-yellow'},'Hold'), e('td',null,'4'), e('td',null,'$50~$65')),
+          e('tr',null, e('td',{className:'val-red'},'Sell'), e('td',null,'1'), e('td',null,'$35 (Jefferies)')),
+          e('tr',null, e('td',null,'컨센서스 목표가'), e('td',{className:'val-blue',colSpan:'2'},'$66.53~$69.31 (현재 대비 +28~34%)'))
+        )
+      )
+    )
+  );
+}
+
+function Compare() {
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'동종 기업 비교'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'티커'), e('th',null,'기업명'), e('th',null,'시총'), e('th',null,'매출 성장'), e('th',null,'특징'))),
+        e('tbody',null,
+          e('tr',null, e('td',{className:'val-blue',style:{fontWeight:'700'}},'TEM★'), e('td',null,'Tempus AI'), e('td',null,'$7.2B'), e('td',{className:'val-green'},'+36%'), e('td',null,'AI+유전체 플랫폼')),
+          e('tr',null, e('td',null,'EXAS'), e('td',null,'Exact Sciences'), e('td',null,'~$5.4B'), e('td',{className:'val-green'},'+12%'), e('td',null,'대장암 조기 진단')),
+          e('tr',null, e('td',null,'NTRA'), e('td',null,'Natera'), e('td',null,'~$25B'), e('td',{className:'val-green'},'+45%'), e('td',null,'산전·종양 유전체')),
+          e('tr',null, e('td',null,'ILMN'), e('td',null,'Illumina'), e('td',null,'~$16B'), e('td',{className:'val-red'},'-5%'), e('td',null,'시퀀싱 장비 선도')),
+          e('tr',null, e('td',null,'PACB'), e('td',null,'PacBio'), e('td',null,'~$0.8B'), e('td',{className:'val-red'},'-8%'), e('td',null,'롱리드 시퀀싱'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'가격 비교 (현재가 vs 목표가)'),
+    e(PriceCompChart,null),
+
+    e('div',{className:'section-title'},'TEM 포함 주요 ETF'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'ETF'), e('th',null,'이름'), e('th',null,'특징'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'ARKG'), e('td',null,'ARK Genomic Revolution'), e('td',null,'게놈 테마 ETF, TEM 포함 가능성')),
+          e('tr',null, e('td',null,'XLV'), e('td',null,'Health Care Select Sector SPDR'), e('td',null,'대형 헬스케어 ETF')),
+          e('tr',null, e('td',null,'IBB'), e('td',null,'iShares Nasdaq Biotech ETF'), e('td',null,'바이오테크 지수 연동')),
+          e('tr',null, e('td',null,'GNOM'), e('td',null,'Global X Genomics & Biotech'), e('td',null,'게놈·바이오테크 특화'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'함께 언급되는 관련 종목'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'티커'), e('th',null,'기업명'), e('th',null,'연관 이유'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'NTRA'), e('td',null,'Natera'), e('td',null,'종양 유전체 검사 경쟁사, AI 적용')),
+          e('tr',null, e('td',null,'RXRX'), e('td',null,'Recursion Pharma'), e('td',null,'AI 신약 개발 플랫폼')),
+          e('tr',null, e('td',null,'EXAS'), e('td',null,'Exact Sciences'), e('td',null,'액체 생검, 암 조기 진단')),
+          e('tr',null, e('td',null,'TWST'), e('td',null,'Twist Bioscience'), e('td',null,'합성 DNA 제조, 유전체 공급망')),
+          e('tr',null, e('td',null,'BMY'), e('td',null,'Bristol Myers Squibb'), e('td',null,'BMS 협력 파트너'))
+        )
+      )
+    )
+  );
+}
+
+function XTab() {
+  var posts = [
+    { user:'@PrecisionMedInvest', followers:'12.4K', role:'바이오 투자 분석가', text:'FDA xT CDx tumor-only 승인은 TEM에 매우 중요한 이정표. 기존 paired testing에 없던 환자군 접근 가능 → 검사량 급증 예상. +9.8% 갭업은 당연.',
+      textKo:'FDA xT CDx 종양-단독 승인은 TEM에 매우 중요한 이정표. 기존 페어드 테스트에 없던 환자군 접근 가능 → 검사량 급증 예상. +9.8% 갭업 당연.', date:'2026-06-04', likes:1842, rt:312, sent:'pos' },
+    { user:'@GenomicsAlpha', followers:'8.9K', role:'헬스케어 리서치', text:'$TEM Bristol Myers deal is 5 programs spanning oncology AND neuroscience. This isn\'t just a one-time pharma deal — it\'s TEM becoming the data backbone for major drug pipelines.',
+      textKo:'$TEM BMS 딜은 종양학+신경과학 5개 프로그램 포괄. 일회성 파트너십이 아니라 TEM이 주요 신약 파이프라인의 데이터 중추가 되는 것.', date:'2026-06-05', likes:987, rt:201, sent:'pos' },
+    { user:'@ShortSideAnalysis', followers:'31.2K', role:'숏 셀러 분석', text:'TEM 30.5% short float. Market is not wrong — net loss went from $68M to $125.9M in one year. The convertible note $400M just adds dilution. Be careful with the FDA pop.',
+      textKo:'TEM 공매도 비율 30.5%. 시장이 틀리지 않았음 — 순손실이 1년 만에 $68M→$125.9M. 전환사채 $400M은 희석만 더함. FDA 급등에 조심.', date:'2026-06-04', likes:2341, rt:567, sent:'neg' },
+    { user:'@OncologyDataPro', followers:'5.6K', role:'종양학 데이터 전문가', text:'Tempus just unveiled next-gen Lens at ASCO with agentic AI workflows. This is a DIRECT attack on Veeva/IQVIA\'s pharma data dominance. Long-term moat builder.',
+      textKo:'Tempus가 ASCO에서 에이전틱 AI 기반 차세대 Lens 공개. Veeva/IQVIA의 제약 데이터 지배력에 대한 직접적 도전. 장기 해자 구축 중.', date:'2026-06-01', likes:743, rt:128, sent:'pos' },
+    { user:'@MedTechTrader', followers:'19.8K', role:'메드텍 트레이더', text:'$TEM death cross still in effect (50d < 200d). Even with FDA news, you\'re fighting the tape. Need to see $56+ close to confirm trend reversal. Watching from sidelines.',
+      textKo:'$TEM 데스크로스 유효 (50일<200일). FDA 뉴스에도 테이프와 싸우는 중. 추세 전환 확인엔 $56+ 종가 필요. 관망 중.', date:'2026-06-06', likes:1205, rt:234, sent:'neu' },
+    { user:'@AIHealthInvestor', followers:'7.3K', role:'AI 헬스케어 투자자', text:'Tempus 45M+ de-identified patient journeys is a data moat that\'ll take 10+ years to replicate. Merck + BMS + whoever is next = recurring data revenue. $TEM is playing the long game.',
+      textKo:'Tempus 4,500만+ 비식별 환자 여정은 10년+ 복제 불가 데이터 해자. Merck+BMS+다음 빅파마 = 반복 데이터 수익. $TEM은 장기 게임 중.', date:'2026-06-03', likes:631, rt:97, sent:'pos' },
+    { user:'@QuintessentialShort', followers:'44.1K', role:'공매도 헤지펀드 매니저', text:'$TEM insiders sold $19M net in last 12 months. If this story were as clean as bulls say, why are insiders selling at these levels? The Lens platform is vaporware until proven otherwise.',
+      textKo:'$TEM 내부자 최근 12개월 순매도 $19M. 불리시한 스토리가 맞다면 왜 내부자가 이 가격에 팔겠나? Lens 플랫폼은 증명되기 전까지 증기.', date:'2026-06-07', likes:3102, rt:891, sent:'neg' },
+    { user:'@PharmaDataNerd', followers:'3.2K', role:'의약품 데이터 분석', text:'Merck collaboration announced March 3. By Q2 earnings we should see first revenue recognition from this deal. If Q2 Data&Apps segment beats +45%, the short case deteriorates fast.',
+      textKo:'3월 3일 Merck 협력 발표. Q2 실적에서 이 딜의 첫 매출 인식 나올 것. Q2 데이터&앱 부문이 +45% 비트 시 공매도 논리 빠르게 붕괴.', date:'2026-05-30', likes:412, rt:68, sent:'pos' },
+    { user:'@HealthcareAlgoFund', followers:'15.7K', role:'헬스케어 퀀트 펀드', text:'$TEM Q1 gross margin 63.8% is legitimately impressive for a diagnostics+data hybrid. That\'s better than most pure diagnostic plays. EBITDA path to $65M is credible.',
+      textKo:'$TEM Q1 매출총이익률 63.8%는 진단+데이터 하이브리드로선 정말 인상적. 대부분 순수 진단 기업보다 우수. EBITDA $65M 경로는 신뢰 가능.', date:'2026-05-06', likes:567, rt:103, sent:'pos' },
+    { user:'@ConvertibleArb', followers:'22.4K', role:'전환사채 아비트라지', text:'$400M convertible notes on TEM is interesting. Upsized deal means institutional demand is strong. But dilution risk is real — these notes will likely convert around $65-70.',
+      textKo:'TEM $400M 전환사채 흥미. 증액 딜은 기관 수요 강함을 의미. 하지만 희석 리스크 실재 — 이 노트는 $65-70에서 전환될 가능성.', date:'2026-06-05', likes:889, rt:178, sent:'neu' },
+    { user:'@OncologyBullRun', followers:'6.8K', role:'종양학 테마 투자자', text:'Tempus showing multimodal cancer foundation model results at ASCO. Combining genomics + pathology images + clinical notes = nobody else has this depth. This is why NTRA can\'t replace TEM.',
+      textKo:'ASCO에서 Tempus 멀티모달 암 파운데이션 모델 결과 공개. 유전체+병리 이미지+임상 노트 통합 = 이 깊이는 아무도 못함. NTRA가 TEM 대체 못하는 이유.', date:'2026-06-02', likes:524, rt:88, sent:'pos' },
+    { user:'@BioTechSkeptic', followers:'28.9K', role:'바이오테크 비판적 투자자', text:'$TEM loss went from $68M to $125.9M YoY Q1. Stock-based comp $56M + unrealized securities loss $32M = that\'s not really operations but the actual cash burn is still significant.',
+      textKo:'$TEM 손실 Q1 YoY $68M→$125.9M. 주식 보상 $56M + 유가증권 평가손 $32M = 운영 외 요인이지만 실제 현금 소각도 여전히 상당.', date:'2026-05-06', likes:1678, rt:389, sent:'neg' },
+    { user:'@PrecisionOncFund', followers:'9.1K', role:'정밀 종양학 투자 펀드', text:'TIME named TEM one of 2026\'s most influential health companies. Brand recognition in pharma matters — it makes the pitch to new big pharma partners so much easier.',
+      textKo:'TIME이 TEM을 2026 가장 영향력 있는 헬스케어 기업 중 하나로 선정. 제약사에서의 브랜드 인지도 중요 — 새 빅파마 파트너 유치 훨씬 쉬워짐.', date:'2026-06-08', likes:341, rt:52, sent:'pos' },
+    { user:'@HealthDataMarket', followers:'4.4K', role:'헬스 데이터 마켓 애널리스트', text:'$TEM RSI around 45, sitting just above 50d MA. The setup is a coiled spring — either FDA + Merck catalysts push it to $65+ or shorts push it back to $42 support. Binary near-term.',
+      textKo:'$TEM RSI 약 45, 50일 MA 소폭 상회. 이 구도는 코일처럼 감긴 스프링 — FDA+Merck 촉매가 $65+로 밀거나 공매도가 $42 지지선으로 되밀거나. 단기 바이너리.', date:'2026-06-09', likes:628, rt:112, sent:'neu' },
+    { user:'@GoldmanHealthcare', followers:'51.3K', role:'골드만삭스 헬스케어 애널리스트', text:'Maintaining Buy on $TEM. The real-world data business at 40%+ growth with improving margins is underappreciated. Key: watch Data&Apps segment margin expansion in H2 2026.',
+      textKo:'$TEM Buy 유지. 40%+ 성장에 마진 개선 중인 실사용 데이터 비즈니스가 저평가됨. 핵심: 2026 하반기 데이터&앱 부문 마진 확대 주목.', date:'2026-06-10', likes:1423, rt:267, sent:'pos' }
+  ];
+
+  var pos = posts.filter(function(p){return p.sent==='pos'}).length;
+  var neu = posts.filter(function(p){return p.sent==='neu'}).length;
+  var neg = posts.filter(function(p){return p.sent==='neg'}).length;
+
+  return e('div',{className:'content'},
+    e('div',{className:'sent-summary'},
+      e('span',null,'🟢 긍정 ',e('strong',{style:{color:'#4ade80'}},pos)),
+      e('span',null,' · 🟡 중립 ',e('strong',{style:{color:'#fbbf24'}},neu)),
+      e('span',null,' · 🔴 부정 ',e('strong',{style:{color:'#ef4444'}},neg))
+    ),
+    posts.map(function(p, i) {
+      return e('div',{key:i,className:'opinion-card'},
+        e('div',{className:'opinion-header'},
+          e('div',null,
+            e('span',{className:'opinion-user'},p.user,' '),
+            e('span',{style:{fontSize:'10px',color:'#64748b'}},'팔로워 '+p.followers+' · '+p.role)
+          ),
+          e('span',{className:p.sent==='pos'?'sent-pos':p.sent==='neg'?'sent-neg':'sent-neu'},
+            p.sent==='pos'?'🟢 긍정':p.sent==='neg'?'🔴 부정':'🟡 중립')
+        ),
+        e('div',{className:'opinion-body'},p.textKo),
+        e('div',{className:'opinion-footer'},
+          e('span',null,'❤️ ',p.likes.toLocaleString()),
+          e('span',null,'🔁 ',p.rt.toLocaleString()),
+          e('span',null,'📅 ',p.date)
+        )
+      );
+    })
+  );
+}
+
+function RedditTab() {
+  var posts = [
+    { user:'u/TemporalDataBull', sub:'r/investing', upvotes:2841, text:'$TEM is building what I call the \"AWS of clinical genomics\". The more data they collect, the more accurate their models, the more pharma pays. Classic flywheel. Long at $49.',
+      textKo:'$TEM은 내가 "임상 유전체의 AWS"라 부르는 것을 구축 중. 더 많은 데이터 수집 → 더 정확한 모델 → 더 많은 제약사 지출. 고전적 플라이휠. $49에 롱.', date:'2026-06-05', sent:'pos' },
+    { user:'u/WallStreetObserver', sub:'r/wallstreetbets', upvotes:5672, text:'FDA approval + BMS deal + Merck deal all in 3 months. $TEM is getting all their catalysts in one window. Short squeeze incoming? 30.5% short float is JUICY.',
+      textKo:'FDA 승인 + BMS 딜 + Merck 딜이 3개월 안에 전부. $TEM이 촉매를 한 번에 다 받고 있음. 숏 스퀴즈 임박? 30.5% 공매도 비율 달콤하다.', date:'2026-06-05', sent:'pos' },
+    { user:'u/ClinicalDataSkeptic', sub:'r/SecurityAnalysis', upvotes:1923, text:'The problem with TEM\'s bull case is it requires BOTH continued 35%+ revenue growth AND significant margin expansion AND pharma partnerships renewing AND FDA approvals. That\'s a lot of OR gates.',
+      textKo:'TEM 불리시 케이스 문제는 35%+ 매출 성장 지속 AND 마진 대폭 개선 AND 제약사 파트너십 갱신 AND FDA 승인 모두 필요. 너무 많은 조건.', date:'2026-06-06', sent:'neg' },
+    { user:'u/OncologyDataLong', sub:'r/stocks', upvotes:1247, text:'Tempus has sequencing data on 1.5M+ patients with longitudinal follow-up. No one else has this. NTRA has testing, Illumina has instruments — Tempus has the LINKED clinical-molecular data that pharma actually needs for AI.',
+      textKo:'Tempus는 150만+ 환자의 종적 추적 시퀀싱 데이터 보유. 아무도 없음. NTRA는 검사, Illumina는 장비 — Tempus는 제약사가 AI에 실제로 필요한 연결된 임상-분자 데이터 보유.', date:'2026-06-03', sent:'pos' },
+    { user:'u/DeathCrossWarning', sub:'r/options', upvotes:3401, text:'$TEM technical picture is ugly. Death cross confirmed, trading below 200d MA, RSI 45 not oversold enough to be a clean buy. The FDA pop gave shorts a better entry. I\'m adding to my short.',
+      textKo:'$TEM 기술적 그림 않좋음. 데스크로스 확인, 200일 MA 하회, RSI 45 아직 과매도 아님. FDA 급등이 공매도에 더 좋은 진입점 줬음. 숏 추가 중.', date:'2026-06-07', sent:'neg' },
+    { user:'u/PharmaDataMoat', sub:'r/investing', upvotes:987, text:'Just read TEM\'s ASCO presentation — the multimodal foundation model combining genomics + radiology + pathology + EHR data is genuinely impressive. No pharma can build this themselves in under 10 years.',
+      textKo:'TEM의 ASCO 발표 읽었음 — 유전체+방사선+병리+전자의무기록 통합 멀티모달 파운데이션 모델 진심으로 인상적. 어떤 제약사도 10년 안에 자체 구축 불가.', date:'2026-06-02', sent:'pos' },
+    { user:'u/ConvertibleNotesRisk', sub:'r/SecurityAnalysis', upvotes:2156, text:'$400M convertible note at TEM. Let\'s say conversion at $65 — that\'s ~6.1M new shares (~4.4% dilution). Plus whatever the $56M/quarter SBC adds. Bulls need to price this in.',
+      textKo:'TEM $400M 전환사채. $65에 전환 가정 시 ~610만 주 신규 발행 (약 4.4% 희석). 여기에 분기 $56M SBC 추가. 불리시들은 이걸 가격에 반영해야 함.', date:'2026-06-06', sent:'neg' },
+    { user:'u/LongTimePrecisionMed', sub:'r/stocks', upvotes:734, text:'Tempus went from $693M revenue in 2024 to $1.6B guidance in 2026. That\'s 2.3x in 2 years. At $7B market cap that\'s 4.4x sales on a company growing 36% YoY. Actually reasonable.',
+      textKo:'Tempus 매출 2024년 $693M에서 2026년 $1.6B 가이던스. 2년에 2.3배. $7B 시총은 36% 성장 기업에 4.4x 매출 — 사실 합리적.', date:'2026-06-01', sent:'pos' },
+    { user:'u/WSBRocketEmoji', sub:'r/wallstreetbets', upvotes:8923, text:'TEM 30.5% short float + Merck + BMS + FDA approval + next earnings in 2 months = perfect short squeeze setup. $65+ by August. Buy calls. NFA.',
+      textKo:'TEM 30.5% 공매도 + Merck + BMS + FDA 승인 + 2개월 후 실적 = 완벽한 숏 스퀴즈 구도. 8월까지 $65+. 콜 삼. 투자 조언 아님.', date:'2026-06-08', sent:'pos' },
+    { user:'u/HealthcareValueHunter', sub:'r/investing', upvotes:1567, text:'Comparing TEM (4.5x sales, 36% growth) to NTRA (15x sales, 45% growth) — TEM is genuinely cheaper on a growth-adjusted basis. But NTRA is profitable. That gap in profitability is real.',
+      textKo:'TEM(4.5x 매출, 36% 성장) vs NTRA(15x 매출, 45% 성장) 비교 — TEM이 성장 조정 기준으로 확실히 저렴. 하지만 NTRA는 흑자. 수익성 차이는 진짜.', date:'2026-06-04', sent:'neu' },
+    { user:'u/CriticalThinkerMD', sub:'r/SecurityAnalysis', upvotes:2034, text:'The key question for TEM is: when does the DATA business become dominant? Right now diagnostics is 75%. Until data&apps hits 40%+, they\'re just an expensive diagnostics company.',
+      textKo:'TEM의 핵심 질문: 데이터 비즈니스가 언제 주도적이 될까? 지금은 진단이 75%. 데이터&앱이 40%+ 도달 전까지는 비싼 진단 기업일 뿐.', date:'2026-06-03', sent:'neu' },
+    { user:'u/AIinHealthcareNow', sub:'r/stocks', upvotes:891, text:'Tempus Lens platform now has agentic AI for drug development. Imagine: pharma scientist describes a target, AI searches 45M patient records, finds biomarker patterns, designs trial inclusion criteria. This changes drug development timelines.',
+      textKo:'Tempus Lens 플랫폼에 신약 개발용 에이전틱 AI. 상상해보자: 제약 과학자가 타겟 설명 → AI가 4,500만 환자 기록 검색 → 바이오마커 패턴 찾기 → 임상 포함 기준 설계. 이게 신약 개발 타임라인을 바꿈.', date:'2026-05-31', sent:'pos' },
+    { user:'u/BioPharmaFund2026', sub:'r/investing', upvotes:1203, text:'BMS deal covers 5 programs — not just oncology but neuroscience too. TEM is expanding its data to neurology. Parkinson\'s, Alzheimer\'s, MS = massive future TAM expansion.',
+      textKo:'BMS 딜이 5개 프로그램 포괄 — 종양학뿐만 아니라 신경과학도. TEM이 데이터를 신경학으로 확장 중. 파킨슨·알츠하이머·다발성경화증 = 엄청난 미래 TAM 확장.', date:'2026-06-05', sent:'pos' },
+    { user:'u/TechnicalsFirst', sub:'r/options', upvotes:1789, text:'$TEM chart: need to see it hold $50 level for 2+ weeks before going long. The 50d MA at $50.3 is the line. A close below $48 and it tests $42 support. Not yet a clean technical setup.',
+      textKo:'$TEM 차트: $50 레벨을 2주+ 유지하는 것 확인 후 롱 진입. 50일 MA $50.3이 선. $48 이하 종가 시 $42 지지선 테스트. 아직 깔끔한 기술적 구도 아님.', date:'2026-06-09', sent:'neu' },
+    { user:'u/Q2EarningsBet', sub:'r/wallstreetbets', upvotes:4512, text:'Loading up on $TEM $60 calls for August expiry. Q2 earnings + Merck revenue recognition + potential new FDA approvals = 3 catalysts in one quarter. Risk/reward tilts bullish.',
+      textKo:'8월 만기 $TEM $60 콜 적재 중. Q2 실적 + Merck 매출 인식 + 신규 FDA 승인 가능성 = 한 분기에 촉매 3개. 리스크/리워드 불리시 쪽으로 기움.', date:'2026-06-08', sent:'pos' }
+  ];
+
+  var pos = posts.filter(function(p){return p.sent==='pos'}).length;
+  var neu = posts.filter(function(p){return p.sent==='neu'}).length;
+  var neg = posts.filter(function(p){return p.sent==='neg'}).length;
+
+  return e('div',{className:'content'},
+    e('div',{className:'sent-summary'},
+      e('span',null,'🟢 긍정 ',e('strong',{style:{color:'#4ade80'}},pos)),
+      e('span',null,' · 🟡 중립 ',e('strong',{style:{color:'#fbbf24'}},neu)),
+      e('span',null,' · 🔴 부정 ',e('strong',{style:{color:'#ef4444'}},neg))
+    ),
+    posts.map(function(p, i) {
+      return e('div',{key:i,className:'opinion-card'},
+        e('div',{className:'opinion-header'},
+          e('div',null,
+            e('span',{className:'opinion-user'},p.user,' '),
+            e('span',{style:{fontSize:'10px',color:'#64748b'}},p.sub)
+          ),
+          e('span',{className:p.sent==='pos'?'sent-pos':p.sent==='neg'?'sent-neg':'sent-neu'},
+            p.sent==='pos'?'🟢 긍정':p.sent==='neg'?'🔴 부정':'🟡 중립')
+        ),
+        e('div',{className:'opinion-body'},p.textKo),
+        e('div',{className:'opinion-footer'},
+          e('span',null,'⬆️ ',p.upvotes.toLocaleString()),
+          e('span',null,'📅 ',p.date)
+        )
+      );
+    })
+  );
+}
+
+function Terms() {
+  var allTerms = [
+    { name:'PSR', abbr:'Price-to-Sales Ratio', cat:'재무', catColor:'#22c55e',
+      desc:'기업의 주가를 주당 매출로 나눈 비율입니다. PER처럼 수익성이 없어도 사용할 수 있어, 아직 적자인 고성장 기업 평가에 자주 쓰입니다. 낮을수록 매출 대비 저평가됩니다.',
+      example:'현재 TEM PSR ~4.5x는 동종 업계 평균(6~8x) 대비 상대적으로 합리적인 수준입니다.' },
+    { name:'데스크로스', abbr:'Death Cross', cat:'기술적', catColor:'#3b82f6',
+      desc:'단기 이동평균선(50일)이 장기 이동평균선(200일)을 아래로 뚫고 내려가는 기술적 패턴입니다. 중장기 하락 추세의 시작을 알리는 약세 신호로 해석합니다.',
+      example:'TEM의 50일 MA($50.3)가 200일 MA($57.4) 아래에 있어 현재 데스크로스 상태입니다.' },
+    { name:'하이킨아시', abbr:'Heikin-Ashi', cat:'기술적', catColor:'#3b82f6',
+      desc:'일반 캔들 차트의 노이즈를 줄여 추세를 더 명확하게 보여주는 차트 기법입니다. 시가·고가·저가·종가의 평균값으로 캔들을 그립니다. 연속 양봉은 강한 상승, 연속 음봉은 강한 하락 추세를 나타냅니다.',
+      example:'TEM 주봉 하이킨아시는 연속 음봉으로 중기 하락 추세를 보이고 있습니다.' },
+    { name:'RSI', abbr:'Relative Strength Index', cat:'기술적', catColor:'#3b82f6',
+      desc:'최근 14일간 주가 상승·하락폭을 비교해 0~100 사이 숫자로 나타냅니다. 70 이상은 과매수(비싸다), 30 이하는 과매도(싸다) 신호입니다.',
+      example:'TEM RSI ~45는 과매도도 과매수도 아닌 중립-약세 구간으로, 방향성이 결정되지 않은 상태입니다.' },
+    { name:'공매도', abbr:'Short Selling', cat:'실적', catColor:'#f97316',
+      desc:'주식을 빌려서 팔고, 나중에 더 낮은 가격에 사서 되돌려주는 하락 베팅 전략입니다. 공매도 비율이 높으면 시장에서 해당 주식의 하락을 많이 예상하고 있다는 의미입니다.',
+      example:'TEM 공매도 비율 30.5%는 매우 높은 수준으로, 시장의 상당한 하락 베팅이 존재함을 뜻합니다.' },
+    { name:'숏 스퀴즈', abbr:'Short Squeeze', cat:'실적', catColor:'#f97316',
+      desc:'공매도 비율이 높은 주식이 예상과 달리 급등할 때, 공매도 투자자들이 손실을 줄이기 위해 앞다퉈 주식을 사면서 주가가 더욱 빠르게 오르는 현상입니다.',
+      example:'TEM의 30.5% 공매도 비율은 긍정적 촉매 시 강한 숏 스퀴즈 가능성을 내포합니다.' },
+    { name:'전환사채', abbr:'Convertible Notes', cat:'재무', catColor:'#22c55e',
+      desc:'일정 조건 하에 주식으로 전환할 수 있는 채권입니다. 이자 비용이 낮지만, 전환 시 기존 주주들의 주식 가치가 희석되는 단점이 있습니다.',
+      example:'TEM의 $400M 전환사채는 자금 조달엔 유리하나, 향후 $65~70 전환 시 약 4.4% 희석 압력이 존재합니다.' },
+    { name:'Adj EBITDA', abbr:'Adjusted EBITDA', cat:'재무', catColor:'#22c55e',
+      desc:'감가상각, 이자, 세금, 주식 기반 보상 등 비현금 항목을 제외한 실제 영업 창출 이익 지표입니다. 주식 기반 보상이 큰 테크 기업에서 실제 현금 창출 능력을 파악하는 데 많이 씁니다.',
+      example:'TEM FY2026 Adj EBITDA 목표 $65M은 GAAP 손실에도 불구하고 영업 효율이 개선되고 있음을 의미합니다.' },
+    { name:'주식기반보상', abbr:'Stock-Based Compensation (SBC)', cat:'재무', catColor:'#22c55e',
+      desc:'직원에게 급여 대신 또는 추가로 주식·옵션을 지급하는 비용입니다. 현금이 나가지 않지만 GAAP 회계상 비용으로 처리되어 손익계산서에 손실을 늘립니다.',
+      example:'TEM의 Q1 SBC $56.3M이 GAAP 순손실 $125.9M의 약 45%를 차지, GAAP 손실이 실제 현금 소각보다 크게 보입니다.' },
+    { name:'xT CDx', abbr:'Comprehensive Genomic Profiling', cat:'실적', catColor:'#f97316',
+      desc:'Tempus AI의 주력 종양 유전체 검사 제품입니다. 종양 조직에서 수백 개의 유전자를 분석해 맞춤 항암 치료법 선택을 돕습니다. FDA 승인을 받은 동반 진단(CDx) 검사입니다.',
+      example:'2026.06.04 FDA가 xT CDx의 고형암 종양-단독 적용을 추가 승인하며 TEM 주가 +9.8% 급등의 핵심 촉매가 되었습니다.' },
+    { name:'동반진단', abbr:'Companion Diagnostics (CDx)', cat:'실적', catColor:'#f97316',
+      desc:'특정 약물의 치료 효과를 예측하거나 안전성을 모니터링하기 위해 설계된 진단 검사입니다. FDA 승인이 필요하며, 특정 항암제와 함께 사용하도록 규제받습니다.',
+      example:'TEM의 xT CDx FDA 승인은 동반진단 지위를 확보해 특정 항암제 처방 시 TEM 검사가 표준이 될 수 있음을 의미합니다.' },
+    { name:'멀티모달AI', abbr:'Multimodal AI', cat:'실적', catColor:'#f97316',
+      desc:'텍스트, 이미지, 수치 데이터 등 다양한 형식의 데이터를 동시에 처리하는 AI 기술입니다. Tempus의 경우 유전체 데이터 + 병리 이미지 + 임상 기록을 통합하여 분석합니다.',
+      example:'TEM의 ASCO 발표 멀티모달 암 파운데이션 모델은 게놈+방사선+병리+EMR을 결합한 것으로 경쟁사 대비 독보적 차별점입니다.' },
+    { name:'TAM', abbr:'Total Addressable Market', cat:'실적', catColor:'#f97316',
+      desc:'한 기업이 진출할 수 있는 전체 시장 규모를 의미합니다. 클수록 성장 여지가 크다는 의미로 해석합니다.',
+      example:'TEM은 BMS 딜을 통해 신경과학으로 TAM을 확장하고 있으며, 향후 파킨슨·알츠하이머 데이터 시장까지 진출 계획입니다.' }
+  ];
+
+  var cats = ['전체','기술적','재무','실적'];
+  var selectedCat = useState('전체');
+  var sel = selectedCat[0];
+  var setSel = selectedCat[1];
+
+  var filtered = sel === '전체' ? allTerms : allTerms.filter(function(t){return t.cat===sel});
+
+  return e('div',{className:'content'},
+    e('div',{className:'filter-btns'},
+      cats.map(function(c){ return e('button',{key:c,className:'filter-btn'+(sel===c?' active':''),onClick:function(){setSel(c)}},c); })
+    ),
+    filtered.map(function(t,i){
+      return e('div',{key:i,className:'term-card'},
+        e('div',{className:'term-header'},
+          e('span',{className:'term-name'},t.name,' ',e('span',{style:{color:'#64748b',fontSize:'11px',fontWeight:'400'}},'(',t.abbr,')')),
+          e('span',{className:'badge',style:{background:t.catColor+'22',color:t.catColor}},t.cat)
+        ),
+        e('div',{className:'term-body'},t.desc),
+        e('div',{className:'term-example'},t.example)
+      );
+    })
+  );
+}
+
+function Multibagger() {
+  var checks = [
+    { q:'아직 충분히 작은 기업인가?', data:'시가총액 ~$7.2B', icon:'⚠️', verdict:'부분충족', vClass:'v-partial', score:0.5,
+      reason:'$5~20B 범위에 해당. 멀티배거 가능성 있으나 $5B 이하보다는 제한적.' },
+    { q:'현재 가격이 미래를 과대반영하지 않았는가?', data:'PSR ~4.5x (2026 매출 기준), 52W 고점 $104 대비 50% 조정', icon:'⚠️', verdict:'부분충족', vClass:'v-partial', score:0.5,
+      reason:'고점 대비 50% 할인은 매력적이나, 아직 적자 기업의 4.5x 매출배수는 무조건 저렴하지 않음.' },
+    { q:'매출보다 EBITDA·FCF 개선이 따라오는가?', data:'매출총이익률 63.8% (+3pp YoY), Adj EBITDA $65M 목표', icon:'⚠️', verdict:'부분충족', vClass:'v-partial', score:0.5,
+      reason:'마진 개선 트렌드 명확하나 GAAP 손실은 YoY 85% 확대 — 방향성은 좋으나 속도가 느림.' },
+    { q:'자산 증가율보다 EBITDA 증가율이 뒤처지지 않는가?', data:'$400M 전환사채로 자산 급증, Adj EBITDA 첫 흑자 전환 중', icon:'⚠️', verdict:'부분충족', vClass:'v-partial', score:0.5,
+      reason:'자산(부채 포함)이 빠르게 늘어나는 반면 EBITDA는 개선 중 — 아직 투자 효율 검증 필요.' },
+    { q:'FCF yield 관점에서 가격이 합리적인가?', data:'FCF 아직 마이너스 (현금 소각 지속)', icon:'❌', verdict:'미충족', vClass:'v-fail', score:0,
+      reason:'FCF가 음수로 현 주가 대비 FCF yield 계산 불가. 2026~2027년 FCF 흑자 전환이 핵심 관건.' },
+    { q:'투자가 실제 수요·주문과 연결되는가?', data:'Merck·BMS·40+ 제약사 파트너십, 수주잔고 증가, 검사량 지속 증가', icon:'✅', verdict:'충족', vClass:'v-pass', score:1,
+      reason:'멀티이어 빅파마 파트너십, FDA 승인으로 검사 볼륨 증가 확실 — 수요 연결성 강함.' },
+    { q:'고금리 환경에서도 버틸 수 있는가?', data:'전환사채 $400M 추가, 기존 현금 충분, 매출 성장으로 런웨이 확보', icon:'⚠️', verdict:'부분충족', vClass:'v-partial', score:0.5,
+      reason:'현금 충분하나 전환사채 부담 추가 — 고금리 하에서 이자 비용 증가. 중기적으로 감당 가능.' },
+    { q:'단기 급등 후 추격매수 구간은 아닌가?', data:'52W 고점 $104.32 대비 현재 $51.66 (-50.5%), RSI ~45', icon:'✅', verdict:'충족', vClass:'v-pass', score:1,
+      reason:'고점 대비 절반 이하, RSI 중립. 단기 급등 구간이 아님 — 기술적으로 진입 가능한 수준.' }
+  ];
+
+  var total = checks.reduce(function(s,c){return s+c.score;},0);
+
+  return e('div',{className:'content'},
+    e('div',{className:'card'},
+      e('div',{className:'score-big',style:{color: total>=6.5?'#4ade80': total>=4?'#fbbf24':'#ef4444'}},
+        total.toFixed(1),' / 8',
+        e('div',{style:{fontSize:'14px',color:'#94a3b8',marginTop:'4px'}},
+          total>=6.5?'🚀 유망':total>=4?'📊 보통':'⚠️ 낮음'
+        )
+      )
+    ),
+
+    e(RadarChart,null),
+
+    checks.map(function(c,i){
+      return e('div',{key:i,className:'check-card'},
+        e('div',{className:'check-header'},
+          e('div',{className:'check-q'},i+1+'. '+c.q),
+          e('div',{className:'check-icon'},c.icon)
+        ),
+        e('div',{className:'check-data'},'📊 데이터: ',c.data),
+        e('div',{className:'check-verdict '+c.vClass},'→ ',c.verdict,': ',c.reason)
+      );
+    }),
+
+    e('div',{className:'warn-box',style:{marginTop:'20px'}},
+      e('div',{className:'warn-title'},'⚠️ 핵심 한계 주의사항'),
+      e('div',{className:'warn-body'},
+        '워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않습니다.\n',
+        '성공 기업 중심 표본으로 선택 편향이 존재합니다. 참고 지표로만 활용하세요.\n',
+        '본 분석은 투자 권유가 아니며, 투자 결정은 본인의 판단과 책임으로 이루어져야 합니다.'
+      )
+    )
+  );
+}
+
+function Conclusion() {
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'종합 투자 의견'),
+    e('div',{className:'card'},
+      e('div',{style:{textAlign:'center',padding:'16px 0'}},
+        e('div',{style:{fontSize:'24px',fontWeight:'800',color:'#fbbf24'}},'🟡 조건부 매수'),
+        e('div',{style:{fontSize:'14px',color:'#94a3b8',marginTop:'4px'}},'(멀티배거 점수 4.5 / 8 · 기술적 개선 대기 중)')
+      ),
+      e('div',{style:{display:'flex',justifyContent:'center',gap:'8px',marginTop:'8px',flexWrap:'wrap'}},
+        ['강한 매도','매도','중립','조건부 매수★','강한 매수'].map(function(l,i){
+          return e('div',{key:i,style:{
+            padding:'8px 12px',borderRadius:'8px',fontSize:'12px',fontWeight:i===3?'800':'400',
+            background:i===3?'#713f12':'#1e293b',color:i===3?'#fbbf24':'#475569',
+            border:i===3?'2px solid #d97706':'1px solid #1e293b'
+          }},l);
+        })
+      )
+    ),
+
+    e('div',{className:'section-title'},'Bull Case vs Bear Case'),
+    e('div',{className:'card'},
+      e('div',{className:'info-box'},
+        e('div',{className:'info-title'},'🐂 Bull Case (상승 시나리오)'),
+        e('div',{className:'info-body'},
+          '① 세계 최대 임상·분자 데이터 라이브러리 — 10년 이상 복제 불가 해자\n',
+          '② 36% 매출 성장 + 마진 개선 → FY2026 Adj EBITDA $65M 첫 흑자 전환\n',
+          '③ Merck + BMS + 향후 추가 빅파마 파트너십 → 고마진 반복 데이터 수익\n',
+          '④ FDA xT CDx 승인 확대로 진단 볼륨 급증 (TAM 확장)\n',
+          '⑤ 30.5% 공매도 비율 → 촉매 시 숏 스퀴즈로 주가 폭발적 반응 가능\n',
+          '⑥ 신경과학·심장 영역 확장 → 5년 내 암 의존도 줄고 대형 플랫폼으로 성장'
+        )
+      ),
+      e('div',{className:'alert-box'},
+        e('div',{className:'alert-title'},'🐻 Bear Case (하락 시나리오)'),
+        e('div',{className:'alert-body'},
+          '① 순손실 YoY 85% 확대 (-$125.9M) — 적자 속도 매출 성장보다 빠름\n',
+          '② 공매도 30.5% — 구조적 하락 베팅, 반등 시 연속 저항\n',
+          '③ $400M 전환사채 희석 + SBC 분기 $56M → 주당 가치 지속 희석\n',
+          '④ 데스크로스 (50일<200일) — 기술적 추세 불리\n',
+          '⑤ 내부자 순매도 -$19M — 경영진 신뢰도 의문\n',
+          '⑥ NTRA·EXAS 등 경쟁사의 AI 역량 강화 → 차별성 희석 가능성'
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'실행 계획 (Action Plan)'),
+    e('div',{className:'card'},
+      e('table',{className:'action-table'},
+        e('thead',null, e('tr',null, e('th',null,'구분'), e('th',null,'가격'), e('th',null,'비중'), e('th',null,'조건'))),
+        e('tbody',null,
+          e('tr',null, e('td',{className:'val-blue'},'1차 매수'), e('td',null,'$49~53'), e('td',null,'포트폴리오 3%'), e('td',null,'50일 MA 지지 확인')),
+          e('tr',null, e('td',{className:'val-blue'},'2차 매수'), e('td',null,'$44~48'), e('td',null,'추가 3%'), e('td',null,'2차 지지선 테스트 후 반등')),
+          e('tr',null, e('td',{className:'val-red'},'손절선'), e('td',null,'$42 이탈'), e('td',null,'전량 청산'), e('td',null,'52주 저점 이탈')),
+          e('tr',null, e('td',{className:'val-green'},'1차 익절'), e('td',null,'$62~65'), e('td',null,'50% 청산'), e('td',null,'200일 MA 회복 확인')),
+          e('tr',null, e('td',{className:'val-green'},'2차 익절'), e('td',null,'$75~85'), e('td',null,'나머지'), e('td',null,'Q2 실적 Beat + 상승 추세 전환'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'핵심 모니터링 지표'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'항목'), e('th',null,'주시 내용'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'📅 다음 실적'), e('td',null,'2026년 8월 초 (Q2) — Merck 매출 인식 첫 반영 기대')),
+          e('tr',null, e('td',null,'📊 핵심 지표'), e('td',null,'데이터&앱 성장률 40%+ 유지 여부 / Adj EBITDA 분기별 개선')),
+          e('tr',null, e('td',null,'🔬 FDA'), e('td',null,'xT CDx 추가 적응증 승인 파이프라인')),
+          e('tr',null, e('td',null,'🤝 파트너십'), e('td',null,'Merck·BMS 매출 인식 타이밍 / 신규 빅파마 계약')),
+          e('tr',null, e('td',null,'📉 기술적'), e('td',null,'$50 지지 여부 / 200일 MA($57.4) 회복 시 추세 전환 신호'))
+        )
+      )
+    )
+  );
+}
+
+/* ── 메인 앱 ── */
+function App() {
+  var tabState = useState('개요');
+  var activeTab = tabState[0];
+  var setTab = tabState[1];
+
+  var TABS = ['개요','기술적분석','실적','재무','비교','🐦 X','💬 Reddit','📖 용어','🔟 멀티배거','🎯 결론'];
+
+  return e('div',null,
+    e('div',{className:'header'},
+      e('div',{className:'ticker'},'TEM'),
+      e('div',{className:'company'},'Tempus AI, Inc. — AI 기반 정밀 의료 플랫폼'),
+      e('div',{className:'price-row'},
+        e('span',{className:'price'},'$51.66'),
+        e('span',{className:'chg-pos'},'+9.81% (FDA 승인 6/4)'),
+        e('span',{style:{color:'#64748b',fontSize:'12px'}},'2026-06-10')
+      ),
+      e('div',{className:'badges'},
+        e('span',{className:'badge b-blue'},'NASDAQ'),
+        e('span',{className:'badge b-green'},'AI 헬스케어'),
+        e('span',{className:'badge b-purple'},'정밀 의료'),
+        e('span',{className:'badge b-yellow'},'RSI ~45'),
+        e('span',{className:'badge b-red'},'공매도 30.5%'),
+        e('span',{className:'badge b-gray'},'시총 $7.2B')
+      )
+    ),
+    e('div',{className:'tabs'},
+      TABS.map(function(t){
+        return e('div',{key:t,className:'tab'+(activeTab===t?' active':''),onClick:function(){setTab(t)}},t);
+      })
+    ),
+    activeTab==='개요'       && e(Overview,null),
+    activeTab==='기술적분석' && e(Technical,null),
+    activeTab==='실적'       && e(Earnings,null),
+    activeTab==='재무'       && e(Fundamental,null),
+    activeTab==='비교'       && e(Compare,null),
+    activeTab==='🐦 X'       && e(XTab,null),
+    activeTab==='💬 Reddit'  && e(RedditTab,null),
+    activeTab==='📖 용어'    && e(Terms,null),
+    activeTab==='🔟 멀티배거'&& e(Multibagger,null),
+    activeTab==='🎯 결론'    && e(Conclusion,null)
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
