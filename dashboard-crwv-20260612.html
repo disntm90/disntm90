@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CRWV — CoreWeave 종목 분석 대시보드</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;font-size:14px}
+  a{color:#06b6d4;text-decoration:none}
+  .back-link{display:inline-block;padding:8px 16px;margin:12px 16px;background:#1e293b;border-radius:8px;font-size:13px;color:#94a3b8}
+  .back-link:hover{background:#334155;color:#e2e8f0}
+  .header{padding:16px;border-bottom:1px solid #1e293b}
+  .ticker{font-size:28px;font-weight:800;color:#06b6d4}
+  .company{font-size:14px;color:#94a3b8;margin-top:2px}
+  .price-row{display:flex;align-items:baseline;gap:10px;margin-top:8px}
+  .price{font-size:32px;font-weight:700;color:#e2e8f0}
+  .chg-pos{color:#22c55e;font-size:16px}
+  .chg-neg{color:#ef4444;font-size:16px}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+  .b-blue{background:#164e63;color:#67e8f9}
+  .b-green{background:#14532d;color:#4ade80}
+  .b-yellow{background:#713f12;color:#fbbf24}
+  .b-red{background:#450a0a;color:#f87171}
+  .b-purple{background:#3b1d6e;color:#c084fc}
+  .b-gray{background:#1e293b;color:#94a3b8}
+  .tabs{display:flex;overflow-x:auto;background:#0f172a;border-bottom:1px solid #1e293b;padding:0 8px}
+  .tabs::-webkit-scrollbar{height:3px}
+  .tabs::-webkit-scrollbar-track{background:#0f172a}
+  .tabs::-webkit-scrollbar-thumb{background:#334155;border-radius:2px}
+  .tab{padding:12px 14px;font-size:12px;cursor:pointer;white-space:nowrap;color:#64748b;border-bottom:2px solid transparent;transition:all .2s}
+  .tab.active{color:#06b6d4;border-bottom-color:#06b6d4}
+  .tab:hover{color:#94a3b8}
+  .content{padding:16px;max-width:680px;margin:0 auto}
+  .section-title{font-size:16px;font-weight:700;color:#e2e8f0;margin:20px 0 10px;border-left:3px solid #06b6d4;padding-left:10px}
+  .card{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:14px;margin-bottom:12px}
+  .card-title{font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:8px}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{background:#1e293b;border-radius:8px;padding:10px}
+  .kpi-label{font-size:10px;color:#64748b;margin-bottom:3px}
+  .kpi-value{font-size:16px;font-weight:700;color:#e2e8f0}
+  .kpi-sub{font-size:10px;color:#94a3b8;margin-top:2px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#1e293b;padding:8px 6px;text-align:left;color:#94a3b8;font-weight:600;font-size:11px}
+  td{padding:8px 6px;border-bottom:1px solid #1e293b;color:#e2e8f0}
+  tr:hover td{background:#1e293b22}
+  .chart-wrap{position:relative;height:220px;margin:12px 0}
+  .alert-box{background:#1a0a0a;border:1px solid #ef4444;border-radius:8px;padding:12px;margin:12px 0}
+  .alert-title{color:#f87171;font-size:13px;font-weight:700;margin-bottom:4px}
+  .alert-body{color:#fca5a5;font-size:12px;line-height:1.6}
+  .info-box{background:#0a1a28;border:1px solid #155e75;border-radius:8px;padding:12px;margin:12px 0}
+  .info-title{color:#67e8f9;font-size:13px;font-weight:700;margin-bottom:4px}
+  .info-body{color:#a5f3fc;font-size:12px;line-height:1.6}
+  .warn-box{background:#1a1200;border:1px solid #d97706;border-radius:8px;padding:12px;margin:12px 0}
+  .warn-title{color:#fbbf24;font-size:13px;font-weight:700;margin-bottom:4px}
+  .warn-body{color:#fcd34d;font-size:12px;line-height:1.6}
+  .opinion-card{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+  .opinion-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .opinion-user{font-size:12px;font-weight:700;color:#06b6d4}
+  .opinion-body{font-size:12px;color:#cbd5e1;line-height:1.5;margin-bottom:6px}
+  .opinion-footer{display:flex;gap:8px;font-size:10px;color:#64748b}
+  .sent-pos{background:#14532d;color:#4ade80;padding:2px 7px;border-radius:8px;font-size:10px}
+  .sent-neu{background:#1c2a3a;color:#93c5fd;padding:2px 7px;border-radius:8px;font-size:10px}
+  .sent-neg{background:#450a0a;color:#f87171;padding:2px 7px;border-radius:8px;font-size:10px}
+  .sent-summary{display:flex;gap:10px;margin-bottom:12px;font-size:12px}
+  .progress-bar{height:6px;background:#1e293b;border-radius:3px;overflow:hidden;margin-top:4px}
+  .progress-fill{height:100%;background:#06b6d4;border-radius:3px}
+  .score-big{font-size:48px;font-weight:800;text-align:center;padding:16px 0}
+  .check-card{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+  .check-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+  .check-q{font-size:12px;font-weight:600;color:#e2e8f0;flex:1}
+  .check-icon{font-size:18px;flex-shrink:0}
+  .check-data{font-size:11px;color:#94a3b8;margin-bottom:4px}
+  .check-verdict{font-size:11px;font-weight:600}
+  .v-pass{color:#4ade80}
+  .v-partial{color:#fbbf24}
+  .v-fail{color:#f87171}
+  .term-card{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+  .term-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .term-name{font-size:13px;font-weight:700;color:#e2e8f0}
+  .term-body{font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:6px}
+  .term-example{font-size:11px;color:#67e8f9;font-style:italic;border-left:2px solid #06b6d4;padding-left:8px}
+  .filter-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .filter-btn{padding:4px 12px;border-radius:16px;font-size:11px;cursor:pointer;border:1px solid #334155;background:#1e293b;color:#94a3b8;transition:all .2s}
+  .filter-btn.active{background:#164e63;color:#67e8f9;border-color:#06b6d4}
+  .val-green{color:#4ade80;font-weight:700}
+  .val-red{color:#f87171;font-weight:700}
+  .val-yellow{color:#fbbf24;font-weight:700}
+  .val-blue{color:#67e8f9;font-weight:700}
+  .radar-wrap{position:relative;height:250px;margin:12px 0}
+  .comp-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e293b22;font-size:12px}
+  .comp-name{color:#94a3b8;flex:1}
+  .comp-val{font-weight:700;color:#e2e8f0;width:60px;text-align:right}
+</style>
+</head>
+<body>
+<a class="back-link" href="https://disntm90.github.io/disntm90/">← 목록으로</a>
+
+<div id="root"></div>
+
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(canvasRef, chartRef, cfg) {
+  useEffect(function() {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(canvasRef.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+/* ── 분기 매출 차트 ── */
+function RevenueChart() {
+  var ref = useRef(null); var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'bar',
+    data: {
+      labels: ['Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026','Q2 2026E'],
+      datasets: [{
+        label: '분기 매출 ($M)',
+        data: [981.8, 1212, 1365, 1540, 2080, 2525],
+        backgroundColor: ['#334155','#334155','#334155','#334155','#06b6d4','#67e8f966']
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color:'#94a3b8', font:{size:10} } } },
+      scales: {
+        x: { ticks:{color:'#64748b',font:{size:10}}, grid:{color:'#1e293b'} },
+        y: { ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v+'M'}}, grid:{color:'#1e293b'} }
+      }
+    }
+  });
+  return e('div',{className:'chart-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 순손실 추이 ── */
+function LossChart() {
+  var ref = useRef(null); var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'line',
+    data: {
+      labels: ['Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026'],
+      datasets: [{
+        label: '순손실(Net Loss, $M)',
+        data: [-315, -290, -110, -120, -740],
+        borderColor:'#ef4444', backgroundColor:'#ef444422', fill:true, tension:0.4, pointRadius:4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{color:'#94a3b8',font:{size:10}} } },
+      scales: {
+        x: { ticks:{color:'#64748b',font:{size:10}}, grid:{color:'#1e293b'} },
+        y: { ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v+'M'}}, grid:{color:'#1e293b'} }
+      }
+    }
+  });
+  return e('div',{className:'chart-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 연간 매출 성장 ── */
+function GuidanceChart() {
+  var ref = useRef(null); var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'bar',
+    data: {
+      labels: ['2024 실적','2025 실적','2026 가이던스','2027 목표(연환산)'],
+      datasets: [{
+        label: '연간 매출 ($B)',
+        data: [1.9, 5.1, 12.5, 30],
+        backgroundColor: ['#334155','#475569','#06b6d4','#22c55e']
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{color:'#94a3b8',font:{size:10}} } },
+      scales: {
+        x: { ticks:{color:'#64748b',font:{size:10}}, grid:{color:'#1e293b'} },
+        y: { ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v+'B'}}, grid:{color:'#1e293b'} }
+      }
+    }
+  });
+  return e('div',{className:'chart-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 애널리스트 도넛 ── */
+function AnalystChart() {
+  var ref = useRef(null); var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'doughnut',
+    data: {
+      labels: ['Strong Buy','Buy','Hold','Sell'],
+      datasets: [{ data: [14, 8, 11, 3], backgroundColor:['#16a34a','#22c55e','#f59e0b','#ef4444'], borderWidth:0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{color:'#94a3b8',font:{size:11}}, position:'right' } }
+    }
+  });
+  return e('div',{className:'chart-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 멀티배거 레이더 ── */
+function RadarChart() {
+  var ref = useRef(null); var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'radar',
+    data: {
+      labels: ['규모','밸류에이션','수익질','자산효율','FCF','수주잔고','재무건전성','진입시점'],
+      datasets: [{
+        label: 'CRWV',
+        data: [0, 0.5, 0, 0.5, 0, 1, 0, 1],
+        borderColor: '#06b6d4', backgroundColor: '#06b6d422', pointBackgroundColor: '#06b6d4', pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels:{color:'#94a3b8',font:{size:10}} } },
+      scales: {
+        r: {
+          min:0, max:1, ticks: { display:false },
+          grid: { color:'#1e293b' },
+          pointLabels: { color:'#94a3b8', font:{size:10} },
+          angleLines: { color:'#1e293b' }
+        }
+      }
+    }
+  });
+  return e('div',{className:'radar-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ── 비교 차트 ── */
+function PriceCompChart() {
+  var ref = useRef(null); var cRef = useRef(null);
+  makeChart(ref, cRef, {
+    type: 'bar',
+    data: {
+      labels: ['CRWV','NBIS','IREN','APLD','ORCL'],
+      datasets: [
+        { label: '현재가($)', data: [98.42, 92.0, 22.5, 18.4, 195.0], backgroundColor:['#06b6d4','#475569','#475569','#475569','#475569'] },
+        { label: '목표가($)', data: [131.88, 120.0, 30.0, 25.0, 220.0], backgroundColor:['#67e8f9','#94a3b8','#94a3b8','#94a3b8','#94a3b8'] }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{ labels:{color:'#94a3b8',font:{size:10}} } },
+      scales: {
+        x:{ ticks:{color:'#64748b',font:{size:10}}, grid:{color:'#1e293b'} },
+        y:{ ticks:{color:'#64748b',font:{size:10},callback:function(v){return '$'+v}}, grid:{color:'#1e293b'} }
+      }
+    }
+  });
+  return e('div',{className:'chart-wrap'}, e('canvas',{ref:ref}));
+}
+
+/* ════════ 개요 탭 ════════ */
+function Overview() {
+  return e('div',{className:'content'},
+    e('div',{className:'kpi-grid'},
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'현재가'), e('div',{className:'kpi-value'},'$98.42'), e('div',{className:'kpi-sub'},'2026-06-12 · +6.57%')),
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'시가총액'), e('div',{className:'kpi-value'},'$53.7B'), e('div',{className:'kpi-sub'},'대형주')),
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'52주 범위'), e('div',{className:'kpi-value'},'$63.80'), e('div',{className:'kpi-sub'},'~ $187.00')),
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'RSI (14)'), e('div',{className:'kpi-value','style':{color:'#fbbf24'}},'~45'), e('div',{className:'kpi-sub'},'중립 구간')),
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'Q1 2026 매출'), e('div',{className:'kpi-value','style':{color:'#4ade80'}},'$2.08B'), e('div',{className:'kpi-sub'},'+112% YoY')),
+      e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'수주잔고(Backlog)'), e('div',{className:'kpi-value','style':{color:'#67e8f9'}},'$99.4B'), e('div',{className:'kpi-sub'},'계약 전력 3.5GW'))
+    ),
+
+    e('div',{className:'section-title'},'기업 개요'),
+    e('div',{className:'card'},
+      e('div',{className:'card-title'},'CoreWeave, Inc. (NASDAQ: CRWV)'),
+      e('p',{style:{fontSize:'12px',lineHeight:'1.8',color:'#cbd5e1'}},
+        'CoreWeave는 2017년 뉴저지에서 설립된 AI 전문 클라우드 컴퓨팅 기업입니다. ',
+        '원래 이더리움 채굴 기업(Atlantic Crypto)으로 출발해 2019년 GPU 클라우드 서비스로 전환했습니다. ',
+        'NVIDIA의 Elite Cloud Partner로서 최신 GPU 세대 우선 배정을 받으며, ',
+        'OpenAI·Microsoft·Meta 등 최대 AI 연구소에 GPU 인프라를 공급합니다. ',
+        '2025년 3월 IPO ($1.5B 조달, 역대 최대 AI 상장)했으며, ',
+        '2026년 6월 22일 나스닥-100 지수 편입이 확정되었습니다.'
+      )
+    ),
+
+    e('div',{className:'section-title'},'핵심 계약 & 고객'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'고객/파트너'), e('th',null,'규모'), e('th',null,'내용'))),
+        e('tbody',null,
+          e('tr',null, e('td',{className:'val-blue'},'OpenAI'), e('td',{className:'val-green'},'$22.4B'), e('td',null,'$11.9B 초기 + $4B + $6.5B 확장 (5년)')),
+          e('tr',null, e('td',null,'Microsoft'), e('td',null,'대규모'), e('td',null,'주요 매출처 (비중 축소 중)')),
+          e('tr',null, e('td',null,'Meta'), e('td',null,'대규모'), e('td',null,'AI 학습 인프라 공급')),
+          e('tr',null, e('td',{className:'val-blue'},'NVIDIA'), e('td',{className:'val-green'},'$2B 지분 투자'), e('td',null,'Elite Cloud Partner — GPU 우선 배정')),
+          e('tr',null, e('td',null,'시카고 DC'), e('td',null,'$2.2B'), e('td',null,'15년 하이퍼스케일 임대 (2026.06 발표, +12% 급등)'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'2026년 핵심 촉매 타임라인'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'날짜'), e('th',null,'이벤트'), e('th',null,'영향'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'2026.05.07'), e('td',null,'Q1 실적: 매출 Beat / EPS Miss (-$1.12)'), e('td',{style:{color:'#fbbf24'}},'🟡 혼조')),
+          e('tr',null, e('td',null,'2026.06.04'), e('td',null,'손실 확대 + Q2 가이던스 우려로 주가 하락'), e('td',{style:{color:'#f87171'}},'🔴 부정')),
+          e('tr',null, e('td',null,'2026.06.12'), e('td',null,'시카고 $2.2B 15년 임대 계약 → +12%'), e('td',{style:{color:'#4ade80'}},'🟢 긍정')),
+          e('tr',null, e('td',null,'2026.06.12'), e('td',null,'나스닥-100 편입 확정 발표 → +6.57%'), e('td',{style:{color:'#4ade80'}},'🟢 긍정')),
+          e('tr',null, e('td',null,'2026.06.22'), e('td',null,'나스닥-100 공식 편입 — 패시브 자금 유입'), e('td',{style:{color:'#4ade80'}},'🟢 예정')),
+          e('tr',null, e('td',null,'2026.08 초'), e('td',null,'Q2 실적 발표 (가이던스 $2.45~2.6B)'), e('td',{style:{color:'#fbbf24'}},'🟡 관건'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'미래 인사이트'),
+    e('div',{className:'card'},
+      e('p',{style:{fontSize:'12px',lineHeight:'1.8',color:'#cbd5e1',marginBottom:'8px'}},
+        '☁️ CoreWeave는 "AI 시대의 네오클라우드(Neocloud)" 대표 주자입니다. ',
+        'AWS·Azure 같은 범용 클라우드와 달리 GPU 특화 인프라만 제공하며, 범용 대비 60~80% 비용 절감을 내세웁니다. ',
+        '관건은 $31~35B에 달하는 2026년 설비투자(capex)를 감당하면서 수익성을 증명하는 것입니다.'
+      ),
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'기간'), e('th',null,'핵심 목표'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'1년 (2026)'), e('td',null,'매출 $12~13B, 조정 영업이익 $900M~$1.1B')),
+          e('tr',null, e('td',null,'2년 (2027)'), e('td',null,'연환산 매출 $30B+ 달성, 고객 다변화')),
+          e('tr',null, e('td',null,'5년 (2030)'), e('td',null,'AI 인프라 슈퍼사이클의 핵심 공급자 지위 공고화'))
+        )
+      )
+    ),
+
+    e('div',{className:'warn-box'},
+      e('div',{className:'warn-title'},'⚠️ 핵심 리스크'),
+      e('div',{className:'warn-body'},
+        '① 총부채 ~$25B — 고금리 차입으로 인한 이자 부담 막대\n',
+        '② Q1 순손실 -$740M (YoY 2.3배 확대) — 이자·감가상각이 성장 압도\n',
+        '③ 고객 집중 — OpenAI·Microsoft 의존도 높음 (계약 해지·재협상 리스크)\n',
+        '④ 2026 capex $31~35B — 매출의 2.5배 이상 투자, FCF 대규모 적자\n',
+        '⑤ 내부자 매도 — CEO 79K주 ($72.57), 공동창업자 McBee 58K주 ($139)\n',
+        '⑥ GPU 감가상각 주기 논쟁 — 자산 수명 6년 가정의 적정성 의문'
+      )
+    )
+  );
+}
+
+/* ════════ 기술적 분석 탭 ════════ */
+function Technical() {
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'하이킨아시 (Heikin-Ashi) 분석'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'기간'), e('th',null,'추세'), e('th',null,'신호'), e('th',null,'근거'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'일봉'), e('td',{style:{color:'#4ade80'}},'반등 전환'), e('td',null,'양봉 전환'), e('td',null,'6/12 +6.57% 강한 양봉 — 나스닥-100 편입')),
+          e('tr',null, e('td',null,'주봉'), e('td',{style:{color:'#fbbf24'}},'조정 후 반등 시도'), e('td',null,'중립'), e('td',null,'52W 고점 $187 대비 -47%, 저점 대비 +54%')),
+          e('tr',null, e('td',null,'월봉'), e('td',{style:{color:'#fbbf24'}},'변동성 큰 횡보'), e('td',null,'중립'), e('td',null,'$64~187 광폭 박스권 내 중간 위치'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'핵심 기술 지표'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'지표'), e('th',null,'현재값'), e('th',null,'신호'), e('th',null,'의미'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'RSI (14)'), e('td',{style:{color:'#fbbf24'}},'~45'), e('td',null,'중립'), e('td',null,'과매수·과매도 아님 — 방향 결정 대기')),
+          e('tr',null, e('td',null,'MACD'), e('td',{style:{color:'#fbbf24'}},'-0.91'), e('td',null,'약세→개선 중'), e('td',null,'6/12 급등으로 골든크로스 시도')),
+          e('tr',null, e('td',null,'200일 MA'), e('td',null,'$93.2'), e('td',{style:{color:'#4ade80'}},'현재가 위'), e('td',null,'6/12 급등으로 회복 — 추세 전환 신호')),
+          e('tr',null, e('td',null,'50일 MA'), e('td',null,'$92.4'), e('td',{style:{color:'#4ade80'}},'현재가 위'), e('td',null,'50·200일 MA 동시 돌파 — 긍정적')),
+          e('tr',null, e('td',null,'변동성'), e('td',{style:{color:'#ef4444'}},'매우 높음'), e('td',null,'주의'), e('td',null,'일중 ±5~12% 흔함 — 포지션 크기 조절 필수'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'지지선 & 저항선'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'구분'), e('th',null,'가격'), e('th',null,'근거'))),
+        e('tbody',null,
+          e('tr',null, e('td',{style:{color:'#ef4444'}},'2차 저항'), e('td',null,'$139.93'), e('td',null,'전 고점 클러스터, 애널리스트 평균 목표가 부근')),
+          e('tr',null, e('td',{style:{color:'#ef4444'}},'1차 저항'), e('td',null,'$104.6~107'), e('td',null,'다중 추세선·MA 수렴 구간')),
+          e('tr',null, e('td',{style:{color:'#4ade80'}},'현재가'), e('td',{style:{fontWeight:'700'}},'$98.42'), e('td',null,'50·200일 MA 상회 직후')),
+          e('tr',null, e('td',{style:{color:'#4ade80'}},'1차 지지'), e('td',null,'$92~93'), e('td',null,'50일·200일 MA 밀집')),
+          e('tr',null, e('td',{style:{color:'#4ade80'}},'2차 지지'), e('td',null,'$64~65'), e('td',null,'52주 저점 부근 — 최후 방어선'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'차트 패턴 & 진입 전략'),
+    e('div',{className:'card'},
+      e('p',{style:{fontSize:'12px',lineHeight:'1.7',color:'#cbd5e1',marginBottom:'10px'}},
+        '📈 현재: 5월 실적 실망 매도 후 6/12 시카고 계약 + 나스닥-100 편입으로 V자 반등 시도. ',
+        '50일·200일 MA를 하루 만에 동시 돌파한 강한 모멘텀 — 단, 갭 상승 후 되돌림(갭 메우기) 가능성 주의. ',
+        '6/22 지수 편입 전후 패시브 자금 유입이 단기 수급에 우호적.'
+      ),
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'구분'), e('th',null,'가격'), e('th',null,'조건'))),
+        e('tbody',null,
+          e('tr',null, e('td',{className:'val-blue'},'매수 진입'), e('td',null,'$92~98'), e('td',null,'MA 지지 확인 후 분할 진입')),
+          e('tr',null, e('td',{className:'val-red'},'손절선'), e('td',null,'$85 이탈'), e('td',null,'MA 클러스터 붕괴 시')),
+          e('tr',null, e('td',{className:'val-green'},'1차 목표'), e('td',null,'$120~130'), e('td',null,'나스닥-100 편입 수급 + Q2 실적 기대')),
+          e('tr',null, e('td',{className:'val-green'},'2차 목표'), e('td',null,'$150~187'), e('td',null,'Q2 Beat + 수익성 개선 확인 시'))
+        )
+      )
+    )
+  );
+}
+
+/* ════════ 실적 탭 ════════ */
+function Earnings() {
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'Q1 2026 실적 요약 (2026.05.07 발표)'),
+    e('div',{className:'card'},
+      e('div',{className:'kpi-grid'},
+        e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'매출'), e('div',{className:'kpi-value','style':{color:'#4ade80'}},'$2.08B'), e('div',{className:'kpi-sub'},'vs $1.97B 예상 ✅ Beat')),
+        e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'YoY 성장'), e('div',{className:'kpi-value','style':{color:'#4ade80'}},'+112%'), e('div',{className:'kpi-sub'},'$981.8M → $2.08B')),
+        e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'조정 EPS'), e('div',{className:'kpi-value','style':{color:'#ef4444'}},'-$1.12'), e('div',{className:'kpi-sub'},'vs -$0.90 예상 ❌ Miss')),
+        e('div',{className:'kpi'}, e('div',{className:'kpi-label'},'순손실'), e('div',{className:'kpi-value','style':{color:'#ef4444'}},'-$740M'), e('div',{className:'kpi-sub'},'vs -$315M YoY 확대'))
+      )
+    ),
+
+    e('div',{className:'section-title'},'분기 매출 추이'),
+    e(RevenueChart,null),
+
+    e('div',{className:'section-title'},'순손실 추이 — Q1 급격 확대'),
+    e(LossChart,null),
+    e('div',{className:'alert-box'},
+      e('div',{className:'alert-title'},'🔴 손실 확대 원인'),
+      e('div',{className:'alert-body'},
+        '순손실 -$740M은 매출 성장에도 불구하고 ① 데이터센터 가동 전 선행 비용, ',
+        '② $25B 부채의 이자 비용 급증, ③ GPU 감가상각 가속이 겹친 결과입니다. ',
+        '매출이 2배 늘어도 손실이 2.3배 늘어나는 구조 — 시장이 5월에 매도로 반응한 이유입니다.'
+      )
+    ),
+
+    e('div',{className:'section-title'},'연간 매출 성장 궤적'),
+    e(GuidanceChart,null),
+
+    e('div',{className:'section-title'},'가이던스 & 컨센서스'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'항목'), e('th',null,'가이던스'), e('th',null,'비고'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'Q2 2026 매출'), e('td',{className:'val-blue'},'$2.45~2.6B'), e('td',null,'QoQ +18~25%')),
+          e('tr',null, e('td',null,'FY2026 매출'), e('td',{className:'val-green'},'$12~13B'), e('td',null,'YoY +134~138%, 유지')),
+          e('tr',null, e('td',null,'FY2026 조정 영업이익'), e('td',{className:'val-green'},'$900M~$1.1B'), e('td',null,'조정 기준 흑자')),
+          e('tr',null, e('td',null,'FY2026 Capex'), e('td',{className:'val-red'},'$31~35B'), e('td',null,'매출의 2.5배 이상 — 공격적')),
+          e('tr',null, e('td',null,'2027 연환산 매출'), e('td',{className:'val-green'},'$30B+'), e('td',null,'경영진 재확인')),
+          e('tr',null, e('td',null,'수주잔고'), e('td',{className:'val-blue'},'$99.4B'), e('td',null,'계약 전력 3.5GW'))
+        )
+      )
+    ),
+
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'💡 Q2 실적 핵심 관전 포인트'),
+      e('div',{className:'info-body'},
+        '① 순손실 축소 여부 — Q1 -$740M에서 개선 시 "성장 비용" 논리 입증\n',
+        '② OpenAI 외 신규 대형 고객 발표 — 고객 집중도 완화\n',
+        '③ 시카고 등 신규 데이터센터 가동 일정 — 지연 시 매출 인식 밀림\n',
+        '④ 이자 비용 추이 — $25B 부채의 리파이낸싱 조건\n',
+        '⑤ 2027 $30B 연환산 매출 목표 유지 여부'
+      )
+    )
+  );
+}
+
+/* ════════ 재무 탭 ════════ */
+function Fundamental() {
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'핵심 재무 지표'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'지표'), e('th',null,'현재값'), e('th',null,'평가'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'PER'), e('td',{style:{color:'#94a3b8'}},'N/A (적자)'), e('td',null,'적자 기업 — PSR 적용')),
+          e('tr',null, e('td',null,'PSR (2026E 매출 기준)'), e('td',{className:'val-yellow'},'~4.3x'), e('td',{className:'val-yellow'},'고성장 반영 시 보통 수준')),
+          e('tr',null, e('td',null,'매출 성장률 YoY'), e('td',{className:'val-green'},'+112%'), e('td',{className:'val-green'},'극단적 고성장')),
+          e('tr',null, e('td',null,'총부채'), e('td',{className:'val-red'},'~$25B'), e('td',{className:'val-red'},'시총의 47% — 매우 높음')),
+          e('tr',null, e('td',null,'순손실률'), e('td',{className:'val-red'},'-35.6%'), e('td',{className:'val-red'},'이자·감가상각 부담')),
+          e('tr',null, e('td',null,'FCF'), e('td',{className:'val-red'},'대규모 적자'), e('td',{className:'val-red'},'capex $31~35B로 수년간 음수 예상')),
+          e('tr',null, e('td',null,'수주잔고/시총'), e('td',{className:'val-green'},'1.85x'), e('td',{className:'val-green'},'$99.4B 백로그 — 압도적'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'부채 구조 (자금 조달 내역)'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'항목'), e('th',null,'규모'), e('th',null,'성격'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'비소구 텀론'), e('td',null,'$8.5B'), e('td',null,'데이터센터 자산 담보 (회사 전체 비소구)')),
+          e('tr',null, e('td',null,'AI 인프라 대출'), e('td',null,'$3.1B'), e('td',null,'시설 전용 대출')),
+          e('tr',null, e('td',null,'정크본드'), e('td',null,'$850M'), e('td',null,'시카고 DC 임대 연계 (완전 임대 완료)')),
+          e('tr',null, e('td',null,'NVIDIA 지분 투자'), e('td',{className:'val-green'},'$2B'), e('td',null,'전략적 파트너 — 희석이지만 신뢰 신호')),
+          e('tr',null, e('td',null,'총부채'), e('td',{className:'val-red'},'~$25B'), e('td',null,'고금리 환경에서 이자 부담 핵심 리스크'))
+        )
+      )
+    ),
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'💡 비소구(Non-Recourse) 대출이란?'),
+      e('div',{className:'info-body'},
+        '채무 불이행 시 담보(데이터센터·GPU)만 회수 가능하고 회사 전체에는 청구할 수 없는 대출 구조입니다. ',
+        'CoreWeave 부채의 상당 부분이 이 구조여서, 최악의 경우에도 회사 전체 파산 위험은 표면 수치보다 낮습니다. ',
+        '단, 이자 비용은 그대로 손익에 반영됩니다.'
+      )
+    ),
+
+    e('div',{className:'section-title'},'기관·내부자 동향'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'항목'), e('th',null,'현황'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'나스닥-100 편입'), e('td',{className:'val-green'},'6/22 공식 편입 — 패시브 자금 유입 예정')),
+          e('tr',null, e('td',null,'NVIDIA'), e('td',{className:'val-green'},'$2B 지분 투자 — 전략적 지지')),
+          e('tr',null, e('td',null,'CEO Intrator'), e('td',{className:'val-red'},'79K주 매도 @ $72.57 (직접 보유의 1.3%)')),
+          e('tr',null, e('td',null,'공동창업자 McBee'), e('td',{className:'val-red'},'58K주 매도 @ $139 (직접 보유의 19%)'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'애널리스트 레이팅 분포 (36명)'),
+    e(AnalystChart,null),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'구분'), e('th',null,'값'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'컨센서스'), e('td',{className:'val-green'},'Buy')),
+          e('tr',null, e('td',null,'평균 목표가'), e('td',{className:'val-blue'},'$131.88~$140.18 (+34~42%)')),
+          e('tr',null, e('td',null,'최고 목표가'), e('td',{className:'val-green'},'$303 (+208%)')),
+          e('tr',null, e('td',null,'최저 목표가'), e('td',{className:'val-red'},'$36 (-63%)')),
+          e('tr',null, e('td',null,'특징'), e('td',null,'목표가 분산 극단적 — 강세·약세 의견 대립 심함'))
+        )
+      )
+    )
+  );
+}
+
+/* ════════ 비교 탭 ════════ */
+function Compare() {
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'네오클라우드 & AI 인프라 동종 비교'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'티커'), e('th',null,'기업명'), e('th',null,'시총'), e('th',null,'특징'))),
+        e('tbody',null,
+          e('tr',null, e('td',{className:'val-blue',style:{fontWeight:'700'}},'CRWV★'), e('td',null,'CoreWeave'), e('td',null,'$53.7B'), e('td',null,'네오클라우드 1위, OpenAI 핵심 공급자')),
+          e('tr',null, e('td',null,'NBIS'), e('td',null,'Nebius Group'), e('td',null,'~$22B'), e('td',null,'유럽계 GPU 클라우드, MS 계약')),
+          e('tr',null, e('td',null,'IREN'), e('td',null,'IREN Ltd'), e('td',null,'~$5B'), e('td',null,'BTC 채굴→AI 전환, 재생에너지')),
+          e('tr',null, e('td',null,'APLD'), e('td',null,'Applied Digital'), e('td',null,'~$4B'), e('td',null,'데이터센터 개발, CRWV 임대 고객')),
+          e('tr',null, e('td',null,'ORCL'), e('td',null,'Oracle'), e('td',null,'~$550B'), e('td',null,'OCI로 AI 클라우드 급성장'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'가격 비교 (현재가 vs 목표가)'),
+    e(PriceCompChart,null),
+
+    e('div',{className:'section-title'},'CRWV 포함 주요 지수·ETF'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'지수/ETF'), e('th',null,'내용'))),
+        e('tbody',null,
+          e('tr',null, e('td',{className:'val-green'},'나스닥-100 (QQQ)'), e('td',null,'2026.06.22 편입 — QQQ 추종 자금 의무 매수')),
+          e('tr',null, e('td',null,'IGV'), e('td',null,'iShares 소프트웨어 ETF')),
+          e('tr',null, e('td',null,'WCLD'), e('td',null,'WisdomTree 클라우드 컴퓨팅')),
+          e('tr',null, e('td',null,'AIQ'), e('td',null,'Global X AI & Technology'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'함께 언급되는 관련 종목'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'티커'), e('th',null,'연관 이유'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'NVDA'), e('td',null,'GPU 공급자이자 $2B 주주 — 운명 공동체')),
+          e('tr',null, e('td',null,'CORZ'), e('td',null,'Core Scientific — CRWV 데이터센터 호스팅 파트너')),
+          e('tr',null, e('td',null,'GLXY'), e('td',null,'Galaxy Digital — Helios AI 캠퍼스 (동일 채굴→AI 전환 테마)')),
+          e('tr',null, e('td',null,'VRT'), e('td',null,'Vertiv — 데이터센터 냉각·전력 (밸류체인 하류)')),
+          e('tr',null, e('td',null,'SLNH'), e('td',null,'Soluna — 소형 그린 데이터센터 (동일 테마 소형주)'))
+        )
+      )
+    )
+  );
+}
+
+/* ════════ X 탭 ════════ */
+function XTab() {
+  var posts = [
+    { user:'@AIInfraCapital', followers:'24.1K', role:'AI 인프라 전문 투자자',
+      textKo:'$CRWV 나스닥-100 편입은 게임체인저. QQQ 추종 자금만 수십억 달러 의무 매수. 6/22 전까지 패시브 프런트런 들어온다. 수급의 계절.', date:'2026-06-12', likes:3214, rt:687, sent:'pos' },
+    { user:'@DebtSkeptic', followers:'41.7K', role:'크레딧 애널리스트',
+      textKo:'CoreWeave 부채 $25B에 capex $31~35B 가이던스. 매출 $12B 회사가 매출의 3배를 투자하는 중. 금리가 안 떨어지면 이 모델은 이자에 잡아먹힌다. 숏 유지.', date:'2026-06-08', likes:5621, rt:1432, sent:'neg' },
+    { user:'@NeocloudWatch', followers:'12.8K', role:'클라우드 산업 분석',
+      textKo:'시카고 $2.2B 15년 임대 — 완전 임대 완료된 시설. 이게 CRWV 모델의 핵심: 계약 먼저, 건설 나중. $99.4B 백로그는 거품이 아니라 서명된 계약.', date:'2026-06-12', likes:1893, rt:412, sent:'pos' },
+    { user:'@GPUEconomist', followers:'31.5K', role:'반도체 이코노미스트',
+      textKo:'CRWV 베어 케이스의 핵심은 GPU 감가상각. H100의 경제적 수명이 6년? 신형 GPU가 2년마다 나오는데? 자산 가치가 장부보다 빨리 녹으면 이 회사 마진은 환상이다.', date:'2026-06-09', likes:4102, rt:998, sent:'neg' },
+    { user:'@MomentumDesk', followers:'18.3K', role:'모멘텀 트레이더',
+      textKo:'$CRWV 하루 만에 50일·200일 MA 동시 돌파. 이런 캔들 뒤에는 보통 추세 전환이 온다. $104~107 저항 돌파 시 $130까지 열린다. 진입.', date:'2026-06-12', likes:2756, rt:534, sent:'pos' },
+    { user:'@OpenAIWatcher', followers:'56.2K', role:'AI 산업 저널리스트',
+      textKo:'OpenAI가 CRWV에 $22.4B 묶어둔 상태. Stargate 등 자체 인프라 계획이 진행되어도 2030년까지 컴퓨트는 부족하다. CRWV의 계약은 안전하다고 본다.', date:'2026-06-10', likes:3489, rt:756, sent:'pos' },
+    { user:'@ShortSellerDaily', followers:'38.9K', role:'공매도 리서치',
+      textKo:'CEO가 $72에 팔고 공동창업자가 $139에 19%를 팔았다. 내부자들이 이 "AI 슈퍼사이클"을 정말 믿는다면 왜 팔까? 행동이 말보다 정직하다.', date:'2026-06-07', likes:6234, rt:1876, sent:'neg' },
+    { user:'@DataCenterREIT', followers:'9.4K', role:'데이터센터 부동산 분석',
+      textKo:'CRWV의 비소구 대출 구조는 영리하다. 데이터센터별로 파이낸싱을 분리해서 하나가 망해도 회사가 안 망한다. 월가가 이 구조의 가치를 과소평가 중.', date:'2026-06-11', likes:1245, rt:289, sent:'pos' },
+    { user:'@TechBubbleAlert', followers:'72.3K', role:'매크로 비관론자',
+      textKo:'CRWV는 2000년 닷컴 시절 글로벌크로싱과 구조가 같다: 폭증하는 수요 전망 + 부채로 인프라 선건설 + 고객 집중. AI 수요가 1년만 둔화돼도 도미노. 역사는 반복된다.', date:'2026-06-06', likes:8912, rt:2341, sent:'neg' },
+    { user:'@HyperscaleHunter', followers:'15.6K', role:'클라우드 인프라 VC',
+      textKo:'다들 CRWV 부채만 보는데 백로그 $99.4B/시총 $53.7B = 1.85배. AWS 초기에도 똑같은 비판 있었다. 인프라 비즈니스는 원래 선투자 후회수. 10년 시계로 보면 싸다.', date:'2026-06-11', likes:2087, rt:445, sent:'pos' },
+    { user:'@OptionsFlowBot', followers:'28.7K', role:'옵션 플로우 추적',
+      textKo:'$CRWV 6/12 콜 옵션 거래량 평소의 8배. 7월 만기 $110·$120 콜에 대량 매수세. 스마트머니가 나스닥-100 편입 랠리에 베팅 중.', date:'2026-06-12', likes:1934, rt:521, sent:'pos' },
+    { user:'@ValueOverHype', followers:'19.2K', role:'가치투자 펀드매니저',
+      textKo:'CRWV에 조정 영업이익 $1B을 줘도 시총 $53.7B는 53배. 진짜 GAAP 이익은 한참 멀었다. 좋은 회사와 좋은 주식은 다르다. $70대면 모를까 $98은 비싸다.', date:'2026-06-10', likes:2456, rt:587, sent:'neu' },
+    { user:'@AICapexTracker', followers:'11.3K', role:'빅테크 capex 추적',
+      textKo:'MS·Meta·Google·Amazon 2026 합산 capex $400B+. 이 돈의 상당 부분이 GPU 클라우드로 흐른다. CRWV는 이 흐름의 최대 순수 수혜주. 변동성은 크지만 방향은 위.', date:'2026-06-09', likes:1678, rt:367, sent:'pos' },
+    { user:'@QuantSignals', followers:'33.1K', role:'퀀트 시그널 서비스',
+      textKo:'$CRWV 변동성 연 90%+. 이건 주식이 아니라 옵션이다. 포지션 사이즈를 평소의 1/3로 줄이고 접근해야 한다. 방향이 맞아도 변동성에 털릴 수 있다.', date:'2026-06-11', likes:1523, rt:334, sent:'neu' },
+    { user:'@EarningsWhisper', followers:'47.8K', role:'실적 분석 서비스',
+      textKo:'CRWV Q2 가이던스 $2.45~2.6B. Q1처럼 매출 Beat + 손실 Miss 패턴이면 또 "sell the rip" 나온다. 8월 실적에서 손실 축소를 보여줘야 진짜 리레이팅.', date:'2026-06-10', likes:2890, rt:645, sent:'neu' }
+  ];
+
+  var pos = posts.filter(function(p){return p.sent==='pos'}).length;
+  var neu = posts.filter(function(p){return p.sent==='neu'}).length;
+  var neg = posts.filter(function(p){return p.sent==='neg'}).length;
+
+  return e('div',{className:'content'},
+    e('div',{className:'sent-summary'},
+      e('span',null,'🟢 긍정 ',e('strong',{style:{color:'#4ade80'}},pos)),
+      e('span',null,' · 🟡 중립 ',e('strong',{style:{color:'#fbbf24'}},neu)),
+      e('span',null,' · 🔴 부정 ',e('strong',{style:{color:'#ef4444'}},neg))
+    ),
+    posts.map(function(p, i) {
+      return e('div',{key:i,className:'opinion-card'},
+        e('div',{className:'opinion-header'},
+          e('div',null,
+            e('span',{className:'opinion-user'},p.user,' '),
+            e('span',{style:{fontSize:'10px',color:'#64748b'}},'팔로워 '+p.followers+' · '+p.role)
+          ),
+          e('span',{className:p.sent==='pos'?'sent-pos':p.sent==='neg'?'sent-neg':'sent-neu'},
+            p.sent==='pos'?'🟢 긍정':p.sent==='neg'?'🔴 부정':'🟡 중립')
+        ),
+        e('div',{className:'opinion-body'},p.textKo),
+        e('div',{className:'opinion-footer'},
+          e('span',null,'❤️ ',p.likes.toLocaleString()),
+          e('span',null,'🔁 ',p.rt.toLocaleString()),
+          e('span',null,'📅 ',p.date)
+        )
+      );
+    })
+  );
+}
+
+/* ════════ Reddit 탭 ════════ */
+function RedditTab() {
+  var posts = [
+    { user:'u/NeocloudBull2026', sub:'r/wallstreetbets', upvotes:9834,
+      textKo:'CRWV 나스닥-100 편입 = QQQ가 강제로 사야 함. 6/22 전까지 인덱스 프런트러닝 + 시카고 $2.2B 계약. 콜 옵션 만기 7월. 이건 공짜 돈이다. NFA.', date:'2026-06-12', sent:'pos' },
+    { user:'u/DebtMathGuy', sub:'r/SecurityAnalysis', upvotes:4521,
+      textKo:'CRWV 단위 경제 계산해봤다: 부채 $25B 평균 금리 ~9% 가정 시 연 이자 $2.25B. 2026 조정 영업이익 가이던스 $1B. 이자가 영업이익의 2배다. 금리 인하 없으면 답이 없는 구조.', date:'2026-06-08', sent:'neg' },
+    { user:'u/AIInfraLongTerm', sub:'r/investing', upvotes:3267,
+      textKo:'백로그 $99.4B는 진짜 서명된 계약이다. OpenAI $22.4B, MS, Meta. 이걸 5년에 걸쳐 인식하면 연 $20B 매출. 현재 시총 $53.7B = 미래 매출의 2.7배. 부채 무섭지만 수요는 진짜.', date:'2026-06-10', sent:'pos' },
+    { user:'u/GPUDepreciationNerd', sub:'r/stocks', upvotes:5678,
+      textKo:'아무도 말 안 하는 것: CRWV의 GPU는 6년 감가상각인데 NVIDIA는 1년마다 신제품을 낸다. H100 임대료는 2년 전 대비 이미 50% 하락. 자산 가치 하락 속도가 장부보다 빠르면 이건 시한폭탄.', date:'2026-06-07', sent:'neg' },
+    { user:'u/IndexFundFlows', sub:'r/investing', upvotes:2134,
+      textKo:'나스닥-100 편입 효과 분석: QQQ + 미러링 펀드 합산 ~$3.5B 의무 매수 추정. 일평균 거래량 대비 3~4일치. 단기 수급엔 확실히 긍정적, 다만 편입 후 차익 매물도 역사적으로 흔함.', date:'2026-06-12', sent:'neu' },
+    { user:'u/FormerCloudEngineer', sub:'r/stocks', upvotes:1893,
+      textKo:'전직 하이퍼스케일러 엔지니어다. CRWV 인프라는 진짜다. 쿠버네티스 네이티브 GPU 오케스트레이션은 AWS보다 낫다. 기술 해자는 있다. 문제는 재무 구조지 제품이 아니다.', date:'2026-06-09', sent:'pos' },
+    { user:'u/BearCaseBuilder', sub:'r/SecurityAnalysis', upvotes:3456,
+      textKo:'CRWV 리스크 정리: ① 고객 3곳이 매출 60%+ ② OpenAI가 자체 데이터센터(Stargate) 지으면 갱신 불확실 ③ 정크본드 등급 ④ GAAP 흑자 전망 2028년 이후. 목표가 $36 낸 애널리스트가 미친 게 아니다.', date:'2026-06-06', sent:'neg' },
+    { user:'u/SemiconductorSupply', sub:'r/investing', upvotes:1567,
+      textKo:'NVIDIA가 CRWV에 $2B 투자한 의미를 생각해봐라. 젠슨 황은 네오클라우드가 하이퍼스케일러 견제 수단으로 필요하다. NVDA가 CRWV를 망하게 둘 리 없다. 전략적 풋옵션이 깔려 있는 셈.', date:'2026-06-11', sent:'pos' },
+    { user:'u/WSBDegenKing', sub:'r/wallstreetbets', upvotes:12453,
+      textKo:'CRWV $98 → 6/22 나스닥-100 편입 → 8월 Q2 실적. 두 달간 촉매 연속. 52주 고점 $187 대비 반토막 상태. 7월 $120콜 풀매수했다. 야수의 심장만 따라와라. 🚀🚀', date:'2026-06-12', sent:'pos' },
+    { user:'u/RiskManagedReturns', sub:'r/options', upvotes:2789,
+      textKo:'CRWV IV(내재변동성) 90%+. 콜 사기엔 프리미엄이 너무 비싸다. 차라리 $85 풋 매도로 진입하거나 콜 스프레드로 비용 줄여라. 방향 맞춰도 IV 크러시로 죽는 게 이 종목이다.', date:'2026-06-11', sent:'neu' },
+    { user:'u/DotcomSurvivor', sub:'r/stocks', upvotes:4012,
+      textKo:'2000년에 글로벌크로싱·월드컴 다 겪었다. "수요는 무한하다"며 부채로 인프라 깔다가 수요 증가율이 꺾이는 순간 다 무너졌다. CRWV가 다르길 바라지만, 패턴이 너무 비슷해서 소름.', date:'2026-06-05', sent:'neg' },
+    { user:'u/CloudCapexAnalyst', sub:'r/investing', upvotes:1876,
+      textKo:'차이점: 닷컴 광케이블은 수요가 없었지만 지금 GPU는 공급이 부족하다. CRWV 가동률은 사실상 100%, 계약은 take-or-pay. 글로벌크로싱 비유는 게으른 분석이다. 리스크는 금리지 수요가 아님.', date:'2026-06-08', sent:'pos' },
+    { user:'u/PassiveFlowTracker', sub:'r/options', upvotes:1432,
+      textKo:'역사적으로 나스닥-100 편입 종목은 발표일~편입일 평균 +4%, 편입 후 한 달 -2%. 단기 트레이드면 6/20 전후 익절이 통계적으로 유리하다. 장투면 무시해도 됨.', date:'2026-06-12', sent:'neu' },
+    { user:'u/AIBoomOrBust', sub:'r/wallstreetbets', upvotes:6789,
+      textKo:'솔직히 CRWV는 AI 버블의 레버리지 베팅이다. AI가 계속 가면 3배, 꺾이면 -80%. 중간이 없는 주식. 포트 5% 이하로만 담아라. 나는 담았다.', date:'2026-06-10', sent:'neu' },
+    { user:'u/FinancialDeepDive', sub:'r/SecurityAnalysis', upvotes:2345,
+      textKo:'Q1 컨콜 디테일: 경영진이 2027 연환산 $30B를 재확인했고 신규 계약 파이프라인이 "역대 최대"라 했다. 손실 -$740M 중 상당분은 가동 전 시설의 선행 비용. 가동되면 마진이 따라온다는 베팅.', date:'2026-06-09', sent:'pos' }
+  ];
+
+  var pos = posts.filter(function(p){return p.sent==='pos'}).length;
+  var neu = posts.filter(function(p){return p.sent==='neu'}).length;
+  var neg = posts.filter(function(p){return p.sent==='neg'}).length;
+
+  return e('div',{className:'content'},
+    e('div',{className:'sent-summary'},
+      e('span',null,'🟢 긍정 ',e('strong',{style:{color:'#4ade80'}},pos)),
+      e('span',null,' · 🟡 중립 ',e('strong',{style:{color:'#fbbf24'}},neu)),
+      e('span',null,' · 🔴 부정 ',e('strong',{style:{color:'#ef4444'}},neg))
+    ),
+    posts.map(function(p, i) {
+      return e('div',{key:i,className:'opinion-card'},
+        e('div',{className:'opinion-header'},
+          e('div',null,
+            e('span',{className:'opinion-user'},p.user,' '),
+            e('span',{style:{fontSize:'10px',color:'#64748b'}},p.sub)
+          ),
+          e('span',{className:p.sent==='pos'?'sent-pos':p.sent==='neg'?'sent-neg':'sent-neu'},
+            p.sent==='pos'?'🟢 긍정':p.sent==='neg'?'🔴 부정':'🟡 중립')
+        ),
+        e('div',{className:'opinion-body'},p.textKo),
+        e('div',{className:'opinion-footer'},
+          e('span',null,'⬆️ ',p.upvotes.toLocaleString()),
+          e('span',null,'📅 ',p.date)
+        )
+      );
+    })
+  );
+}
+
+/* ════════ 용어 탭 ════════ */
+function Terms() {
+  var allTerms = [
+    { name:'네오클라우드', abbr:'Neocloud', cat:'실적', catColor:'#f97316',
+      desc:'AWS·Azure 같은 범용 클라우드와 달리 AI용 GPU 컴퓨팅에만 특화된 신생 클라우드 사업자를 말합니다. GPU 확보력과 가격 경쟁력이 핵심 무기입니다.',
+      example:'CoreWeave는 네오클라우드 1위 기업으로, 범용 클라우드 대비 60~80% 저렴한 GPU 컴퓨팅을 제공합니다.' },
+    { name:'수주잔고', abbr:'Revenue Backlog', cat:'재무', catColor:'#22c55e',
+      desc:'이미 계약했지만 아직 매출로 인식되지 않은 금액의 총합입니다. 미래 매출의 가시성을 보여주는 핵심 지표로, 클수록 실적 예측이 안정적입니다.',
+      example:'CRWV 수주잔고 $99.4B는 시총($53.7B)의 1.85배로, 향후 수년간 매출이 계약으로 확보되어 있음을 의미합니다.' },
+    { name:'비소구 대출', abbr:'Non-Recourse Loan', cat:'재무', catColor:'#22c55e',
+      desc:'빚을 못 갚아도 담보로 잡힌 자산(예: 데이터센터)만 회수할 수 있고, 회사의 다른 자산에는 청구할 수 없는 대출입니다. 회사 전체의 파산 위험을 낮추는 구조입니다.',
+      example:'CRWV의 $8.5B 텀론은 비소구 구조로, 개별 데이터센터가 실패해도 회사 전체로 위험이 전이되지 않습니다.' },
+    { name:'설비투자', abbr:'Capex', cat:'재무', catColor:'#22c55e',
+      desc:'공장·장비·인프라 등 미래 수익을 위한 대규모 투자 지출입니다. 성장 기업은 capex가 크지만, 매출 대비 과도하면 현금이 마르고 부채가 늘어납니다.',
+      example:'CRWV의 2026년 capex $31~35B는 연매출($12~13B)의 2.5배가 넘는 초공격적 투자입니다.' },
+    { name:'감가상각', abbr:'Depreciation', cat:'재무', catColor:'#22c55e',
+      desc:'장비의 가치가 시간이 지나며 줄어드는 것을 회계 비용으로 반영하는 것입니다. GPU처럼 기술 발전이 빠른 자산은 실제 가치 하락이 회계 가정보다 빠를 수 있습니다.',
+      example:'CRWV는 GPU를 6년에 걸쳐 감가상각하지만, 신형 GPU 출시 주기가 1~2년이라 자산 수명 논쟁이 베어 케이스의 핵심입니다.' },
+    { name:'데스크로스/골든크로스', abbr:'Death/Golden Cross', cat:'기술적', catColor:'#3b82f6',
+      desc:'50일 이동평균선이 200일 이동평균선을 아래로 뚫으면 데스크로스(약세), 위로 뚫으면 골든크로스(강세) 신호입니다.',
+      example:'CRWV는 6/12 급등으로 50일·200일 MA를 동시에 회복하며 추세 전환을 시도하고 있습니다.' },
+    { name:'RSI', abbr:'Relative Strength Index', cat:'기술적', catColor:'#3b82f6',
+      desc:'최근 14일간 상승·하락 강도를 0~100으로 나타낸 지표입니다. 70 이상은 과매수, 30 이하는 과매도로 해석합니다.',
+      example:'CRWV RSI ~45는 중립 구간으로, 6/12 급등 이후에도 과매수가 아니어서 추가 상승 여력이 있습니다.' },
+    { name:'내재변동성', abbr:'Implied Volatility (IV)', cat:'기술적', catColor:'#3b82f6',
+      desc:'옵션 가격에 반영된 시장의 미래 변동성 예상치입니다. IV가 높으면 옵션이 비싸고, 큰 폭의 주가 움직임이 예상된다는 뜻입니다.',
+      example:'CRWV의 IV 90%+는 시장이 극단적 변동을 예상한다는 의미로, 옵션 매수 전략에 불리한 환경입니다.' },
+    { name:'지수 편입', abbr:'Index Inclusion', cat:'실적', catColor:'#f97316',
+      desc:'주요 주가지수(나스닥-100, S&P500 등)에 종목이 포함되는 것입니다. 지수를 추종하는 패시브 펀드들이 해당 주식을 의무적으로 매수해 단기 수급에 긍정적입니다.',
+      example:'CRWV의 6/22 나스닥-100 편입으로 QQQ 등 추종 펀드의 약 $3.5B 규모 의무 매수가 예상됩니다.' },
+    { name:'테이크오어페이', abbr:'Take-or-Pay', cat:'실적', catColor:'#f97316',
+      desc:'고객이 서비스를 실제로 사용하지 않아도 계약된 금액을 지불해야 하는 계약 구조입니다. 공급자에게 안정적인 수익을 보장합니다.',
+      example:'CRWV의 대형 계약 다수가 take-or-pay 구조로, AI 수요가 둔화해도 계약 기간 내 매출은 보호됩니다.' },
+    { name:'정크본드', abbr:'Junk Bond (고수익 채권)', cat:'재무', catColor:'#22c55e',
+      desc:'신용등급이 투자적격 미만인 기업이 발행하는 고금리 채권입니다. 부도 위험이 높은 만큼 이자가 높습니다.',
+      example:'CRWV의 $850M 정크본드 발행은 자금 조달 비용이 높다는 의미지만, 완전 임대된 시카고 시설이 담보라 위험은 제한적입니다.' },
+    { name:'PSR', abbr:'Price-to-Sales Ratio', cat:'재무', catColor:'#22c55e',
+      desc:'시가총액을 연매출로 나눈 비율입니다. 적자 기업의 밸류에이션 평가에 주로 사용하며, 성장률이 높을수록 높은 PSR이 정당화됩니다.',
+      example:'CRWV의 2026년 예상 매출 기준 PSR ~4.3x는 +134% 성장률을 감안하면 과도하게 비싸지 않은 수준입니다.' },
+    { name:'갭 상승', abbr:'Gap Up', cat:'기술적', catColor:'#3b82f6',
+      desc:'전일 종가보다 훨씬 높은 가격에서 거래가 시작되는 현상입니다. 호재 발표 후 자주 발생하며, 이후 갭을 메우러 내려오는 "갭 메우기"가 나타나기도 합니다.',
+      example:'CRWV는 6/12 시카고 계약 + 나스닥-100 편입 소식에 갭 상승했으며, $92~93 갭 메우기 여부가 단기 관건입니다.' }
+  ];
+
+  var cats = ['전체','기술적','재무','실적'];
+  var selectedCat = useState('전체');
+  var sel = selectedCat[0];
+  var setSel = selectedCat[1];
+  var filtered = sel === '전체' ? allTerms : allTerms.filter(function(t){return t.cat===sel});
+
+  return e('div',{className:'content'},
+    e('div',{className:'filter-btns'},
+      cats.map(function(c){ return e('button',{key:c,className:'filter-btn'+(sel===c?' active':''),onClick:function(){setSel(c)}},c); })
+    ),
+    filtered.map(function(t,i){
+      return e('div',{key:i,className:'term-card'},
+        e('div',{className:'term-header'},
+          e('span',{className:'term-name'},t.name,' ',e('span',{style:{color:'#64748b',fontSize:'11px',fontWeight:'400'}},'(',t.abbr,')')),
+          e('span',{className:'badge',style:{background:t.catColor+'22',color:t.catColor}},t.cat)
+        ),
+        e('div',{className:'term-body'},t.desc),
+        e('div',{className:'term-example'},t.example)
+      );
+    })
+  );
+}
+
+/* ════════ 멀티배거 탭 ════════ */
+function Multibagger() {
+  var checks = [
+    { q:'아직 충분히 작은 기업인가?', data:'시가총액 $53.7B', icon:'❌', verdict:'미충족', vClass:'v-fail', score:0,
+      reason:'$20B를 크게 초과하는 대형주 — 10배 상승하려면 시총 $500B+ 필요, 통계적으로 매우 드묾.' },
+    { q:'현재 가격이 미래를 과대반영하지 않았는가?', data:'PSR 4.3x (2026E), 52W 고점 대비 -47%', icon:'⚠️', verdict:'부분충족', vClass:'v-partial', score:0.5,
+      reason:'고점 대비 큰 폭 조정 + 성장률 대비 합리적 멀티플. 다만 $25B 부채를 포함한 EV 기준으로는 부담.' },
+    { q:'매출보다 EBITDA·FCF 개선이 따라오는가?', data:'매출 +112% vs 순손실 2.3배 확대 (-$740M)', icon:'❌', verdict:'미충족', vClass:'v-fail', score:0,
+      reason:'매출이 2배 늘 때 손실이 2.3배 — 성장의 질이 아직 증명되지 않음. 이자·감가상각이 성장 압도.' },
+    { q:'자산 증가율보다 EBITDA 증가율이 뒤처지지 않는가?', data:'capex $31~35B vs 조정 영업이익 $1B 가이던스', icon:'⚠️', verdict:'부분충족', vClass:'v-partial', score:0.5,
+      reason:'자산이 폭증하는 구간. 조정 기준 흑자는 달성 중이나 투자 효율은 2027년 이후에야 검증 가능.' },
+    { q:'FCF yield 관점에서 가격이 합리적인가?', data:'FCF 대규모 적자 (capex가 영업현금흐름의 수 배)', icon:'❌', verdict:'미충족', vClass:'v-fail', score:0,
+      reason:'FCF가 깊은 음수 — capex 사이클이 꺾이기 전까지 FCF yield 평가 자체가 불가.' },
+    { q:'투자가 실제 수요·주문과 연결되는가?', data:'수주잔고 $99.4B, OpenAI $22.4B, take-or-pay 계약', icon:'✅', verdict:'충족', vClass:'v-pass', score:1,
+      reason:'시총의 1.85배에 달하는 서명된 백로그 — 투자와 수요의 연결성은 시장 전체에서 최상위권.' },
+    { q:'고금리 환경에서도 버틸 수 있는가?', data:'총부채 ~$25B, 정크본드 등급, 연 이자 추정 $2B+', icon:'❌', verdict:'미충족', vClass:'v-fail', score:0,
+      reason:'고금리가 지속될 경우 이자 부담이 조정 영업이익을 초과 — 금리에 가장 취약한 구조.' },
+    { q:'단기 급등 후 추격매수 구간은 아닌가?', data:'52W 고점 $187 대비 -47%, RSI ~45', icon:'✅', verdict:'충족', vClass:'v-pass', score:1,
+      reason:'고점 대비 절반 수준 + RSI 중립 — 추격매수 구간이 아닌 조정 후 반등 초기 구간.' }
+  ];
+
+  var total = checks.reduce(function(s,c){return s+c.score;},0);
+
+  return e('div',{className:'content'},
+    e('div',{className:'card'},
+      e('div',{className:'score-big',style:{color: total>=6.5?'#4ade80': total>=4?'#fbbf24':'#ef4444'}},
+        total.toFixed(1),' / 8',
+        e('div',{style:{fontSize:'14px',color:'#94a3b8',marginTop:'4px'}},
+          total>=6.5?'🚀 유망':total>=4?'📊 보통':'⚠️ 낮음'
+        )
+      ),
+      e('p',{style:{fontSize:'11px',color:'#64748b',textAlign:'center'}},
+        '멀티배거(10배) 관점에서는 낮은 점수 — 이미 대형주이며 부채 부담이 큼. 단, 멀티배거 점수와 별개로 1.5~2배 수익 시나리오는 유효.'
+      )
+    ),
+
+    e(RadarChart,null),
+
+    checks.map(function(c,i){
+      return e('div',{key:i,className:'check-card'},
+        e('div',{className:'check-header'},
+          e('div',{className:'check-q'},i+1+'. '+c.q),
+          e('div',{className:'check-icon'},c.icon)
+        ),
+        e('div',{className:'check-data'},'📊 데이터: ',c.data),
+        e('div',{className:'check-verdict '+c.vClass},'→ ',c.verdict,': ',c.reason)
+      );
+    }),
+
+    e('div',{className:'warn-box',style:{marginTop:'20px'}},
+      e('div',{className:'warn-title'},'⚠️ 핵심 한계 주의사항'),
+      e('div',{className:'warn-body'},
+        '워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않습니다.\n',
+        '성공 기업 중심 표본으로 선택 편향이 존재합니다. 참고 지표로만 활용하세요.\n',
+        '본 분석은 투자 권유가 아니며, 투자 결정은 본인의 판단과 책임으로 이루어져야 합니다.'
+      )
+    )
+  );
+}
+
+/* ════════ 결론 탭 ════════ */
+function Conclusion() {
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'종합 투자 의견'),
+    e('div',{className:'card'},
+      e('div',{style:{textAlign:'center',padding:'16px 0'}},
+        e('div',{style:{fontSize:'24px',fontWeight:'800',color:'#fbbf24'}},'🟡 단기 매수 / 중기 중립'),
+        e('div',{style:{fontSize:'14px',color:'#94a3b8',marginTop:'4px'}},'(나스닥-100 편입 모멘텀 단기 유효 · 부채 구조는 중기 관찰 필요)')
+      ),
+      e('div',{style:{display:'flex',justifyContent:'center',gap:'8px',marginTop:'8px',flexWrap:'wrap'}},
+        ['강한 매도','매도','중립','단기 매수★','강한 매수'].map(function(l,i){
+          return e('div',{key:i,style:{
+            padding:'8px 12px',borderRadius:'8px',fontSize:'12px',fontWeight:i===3?'800':'400',
+            background:i===3?'#713f12':'#1e293b',color:i===3?'#fbbf24':'#475569',
+            border:i===3?'2px solid #d97706':'1px solid #1e293b'
+          }},l);
+        })
+      )
+    ),
+
+    e('div',{className:'section-title'},'Bull Case vs Bear Case'),
+    e('div',{className:'card'},
+      e('div',{className:'info-box'},
+        e('div',{className:'info-title'},'🐂 Bull Case (상승 시나리오)'),
+        e('div',{className:'info-body'},
+          '① 수주잔고 $99.4B (시총의 1.85배) — 서명된 take-or-pay 계약\n',
+          '② 나스닥-100 편입 (6/22) → 패시브 자금 ~$3.5B 의무 매수\n',
+          '③ NVIDIA $2B 지분 투자 — GPU 우선 배정 + 전략적 후원\n',
+          '④ 매출 +112% YoY, 2027 연환산 $30B 목표 — 압도적 성장 속도\n',
+          '⑤ 비소구 대출 구조 — 표면 부채보다 실질 파산 위험 낮음\n',
+          '⑥ 52W 고점 대비 -47% — 밸류에이션 부담 상당 부분 해소'
+        )
+      ),
+      e('div',{className:'alert-box'},
+        e('div',{className:'alert-title'},'🐻 Bear Case (하락 시나리오)'),
+        e('div',{className:'alert-body'},
+          '① 총부채 $25B + 연 이자 $2B+ — 조정 영업이익($1B)의 2배\n',
+          '② Q1 순손실 -$740M, YoY 2.3배 확대 — 수익성 증명 실패 지속\n',
+          '③ capex $31~35B — FCF 수년간 대규모 적자 확정\n',
+          '④ OpenAI·MS 고객 집중 — Stargate 등 자체 인프라 구축 시 갱신 리스크\n',
+          '⑤ GPU 감가상각 6년 가정 — 실제 가치 하락이 더 빠르면 마진 환상\n',
+          '⑥ 내부자 매도 (CEO·공동창업자) + 닷컴 인프라 버블 데자뷔 논쟁'
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'실행 계획 (Action Plan)'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'구분'), e('th',null,'가격'), e('th',null,'비중'), e('th',null,'조건'))),
+        e('tbody',null,
+          e('tr',null, e('td',{className:'val-blue'},'1차 매수'), e('td',null,'$92~98'), e('td',null,'포트폴리오 2~3%'), e('td',null,'MA 클러스터 지지 확인')),
+          e('tr',null, e('td',{className:'val-blue'},'2차 매수'), e('td',null,'$85~90'), e('td',null,'추가 2%'), e('td',null,'갭 메우기 조정 시')),
+          e('tr',null, e('td',{className:'val-red'},'손절선'), e('td',null,'$80 이탈'), e('td',null,'전량 청산'), e('td',null,'MA 붕괴 + 추세 재하락')),
+          e('tr',null, e('td',{className:'val-green'},'1차 익절'), e('td',null,'$120~130'), e('td',null,'50% 청산'), e('td',null,'편입 랠리 + 저항 도달')),
+          e('tr',null, e('td',{className:'val-green'},'2차 익절'), e('td',null,'$150+'), e('td',null,'나머지'), e('td',null,'Q2 손실 축소 확인 시'))
+        )
+      ),
+      e('p',{style:{fontSize:'11px',color:'#fbbf24',marginTop:'8px'}},
+        '⚠️ 변동성 연 90%+ 종목 — 통상 포지션의 1/2~1/3 크기로 접근 권장'
+      )
+    ),
+
+    e('div',{className:'section-title'},'핵심 모니터링 지표'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null, e('tr',null, e('th',null,'항목'), e('th',null,'주시 내용'))),
+        e('tbody',null,
+          e('tr',null, e('td',null,'📅 6/22'), e('td',null,'나스닥-100 공식 편입 — 편입 후 차익 매물 여부')),
+          e('tr',null, e('td',null,'📅 8월 초'), e('td',null,'Q2 실적 — 순손실 축소가 최대 관건 (매출 Beat만으론 부족)')),
+          e('tr',null, e('td',null,'💰 금리'), e('td',null,'연준 금리 인하 여부 — $25B 부채 리파이낸싱 비용 직결')),
+          e('tr',null, e('td',null,'🤝 고객'), e('td',null,'OpenAI 외 신규 대형 계약 / Stargate 진행 상황')),
+          e('tr',null, e('td',null,'📉 기술적'), e('td',null,'$92~93 (MA 클러스터) 지지 유지 / $104~107 저항 돌파'))
+        )
+      )
+    )
+  );
+}
+
+/* ════════ 메인 앱 ════════ */
+function App() {
+  var tabState = useState('개요');
+  var activeTab = tabState[0];
+  var setTab = tabState[1];
+
+  var TABS = ['개요','기술적분석','실적','재무','비교','🐦 X','💬 Reddit','📖 용어','🔟 멀티배거','🎯 결론'];
+
+  return e('div',null,
+    e('div',{className:'header'},
+      e('div',{className:'ticker'},'CRWV'),
+      e('div',{className:'company'},'CoreWeave, Inc. — AI 전문 GPU 클라우드 (네오클라우드)'),
+      e('div',{className:'price-row'},
+        e('span',{className:'price'},'$98.42'),
+        e('span',{className:'chg-pos'},'+6.57% (나스닥-100 편입)'),
+        e('span',{style:{color:'#64748b',fontSize:'12px'}},'2026-06-12')
+      ),
+      e('div',{className:'badges'},
+        e('span',{className:'badge b-blue'},'NASDAQ'),
+        e('span',{className:'badge b-purple'},'AI 인프라'),
+        e('span',{className:'badge b-green'},'백로그 $99.4B'),
+        e('span',{className:'badge b-yellow'},'RSI ~45'),
+        e('span',{className:'badge b-red'},'부채 $25B'),
+        e('span',{className:'badge b-gray'},'시총 $53.7B')
+      )
+    ),
+    e('div',{className:'tabs'},
+      TABS.map(function(t){
+        return e('div',{key:t,className:'tab'+(activeTab===t?' active':''),onClick:function(){setTab(t)}},t);
+      })
+    ),
+    activeTab==='개요'       && e(Overview,null),
+    activeTab==='기술적분석' && e(Technical,null),
+    activeTab==='실적'       && e(Earnings,null),
+    activeTab==='재무'       && e(Fundamental,null),
+    activeTab==='비교'       && e(Compare,null),
+    activeTab==='🐦 X'       && e(XTab,null),
+    activeTab==='💬 Reddit'  && e(RedditTab,null),
+    activeTab==='📖 용어'    && e(Terms,null),
+    activeTab==='🔟 멀티배거'&& e(Multibagger,null),
+    activeTab==='🎯 결론'    && e(Conclusion,null)
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
