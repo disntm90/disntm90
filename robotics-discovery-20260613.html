@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>로보틱스 종목발굴 대시보드 — Value Chain Top-Down</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#06120d;color:#e2e8f0;font-family:'Segoe UI',sans-serif;font-size:14px}
+  a{color:#10b981;text-decoration:none}
+  .back-link{display:inline-block;padding:8px 16px;margin:12px 16px;background:#0f231a;border-radius:8px;font-size:13px;color:#6ee7b7}
+  .back-link:hover{background:#16352620;color:#e2e8f0}
+  .header{padding:16px;border-bottom:1px solid #16352a;background:linear-gradient(135deg,#0a1d14,#06120d)}
+  .h-title{font-size:24px;font-weight:800;color:#10b981}
+  .h-sub{font-size:13px;color:#94a3b8;margin-top:4px}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+  .b-green{background:#14532d;color:#6ee7b7}
+  .b-emerald{background:#064e3b;color:#34d399}
+  .b-yellow{background:#713f12;color:#fbbf24}
+  .b-red{background:#450a0a;color:#f87171}
+  .b-gray{background:#1e293b;color:#94a3b8}
+  .tabs{display:flex;overflow-x:auto;background:#0a1d14;border-bottom:1px solid #16352a;padding:0 8px}
+  .tabs::-webkit-scrollbar{height:3px}
+  .tabs::-webkit-scrollbar-thumb{background:#10b981;border-radius:2px}
+  .tab{padding:12px 14px;font-size:12px;cursor:pointer;white-space:nowrap;color:#64748b;border-bottom:2px solid transparent;transition:all .2s}
+  .tab.active{color:#10b981;border-bottom-color:#10b981}
+  .content{padding:16px;max-width:680px;margin:0 auto}
+  .section-title{font-size:16px;font-weight:700;color:#e2e8f0;margin:20px 0 10px;border-left:3px solid #10b981;padding-left:10px}
+  .card{background:#0a1d14;border:1px solid #16352a;border-radius:12px;padding:14px;margin-bottom:12px}
+  .card-title{font-size:13px;font-weight:700;color:#6ee7b7;margin-bottom:8px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#0f231a;padding:8px 6px;text-align:left;color:#6ee7b7;font-weight:600;font-size:11px}
+  td{padding:8px 6px;border-bottom:1px solid #16352a;color:#e2e8f0}
+  .chart-wrap{position:relative;height:240px;margin:12px 0}
+  .info-box{background:#0a1d14;border:1px solid #10b981;border-radius:8px;padding:12px;margin:12px 0}
+  .info-title{color:#34d399;font-size:13px;font-weight:700;margin-bottom:4px}
+  .info-body{color:#a7f3d0;font-size:12px;line-height:1.7;white-space:pre-line}
+  .warn-box{background:#1a1200;border:1px solid #d97706;border-radius:8px;padding:12px;margin:12px 0}
+  .warn-title{color:#fbbf24;font-size:13px;font-weight:700;margin-bottom:4px}
+  .warn-body{color:#fcd34d;font-size:12px;line-height:1.6;white-space:pre-line}
+  .vc-layer{background:#0a1d14;border:1px solid #16352a;border-radius:10px;padding:12px;margin-bottom:10px}
+  .vc-head{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .vc-tag{font-size:10px;padding:2px 8px;border-radius:8px;background:#064e3b;color:#34d399}
+  .vc-item{font-size:12px;color:#cbd5e1;padding:4px 0;display:flex;gap:6px}
+  .vc-star{color:#fbbf24}
+  .timeline{position:relative;padding-left:24px;margin:12px 0}
+  .timeline::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:#10b981}
+  .tl-item{position:relative;margin-bottom:16px}
+  .tl-item::before{content:'';position:absolute;left:-21px;top:4px;width:12px;height:12px;border-radius:50%;background:#10b981;border:2px solid #06120d}
+  .tl-stage{font-size:13px;font-weight:700;color:#34d399}
+  .tl-period{font-size:11px;color:#64748b;margin-bottom:4px}
+  .tl-body{font-size:12px;color:#cbd5e1;line-height:1.6}
+  .stock-card{background:#0a1d14;border:1px solid #16352a;border-radius:12px;padding:14px;margin-bottom:12px}
+  .stock-card.core{border-color:#10b981;box-shadow:0 0 0 1px #10b98144}
+  .sc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+  .sc-ticker{font-size:18px;font-weight:800;color:#10b981}
+  .sc-name{font-size:12px;color:#94a3b8}
+  .sc-price{text-align:right}
+  .sc-px{font-size:16px;font-weight:700}
+  .sc-mc{font-size:11px;color:#64748b}
+  .sc-row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+  .sc-pill{font-size:10px;padding:3px 8px;border-radius:8px;background:#0f231a;color:#cbd5e1}
+  .sc-point{font-size:12px;color:#cbd5e1;line-height:1.6;margin-top:6px}
+  .mb-bar-wrap{height:8px;background:#0f231a;border-radius:4px;overflow:hidden;margin-top:6px}
+  .mb-bar{height:100%;background:linear-gradient(90deg,#059669,#34d399);border-radius:4px}
+  .mb-label{font-size:10px;color:#6ee7b7;margin-top:3px}
+  .filter-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .filter-btn{padding:5px 14px;border-radius:16px;font-size:12px;cursor:pointer;border:1px solid #16352a;background:#0f231a;color:#94a3b8}
+  .filter-btn.active{background:#064e3b;color:#34d399;border-color:#10b981}
+  .val-green{color:#34d399;font-weight:700}
+  .val-red{color:#f87171;font-weight:700}
+  .val-yellow{color:#fbbf24;font-weight:700}
+  .val-emerald{color:#6ee7b7;font-weight:700}
+  .radar-wrap{position:relative;height:260px;margin:12px 0}
+  .check-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #16352a;font-size:12px;gap:8px}
+  .check-q{flex:1;color:#cbd5e1}
+  .check-v{flex-shrink:0;font-weight:600}
+  .rank-row{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #16352a}
+  .rank-num{font-size:20px;font-weight:800;color:#10b981;width:28px}
+  .rank-info{flex:1}
+  .rank-tk{font-size:14px;font-weight:700;color:#e2e8f0}
+  .rank-desc{font-size:11px;color:#94a3b8}
+  .rank-score{font-size:13px;font-weight:700;color:#34d399}
+</style>
+</head>
+<body>
+<a class="back-link" href="https://disntm90.github.io/disntm90/">← 목록으로</a>
+<div id="root"></div>
+
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+function makeChart(canvasRef, chartRef, cfg) {
+  useEffect(function() {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(canvasRef.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+var STOCKS = [
+  { tk:'ALNT', name:'Allient Inc', px:74.59, mc:1.01, mcLabel:'$1.01B', rsi:52, mb:7, core:true,
+    layer:'중류 ★정밀모션·액추에이터', sub:'중류', irr:'높음',
+    point:'시총 $1B 최소형. 정밀 제어모션 부품·액추에이터. 관절마다 필수인데 기관 커버리지 거의 없음 → 로봇 매출 모델링 시작되면 리레이팅 여지 최대.' },
+  { tk:'NOVT', name:'Novanta Inc', px:168.66, mc:6.01, mcLabel:'$6.01B', rsi:62, mb:6, core:true,
+    layer:'중류 ★포스/토크 센서 (ATI)', sub:'중류', irr:'매우 높음',
+    point:'ATI 6축 포스/토크 센서 세계 1위. 전 세계 양산 시설 손에 꼽음. 다빈치 수술로봇 공급. 단 P/E 121로 밸류 부담.' },
+  { tk:'MP', name:'MP Materials', px:72.24, mc:12.9, mcLabel:'$12.9B', rsi:48, mb:6, core:true,
+    layer:'상류 ★희토류 NdFeB 자석', sub:'상류', irr:'매우 높음',
+    point:'중국 밖 NdFeB 자석 생산사 단 2곳. 모든 모터 토크의 원천. COO 6/10 자사주 매수(섹터 약세 중). 미 국방·리쇼어링 핵심.' },
+  { tk:'AMBA', name:'Ambarella', px:72.0, mc:3.4, mcLabel:'~$3.4B', rsi:51, mb:6, core:true,
+    layer:'중류 ★엣지 AI 비전칩 (로봇의 눈)', sub:'중류', irr:'높음',
+    point:'로봇 실시간 시각 추론 SoC. 한화 $800M 파트너십. 무부채, 현금 풍부. NVIDIA 로보틱스 생태계 수혜.' },
+  { tk:'ROLL', name:'RBC Bearings', px:560, mc:17.46, mcLabel:'$17.46B', rsi:55, mb:5, core:false,
+    layer:'중류 정밀 베어링·볼스크류 (언섹시층)', sub:'중류', irr:'보통~높음',
+    point:'모든 관절 회전 정밀도의 기반. 항공·방산 인증 진입장벽. "베어링 없으면 관절 안 움직인다" 언섹시 필수재.' },
+  { tk:'TER', name:'Teradyne', px:396.52, mc:62.0, mcLabel:'$62B', rsi:53, mb:4, core:false,
+    layer:'하류 협동로봇 OEM (Universal Robots+MiR)', sub:'하류', irr:'높음(가격반영)',
+    point:'협동로봇 세계 1위 OEM. 단 반도체 테스트 비중 커 순수 로봇 베팅 희석. 대형주 = 멀티배거 제한.' },
+  { tk:'SERV', name:'Serve Robotics', px:8.23, mc:0.64, mcLabel:'~$640M', rsi:40, mb:5, core:false,
+    layer:'하류 자율 배달로봇 (터미널)', sub:'하류', irr:'낮음~보통',
+    point:'Q1 2026 매출 +578% YoY ($3M). Diligent Robotics 통합. 반복매출 50% 근접. 초소형 고위험·고수익 터미널 베팅.' }
+];
+
+/* ════ 1. 밸류체인 ════ */
+function ValueChain() {
+  return e('div',{className:'content'},
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'🎯 발굴 철학: 탑다운 × 밸류체인'),
+      e('div',{className:'info-body'},
+        '"그들이 뭘 샀느냐"가 아니라 "휴머노이드를 만들려면 반드시 쥐고 흔들어야 하는 숨겨진 병목 노드"를 선점한다.\n\n하모닉 감속기(Harmonic Drive·Nabtesco)는 이미 주목받지만 일본 비상장 → 접근 불가. 옆으로 보기 → 관절마다 필수지만 덜 반영된 포스센서(NOVT)·정밀모션(ALNT), 그리고 모든 토크의 원천인 희토류 자석(MP)이 미국 상장 카 포인트.')
+    ),
+
+    e('div',{className:'section-title'},'L1 — 터미널(Terminal) 확정'),
+    e('div',{className:'card'},
+      e('p',{style:{fontSize:'12px',lineHeight:'1.7',color:'#cbd5e1'}},
+        '🤖 대량 생산에 들어가는 것 = ',e('span',{className:'val-emerald'},'휴머노이드 로봇'),
+        ' (Tesla Optimus·Boston Dynamics Atlas·Figure). 일론 머스크 "연 100만 대" 목표. 종목을 먼저 찾지 않고 터미널부터 확정.')
+    ),
+
+    e('div',{className:'section-title'},'L2 — 공급망 스택'),
+    e('div',{className:'vc-layer',style:{borderColor:'#10b981'}},
+      e('div',{className:'vc-head'},'🔸 상류 (소재) ',e('span',{className:'vc-tag'},'★재료병목')),
+      e('div',{className:'vc-item'},e('span',{className:'vc-star'},'★'),'희토류 NdFeB 자석 — MP'),
+      e('div',{className:'vc-item'},'특수 강재 · 경량 합금')
+    ),
+    e('div',{className:'vc-layer',style:{borderColor:'#10b981'}},
+      e('div',{className:'vc-head'},'🔸 중류 (부품) ',e('span',{className:'vc-tag'},'★병목층★')),
+      e('div',{className:'vc-item'},e('span',{className:'vc-star'},'★'),'포스/토크 센서 — NOVT(ATI)'),
+      e('div',{className:'vc-item'},e('span',{className:'vc-star'},'★'),'정밀모션·액추에이터 — ALNT'),
+      e('div',{className:'vc-item'},e('span',{className:'vc-star'},'★'),'정밀 베어링·볼스크류 — ROLL'),
+      e('div',{className:'vc-item'},e('span',{className:'vc-star'},'★'),'엣지 AI 비전칩 — AMBA'),
+      e('div',{className:'vc-item'},'하모닉 감속기 — 일본 비상장(접근불가)')
+    ),
+    e('div',{className:'vc-layer'},
+      e('div',{className:'vc-head'},'🔹 하류 (OEM·터미널)'),
+      e('div',{className:'vc-item'},'협동로봇 OEM(TER) · 배달로봇(SERV) · 창고자동화(SYM)')
+    ),
+
+    e('div',{className:'section-title'},'L3 — 카 포인트(Choke Point)'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'로보틱스 적용'),e('th',null,'해당 종목'))),
+        e('tbody',null,
+          e('tr',null,e('td',{className:'val-yellow'},'재료'),e('td',null,'중국 밖 NdFeB 자석 단 2곳 (중국 정제 90%)'),e('td',null,'MP')),
+          e('tr',null,e('td',{className:'val-yellow'},'생산량'),e('td',null,'6축 포스센서 양산 시설 전 세계 소수'),e('td',null,'NOVT')),
+          e('tr',null,e('td',{className:'val-yellow'},'수율/정밀'),e('td',null,'정밀 그라인딩 머신 제한, 볼스크류·베어링'),e('td',null,'ALNT·ROLL')),
+          e('tr',null,e('td',{className:'val-yellow'},'열/전기'),e('td',null,'배터리 에너지밀도·열관리 → 가동시간 제약'),e('td',null,'(공통)'))
+        )
+      )
+    ),
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'💡 옆으로 보기 원칙'),
+      e('div',{className:'info-body'},
+        '하모닉 감속기 → 이미 주목 (일본 비상장, 접근 불가)\n옆 → 포스센서(NOVT, 관절마다 필수), 정밀모션(ALNT, $1B 소형 아직 덜 주목). 그리고 한 층 더 위 → 모든 모터 토크의 원천인 희토류 자석(MP).')
+    ),
+
+    e('div',{className:'section-title'},'L5 — 방향 → 이름 → 포지션'),
+    e('div',{className:'card'},
+      e('p',{style:{fontSize:'12px',lineHeight:'1.8',color:'#cbd5e1',whiteSpace:'pre-line'}},
+        e('span',{className:'val-emerald'},'① 방향'),' — 부품 병목층(중류) + 재료(상류)\n',
+        e('span',{className:'val-emerald'},'② 이름'),' — ALNT(모션)·NOVT(센서)·MP(자석)·AMBA(비전)\n',
+        e('span',{className:'val-emerald'},'③ 포지션'),' — RSI 30~55 분할 진입, 시총 작은 순(ALNT→SERV) 멀티배거 가중')
+    )
+  );
+}
+
+/* ════ 2. 기술분석 ════ */
+function TechAnalysis() {
+  var mRef = useRef(null); var mC = useRef(null);
+  makeChart(mRef, mC, {
+    type:'bar',
+    data:{ labels:['2026','2030','2034','2035(OEM)'],
+      datasets:[{ label:'휴머노이드 시장 ($B)', data:[6.24, 30, 165, 300], backgroundColor:['#10b981','#059669','#34d399','#6ee7b7'] }]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+      scales:{x:{ticks:{color:'#64748b'},grid:{color:'#16352a'}},y:{ticks:{color:'#64748b',callback:function(v){return '$'+v+'B'}},grid:{color:'#16352a'}}}}
+  });
+
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'① 기존 기술의 근본 한계'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'한계'),e('th',null,'왜 휴머노이드 시대에 심각한가'))),
+        e('tbody',null,
+          e('tr',null,e('td',{className:'val-red'},'산업용 로봇'),e('td',null,'고정·반복 작업만 가능 → 비정형 환경(가정·물류) 대응 불가')),
+          e('tr',null,e('td',{className:'val-red'},'전기모터+기어'),e('td',null,'백래시·정밀도 한계 → 섬세한 그리핑·균형 제어 불가')),
+          e('tr',null,e('td',{className:'val-red'},'배터리'),e('td',null,'에너지밀도·열관리 한계 → 가동시간 짧고 다운타임 ↑'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'② 신기술 우위성 (정량 비교)'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'신기술'),e('th',null,'기존 대비 우위'))),
+        e('tbody',null,
+          e('tr',null,e('td',{className:'val-green'},'6축 포스/토크 센서'),e('td',null,'인간 손 수준 힘 감지 → 계란도 안 깨는 섬세 그리핑')),
+          e('tr',null,e('td',{className:'val-green'},'하모닉 감속기'),e('td',null,'백래시 거의 0, 고감속비 → 관절 정밀 제어')),
+          e('tr',null,e('td',{className:'val-green'},'NdFeB 자석'),e('td',null,'동일 크기 토크 극대화 → 경량·고출력 모터')),
+          e('tr',null,e('td',{className:'val-green'},'엣지 AI 비전'),e('td',null,'실시간 추론, 클라우드 의존 제거 → 즉각 반응'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'③ 결정적 흐름 — 3단계 타임라인'),
+    e('div',{className:'timeline'},
+      e('div',{className:'tl-item'},
+        e('div',{className:'tl-stage'},'1단계 — 초기 수요 폭발'),
+        e('div',{className:'tl-period'},'2022~2024'),
+        e('div',{className:'tl-body'},'Tesla Optimus 공개, ChatGPT로 AI "로봇 두뇌" 실현 가능성 입증. 휴머노이드가 데모를 넘어 상업화 논의로 전환.')
+      ),
+      e('div',{className:'tl-item'},
+        e('div',{className:'tl-stage'},'2단계 — 빅테크 전략 투자'),
+        e('div',{className:'tl-period'},'2024~2025'),
+        e('div',{className:'tl-body'},'NVIDIA "로보틱스는 AI 다음 최대 기회"(젠슨 황), Blackwell이 로봇 두뇌로. Figure·1X 대규모 펀딩 라운드.')
+      ),
+      e('div',{className:'tl-item'},
+        e('div',{className:'tl-stage'},'3단계 — 상업 양산·공급망 병목'),
+        e('div',{className:'tl-period'},'2026~현재~미래'),
+        e('div',{className:'tl-body'},'CES 2026 Boston Dynamics Atlas 양산 진입. 연 100만 대 목표 → 포스센서·감속기·자석 공급 부족 심화. 병목 기업 가격결정력 상승 변곡점.')
+      )
+    ),
+
+    e('div',{className:'section-title'},'④ 시장 규모 데이터'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+        e('tbody',null,
+          e('tr',null,e('td',null,'휴머노이드 (2026)'),e('td',{className:'val-emerald'},'$6.24B')),
+          e('tr',null,e('td',null,'휴머노이드 (2034)'),e('td',{className:'val-emerald'},'$165B')),
+          e('tr',null,e('td',null,'모션 액추에이터 (2035)'),e('td',null,'~$79B')),
+          e('tr',null,e('td',null,'손·엔드이펙터 (2035)'),e('td',null,'~$26B')),
+          e('tr',null,e('td',null,'OEM 시장 (2035)'),e('td',null,'$300B(기본)~$750B(낙관)'))
+        )
+      ),
+      e('div',{className:'chart-wrap'},e('canvas',{ref:mRef}))
+    )
+  );
+}
+
+/* ════ 3. 발굴종목 ════ */
+function StockCards() {
+  return e('div',{className:'content'},
+    e('p',{style:{fontSize:'11px',color:'#64748b',marginBottom:'10px'}},'★ = 핵심 노드(병목) · 시총 작은 순으로 멀티배거 잠재력 ↑'),
+    STOCKS.map(function(s,i){
+      return e('div',{key:i,className:'stock-card'+(s.core?' core':'')},
+        e('div',{className:'sc-head'},
+          e('div',null,
+            e('div',{className:'sc-ticker'},s.tk,' ',s.core?e('span',{style:{fontSize:'12px',color:'#fbbf24'}},'★핵심노드'):''),
+            e('div',{className:'sc-name'},s.name)
+          ),
+          e('div',{className:'sc-price'},
+            e('div',{className:'sc-px'},'$'+s.px),
+            e('div',{className:'sc-mc'},s.mcLabel)
+          )
+        ),
+        e('div',{className:'sc-row'},
+          e('span',{className:'sc-pill'},'📍 '+s.layer),
+          e('span',{className:'sc-pill'},'대체불가: '+s.irr),
+          e('span',{className:'sc-pill'},'RSI '+s.rsi)
+        ),
+        e('div',{className:'sc-point'},s.point),
+        e('div',{className:'mb-bar-wrap'},e('div',{className:'mb-bar',style:{width:(s.mb/8*100)+'%'}})),
+        e('div',{className:'mb-label'},'멀티배거 '+s.mb+'/8')
+      );
+    })
+  );
+}
+
+/* ════ 4. 비교차트 ════ */
+function CompareCharts() {
+  var mcRef = useRef(null); var mcC = useRef(null);
+  var mbRef = useRef(null); var mbC = useRef(null);
+  var rsiRef = useRef(null); var rsiC = useRef(null);
+
+  makeChart(mcRef, mcC, {
+    type:'bar',
+    data:{ labels:STOCKS.map(function(s){return s.tk}),
+      datasets:[{label:'시가총액 ($B)', data:STOCKS.map(function(s){return s.mc}), backgroundColor:'#10b981'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+      scales:{x:{ticks:{color:'#64748b'},grid:{color:'#16352a'}},y:{ticks:{color:'#64748b',callback:function(v){return '$'+v+'B'}},grid:{color:'#16352a'}}}}
+  });
+  makeChart(mbRef, mbC, {
+    type:'bar',
+    data:{ labels:STOCKS.map(function(s){return s.tk}),
+      datasets:[{label:'멀티배거 점수 (/8)', data:STOCKS.map(function(s){return s.mb}),
+        backgroundColor:STOCKS.map(function(s){return s.mb>=6?'#34d399':s.mb>=5?'#fbbf24':'#f87171'})}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+      scales:{x:{ticks:{color:'#64748b'},grid:{color:'#16352a'}},y:{max:8,ticks:{color:'#64748b'},grid:{color:'#16352a'}}}}
+  });
+  makeChart(rsiRef, rsiC, {
+    type:'bar',
+    data:{ labels:STOCKS.map(function(s){return s.tk}),
+      datasets:[{label:'RSI (14)', data:STOCKS.map(function(s){return s.rsi}),
+        backgroundColor:STOCKS.map(function(s){return s.rsi<55?'#34d399':s.rsi<65?'#fbbf24':'#f87171'})}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+      scales:{x:{ticks:{color:'#64748b'},grid:{color:'#16352a'}},y:{max:100,ticks:{color:'#64748b'},grid:{color:'#16352a'}}}}
+  });
+
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'시가총액 비교 ($B)'),
+    e('p',{style:{fontSize:'11px',color:'#64748b'}},'작을수록 멀티배거 여지 ↑ — SERV($640M) < ALNT($1B) < AMBA < NOVT < MP < ROLL < TER($62B)'),
+    e('div',{className:'chart-wrap'},e('canvas',{ref:mcRef})),
+    e('div',{className:'section-title'},'멀티배거 점수 (Anna Yartseva 8항목)'),
+    e('div',{className:'chart-wrap'},e('canvas',{ref:mbRef})),
+    e('div',{className:'section-title'},'RSI 비교 (30~55 = 매력적 진입)'),
+    e('p',{style:{fontSize:'11px',color:'#64748b'}},'🟢 55 미만 = 진입 매력 · 🟡 55~65 = 중립 · 🔴 65+ = 단기 과열 주의'),
+    e('div',{className:'chart-wrap'},e('canvas',{ref:rsiRef}))
+  );
+}
+
+/* ════ 5. 멀티배거 ════ */
+function Multibagger() {
+  var sel = useState('ALNT');
+  var cur = sel[0]; var setCur = sel[1];
+
+  var DATA = {
+    ALNT:{ score:7, radar:[1,1,1,0.5,1,1,1,0.5], checks:[
+      ['① 시총 $5B 이하?','$1.01B (최소형)','✅ 1'],
+      ['② 가격이 미래 과대반영 안?','정밀모션 저평가, 로봇 미반영','✅ 1'],
+      ['③ 매출보다 EBITDA·FCF 개선?','흑자+마진 개선','✅ 1'],
+      ['④ 자산<EBITDA 증가율?','설비 투자기','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','FCF 흑자, 저시총','✅ 1'],
+      ['⑥ 실제 수요·수주 연결?','모션 부품 다변 수요','✅ 1'],
+      ['⑦ 고금리 버티나?','흑자 기반','✅ 1'],
+      ['⑧ 추격매수 구간 아닌가?','RSI ~52 중립','⚠️ 0.5']
+    ]},
+    NOVT:{ score:6, radar:[1,0.5,1,0.5,0.5,1,1,0.5], checks:[
+      ['① 시총 $5B 이하?','$6.01B','⚠️ 0.5'],
+      ['② 가격이 미래 과대반영 안?','P/E 121 부담','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','마진 우수, EBITDA +14%','✅ 1'],
+      ['④ 자산<EBITDA 증가율?','M&A로 자산 증가','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','순현금 +$138M','⚠️ 0.5'],
+      ['⑥ 실제 수요·수주 연결?','수주 +37%, B2B 1.10','✅ 1'],
+      ['⑦ 고금리 버티나?','순현금·흑자','✅ 1'],
+      ['⑧ 추격매수 구간 아닌가?','RSI ~62 다소 높음','⚠️ 0.5']
+    ]},
+    MP:{ score:6, radar:[0.5,0.5,0.5,0.5,0.5,1,1,1], checks:[
+      ['① 시총 $5B 이하?','$12.9B','❌ 0'],
+      ['② 가격이 미래 과대반영 안?','고점 $100 대비 -28%','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','자석 사업 마진 개선','⚠️ 0.5'],
+      ['④ 자산<EBITDA 증가율?','자석공장 투자기','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','전환 초기','⚠️ 0.5'],
+      ['⑥ 실제 수요·수주 연결?','국방·EV·로봇 자석 수요','✅ 1'],
+      ['⑦ 고금리 버티나?','전략 자산, 정부 지원','✅ 1'],
+      ['⑧ 추격매수 구간 아닌가?','RSI ~48, COO 매수','✅ 1']
+    ]},
+    AMBA:{ score:6, radar:[1,0.5,0.5,0.5,0.5,1,1,1], checks:[
+      ['① 시총 $5B 이하?','~$3.4B','✅ 1'],
+      ['② 가격이 미래 과대반영 안?','매출 회복 초기','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','GAAP 적자, GM 60%','⚠️ 0.5'],
+      ['④ 자산<EBITDA 증가율?','무부채 효율','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','현금 $277M','⚠️ 0.5'],
+      ['⑥ 실제 수요·수주 연결?','한화 $800M 파트너십','✅ 1'],
+      ['⑦ 고금리 버티나?','무부채','✅ 1'],
+      ['⑧ 추격매수 구간 아닌가?','RSI ~51 중립','✅ 1']
+    ]},
+    ROLL:{ score:5, radar:[0,0.5,1,0.5,0.5,1,1,0.5], checks:[
+      ['① 시총 $5B 이하?','$17.46B','❌ 0'],
+      ['② 가격이 미래 과대반영 안?','항공·방산 멀티플','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','흑자, 마진 견조','✅ 1'],
+      ['④ 자산<EBITDA 증가율?','효율적 운영','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','FCF 흑자','⚠️ 0.5'],
+      ['⑥ 실제 수요·수주 연결?','항공·방산·로봇 베어링','✅ 1'],
+      ['⑦ 고금리 버티나?','안정 흑자','✅ 1'],
+      ['⑧ 추격매수 구간 아닌가?','RSI ~55 중립','⚠️ 0.5']
+    ]},
+    TER:{ score:4, radar:[0,0.5,0.5,0.5,0.5,0.5,1,0.5], checks:[
+      ['① 시총 $5B 이하?','$62B','❌ 0'],
+      ['② 가격이 미래 과대반영 안?','52W +377% 급등','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','반도체 사이클 의존','⚠️ 0.5'],
+      ['④ 자산<EBITDA 증가율?','효율적','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','흑자','⚠️ 0.5'],
+      ['⑥ 실제 수요·수주 연결?','협동로봇+반도체 테스트','⚠️ 0.5'],
+      ['⑦ 고금리 버티나?','대형 흑자','✅ 1'],
+      ['⑧ 추격매수 구간 아닌가?','고점 부근','⚠️ 0.5']
+    ]},
+    SERV:{ score:5, radar:[1,0.5,0,0.5,0,1,0.5,1], checks:[
+      ['① 시총 $5B 이하?','~$640M (초소형)','✅ 1'],
+      ['② 가격이 미래 과대반영 안?','$8.23, 고점 대비 조정','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','매출 +578% 적자 지속','⚠️ 0.5'],
+      ['④ 자산<EBITDA 증가율?','확장 투자기','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','FCF 적자','❌ 0'],
+      ['⑥ 실제 수요·수주 연결?','배달 플릿 확대, 반복매출↑','✅ 1'],
+      ['⑦ 고금리 버티나?','자본 조달 의존','⚠️ 0.5'],
+      ['⑧ 추격매수 구간 아닌가?','RSI ~40 저점권','✅ 1']
+    ]}
+  };
+
+  var radarRef = useRef(null); var radarC = useRef(null);
+  useEffect(function(){
+    if(!radarRef.current) return;
+    if(radarC.current) radarC.current.destroy();
+    radarC.current = new Chart(radarRef.current.getContext('2d'),{
+      type:'radar',
+      data:{ labels:['규모','밸류','수익질','자산효율','FCF','수주','재무','진입시점'],
+        datasets:[{label:cur, data:DATA[cur].radar, borderColor:'#10b981', backgroundColor:'#10b98133', pointBackgroundColor:'#10b981', pointRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+        scales:{r:{min:0,max:1,ticks:{display:false},grid:{color:'#16352a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#16352a'}}}}
+    });
+    return function(){ if(radarC.current) radarC.current.destroy(); };
+  },[cur]);
+
+  return e('div',{className:'content'},
+    e('div',{className:'filter-btns'},
+      Object.keys(DATA).map(function(tk){
+        return e('button',{key:tk,className:'filter-btn'+(cur===tk?' active':''),onClick:function(){setCur(tk)}},tk);
+      })
+    ),
+    e('div',{className:'card'},
+      e('div',{style:{textAlign:'center',fontSize:'32px',fontWeight:'800',
+        color:DATA[cur].score>=6?'#34d399':DATA[cur].score>=5?'#fbbf24':'#f87171'}},
+        DATA[cur].score,' / 8',
+        e('div',{style:{fontSize:'13px',color:'#94a3b8',marginTop:'2px'}},
+          DATA[cur].score>=6.5?'🚀 유망':DATA[cur].score>=4?'📊 보통':'⚠️ 낮음')
+      ),
+      e('div',{className:'radar-wrap'},e('canvas',{ref:radarRef}))
+    ),
+    e('div',{className:'card'},
+      DATA[cur].checks.map(function(c,i){
+        return e('div',{key:i,className:'check-item'},
+          e('div',{className:'check-q'},c[0],e('div',{style:{fontSize:'10px',color:'#64748b',marginTop:'2px'}},c[1])),
+          e('div',{className:'check-v',style:{color:c[2].indexOf('✅')>=0?'#34d399':c[2].indexOf('⚠️')>=0?'#fbbf24':'#f87171'}},c[2])
+        );
+      })
+    ),
+    e('div',{className:'warn-box'},
+      e('div',{className:'warn-title'},'⚠️ 핵심 한계 주의사항'),
+      e('div',{className:'warn-body'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않습니다. 성공 기업 중심 표본으로 선택 편향이 존재합니다. 참고 지표로만 활용하세요.')
+    )
+  );
+}
+
+/* ════ 6. 전략 ════ */
+function Strategy() {
+  var ranks = [
+    { tk:'ALNT', desc:'정밀모션 $1B 최소형, 흑자, 로봇 미반영 — 리레이팅 1순위', score:'7/8' },
+    { tk:'NOVT', desc:'ATI 포스센서 세계 1위, 수술로봇 공급 (밸류 부담)', score:'6/8' },
+    { tk:'MP', desc:'희토류 자석 재료 병목, COO 자사주 매수', score:'6/8' },
+    { tk:'AMBA', desc:'엣지 AI 비전칩, 무부채, 한화 파트너십', score:'6/8' },
+    { tk:'ROLL', desc:'정밀 베어링 언섹시층, 항공·방산 인증장벽', score:'5/8' },
+    { tk:'SERV', desc:'초소형 배달로봇 터미널, 매출 +578%(고위험)', score:'5/8' },
+    { tk:'TER', desc:'협동로봇 1위 OEM이나 대형주+반도체 희석', score:'4/8' }
+  ];
+
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'우선순위 순위표'),
+    e('div',{className:'card',style:{padding:'0'}},
+      ranks.map(function(r,i){
+        return e('div',{key:i,className:'rank-row'},
+          e('div',{className:'rank-num'},i+1),
+          e('div',{className:'rank-info'},
+            e('div',{className:'rank-tk'},r.tk),
+            e('div',{className:'rank-desc'},r.desc)
+          ),
+          e('div',{className:'rank-score'},r.score)
+        );
+      })
+    ),
+
+    e('div',{className:'section-title'},'촉매 & 리스크'),
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'🟢 공통 촉매'),
+      e('div',{className:'info-body'},'• CES 2026 Boston Dynamics Atlas 양산 진입 → 부품 수요 가시화\n• NVIDIA 로보틱스 생태계 확장 (Blackwell = 로봇 두뇌)\n• 연 100만 대 목표 → 포스센서·자석·감속기 공급 부족 심화\n• 기관 애널리스트가 부품사 실적에 로봇 매출 모델링 시작 = 리레이팅 트리거')
+    ),
+    e('div',{className:'warn-box'},
+      e('div',{className:'warn-title'},'🔴 공통 리스크'),
+      e('div',{className:'warn-body'},'• 휴머노이드 상업화 지연 시 부품 수요 후행\n• 중국 부품사(Green Harmonic·Coliy) 가격 경쟁 위협\n• 다수 종목 고밸류(NOVT P/E 121, TER +377%) — 조정 리스크\n• SERV 등 적자 소형주 자본조달·희석 위험')
+    ),
+
+    e('div',{className:'section-title'},'포트폴리오 제안 (예시)'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'),e('th',null,'성격'))),
+        e('tbody',null,
+          e('tr',null,e('td',{className:'val-emerald'},'핵심(병목)'),e('td',null,'ALNT + NOVT'),e('td',null,'45%'),e('td',null,'모션·센서 대체불가 노드')),
+          e('tr',null,e('td',{className:'val-emerald'},'재료앵커'),e('td',null,'MP'),e('td',null,'20%'),e('td',null,'희토류 자석, 전략 자산')),
+          e('tr',null,e('td',{className:'val-emerald'},'두뇌'),e('td',null,'AMBA'),e('td',null,'15%'),e('td',null,'엣지 비전, 무부채')),
+          e('tr',null,e('td',{className:'val-emerald'},'안정'),e('td',null,'ROLL'),e('td',null,'12%'),e('td',null,'베어링 언섹시층, 변동성 완충')),
+          e('tr',null,e('td',{className:'val-emerald'},'고배수베팅'),e('td',null,'SERV'),e('td',null,'8%'),e('td',null,'초소형 고위험·고수익'))
+        )
+      ),
+      e('p',{style:{fontSize:'11px',color:'#64748b',marginTop:'8px'}},'※ 투자 권유가 아닌 발굴 참고용 예시. 실제 비중은 본인 리스크 성향에 맞게 조정.')
+    ),
+
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'📌 다음 단계'),
+      e('div',{className:'info-body'},'관심 종목을 골라 "[티커] 분석해줘"라고 입력하면 7섹션 심층 분석 + 9탭 대시보드를 생성합니다.\n예) "ALNT 분석해줘", "MP 분석해줘"')
+    )
+  );
+}
+
+/* ════ 메인 ════ */
+function App() {
+  var tab = useState('🗺️ 밸류체인');
+  var active = tab[0]; var setTab = tab[1];
+  var TABS = ['🗺️ 밸류체인','🔬 기술분석','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
+
+  return e('div',null,
+    e('div',{className:'header'},
+      e('div',{className:'h-title'},'🤖 로보틱스 종목발굴'),
+      e('div',{className:'h-sub'},'밸류체인 탑다운 × L1~L5 레이어 탐색 · 2026-06-13'),
+      e('div',{className:'badges'},
+        e('span',{className:'badge b-green'},'휴머노이드 $6.24B→$165B'),
+        e('span',{className:'badge b-emerald'},'연 100만 대 목표'),
+        e('span',{className:'badge b-yellow'},'부품 병목 심화'),
+        e('span',{className:'badge b-gray'},'7종목 발굴')
+      )
+    ),
+    e('div',{className:'tabs'},
+      TABS.map(function(t){
+        return e('div',{key:t,className:'tab'+(active===t?' active':''),onClick:function(){setTab(t)}},t);
+      })
+    ),
+    active==='🗺️ 밸류체인' && e(ValueChain,null),
+    active==='🔬 기술분석' && e(TechAnalysis,null),
+    active==='🔍 발굴종목' && e(StockCards,null),
+    active==='📊 비교차트' && e(CompareCharts,null),
+    active==='🔟 멀티배거' && e(Multibagger,null),
+    active==='🎯 전략'    && e(Strategy,null)
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
