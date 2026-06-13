@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>우주항공 종목발굴 대시보드 — Value Chain Top-Down</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0a0a14;color:#e2e8f0;font-family:'Segoe UI',sans-serif;font-size:14px}
+  a{color:#a855f7;text-decoration:none}
+  .back-link{display:inline-block;padding:8px 16px;margin:12px 16px;background:#1e1b2e;border-radius:8px;font-size:13px;color:#a78bda}
+  .back-link:hover{background:#2d2640;color:#e2e8f0}
+  .header{padding:16px;border-bottom:1px solid #2d2640;background:linear-gradient(135deg,#13101f,#0a0a14)}
+  .h-title{font-size:24px;font-weight:800;color:#a855f7}
+  .h-sub{font-size:13px;color:#94a3b8;margin-top:4px}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+  .b-purple{background:#3b1d6e;color:#c084fc}
+  .b-green{background:#14532d;color:#4ade80}
+  .b-yellow{background:#713f12;color:#fbbf24}
+  .b-red{background:#450a0a;color:#f87171}
+  .b-gray{background:#1e293b;color:#94a3b8}
+  .tabs{display:flex;overflow-x:auto;background:#13101f;border-bottom:1px solid #2d2640;padding:0 8px}
+  .tabs::-webkit-scrollbar{height:3px}
+  .tabs::-webkit-scrollbar-thumb{background:#7c3aed;border-radius:2px}
+  .tab{padding:12px 14px;font-size:12px;cursor:pointer;white-space:nowrap;color:#64748b;border-bottom:2px solid transparent;transition:all .2s}
+  .tab.active{color:#a855f7;border-bottom-color:#a855f7}
+  .content{padding:16px;max-width:680px;margin:0 auto}
+  .section-title{font-size:16px;font-weight:700;color:#e2e8f0;margin:20px 0 10px;border-left:3px solid #a855f7;padding-left:10px}
+  .card{background:#13101f;border:1px solid #2d2640;border-radius:12px;padding:14px;margin-bottom:12px}
+  .card-title{font-size:13px;font-weight:700;color:#a78bda;margin-bottom:8px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#1e1b2e;padding:8px 6px;text-align:left;color:#a78bda;font-weight:600;font-size:11px}
+  td{padding:8px 6px;border-bottom:1px solid #2d2640;color:#e2e8f0}
+  .chart-wrap{position:relative;height:240px;margin:12px 0}
+  .info-box{background:#13101f;border:1px solid #7c3aed;border-radius:8px;padding:12px;margin:12px 0}
+  .info-title{color:#c084fc;font-size:13px;font-weight:700;margin-bottom:4px}
+  .info-body{color:#d8b4fe;font-size:12px;line-height:1.7;white-space:pre-line}
+  .warn-box{background:#1a1200;border:1px solid #d97706;border-radius:8px;padding:12px;margin:12px 0}
+  .warn-title{color:#fbbf24;font-size:13px;font-weight:700;margin-bottom:4px}
+  .warn-body{color:#fcd34d;font-size:12px;line-height:1.6;white-space:pre-line}
+  .vc-layer{background:#13101f;border:1px solid #2d2640;border-radius:10px;padding:12px;margin-bottom:10px}
+  .vc-head{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .vc-tag{font-size:10px;padding:2px 8px;border-radius:8px;background:#3b1d6e;color:#c084fc}
+  .vc-item{font-size:12px;color:#cbd5e1;padding:4px 0;display:flex;gap:6px}
+  .vc-star{color:#fbbf24}
+  .timeline{position:relative;padding-left:24px;margin:12px 0}
+  .timeline::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:#7c3aed}
+  .tl-item{position:relative;margin-bottom:16px}
+  .tl-item::before{content:'';position:absolute;left:-21px;top:4px;width:12px;height:12px;border-radius:50%;background:#a855f7;border:2px solid #0a0a14}
+  .tl-stage{font-size:13px;font-weight:700;color:#c084fc}
+  .tl-period{font-size:11px;color:#64748b;margin-bottom:4px}
+  .tl-body{font-size:12px;color:#cbd5e1;line-height:1.6}
+  .stock-card{background:#13101f;border:1px solid #2d2640;border-radius:12px;padding:14px;margin-bottom:12px}
+  .stock-card.core{border-color:#a855f7;box-shadow:0 0 0 1px #7c3aed44}
+  .sc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+  .sc-ticker{font-size:18px;font-weight:800;color:#a855f7}
+  .sc-name{font-size:12px;color:#94a3b8}
+  .sc-price{text-align:right}
+  .sc-px{font-size:16px;font-weight:700}
+  .sc-mc{font-size:11px;color:#64748b}
+  .sc-row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+  .sc-pill{font-size:10px;padding:3px 8px;border-radius:8px;background:#1e1b2e;color:#cbd5e1}
+  .sc-point{font-size:12px;color:#cbd5e1;line-height:1.6;margin-top:6px}
+  .mb-bar-wrap{height:8px;background:#1e1b2e;border-radius:4px;overflow:hidden;margin-top:6px}
+  .mb-bar{height:100%;background:linear-gradient(90deg,#7c3aed,#a855f7);border-radius:4px}
+  .mb-label{font-size:10px;color:#a78bda;margin-top:3px}
+  .filter-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .filter-btn{padding:5px 14px;border-radius:16px;font-size:12px;cursor:pointer;border:1px solid #2d2640;background:#1e1b2e;color:#94a3b8}
+  .filter-btn.active{background:#3b1d6e;color:#c084fc;border-color:#a855f7}
+  .val-green{color:#4ade80;font-weight:700}
+  .val-red{color:#f87171;font-weight:700}
+  .val-yellow{color:#fbbf24;font-weight:700}
+  .val-purple{color:#c084fc;font-weight:700}
+  .radar-wrap{position:relative;height:260px;margin:12px 0}
+  .check-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #2d2640;font-size:12px;gap:8px}
+  .check-q{flex:1;color:#cbd5e1}
+  .check-v{flex-shrink:0;font-weight:600}
+  .rank-row{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #2d2640}
+  .rank-num{font-size:20px;font-weight:800;color:#a855f7;width:28px}
+  .rank-info{flex:1}
+  .rank-tk{font-size:14px;font-weight:700;color:#e2e8f0}
+  .rank-desc{font-size:11px;color:#94a3b8}
+  .rank-score{font-size:13px;font-weight:700;color:#c084fc}
+</style>
+</head>
+<body>
+<a class="back-link" href="https://disntm90.github.io/disntm90/">← 목록으로</a>
+<div id="root"></div>
+
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+function makeChart(canvasRef, chartRef, cfg) {
+  useEffect(function() {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(canvasRef.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+var STOCKS = [
+  { tk:'KRMN', name:'Karman Holdings', px:49.58, mc:6.57, mcLabel:'$6.57B', rsi:52, mb:6, core:true,
+    layer:'중류 ★추진·페이로드 병목', sub:'중류', irr:'매우 높음',
+    point:'미사일+우주 추진 시스템 동시 공급. Q1 2026 매출 +51%, 흑자 전환, 기록적 수주잔고. 발사체가 늘수록 반드시 거쳐야 하는 노드.' },
+  { tk:'RDW', name:'Redwire Corp', px:17.09, mc:2.94, mcLabel:'$2.94B', rsi:62, mb:6, core:true,
+    layer:'중류 ★솔라어레이·인스페이스 제조', sub:'중류', irr:'높음',
+    point:'위성 전력 공급(솔라어레이)·인스페이스 제조 독점적. 벨기에 국가안보위성 prime 계약. "전기 없으면 칩도 무용" 언섹시 병목.' },
+  { tk:'VOYG', name:'Voyager Technologies', px:41.55, mc:2.5, mcLabel:'~$2.5B', rsi:65, mb:6, core:false,
+    layer:'하류 우주정거장 Starlab', sub:'하류', irr:'높음',
+    point:'ISS 후속 상업 정거장 선두. 수주잔고 $275.3M, Starlab 130% 선예약, 현금 $429M. Jefferies 목표가 $60.' },
+  { tk:'KTOS', name:'Kratos Defense', px:91.10, mc:13.0, mcLabel:'~$13B', rsi:60, mb:5, core:false,
+    layer:'중류 지상시스템·추진 (언섹시층)', sub:'중류', irr:'보통~높음',
+    point:'위성 지상국·고체추진·드론 병목. 수주잔고 $1.5B. RSI 59.7, 50/200일 MA 상회. 방산 예산 수혜.' },
+  { tk:'LUNR', name:'Intuitive Machines', px:12.5, mc:2.2, mcLabel:'~$2.2B', rsi:55, mb:5, core:false,
+    layer:'중·하류 달탐사+위성제조', sub:'하류', irr:'높음',
+    point:'Lanteris(구 Maxar) 위성제조 인수로 수직통합. Q1 2026 매출 $186.7M(3배↑). Goonhilly 지상국 인수, 44개 안테나.' },
+  { tk:'SIDU', name:'Sidus Space', px:2.52, mc:0.166, mcLabel:'$166M', rsi:45, mb:5, core:false,
+    layer:'중·하류 소형위성·데이터', sub:'하류', irr:'낮음~보통',
+    point:'시총 $166M 초소형 → 멀티배거 잠재력 최대(리스크도 최대). 애널리스트 목표가 $10 Strong Buy.' },
+  { tk:'RKLB', name:'Rocket Lab', px:107.0, mc:61.9, mcLabel:'$61.9B', rsi:58, mb:3, core:false,
+    layer:'수직통합 발사+추진+ISL', sub:'중류', irr:'매우 높음(가격반영)',
+    point:'Neutron 2026 첫 발사, 수주잔고 $1.1B, YoY +300%. 최고 기업이나 이미 대형주 — 멀티배거 관점 최하순위.' }
+];
+
+/* ════ 1. 밸류체인 탭 ════ */
+function ValueChain() {
+  return e('div',{className:'content'},
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'🎯 발굴 철학: 탑다운 × 밸류체인'),
+      e('div',{className:'info-body'},
+        '"그들이 뭘 샀느냐"가 아니라 "그 완제품을 만들려면 반드시 쥐고 흔들어야 하는 숨겨진 병목 노드"를 선점한다.\n\n발사(RKLB $62B)는 이미 가격이 다 반영됐다. 옆으로 보기 원칙 → 똑같이 필수적이나 아직 덜 주목받은 추진·부품 병목층(KRMN·RDW·KTOS)이 진짜 카 포인트.')
+    ),
+
+    e('div',{className:'section-title'},'L1 — 터미널(Terminal) 확정'),
+    e('div',{className:'card'},
+      e('p',{style:{fontSize:'12px',lineHeight:'1.7',color:'#cbd5e1'}},
+        '🛰️ 대량 생산에 들어가는 것 = ',e('span',{className:'val-purple'},'LEO 메가 컨스텔레이션'),
+        ' (Starlink·Kuiper·미 우주군 PWSA). 수천 개의 위성이 표준화·대량생산되어 궤도에 올라간다. 종목을 먼저 찾지 않고 터미널부터 확정.')
+    ),
+
+    e('div',{className:'section-title'},'L2 — 공급망 스택'),
+    e('div',{className:'vc-layer'},
+      e('div',{className:'vc-head'},'🔹 상류 (소재)'),
+      e('div',{className:'vc-item'},'특수 추진제 · 태양전지 소재 · 광학 소재')
+    ),
+    e('div',{className:'vc-layer',style:{borderColor:'#a855f7'}},
+      e('div',{className:'vc-head'},'🔸 중류 (부품·장비) ',e('span',{className:'vc-tag'},'★병목층★')),
+      e('div',{className:'vc-item'},e('span',{className:'vc-star'},'★'),'추진시스템 · 페이로드 보호/전개 — KRMN'),
+      e('div',{className:'vc-item'},e('span',{className:'vc-star'},'★'),'솔라어레이 · 인스페이스 제조 — RDW'),
+      e('div',{className:'vc-item'},e('span',{className:'vc-star'},'★'),'광통신 ISL 레이저 — RKLB(구 Mynaric)'),
+      e('div',{className:'vc-item'},e('span',{className:'vc-star'},'★'),'지상시스템 · 고체추진 — KTOS'),
+      e('div',{className:'vc-item'},'위성제조 — LUNR(구 Maxar)')
+    ),
+    e('div',{className:'vc-layer'},
+      e('div',{className:'vc-head'},'🔹 하류 (시스템·서비스)'),
+      e('div',{className:'vc-item'},'발사서비스(RKLB) · 위성운영/EO(PL) · 직접연결통신(ASTS) · 우주정거장(VOYG) · 달/심우주(LUNR)')
+    ),
+
+    e('div',{className:'section-title'},'L3 — 카 포인트(Choke Point)'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'우주항공 적용'),e('th',null,'해당 종목'))),
+        e('tbody',null,
+          e('tr',null,e('td',{className:'val-yellow'},'생산량'),e('td',null,'메가 컨스텔레이션 부품 수요 폭증, 공급 부족'),e('td',null,'KRMN·RDW')),
+          e('tr',null,e('td',{className:'val-yellow'},'전기(Power)'),e('td',null,'위성 솔라어레이 — 전력 없으면 위성 무용'),e('td',null,'RDW')),
+          e('tr',null,e('td',{className:'val-yellow'},'인증'),e('td',null,'국가안보 위성 인증 수년 소요'),e('td',null,'KTOS·KRMN')),
+          e('tr',null,e('td',{className:'val-yellow'},'재료'),e('td',null,'특수 추진제·광학 소재 제한'),e('td',null,'KRMN'))
+        )
+      )
+    ),
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'💡 옆으로 보기 원칙'),
+      e('div',{className:'info-body'},
+        '발사(RKLB) → 이미 주목 ($62B 대형주)\n옆 → 추진·페이로드 보호(KRMN $6.5B), 솔라어레이(RDW $2.9B): 동일하게 필수적이나 아직 가격 덜 반영. 메가 컨스텔레이션이 커질수록 이 병목층이 가장 먼저 막힌다.')
+    ),
+
+    e('div',{className:'section-title'},'L5 — 방향 → 이름 → 포지션'),
+    e('div',{className:'card'},
+      e('p',{style:{fontSize:'12px',lineHeight:'1.8',color:'#cbd5e1'}},
+        e('span',{className:'val-purple'},'① 방향'),' — 추진·부품 병목층 (중류)\n',
+        e('span',{className:'val-purple'},'② 이름'),' — KRMN(추진), RDW(솔라/제조), KTOS(지상)\n',
+        e('span',{className:'val-purple'},'③ 포지션'),' — RSI 30~55 구간 분할 진입, 시총 작은 순으로 멀티배거 가중',
+        {style:{whiteSpace:'pre-line'}})
+    )
+  );
+}
+
+/* ════ 2. 기술분석 탭 ════ */
+function TechAnalysis() {
+  var marketRef = useRef(null); var marketC = useRef(null);
+  makeChart(marketRef, marketC, {
+    type:'bar',
+    data:{
+      labels:['2025','2026','2030'],
+      datasets:[{ label:'우주 경제 ($B)', data:[431, 468, 647], backgroundColor:['#475569','#a855f7','#7c3aed'] }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+      scales:{x:{ticks:{color:'#64748b'},grid:{color:'#2d2640'}},y:{ticks:{color:'#64748b',callback:function(v){return '$'+v+'B'}},grid:{color:'#2d2640'}}}
+    }
+  });
+
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'① 기존 기술의 근본 한계'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'한계'),e('th',null,'왜 AI/컨스텔레이션 시대에 심각한가'))),
+        e('tbody',null,
+          e('tr',null,e('td',{className:'val-red'},'대형·고가 위성'),e('td',null,'한 대 수억$·수년 제작 → 수천 개 메가 컨스텔레이션 대응 불가')),
+          e('tr',null,e('td',{className:'val-red'},'RF(전파) 통신'),e('td',null,'위성 간 데이터 전송 시 지상국 경유 → 지연·보안 취약·대역폭 한계')),
+          e('tr',null,e('td',{className:'val-red'},'화학 추진'),e('td',null,'무겁고 일회성 → 궤도 유지·수명 연장 한계, 대량생산 부적합'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'② 신기술 우위성 (정량 비교)'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'신기술'),e('th',null,'기존 대비 우위'))),
+        e('tbody',null,
+          e('tr',null,e('td',{className:'val-green'},'대량생산 소형위성'),e('td',null,'표준화·소형화로 비용 90%+ 절감')),
+          e('tr',null,e('td',{className:'val-green'},'광통신 레이저 ISL'),e('td',null,'RF 대비 대역폭 수십 배, 지상국 의존 제거')),
+          e('tr',null,e('td',{className:'val-green'},'전기 추진(EP)'),e('td',null,'화학 대비 연료 효율 10배+, 궤도 수명 연장'))
+        )
+      )
+    ),
+
+    e('div',{className:'section-title'},'③ 결정적 흐름 — 3단계 타임라인'),
+    e('div',{className:'timeline'},
+      e('div',{className:'tl-item'},
+        e('div',{className:'tl-stage'},'1단계 — 초기 수요 폭발'),
+        e('div',{className:'tl-period'},'2019~2022'),
+        e('div',{className:'tl-body'},'Starlink 본격 발사 시작, LEO 컨스텔레이션 경쟁 점화. 재사용 발사체로 발사 비용 급락 → 대량 배치 시대 개막.')
+      ),
+      e('div',{className:'tl-item'},
+        e('div',{className:'tl-stage'},'2단계 — 빅테크·정부 전략 투자'),
+        e('div',{className:'tl-period'},'2022~2025'),
+        e('div',{className:'tl-body'},'Amazon Kuiper 수십억$ 투입, 미 우주군 PWSA·SDA 대형 계약. 국가안보 우주 아키텍처가 메가 컨스텔레이션 수요를 견인.')
+      ),
+      e('div',{className:'tl-item'},
+        e('div',{className:'tl-stage'},'3단계 — 시장 폭증·공급망 병목'),
+        e('div',{className:'tl-period'},'2025~현재~미래'),
+        e('div',{className:'tl-body'},'2026 = "공급망의 해". 추진시스템·솔라패널·광통신 ISL·온보드 프로세서 공급 부족 심화. 병목 기업의 가격결정력 상승 변곡점.')
+      )
+    ),
+
+    e('div',{className:'section-title'},'④ 시장 규모 데이터'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+        e('tbody',null,
+          e('tr',null,e('td',null,'우주 경제 (2026)'),e('td',{className:'val-purple'},'$468.5B')),
+          e('tr',null,e('td',null,'우주 경제 CAGR'),e('td',null,'8.4% (→2030 $646.6B)')),
+          e('tr',null,e('td',null,'발사 서비스 (2026)'),e('td',{className:'val-purple'},'$13.85B (CAGR 17.2%)')),
+          e('tr',null,e('td',null,'광통신 지상터미널'),e('td',null,'$2.8B(2025)→$9.1B(2034), CAGR 13.9%'))
+        )
+      ),
+      e('div',{className:'chart-wrap'},e('canvas',{ref:marketRef}))
+    )
+  );
+}
+
+/* ════ 3. 발굴종목 탭 ════ */
+function StockCards() {
+  return e('div',{className:'content'},
+    e('p',{style:{fontSize:'11px',color:'#64748b',marginBottom:'10px'}},'★ = 핵심 노드(병목) · 시총 작은 순으로 멀티배거 잠재력 ↑'),
+    STOCKS.map(function(s,i){
+      return e('div',{key:i,className:'stock-card'+(s.core?' core':'')},
+        e('div',{className:'sc-head'},
+          e('div',null,
+            e('div',{className:'sc-ticker'},s.tk,' ',s.core?e('span',{style:{fontSize:'12px',color:'#fbbf24'}},'★핵심노드'):''),
+            e('div',{className:'sc-name'},s.name)
+          ),
+          e('div',{className:'sc-price'},
+            e('div',{className:'sc-px'},'$'+s.px),
+            e('div',{className:'sc-mc'},s.mcLabel)
+          )
+        ),
+        e('div',{className:'sc-row'},
+          e('span',{className:'sc-pill'},'📍 '+s.layer),
+          e('span',{className:'sc-pill'},'대체불가: '+s.irr),
+          e('span',{className:'sc-pill'},'RSI '+s.rsi)
+        ),
+        e('div',{className:'sc-point'},s.point),
+        e('div',{className:'mb-bar-wrap'},e('div',{className:'mb-bar',style:{width:(s.mb/8*100)+'%'}})),
+        e('div',{className:'mb-label'},'멀티배거 '+s.mb+'/8')
+      );
+    })
+  );
+}
+
+/* ════ 4. 비교차트 탭 ════ */
+function CompareCharts() {
+  var mcRef = useRef(null); var mcC = useRef(null);
+  var mbRef = useRef(null); var mbC = useRef(null);
+  var rsiRef = useRef(null); var rsiC = useRef(null);
+
+  makeChart(mcRef, mcC, {
+    type:'bar',
+    data:{ labels:STOCKS.map(function(s){return s.tk}),
+      datasets:[{label:'시가총액 ($B)', data:STOCKS.map(function(s){return s.mc}), backgroundColor:'#a855f7'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+      scales:{x:{ticks:{color:'#64748b'},grid:{color:'#2d2640'}},y:{ticks:{color:'#64748b',callback:function(v){return '$'+v+'B'}},grid:{color:'#2d2640'}}}}
+  });
+  makeChart(mbRef, mbC, {
+    type:'bar',
+    data:{ labels:STOCKS.map(function(s){return s.tk}),
+      datasets:[{label:'멀티배거 점수 (/8)', data:STOCKS.map(function(s){return s.mb}),
+        backgroundColor:STOCKS.map(function(s){return s.mb>=6?'#4ade80':s.mb>=5?'#fbbf24':'#f87171'})}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+      scales:{x:{ticks:{color:'#64748b'},grid:{color:'#2d2640'}},y:{max:8,ticks:{color:'#64748b'},grid:{color:'#2d2640'}}}}
+  });
+  makeChart(rsiRef, rsiC, {
+    type:'bar',
+    data:{ labels:STOCKS.map(function(s){return s.tk}),
+      datasets:[{label:'RSI (14)', data:STOCKS.map(function(s){return s.rsi}),
+        backgroundColor:STOCKS.map(function(s){return s.rsi<55?'#4ade80':s.rsi<65?'#fbbf24':'#f87171'})}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+      scales:{x:{ticks:{color:'#64748b'},grid:{color:'#2d2640'}},y:{max:100,ticks:{color:'#64748b'},grid:{color:'#2d2640'}}}}
+  });
+
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'시가총액 비교 ($B)'),
+    e('p',{style:{fontSize:'11px',color:'#64748b'}},'작을수록 멀티배거 여지 ↑ — SIDU($166M) > RDW > LUNR > VOYG > KRMN > KTOS > RKLB($62B)'),
+    e('div',{className:'chart-wrap'},e('canvas',{ref:mcRef})),
+    e('div',{className:'section-title'},'멀티배거 점수 (Anna Yartseva 8항목)'),
+    e('div',{className:'chart-wrap'},e('canvas',{ref:mbRef})),
+    e('div',{className:'section-title'},'RSI 비교 (30~55 = 매력적 진입)'),
+    e('p',{style:{fontSize:'11px',color:'#64748b'}},'🟢 55 미만 = 진입 매력 · 🟡 55~65 = 중립 · 🔴 65+ = 단기 과열 주의'),
+    e('div',{className:'chart-wrap'},e('canvas',{ref:rsiRef}))
+  );
+}
+
+/* ════ 5. 멀티배거 탭 ════ */
+function Multibagger() {
+  var sel = useState('KRMN');
+  var cur = sel[0]; var setCur = sel[1];
+
+  var DATA = {
+    KRMN:{ score:6, radar:[1,0.5,1,0.5,0.5,1,1,0.5], checks:[
+      ['① 시총 $5B 이하?','$6.57B','⚠️ 0.5'],
+      ['② 가격이 미래 과대반영 안?','52W 중간, +51% 성장 대비 합리','✅ 1'],
+      ['③ 매출보다 EBITDA·FCF 개선?','흑자 전환 + 마진 개선','✅ 1'],
+      ['④ 자산<EBITDA 증가율?','수주잔고 급증, 효율 개선중','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','흑자 전환 초기','⚠️ 0.5'],
+      ['⑥ 실제 수요·수주 연결?','기록적 수주잔고, 다년 계약','✅ 1'],
+      ['⑦ 고금리 버티나?','흑자+다년 정부계약','✅ 1'],
+      ['⑧ 추격매수 구간 아닌가?','52W 고점 $118 대비 -58%','⚠️ 0.5']
+    ]},
+    RDW:{ score:6, radar:[1,0.5,0.5,0.5,0.5,1,1,1], checks:[
+      ['① 시총 $5B 이하?','$2.94B','✅ 1'],
+      ['② 가격이 미래 과대반영 안?','PSR 합리, prime 계약','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','적자 축소 중','⚠️ 0.5'],
+      ['④ 자산<EBITDA 증가율?','투자 확대기','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','흑자 전환 전','⚠️ 0.5'],
+      ['⑥ 실제 수요·수주 연결?','벨기에 국가안보위성 prime','✅ 1'],
+      ['⑦ 고금리 버티나?','정부·방산 계약 기반','✅ 1'],
+      ['⑧ 추격매수 구간 아닌가?','$14.87→$17.09 회복 초기','✅ 1']
+    ]},
+    VOYG:{ score:6, radar:[1,0.5,0.5,0.5,0.5,1,1,1], checks:[
+      ['① 시총 $5B 이하?','~$2.5B','✅ 1'],
+      ['② 가격이 미래 과대반영 안?','+45% 단기급등 후','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','성장 투자기','⚠️ 0.5'],
+      ['④ 자산<EBITDA 증가율?','정거장 개발 투자','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','현금 $429M 풍부','⚠️ 0.5'],
+      ['⑥ 실제 수요·수주 연결?','Starlab 130% 선예약','✅ 1'],
+      ['⑦ 고금리 버티나?','현금 $429M, NASA 계약','✅ 1'],
+      ['⑧ 추격매수 구간 아닌가?','$26→$41 급등 — 주의','⚠️ 0.5']
+    ]},
+    KTOS:{ score:5, radar:[0.5,0.5,0.5,0.5,0.5,1,1,0.5], checks:[
+      ['① 시총 $5B 이하?','~$13B','❌ 0'],
+      ['② 가격이 미래 과대반영 안?','방산 멀티플 상승','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','마진 개선중','⚠️ 0.5'],
+      ['④ 자산<EBITDA 증가율?','설비 투자 확대','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','흑자 기반','⚠️ 0.5'],
+      ['⑥ 실제 수요·수주 연결?','수주잔고 $1.5B','✅ 1'],
+      ['⑦ 고금리 버티나?','흑자+방산 예산','✅ 1'],
+      ['⑧ 추격매수 구간 아닌가?','RSI 59.7, MA 상회','⚠️ 0.5']
+    ]},
+    LUNR:{ score:5, radar:[1,0.5,0.5,0.5,0,1,0.5,1], checks:[
+      ['① 시총 $5B 이하?','~$2.2B','✅ 1'],
+      ['② 가격이 미래 과대반영 안?','조정 후 합리','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','매출 3배↑ 적자 지속','⚠️ 0.5'],
+      ['④ 자산<EBITDA 증가율?','M&A로 자산 급증','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','FCF 적자','❌ 0'],
+      ['⑥ 실제 수요·수주 연결?','NASA CLPS + Maxar','✅ 1'],
+      ['⑦ 고금리 버티나?','$175M 증자','⚠️ 0.5'],
+      ['⑧ 추격매수 구간 아닌가?','고점 대비 조정','✅ 1']
+    ]},
+    SIDU:{ score:5, radar:[1,0.5,0.5,0.5,0,0.5,0.5,1], checks:[
+      ['① 시총 $5B 이하?','$166M (초소형)','✅ 1'],
+      ['② 가격이 미래 과대반영 안?','목표가 $10 vs $2.52','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','소규모 적자','⚠️ 0.5'],
+      ['④ 자산<EBITDA 증가율?','초기 단계','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','FCF 적자','❌ 0'],
+      ['⑥ 실제 수요·수주 연결?','소형위성 수주','⚠️ 0.5'],
+      ['⑦ 고금리 버티나?','자본 조달 의존','⚠️ 0.5'],
+      ['⑧ 추격매수 구간 아닌가?','저점권 RSI ~45','✅ 1']
+    ]},
+    RKLB:{ score:3, radar:[0,0.5,0.5,0.5,0,1,0.5,0.5], checks:[
+      ['① 시총 $5B 이하?','$61.9B','❌ 0'],
+      ['② 가격이 미래 과대반영 안?','YoY +300% 급등','⚠️ 0.5'],
+      ['③ 매출보다 EBITDA·FCF 개선?','적자 지속','⚠️ 0.5'],
+      ['④ 자산<EBITDA 증가율?','Neutron 대규모 투자','⚠️ 0.5'],
+      ['⑤ FCF yield 합리적?','FCF 적자','❌ 0'],
+      ['⑥ 실제 수요·수주 연결?','수주잔고 $1.1B','✅ 1'],
+      ['⑦ 고금리 버티나?','자금 조달 가능','⚠️ 0.5'],
+      ['⑧ 추격매수 구간 아닌가?','+300% 후 — 추격 주의','⚠️ 0.5']
+    ]}
+  };
+
+  var radarRef = useRef(null); var radarC = useRef(null);
+  useEffect(function(){
+    if(!radarRef.current) return;
+    if(radarC.current) radarC.current.destroy();
+    radarC.current = new Chart(radarRef.current.getContext('2d'),{
+      type:'radar',
+      data:{ labels:['규모','밸류','수익질','자산효율','FCF','수주','재무','진입시점'],
+        datasets:[{label:cur, data:DATA[cur].radar, borderColor:'#a855f7', backgroundColor:'#a855f733', pointBackgroundColor:'#a855f7', pointRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+        scales:{r:{min:0,max:1,ticks:{display:false},grid:{color:'#2d2640'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#2d2640'}}}}
+    });
+    return function(){ if(radarC.current) radarC.current.destroy(); };
+  },[cur]);
+
+  return e('div',{className:'content'},
+    e('div',{className:'filter-btns'},
+      Object.keys(DATA).map(function(tk){
+        return e('button',{key:tk,className:'filter-btn'+(cur===tk?' active':''),onClick:function(){setCur(tk)}},tk);
+      })
+    ),
+    e('div',{className:'card'},
+      e('div',{style:{textAlign:'center',fontSize:'32px',fontWeight:'800',
+        color:DATA[cur].score>=6?'#4ade80':DATA[cur].score>=5?'#fbbf24':'#f87171'}},
+        DATA[cur].score,' / 8',
+        e('div',{style:{fontSize:'13px',color:'#94a3b8',marginTop:'2px'}},
+          DATA[cur].score>=6.5?'🚀 유망':DATA[cur].score>=4?'📊 보통':'⚠️ 낮음')
+      ),
+      e('div',{className:'radar-wrap'},e('canvas',{ref:radarRef}))
+    ),
+    e('div',{className:'card'},
+      DATA[cur].checks.map(function(c,i){
+        return e('div',{key:i,className:'check-item'},
+          e('div',{className:'check-q'},c[0],e('div',{style:{fontSize:'10px',color:'#64748b',marginTop:'2px'}},c[1])),
+          e('div',{className:'check-v',style:{color:c[2].indexOf('✅')>=0?'#4ade80':c[2].indexOf('⚠️')>=0?'#fbbf24':'#f87171'}},c[2])
+        );
+      })
+    ),
+    e('div',{className:'warn-box'},
+      e('div',{className:'warn-title'},'⚠️ 핵심 한계 주의사항'),
+      e('div',{className:'warn-body'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않습니다. 성공 기업 중심 표본으로 선택 편향이 존재합니다. 참고 지표로만 활용하세요.')
+    )
+  );
+}
+
+/* ════ 6. 전략 탭 ════ */
+function Strategy() {
+  var ranks = [
+    { tk:'KRMN', desc:'추진·페이로드 병목 핵심노드, 흑자전환+기록수주', score:'6/8' },
+    { tk:'RDW', desc:'솔라어레이·인스페이스 제조, prime 계약, 저시총', score:'6/8' },
+    { tk:'VOYG', desc:'Starlab 정거장 130% 선예약, 현금 풍부', score:'6/8' },
+    { tk:'LUNR', desc:'Maxar 위성제조 수직통합, 매출 3배↑', score:'5/8' },
+    { tk:'KTOS', desc:'지상시스템·추진 언섹시층, 수주 $1.5B', score:'5/8' },
+    { tk:'SIDU', desc:'초소형주 고배수 베팅(고위험)', score:'5/8' },
+    { tk:'RKLB', desc:'최고 기업이나 대형주 — 가격 반영', score:'3/8' }
+  ];
+
+  return e('div',{className:'content'},
+    e('div',{className:'section-title'},'우선순위 순위표'),
+    e('div',{className:'card',style:{padding:'0'}},
+      ranks.map(function(r,i){
+        return e('div',{key:i,className:'rank-row'},
+          e('div',{className:'rank-num'},i+1),
+          e('div',{className:'rank-info'},
+            e('div',{className:'rank-tk'},r.tk),
+            e('div',{className:'rank-desc'},r.desc)
+          ),
+          e('div',{className:'rank-score'},r.score)
+        );
+      })
+    ),
+
+    e('div',{className:'section-title'},'촉매 & 리스크'),
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'🟢 공통 촉매'),
+      e('div',{className:'info-body'},'• 2026 "공급망의 해" — 부품 병목 심화로 병목 기업 가격결정력 ↑\n• 미 우주군 PWSA·SDA 대형 계약 지속\n• 발사 비용 하락 → 메가 컨스텔레이션 배치 가속\n• SpaceX IPO 기대감 → 섹터 전반 멀티플 상승')
+    ),
+    e('div',{className:'warn-box'},
+      e('div',{className:'warn-title'},'🔴 공통 리스크'),
+      e('div',{className:'warn-body'},'• 정부 예산·정책 변동 (계약 지연·축소)\n• 발사/미션 실패 시 섹터 전반 센티먼트 악화\n• 다수 기업 적자 — 금리·자본조달 환경 민감\n• 단기 급등 종목(VOYG·RKLB) 변동성·되돌림 주의')
+    ),
+
+    e('div',{className:'section-title'},'포트폴리오 제안 (예시)'),
+    e('div',{className:'card'},
+      e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'),e('th',null,'성격'))),
+        e('tbody',null,
+          e('tr',null,e('td',{className:'val-purple'},'핵심(병목)'),e('td',null,'KRMN + RDW'),e('td',null,'50%'),e('td',null,'대체불가 노드, 안정+성장')),
+          e('tr',null,e('td',{className:'val-purple'},'성장'),e('td',null,'VOYG + LUNR'),e('td',null,'30%'),e('td',null,'정거장·위성제조 확장')),
+          e('tr',null,e('td',{className:'val-purple'},'방산앵커'),e('td',null,'KTOS'),e('td',null,'12%'),e('td',null,'언섹시층, 변동성 완충')),
+          e('tr',null,e('td',{className:'val-purple'},'고배수베팅'),e('td',null,'SIDU'),e('td',null,'8%'),e('td',null,'초소형 고위험·고수익'))
+        )
+      ),
+      e('p',{style:{fontSize:'11px',color:'#64748b',marginTop:'8px'}},'※ 투자 권유가 아닌 발굴 참고용 예시. 실제 비중은 본인 리스크 성향에 맞게 조정.')
+    ),
+
+    e('div',{className:'info-box'},
+      e('div',{className:'info-title'},'📌 다음 단계'),
+      e('div',{className:'info-body'},'관심 종목을 골라 "[티커] 분석해줘"라고 입력하면 7섹션 심층 분석 + 9탭 대시보드를 생성합니다.\n예) "KRMN 분석해줘", "RDW 분석해줘"')
+    )
+  );
+}
+
+/* ════ 메인 ════ */
+function App() {
+  var tab = useState('🗺️ 밸류체인');
+  var active = tab[0]; var setTab = tab[1];
+  var TABS = ['🗺️ 밸류체인','🔬 기술분석','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
+
+  return e('div',null,
+    e('div',{className:'header'},
+      e('div',{className:'h-title'},'🚀 우주항공 종목발굴'),
+      e('div',{className:'h-sub'},'밸류체인 탑다운 × L1~L5 레이어 탐색 · 2026-06-13'),
+      e('div',{className:'badges'},
+        e('span',{className:'badge b-purple'},'우주 경제 $468B'),
+        e('span',{className:'badge b-green'},'발사 CAGR 17.2%'),
+        e('span',{className:'badge b-yellow'},'2026 공급망의 해'),
+        e('span',{className:'badge b-gray'},'7종목 발굴')
+      )
+    ),
+    e('div',{className:'tabs'},
+      TABS.map(function(t){
+        return e('div',{key:t,className:'tab'+(active===t?' active':''),onClick:function(){setTab(t)}},t);
+      })
+    ),
+    active==='🗺️ 밸류체인' && e(ValueChain,null),
+    active==='🔬 기술분석' && e(TechAnalysis,null),
+    active==='🔍 발굴종목' && e(StockCards,null),
+    active==='📊 비교차트' && e(CompareCharts,null),
+    active==='🔟 멀티배거' && e(Multibagger,null),
+    active==='🎯 전략'    && e(Strategy,null)
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
