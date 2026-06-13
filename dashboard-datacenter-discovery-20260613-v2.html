@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>데이터센터·AI/HPC 종목발굴 v2 — 2026.06.13</title>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+#root{max-width:900px;margin:0 auto;padding:16px;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:#0f172a;}
+::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:3px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var useState  = React.useState;
+var useEffect = React.useEffect;
+var useRef    = React.useRef;
+
+function e(tag, props) {
+  var args = [tag, props || null];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+}
+
+function makeChart(canvasRef, chartRef, cfg) {
+  useEffect(function() {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(canvasRef.current.getContext('2d'), cfg);
+    return function() { if (chartRef.current) { chartRef.current.destroy(); } };
+  }, []);
+}
+
+var AC  = '#06b6d4';
+var C1  = '#0c1a2e';
+var BD  = '#1e3a5f';
+
+/* ─── 병목 유형 색상 ─── */
+var CHOKE_COLOR = {
+  '전기(Power)':    '#f59e0b',
+  '재료(Material)': '#a78bfa',
+  '생산량(Yield)':  '#06b6d4',
+  '인증(Cert)':     '#10b981',
+  '열(Heat)':       '#ef4444'
+};
+
+/* ─── 10종목 데이터 ─── */
+var STOCKS = [
+  /* 전기(Power) 병목 — 3종목 */
+  { ticker:'SHLS', name:'Shoals Technologies',      price:8.90,   mcap:1.66,  rsi:48, layer:'상류', choke:'전기(Power)',    moat:'보통', score:5, warn:false,
+    key:'DC 전력 인프라 → AI 피벗 — ON.energy GW급 파트너십, $1.66B 소형주',
+    why:'태양광 DC Recombiner 기술을 AI 데이터센터 전력 시스템으로 전용. ON.energy와 GW 단위 AI 데이터센터 전력 계약 체결. 테네시 신공장(63만ft²) 가동. AI 피벗 스토리 아직 주가에 미반영.',
+    items:[true,true,false,false,true,false,true,true] },
+  { ticker:'NVTS', name:'Navitas Semiconductor',    price:25.86,  mcap:6.13,  rsi:52, layer:'중류', choke:'전기(Power)',    moat:'높음', score:5, warn:false,
+    key:'GaN/SiC 전력 IC — NVIDIA MGX 공식 파트너, 800V HVDC AI Factory 핵심',
+    why:'AI 데이터센터 HVDC 800V 변환의 핵심 GaN 칩 공급사. NVIDIA MGX AI Factory 생태계 공식 파트너십(Computex 2026). 실리콘 대비 90%+ 효율, 300W/cm³ 고전력 밀도 실현.',
+    items:[true,false,true,false,true,false,true,true] },
+  { ticker:'ENS',  name:'EnerSys',                  price:171.37, mcap:6.32,  rsi:50, layer:'중류', choke:'전기(Power)',    moat:'높음', score:5, warn:false,
+    key:'데이터센터 UPS 배터리 — 미국 리드산 시장 점유율 50%+, 리튬 DC 솔루션 출시 임박',
+    why:'AI 데이터센터 UPS(무정전전원장치) 배터리의 핵심 공급사. 미국 리드산 배터리 점유율 50%+. 리튬 데이터센터 솔루션이 고객 커미셔닝 단계 진입. 전력 중단 1초도 허용 불가 — UPS 교체·증설 수요 폭증.',
+    items:[true,true,false,false,true,true,true,true] },
+  /* 재료(Material) 병목 — 1종목 */
+  { ticker:'CLFD', name:'Clearfield',               price:42.78,  mcap:0.58,  rsi:45, layer:'중류', choke:'재료(Material)', moat:'보통', score:6, warn:false,
+    key:'초고밀도 광섬유 관리·배선 — NOVA 플랫폼, 마이크로캡 $0.58B',
+    why:'AI 데이터센터 내부 광섬유 밀도 관리의 핵심. 2026년 전 세계 광섬유 공급 부족 시작. NOVA 플랫폼은 100G/400G/AI 워크로드 대응 솔루션. BEAD 정부 프로그램 + 데이터센터 이중 수요. 시총 $580M — 10개 종목 중 멀티배거 가능성 최고.',
+    items:[true,true,false,false,true,true,true,true] },
+  /* 생산량(Yield) / 광 병목 — 3종목 */
+  { ticker:'SMTC', name:'Semtech',                  price:157.56, mcap:7.0,   rsi:65, layer:'중류', choke:'생산량(Yield)',  moat:'높음', score:6, warn:false,
+    key:'800G/1.6T 광인터커넥트 IC — 수요가 생산량 3배 초과, DC 매출 50%',
+    why:'800G·1.6T 고속 광인터커넥트 칩 세계 선도. 수요가 생산 가능량의 3배 초과 — 병목 실증. 데이터센터 매출 50%·35% 순차 성장. HieFo 인수로 InP 광소자 내재화.',
+    items:[false,true,true,false,true,false,true,true] },
+  { ticker:'AAOI', name:'Applied Optoelectronics',  price:114.0,  mcap:8.5,   rsi:72, layer:'중류', choke:'생산량(Yield)',  moat:'높음', score:4, warn:true,
+    key:'InP 1.6T 트랜시버 — $200M+ 수주 매출 2배 목표. ⚠️ 임원 매도·과평가 주의',
+    why:'InP 레이저 칩을 자체 설계·제조하는 수직계열 광부품 기업. $200M+ 1.6T 트랜시버 대형 수주. 텍사스 신공장(1.6T/3.2T 전용) 건설 중. 단, 현재가($114)가 애널리스트 평균 목표가($66.80) 대비 과평가, 임원 5명 주식 매도 신호. 리스크 인지 필수.',
+    items:[true,true,false,false,true,false,true,true] },
+  { ticker:'CRDO', name:'Credo Technology',         price:60.0,   mcap:12.5,  rsi:63, layer:'중류', choke:'생산량(Yield)',  moat:'높음', score:6, warn:false,
+    key:'AI 클러스터 연결 칩 — FY26 매출 $1.34B(3배), FY27 80%+ 가이던스',
+    why:'AI GPU 클러스터 내부 연결용 AEC·광학 DSP 핵심 공급사. FY2026 매출 3배($1.34B). FY2027 80%+ 성장 가이던스. DustPhotonics 인수로 실리콘 포토닉스 역량 확보. BNP Paribas 2026 AI 최우선 추천.',
+    items:[false,true,true,false,true,true,true,true] },
+  /* 인증(Cert) 병목 — 2종목 */
+  { ticker:'MYRG', name:'MYR Group',               price:434.54, mcap:7.3,   rsi:60, layer:'하류', choke:'인증(Cert)',     moat:'보통', score:5, warn:false,
+    key:'데이터센터 전기 건설 — 수주잔고 $2.84B 역대 최고, Q1 매출 $1B (+20% YoY)',
+    why:'데이터센터 전기 배선·설비 전문 건설사. 고압 전기 건설 인증 취득에 수년 소요 — 그 자체가 진입 장벽. 수주잔고 $2.84B(YoY +7.7%). 언섹시층의 전형 — 없으면 데이터센터 가동 불가.',
+    items:[false,true,true,false,true,true,false,true] },
+  { ticker:'WCC',  name:'Wesco International',      price:355.0,  mcap:13.5,  rsi:62, layer:'하류', choke:'인증(Cert)',     moat:'보통', score:5, warn:false,
+    key:'"AI 빌드아웃의 척추" — DC 매출 $4.3B (+50% YoY), 수주잔고 19% 증가',
+    why:'"AI 빌드아웃의 척추"라 불리는 전기 배전 유통사. DC 매출 $4.3B (+50% YoY). 데이터센터 건설에 필요한 전선·배전반·케이블 전체 공급망. 인증 전기 제품 전문 유통 — 규모와 인증망 자체가 해자.',
+    items:[false,true,true,false,true,true,false,true] },
+  /* 열(Heat) 병목 — 1종목 */
+  { ticker:'MOD',  name:'Modine Manufacturing',     price:260.52, mcap:11.0,  rsi:58, layer:'중류', choke:'열(Heat)',       moat:'높음', score:6, warn:false,
+    key:'데이터센터 액체냉각 — $4B 장기 계약, 분기 DC 매출 $400M 돌파',
+    why:'AI 데이터센터 냉각 시장의 Vertiv 대안. $4B 장기 계약(선급금 $165M). 분기 DC 매출 $400M+ 돌파 전망. FY2028 DC 매출 $2B 목표. 냉각 없이는 GPU 단 1초도 작동 불가 — 열은 진짜 물리적 병목.',
+    items:[false,true,true,false,true,true,true,true] }
+];
+
+var MB_LABELS = ['소형/중형주','고성장 매출','마진 개선','내부자 지분','TAM 확장','건전 재무','경쟁 해자','12M 촉매'];
+
+var MB_DESCS = {
+  SHLS: ['소형주 $1.66B — AI 피벗 멀티배거','매출 $434M AI 데이터센터 신규 수주','전환기 마진 압박 향후 개선 기대','아직 확인 불가','AI 데이터센터 전력 인프라 TAM 수조달러','태양광 사업 견고한 재무','DC Recombiner 독자 기술 + ON.energy 파트너','ON.energy GW급 AI 데이터센터 계약 완료'],
+  NVTS: ['중형주 $6.13B — 적정 규모','아직 적자 단계 매출 성장 확인 필요','데이터센터 비중 확대로 마진 개선 기대','아직 확인 불가','GaN 데이터센터·EV·태양광 TAM 수십조달러','아직 적자 부채 관리 필요','GaN 물리적 우위 실리콘으로 대체 불가','NVIDIA MGX Computex 2026 공식 파트너십'],
+  ENS:  ['중형주 $6.32B — 적정 규모','FY2026 매출 $3.75B DC UPS 성장','마진 개선 진행 중','아직 확인 불가','DC UPS TAM 급성장 전력 중단 불가 인프라','리드산 50%+ 점유율 안정 재무','미국 리드산 배터리 시장 1위 50%+','리튬 DC 솔루션 고객 커미셔닝 단계 진입'],
+  CLFD: ['마이크로캡 $580M — 멀티배거 가능성 최고','매출 YoY +16% 가속화 중','NOVA 플랫폼으로 ASP 상승 기대','아직 확인 불가','BEAD + AI 데이터센터 이중 수요','보수적 운영 무부채 구조','NOVA 플랫폼 특허·독점 기술','BEAD 프로그램 2026년 수익 기여 시작'],
+  SMTC: ['중형주 $7B — 적정','데이터센터 매출 35% 순차 성장','반도체 고마진 구조 유지','아직 확인 불가','800G→1.6T→3.2T 광인터커넥트 TAM 성장','아직 확인 필요','수요가 생산량 3배 초과 시장 지배력 입증','생산 증설 완료 시 공급병목 해소 → 마진 레버리지'],
+  AAOI: ['중형주 $8.5B — 적정','1.6T $200M+ 수주 매출 2배 목표','마진 개선 기대','임원 5명 주식 매도 ⚠️ 주의','1.6T→3.2T 트랜시버 TAM 성장','아직 확인 필요','InP 자체 설계·제조 수직계열 구조','텍사스 신공장 1.6T 전용 생산 시작'],
+  CRDO: ['중형주 $12.5B — 다소 큰 편','매출 YoY 3배($1.34B) FY27 80%+ 가이던스','비GAAP 순이익 $662M 흑자 전환 성공','아직 확인 불가','AI 클러스터 고속 연결 TAM 급성장','현금 보유 충분 무부채 구조','AEC + 광학 DSP 플랫폼 GPU 클러스터 필수 부품','BNP Paribas 최우선 추천 FY27 80%+ 가이던스'],
+  MYRG: ['중형주 $7.3B — 약간 큰 편','매출 YoY +20% 분기 $1B 첫 돌파','EBITDA 마진 5~7.5% 확대 전망','아직 확인 불가','데이터센터 전기 건설 TAM 폭발적 성장','건설사 특성 안정적 재무','전문 전기 건설 인증 취득에 수년 소요','수주잔고 $2.84B 역대 최고 2~3년 가시성'],
+  WCC:  ['대형주 $13.5B — 다소 큰 편','DC 매출 $4.3B +50% YoY 분기 $6.1B 최고','DC 믹스 증가로 마진 개선 중','아직 확인 불가','데이터센터 전기 유통 TAM 폭발적 성장','투자등급 재무 견고한 구조','인증 전기 제품 전문 유통 규모의 경제','2026 가이던스 상향 수주잔고 19% 증가'],
+  MOD:  ['중형주 $11B — 약간 큰 편','DC 매출 YoY +78% FY28 $2B 목표','FY27 GM 30%+ 확대 전망','아직 확인 불가','데이터센터 냉각 CAGR 21.9% 장기 TAM','$4B 장기 계약으로 수익 안정화','$4B 전용 계약 사실상 독점 공급 관계','$4B 장기 계약 선급금 $165M 체결 완료']
+};
+
+/* ─── 공통 컴포넌트 ─── */
+function ScoreBar(props) {
+  var pct = (props.score / 8) * 100;
+  return e('div', {style:{marginTop:6}},
+    e('div', {style:{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:3}},
+      e('span', {style:{color:'#64748b'}}, '멀티배거 점수'),
+      e('span', {style:{color:AC,fontWeight:'bold'}}, props.score + '/8')
+    ),
+    e('div', {style:{background:'#1e293b',borderRadius:4,height:7}},
+      e('div', {style:{width:pct+'%',background:AC,height:7,borderRadius:4}})
+    )
+  );
+}
+
+/* ─── 탭 1: 밸류체인 ─── */
+function Tab1() {
+  var chopkes = Object.keys(CHOKE_COLOR);
+  var chopkeCounts = {};
+  STOCKS.forEach(function(s){ chopkeCounts[s.choke] = (chopkeCounts[s.choke]||0)+1; });
+
+  return e('div', null,
+    e('div', {style:{background:C1,border:'1px solid '+BD,borderRadius:12,padding:20,marginBottom:12}},
+      e('h2', {style:{color:AC,fontSize:17,marginBottom:10}}, '🗺️ 밸류체인 탑다운 분석'),
+      e('p', {style:{color:'#94a3b8',fontSize:13,lineHeight:1.7,marginBottom:16}},
+        '하이퍼스케일러 5사(MS·Amazon·Google·Meta·Oracle) 2026년 CapEx $725B (+77% YoY). 이 중 75%(~$450B)가 AI 인프라. 이번 발굴은 5가지 병목 유형에 걸쳐 10개 종목을 탐색했다.'
+      ),
+      /* 병목 커버리지 요약 */
+      e('div', {style:{background:'#0a1628',border:'1px solid '+BD,borderRadius:8,padding:12,marginBottom:12}},
+        e('div', {style:{color:'#fbbf24',fontWeight:'bold',fontSize:13,marginBottom:10}}, '병목 유형별 발굴 현황 (L3 카포인트)'),
+        e('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}},
+          [
+            {choke:'전기(Power)',    n:3, stocks:'SHLS·NVTS·ENS',           icon:'⚡'},
+            {choke:'생산량(Yield)', n:3, stocks:'SMTC·AAOI·CRDO',          icon:'💡'},
+            {choke:'인증(Cert)',     n:2, stocks:'MYRG·WCC',                icon:'🔧'},
+            {choke:'열(Heat)',       n:1, stocks:'MOD',                      icon:'🌡️'},
+            {choke:'재료(Material)',n:1, stocks:'CLFD',                     icon:'🧶'}
+          ].map(function(item, i) {
+            var c = CHOKE_COLOR[item.choke] || AC;
+            return e('div', {key:i, style:{background:'#0f172a',borderLeft:'3px solid '+c,borderRadius:'0 8px 8px 0',padding:10}},
+              e('div', {style:{display:'flex',alignItems:'center',gap:6,marginBottom:4}},
+                e('span', {style:{fontSize:14}}, item.icon),
+                e('span', {style:{color:c,fontWeight:'bold',fontSize:13}}, item.choke),
+                e('span', {style:{background:c+'33',color:c,fontSize:11,padding:'1px 6px',borderRadius:4,marginLeft:'auto'}}, item.n+'종목')
+              ),
+              e('div', {style:{color:'#94a3b8',fontSize:11}}, item.stocks)
+            );
+          })
+        )
+      ),
+      /* 터미널 */
+      e('div', {style:{background:'#0a1628',border:'1px solid '+BD,borderRadius:8,padding:12,marginBottom:10}},
+        e('div', {style:{color:'#fbbf24',fontWeight:'bold',fontSize:13,marginBottom:8}}, 'L1 — 터미널(Terminal)'),
+        e('div', {style:{display:'flex',justifyContent:'center',gap:10,flexWrap:'wrap'}},
+          ['AI 학습 클러스터','HPC 컴퓨팅 노드','AI 추론 서버팜'].map(function(t,i){
+            return e('div',{key:i,style:{background:AC+'22',border:'1px solid '+AC+'55',borderRadius:8,padding:'8px 16px',color:AC,fontSize:13,fontWeight:'bold'}},t);
+          })
+        )
+      ),
+      /* 스택 */
+      e('div', {style:{background:'#0a1628',border:'1px solid '+BD,borderRadius:8,padding:12,marginBottom:10}},
+        e('div', {style:{color:'#fbbf24',fontWeight:'bold',fontSize:13,marginBottom:8}}, 'L2 — 공급망 스택'),
+        [
+          {label:'상류',items:'전력생산 | GaN/SiC 전력IC(NVTS) ⚡ | DC전력인프라(SHLS) ⚡'},
+          {label:'중류',items:'UPS배터리(ENS) ⚡ | 액체냉각CDU(MOD) 🌡️ | 광인터커넥트칩(SMTC·AAOI·CRDO) 💡 | 광섬유관리(CLFD) 🧶'},
+          {label:'하류',items:'전기건설(MYRG) 🔧 | 전기배전유통(WCC) 🔧 | 데이터센터 완공 | HPC코로케이션 | 클라우드'}
+        ].map(function(row,i){
+          return e('div',{key:i,style:{marginBottom:6,fontSize:12}},
+            e('span',{style:{color:'#94a3b8',fontWeight:'bold',display:'inline-block',width:40}},row.label),
+            e('span',{style:{color:'#64748b'}},'→ '),
+            e('span',{style:{color:'#cbd5e1'}},row.items)
+          );
+        })
+      ),
+      /* 파생 논리 */
+      e('div', {style:{background:'#0a1628',border:'1px solid '+BD,borderRadius:8,padding:12}},
+        e('div', {style:{color:'#fbbf24',fontWeight:'bold',fontSize:13,marginBottom:8}}, '핵심 파생 논리'),
+        e('p', {style:{color:'#94a3b8',fontSize:12,lineHeight:1.9}},
+          'AI 모델 경쟁 → GPU 클러스터 확장 → ',
+          e('span',{style:{color:'#f59e0b',fontWeight:'bold'}},'⚡ 전력 병목'),
+          ' (SHLS·NVTS·ENS) → ',
+          e('span',{style:{color:'#ef4444',fontWeight:'bold'}},'🌡️ 냉각 병목'),
+          ' (MOD) → ',
+          e('span',{style:{color:AC,fontWeight:'bold'}},'💡 광 병목'),
+          ' (SMTC·AAOI·CRDO) → ',
+          e('span',{style:{color:'#a78bfa',fontWeight:'bold'}},'🧶 재료 병목'),
+          ' (CLFD) → ',
+          e('span',{style:{color:'#10b981',fontWeight:'bold'}},'🔧 인증 병목'),
+          ' (MYRG·WCC)'
+        )
+      )
+    )
+  );
+}
+
+/* ─── 탭 2: 기술분석 ─── */
+function Tab2() {
+  return e('div', null,
+    e('div', {style:{background:C1,border:'1px solid '+BD,borderRadius:12,padding:20,marginBottom:12}},
+      e('h2', {style:{color:AC,fontSize:17,marginBottom:16}}, '🔬 기술 심층 배경 분석'),
+      e('div', {style:{marginBottom:18}},
+        e('h3', {style:{color:'#fbbf24',fontSize:13,marginBottom:10}}, '① 기존 기술의 근본 한계'),
+        [
+          {icon:'🔴',title:'구리 배선 대역폭 한계',  why:'GPU 수천 개 연결 시 800G 이상에서 저항열·신호 손실 급증. 구리는 물리적 ceiling 도달. AI 시대일수록 더 심각.'},
+          {icon:'🔴',title:'에어쿨링 열 제거 한계',  why:'NVIDIA GB200 단일 칩 700W, 랙 전체 100kW+. 공기 냉각으로 물리적 제거 불가. 발열 = 클러스터 다운.'},
+          {icon:'🔴',title:'AC 배전 효율 한계',      why:'AC→DC 변환 시 15%+ 전력 손실. 수백 MW 데이터센터에서 연간 수천만 달러 전기 낭비. HVDC 전환 필수.'}
+        ].map(function(item,i){
+          return e('div',{key:i,style:{background:'#0a1628',borderRadius:8,padding:12,marginBottom:8}},
+            e('div',{style:{display:'flex',gap:8,alignItems:'center',marginBottom:4}},
+              e('span',null,item.icon),
+              e('span',{style:{color:'#f8fafc',fontWeight:'bold',fontSize:13}},item.title)
+            ),
+            e('p',{style:{color:'#94a3b8',fontSize:12,paddingLeft:24}},item.why)
+          );
+        })
+      ),
+      e('div', {style:{marginBottom:18}},
+        e('h3', {style:{color:'#fbbf24',fontSize:13,marginBottom:10}}, '② 신기술 우위성'),
+        [
+          {tech:'실리콘 포토닉스 / 광인터커넥트', adv:'전력 90% 절감 | 신호 손실 ≈0 | 100Tbps+ 대역폭 | 구리 물리 한계 완전 극복'},
+          {tech:'액체냉각 (CDU / 침적식)',         adv:'에어쿨링 대비 5x 효율 | PUE 1.2 이하 | GPU 밀도 3x 향상 | GB200 필수 구성'},
+          {tech:'GaN 전력 IC (HVDC 800V)',         adv:'실리콘 대비 90%+ 효율 | 스위칭 속도 5x | 300W/cm³ 전력 밀도'}
+        ].map(function(item,i){
+          return e('div',{key:i,style:{background:'#0a1628',borderLeft:'3px solid '+AC,borderRadius:'0 8px 8px 0',padding:12,marginBottom:8}},
+            e('div',{style:{color:AC,fontWeight:'bold',fontSize:13,marginBottom:4}},item.tech),
+            e('p',{style:{color:'#94a3b8',fontSize:12}},item.adv)
+          );
+        })
+      ),
+      e('div', {style:{marginBottom:18}},
+        e('h3', {style:{color:'#fbbf24',fontSize:13,marginBottom:10}}, '③ 결정적 흐름 — 3단계'),
+        [
+          {step:'1단계',title:'초기 GPU 수요 폭발',      period:'2022~2023',desc:'ChatGPT 출시 → GPU 수요 폭발 → H100 공급 부족. 칩이 첫 병목.'},
+          {step:'2단계',title:'빅테크 전략 투자',         period:'2024~2025',desc:'하이퍼스케일러 $300B+ CapEx → 데이터센터 착공 급증 → 전력·냉각이 칩보다 큰 병목으로 부상.'},
+          {step:'3단계',title:'인프라 공급망 병목 시대', period:'2026~현재',desc:'$725B CapEx 확약 → 전력망 4~10년 대기 → 구리→광 전환 가속 → 액체냉각 의무화. 공급망 기업이 진짜 수혜.'}
+        ].map(function(item,i){
+          return e('div',{key:i,style:{background:'#0a1628',borderLeft:'3px solid '+AC,borderRadius:'0 8px 8px 0',padding:12,marginBottom:8}},
+            e('div',{style:{display:'flex',gap:8,alignItems:'center',marginBottom:4}},
+              e('span',{style:{background:AC,color:'#0a0f1e',fontSize:11,fontWeight:'bold',padding:'2px 8px',borderRadius:4}},item.step),
+              e('span',{style:{color:'#f8fafc',fontWeight:'bold',fontSize:13}},item.title),
+              e('span',{style:{color:'#64748b',fontSize:12,marginLeft:8}},item.period)
+            ),
+            e('p',{style:{color:'#94a3b8',fontSize:12}},item.desc)
+          );
+        })
+      ),
+      e('div', null,
+        e('h3', {style:{color:'#fbbf24',fontSize:13,marginBottom:10}}, '④ 시장 규모 데이터'),
+        e('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}},
+          [
+            {label:'AI 데이터센터 전체',     val:'$344B → $2,023B',   sub:'CAGR 27.5% (2025→2032)'},
+            {label:'하이퍼스케일러 CapEx',   val:'$725B (2026)',       sub:'+77% YoY, AI 비중 75%'},
+            {label:'광인터커넥트 시장',       val:'$16B → $34~41B',    sub:'2024→2030, 배선 비중 30%'},
+            {label:'데이터센터 액체냉각',     val:'$348M → $1,694M',   sub:'CAGR 21.9% (2026→2034)'},
+            {label:'HVDC 전원공급',          val:'$1.53B → $4.59B',   sub:'3배 성장 (2025→2035)'},
+            {label:'데이터센터 UPS',         val:'$8.76B → $12.47B',  sub:'CAGR ~7% (2025→2030)'}
+          ].map(function(item,i){
+            return e('div',{key:i,style:{background:'#0a1628',borderRadius:8,padding:12}},
+              e('div',{style:{color:'#64748b',fontSize:11,marginBottom:4}},item.label),
+              e('div',{style:{color:AC,fontWeight:'bold',fontSize:13}},item.val),
+              e('div',{style:{color:'#64748b',fontSize:11}},item.sub)
+            );
+          })
+        )
+      )
+    )
+  );
+}
+
+/* ─── 탭 3: 발굴종목 ─── */
+function Tab3() {
+  return e('div', null,
+    STOCKS.map(function(s){
+      var rsiColor = s.rsi > 65 ? '#f97316' : s.rsi < 40 ? '#22c55e' : '#e2e8f0';
+      var moatColor = s.moat === '높음' ? '#22c55e' : s.moat === '보통' ? '#f59e0b' : '#94a3b8';
+      var chColor = CHOKE_COLOR[s.choke] || AC;
+      return e('div',{key:s.ticker,style:{background:C1,border:'1px solid '+(s.warn?'#f97316':BD),borderRadius:12,padding:16,marginBottom:12}},
+        /* 헤더 */
+        e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}},
+          e('div',null,
+            e('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:4}},
+              e('span',{style:{color:AC,fontWeight:'bold',fontSize:18}},s.ticker),
+              e('span',{style:{background:chColor+'22',color:chColor,fontSize:11,padding:'2px 8px',borderRadius:4}},s.choke),
+              e('span',{style:{background:'#1e293b',color:'#94a3b8',fontSize:11,padding:'2px 8px',borderRadius:4}},s.layer),
+              s.warn && e('span',{style:{background:'#f9731622',color:'#f97316',fontSize:11,padding:'2px 8px',borderRadius:4}},'⚠️ 주의')
+            ),
+            e('div',{style:{color:'#64748b',fontSize:12}},s.name)
+          ),
+          e('div',{style:{textAlign:'right'}},
+            e('div',{style:{color:'#f8fafc',fontWeight:'bold',fontSize:16}},'$'+s.price.toFixed(2)),
+            e('div',{style:{color:'#94a3b8',fontSize:12}},'시총 $'+s.mcap+'B')
+          )
+        ),
+        /* 핵심 포인트 */
+        e('div',{style:{background:'#0a1628',borderRadius:6,padding:10,marginBottom:10,fontSize:12,color:'#e2e8f0',lineHeight:1.5}},s.key),
+        /* 지표 */
+        e('div',{style:{display:'flex',gap:8,marginBottom:10}},
+          e('div',{style:{flex:1,background:'#0a1628',borderRadius:6,padding:8,textAlign:'center'}},
+            e('div',{style:{color:'#64748b',fontSize:10,marginBottom:2}},'RSI'),
+            e('div',{style:{color:rsiColor,fontWeight:'bold',fontSize:14}},s.rsi)
+          ),
+          e('div',{style:{flex:1,background:'#0a1628',borderRadius:6,padding:8,textAlign:'center'}},
+            e('div',{style:{color:'#64748b',fontSize:10,marginBottom:2}},'대체불가성'),
+            e('div',{style:{color:moatColor,fontWeight:'bold',fontSize:13}},s.moat)
+          ),
+          e('div',{style:{flex:2,background:'#0a1628',borderRadius:6,padding:8,textAlign:'center'}},
+            e('div',{style:{color:'#64748b',fontSize:10,marginBottom:2}},'병목 카포인트'),
+            e('div',{style:{color:chColor,fontWeight:'bold',fontSize:11}},s.choke)
+          )
+        ),
+        /* 주목 이유 */
+        e('p',{style:{color:'#94a3b8',fontSize:12,lineHeight:1.6,marginBottom:10}},s.why),
+        /* 멀티배거 바 */
+        e(ScoreBar,{score:s.score})
+      );
+    })
+  );
+}
+
+/* ─── 탭 4: 비교차트 ─── */
+function Tab4() {
+  var mcapRef  = useRef(null); var mcapChart  = useRef(null);
+  var scoreRef = useRef(null); var scoreChart = useRef(null);
+  var rsiRef   = useRef(null); var rsiChart   = useRef(null);
+
+  var tickers = STOCKS.map(function(s){return s.ticker;});
+  var mcaps   = STOCKS.map(function(s){return s.mcap;});
+  var scores  = STOCKS.map(function(s){return s.score;});
+  var rsis    = STOCKS.map(function(s){return s.rsi;});
+  var bgColors = STOCKS.map(function(s){return (CHOKE_COLOR[s.choke]||AC)+'bb';});
+
+  makeChart(mcapRef, mcapChart, {
+    type:'bar',
+    data:{labels:tickers,datasets:[{label:'시가총액 ($B)',data:mcaps,backgroundColor:bgColors,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},title:{display:true,text:'시가총액 ($B) — 색상 = 병목 유형',color:'#94a3b8',font:{size:12}}},scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}},y:{ticks:{color:'#94a3b8',font:{size:11}},grid:{color:'#1e293b'}}}}
+  });
+
+  makeChart(scoreRef, scoreChart, {
+    type:'bar',
+    data:{labels:tickers,datasets:[{label:'멀티배거 점수',data:scores,backgroundColor:scores.map(function(s){return s>=6?'#22c55ebb':'#f59e0bbb';}),borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},title:{display:true,text:'멀티배거 점수 (/8)',color:'#94a3b8',font:{size:12}}},scales:{x:{min:0,max:8,ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}},y:{ticks:{color:'#94a3b8',font:{size:11}},grid:{color:'#1e293b'}}}}
+  });
+
+  makeChart(rsiRef, rsiChart, {
+    type:'bar',
+    data:{labels:tickers,datasets:[{label:'RSI',data:rsis,backgroundColor:rsis.map(function(r){return r>65?'#ef4444bb':r<40?'#22c55ebb':AC+'bb';}),borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},title:{display:true,text:'RSI (30~55 적정 진입 구간)',color:'#94a3b8',font:{size:12}}},scales:{x:{min:0,max:100,ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}},y:{ticks:{color:'#94a3b8',font:{size:11}},grid:{color:'#1e293b'}}}}
+  });
+
+  /* 병목 범례 */
+  var chokeEntries = Object.entries(CHOKE_COLOR);
+
+  return e('div', null,
+    e('div',{style:{background:C1,border:'1px solid '+BD,borderRadius:12,padding:12,marginBottom:8}},
+      e('div',{style:{display:'flex',flexWrap:'wrap',gap:8,marginBottom:8}},
+        chokeEntries.map(function(pair,i){
+          return e('span',{key:i,style:{color:pair[1],fontSize:11,background:pair[1]+'22',padding:'2px 8px',borderRadius:4}},
+            '■ '+pair[0]
+          );
+        })
+      ),
+      e('canvas',{ref:mcapRef,style:{maxHeight:260}})
+    ),
+    e('div',{style:{background:C1,border:'1px solid '+BD,borderRadius:12,padding:12,marginBottom:8}},
+      e('div',{style:{display:'flex',gap:12,fontSize:11,marginBottom:8,flexWrap:'wrap'}},
+        e('span',{style:{color:'#22c55e'}},'■ 6점 이상 (고신뢰)'),
+        e('span',{style:{color:'#f59e0b'}},'■ 5점 (보통)')
+      ),
+      e('canvas',{ref:scoreRef,style:{maxHeight:260}})
+    ),
+    e('div',{style:{background:C1,border:'1px solid '+BD,borderRadius:12,padding:12}},
+      e('div',{style:{display:'flex',gap:12,fontSize:11,marginBottom:8,flexWrap:'wrap'}},
+        e('span',{style:{color:'#22c55e'}},'■ RSI < 40 (과매도)'),
+        e('span',{style:{color:AC}},'■ RSI 40~65 (적정)'),
+        e('span',{style:{color:'#ef4444'}},'■ RSI > 65 (과매수 주의)')
+      ),
+      e('canvas',{ref:rsiRef,style:{maxHeight:260}})
+    )
+  );
+}
+
+/* ─── 탭 5: 멀티배거 ─── */
+function Tab5() {
+  var st = useState('CLFD');
+  var selected = st[0]; var setSelected = st[1];
+  var stock = STOCKS.find(function(s){return s.ticker===selected;});
+  var descs = MB_DESCS[selected] || [];
+
+  return e('div', null,
+    e('div',{style:{display:'flex',flexWrap:'wrap',gap:6,marginBottom:16}},
+      STOCKS.map(function(s){
+        var isActive = selected === s.ticker;
+        var c = CHOKE_COLOR[s.choke] || AC;
+        return e('button',{
+          key:s.ticker,
+          onClick:function(){setSelected(s.ticker);},
+          style:{padding:'6px 12px',background:isActive?c:'#1e293b',color:isActive?'#0a0f1e':'#94a3b8',border:'none',borderRadius:8,cursor:'pointer',fontWeight:'bold',fontSize:12}
+        },s.ticker);
+      })
+    ),
+    stock && e('div',{style:{background:C1,border:'1px solid '+BD,borderRadius:12,padding:16}},
+      e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}},
+        e('div',null,
+          e('span',{style:{color:AC,fontWeight:'bold',fontSize:18}},stock.ticker),
+          e('span',{style:{color:'#94a3b8',fontSize:13,marginLeft:8}},stock.name),
+          stock.warn && e('span',{style:{color:'#f97316',fontSize:12,marginLeft:8}},'⚠️ 주의')
+        ),
+        e('span',{style:{background:AC+'22',color:AC,fontSize:16,fontWeight:'bold',padding:'4px 14px',borderRadius:8}},stock.score+'/8')
+      ),
+      MB_LABELS.map(function(label,i){
+        var passed = stock.items[i];
+        return e('div',{key:i,style:{display:'flex',gap:10,alignItems:'flex-start',padding:'10px 0',borderBottom:'1px solid #1e293b'}},
+          e('div',{style:{width:24,height:24,borderRadius:'50%',background:passed?'#22c55e22':'#ef444422',border:'1px solid '+(passed?'#22c55e':'#ef4444'),display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},
+            e('span',{style:{fontSize:12,color:passed?'#22c55e':'#ef4444'}},passed?'✓':'✗')
+          ),
+          e('div',null,
+            e('div',{style:{color:'#f8fafc',fontSize:13,fontWeight:'bold',marginBottom:2}},label),
+            e('div',{style:{color:'#94a3b8',fontSize:12}},descs[i]||'')
+          )
+        );
+      })
+    )
+  );
+}
+
+/* ─── 탭 6: 전략 ─── */
+function Tab6() {
+  return e('div', null,
+    e('div',{style:{background:C1,border:'1px solid '+BD,borderRadius:12,padding:16,marginBottom:12}},
+      e('h3',{style:{color:AC,fontSize:15,marginBottom:12}},'🎯 발굴 우선순위 (10종목)'),
+      [
+        {rank:1, ticker:'CLFD', mcap:'$0.58B', reason:'마이크로캡 + BEAD+DC 이중 수요 + 광섬유 공급 부족 시작',cat:'BEAD 수익 기여',    risk:'매출 규모 소형', score:6},
+        {rank:2, ticker:'SHLS', mcap:'$1.66B', reason:'AI 전력 피벗 소형주 — 주가 미반영 ON.energy GW 계약',cat:'계약 집행',           risk:'피벗 실행 리스크', score:5},
+        {rank:3, ticker:'ENS',  mcap:'$6.32B', reason:'DC UPS 배터리 1위, 리튬 솔루션 출시 임박 (NEW)',        cat:'리튬 DC 솔루션 상용화',risk:'성장 속도 불확실', score:5},
+        {rank:4, ticker:'NVTS', mcap:'$6.13B', reason:'GaN 물리적 우위 + NVIDIA 공식 파트너십',               cat:'NVIDIA 생태계 확대',  risk:'적자 지속', score:5},
+        {rank:5, ticker:'SMTC', mcap:'$7.0B',  reason:'3x 수요 초과 + DC 매출 50% 확대 중',                   cat:'증설 완료 마진 급등', risk:'이미 많이 상승', score:6},
+        {rank:6, ticker:'CRDO', mcap:'$12.5B', reason:'매출 3배 + FY27 80%+ 가이던스 + 흑자 전환',           cat:'FY27 실적 발표',      risk:'대형주 수준 진입', score:6},
+        {rank:7, ticker:'MOD',  mcap:'$11.0B', reason:'$4B 장기 계약 + Vertiv 대비 저평가',                   cat:'FY27 GM 30%+ 확인',   risk:'멀티배거 둔화', score:6},
+        {rank:8, ticker:'MYRG', mcap:'$7.3B',  reason:'전기 건설 병목 + 역대 최고 수주잔고',                   cat:'DC 비중 30%+ 확대',   risk:'언섹시 저평가 지속', score:5},
+        {rank:9, ticker:'WCC',  mcap:'$13.5B', reason:'AI 빌드아웃 척추 — DC 매출 $4.3B +50% (NEW)',         cat:'2026 가이던스 상향',  risk:'대형주 성장 둔화', score:5},
+        {rank:10,ticker:'AAOI', mcap:'~$8.5B', reason:'1.6T 트랜시버 대형 수주 — 단, 과평가+임원 매도 주의', cat:'신공장 풀가동',       risk:'⚠️ 과평가+임원매도', score:4}
+      ].map(function(row,i){
+        return e('div',{key:i,style:{display:'flex',gap:10,alignItems:'flex-start',padding:'9px 0',borderBottom:'1px solid #1e293b'}},
+          e('div',{style:{width:26,height:26,borderRadius:'50%',background:i<2?AC:i<5?'#0ea5e9':'#1e293b',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},
+            e('span',{style:{color:i<2?'#0a0f1e':'#e2e8f0',fontWeight:'bold',fontSize:12}},row.rank)
+          ),
+          e('div',{style:{flex:1}},
+            e('div',{style:{display:'flex',gap:8,alignItems:'center',marginBottom:2}},
+              e('span',{style:{color:AC,fontWeight:'bold',fontSize:14}},row.ticker),
+              e('span',{style:{color:'#64748b',fontSize:12}},row.mcap),
+              e('span',{style:{background:row.score>=6?'#22c55e22':'#1e293b',color:row.score>=6?'#22c55e':'#94a3b8',fontSize:11,padding:'1px 6px',borderRadius:4}},row.score+'/8')
+            ),
+            e('div',{style:{color:'#94a3b8',fontSize:12,marginBottom:3}},row.reason),
+            e('div',{style:{display:'flex',gap:6,flexWrap:'wrap'}},
+              e('span',{style:{color:'#22c55e',fontSize:11,background:'#22c55e22',padding:'2px 6px',borderRadius:4}},'촉매: '+row.cat),
+              e('span',{style:{color:row.risk.includes('⚠️')?'#ef4444':'#f97316',fontSize:11,background:row.risk.includes('⚠️')?'#ef444422':'#f9731622',padding:'2px 6px',borderRadius:4}},'리스크: '+row.risk)
+            )
+          )
+        );
+      })
+    ),
+    /* 포트폴리오 */
+    e('div',{style:{background:C1,border:'1px solid '+BD,borderRadius:12,padding:16}},
+      e('h3',{style:{color:AC,fontSize:15,marginBottom:12}},'💼 포트폴리오 제안 (병목 유형별)'),
+      e('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}},
+        [
+          {layer:'⚡ 전력 병목', stocks:'SHLS 40% + NVTS 35% + ENS 25%', weight:'25%', color:'#f59e0b'},
+          {layer:'💡 광 병목',   stocks:'SMTC 40% + CRDO 40% + CLFD 20%', weight:'35%', color:AC},
+          {layer:'🌡️ 냉각 병목', stocks:'MOD 100%',                        weight:'20%', color:'#ef4444'},
+          {layer:'🔧 인증 병목', stocks:'MYRG 60% + WCC 40%',              weight:'20%', color:'#10b981'}
+        ].map(function(p,i){
+          return e('div',{key:i,style:{background:'#0a1628',borderLeft:'3px solid '+p.color,borderRadius:'0 8px 8px 0',padding:12}},
+            e('div',{style:{color:p.color,fontWeight:'bold',fontSize:12,marginBottom:4}},p.layer+' — '+p.weight),
+            e('div',{style:{color:'#94a3b8',fontSize:11}},p.stocks)
+          );
+        })
+      ),
+      e('div',{style:{background:'#f9731611',border:'1px solid #f9731644',borderRadius:8,padding:10,marginBottom:10}},
+        e('p',{style:{color:'#f97316',fontSize:12,fontWeight:'bold',marginBottom:4}},'⚠️ AAOI 주의사항'),
+        e('p',{style:{color:'#94a3b8',fontSize:12}},'애널리스트 평균 목표가($66.80) 대비 현재가($114) 과평가. 임원 5명 주식 매도 신호. 포트폴리오에서 제외하거나 소규모 투기적 포지션으로만 접근 권장.')
+      ),
+      e('p',{style:{color:'#64748b',fontSize:11}},'* 이 자료는 투자 권유가 아닙니다. 실제 투자 전 충분한 조사와 전문가 상담을 권장합니다.')
+    )
+  );
+}
+
+/* ─── 메인 앱 ─── */
+function App() {
+  var tabState = useState(0);
+  var tab = tabState[0]; var setTab = tabState[1];
+  var tabs = ['🗺️ 밸류체인','🔬 기술분석','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
+
+  return e('div', null,
+    e('a',{href:'https://disntm90.github.io/disntm90/',style:{display:'inline-block',color:AC,textDecoration:'none',fontSize:13,marginBottom:12}},'← 목록으로'),
+    /* 헤더 */
+    e('div',{style:{background:'linear-gradient(135deg,#0c2a4a,#0a1628)',border:'1px solid '+BD,borderRadius:16,padding:20,marginBottom:16}},
+      e('div',{style:{display:'flex',alignItems:'center',gap:12,marginBottom:10}},
+        e('div',{style:{width:48,height:48,borderRadius:12,background:AC+'33',border:'2px solid '+AC,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}},'🏗️'),
+        e('div',null,
+          e('h1',{style:{color:AC,fontSize:21,fontWeight:'bold'}},'데이터센터 · AI/HPC'),
+          e('div',{style:{color:'#94a3b8',fontSize:13}},'종목발굴 v2 — 2026.06.13 | 10종목 · 5가지 병목 유형')
+        )
+      ),
+      e('div',{style:{display:'flex',flexWrap:'wrap',gap:8}},
+        [
+          {label:'하이퍼스케일러 CapEx', val:'$725B'},
+          {label:'AI 인프라',            val:'$450B (75%)'},
+          {label:'발굴 종목',            val:'10개'},
+          {label:'병목 유형',            val:'5가지'}
+        ].map(function(item,i){
+          return e('div',{key:i,style:{background:AC+'11',border:'1px solid '+AC+'33',borderRadius:8,padding:'6px 12px',textAlign:'center'}},
+            e('div',{style:{color:'#94a3b8',fontSize:10}},item.label),
+            e('div',{style:{color:AC,fontWeight:'bold',fontSize:14}},item.val)
+          );
+        })
+      )
+    ),
+    /* 탭 바 */
+    e('div',{style:{display:'flex',overflowX:'auto',gap:4,marginBottom:16}},
+      tabs.map(function(t,i){
+        var isActive = tab===i;
+        return e('button',{
+          key:i,onClick:function(){setTab(i);},
+          style:{padding:'8px 14px',background:isActive?AC:'#1e293b',color:isActive?'#0a0f1e':'#94a3b8',border:'none',borderRadius:8,cursor:'pointer',fontWeight:'bold',fontSize:12,whiteSpace:'nowrap',flexShrink:0}
+        },t);
+      })
+    ),
+    tab===0 && Tab1(),
+    tab===1 && Tab2(),
+    tab===2 && Tab3(),
+    tab===3 && e(Tab4,null),
+    tab===4 && e(Tab5,null),
+    tab===5 && Tab6()
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
