@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🤖 로보틱스 종목발굴 — 2026-06-14</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f0f; color: #e5e7eb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+(function() {
+  var useState = React.useState;
+  var useEffect = React.useEffect;
+  var useRef = React.useRef;
+
+  function e() {
+    var args = Array.prototype.slice.call(arguments);
+    return React.createElement.apply(React, args);
+  }
+
+  var THEME = '#10b981';
+  var BD  = '#1f2937';
+  var BD2 = '#374151';
+
+  var CHOKE_COLOR = {
+    '재료(Material)':     '#a78bfa',
+    '감지(Sensor)':       '#10b981',
+    '생산량(Production)': '#06b6d4',
+    '광(Vision)':         '#f59e0b',
+    '인증(Cert)':         '#3b82f6',
+    'SW/AI':              '#ec4899',
+    '전기(Power)':        '#ef4444'
+  };
+
+  var STOCKS = [
+    { ticker:'MP',   name:'MP Materials',     price:57.82,  mcap:10.25, rsi:55, score:5, choke:'재료(Material)' },
+    { ticker:'AXTI', name:'AXT Inc',           price:89.27,  mcap:5.66,  rsi:50, score:5, choke:'재료(Material)' },
+    { ticker:'VPG',  name:'Vishay Precision',  price:138.08, mcap:1.85,  rsi:64, score:7, choke:'감지(Sensor)' },
+    { ticker:'ALNT', name:'Allient Inc',        price:65.48,  mcap:1.01,  rsi:48, score:6, choke:'생산량(Production)' },
+    { ticker:'AEVA', name:'Aeva Technologies', price:14.50,  mcap:0.94,  rsi:45, score:6, choke:'광(Vision)' },
+    { ticker:'AMBA', name:'Ambarella',         price:68.72,  mcap:3.44,  rsi:52, score:6, choke:'광(Vision)' },
+    { ticker:'NOVT', name:'Novanta Inc',        price:164.34, mcap:5.85,  rsi:55, score:6, choke:'인증(Cert)' },
+    { ticker:'RCAT', name:'Red Cat Holdings',  price:14.74,  mcap:2.06,  rsi:46, score:5, choke:'인증(Cert)', warn:true },
+    { ticker:'PDYN', name:'Palladyne AI',       price:6.18,   mcap:0.30,  rsi:42, score:5, choke:'SW/AI' },
+    { ticker:'ULBI', name:'Ultralife Corp',     price:6.58,   mcap:0.11,  rsi:40, score:5, choke:'전기(Power)' },
+    { ticker:'NNDM', name:'Nano Dimension',     price:1.63,   mcap:0.35,  rsi:38, score:4, choke:'생산량(Production)', warn:true }
+  ];
+
+  var YARTSEVA = [
+    '소형주 ($5B 이하)',
+    '고성장 매출 (YoY 20%+)',
+    '마진 개선 추이',
+    '내부자 매수',
+    '거대 TAM',
+    '부채 없는 재무',
+    '경제적 해자',
+    '근접 촉매'
+  ];
+
+  var SCORES = {
+    'MP':   [1,0,1,0,1,1,1,1],
+    'AXTI': [0,1,0,0,1,1,1,1],
+    'VPG':  [1,1,1,0,1,1,1,1],
+    'ALNT': [1,1,1,0,1,1,1,0],
+    'AEVA': [1,1,0,0,1,1,1,1],
+    'AMBA': [1,1,1,0,1,1,1,0],
+    'NOVT': [0,1,1,0,1,1,1,1],
+    'RCAT': [1,1,0,0,1,1,1,0],
+    'PDYN': [1,1,0,1,1,1,0,0],
+    'ULBI': [1,0,0,1,1,1,1,0],
+    'NNDM': [1,0,0,0,1,1,0,1]
+  };
+
+  var POINTS = [
+    '미국 유일 희토류 통합 생산기업. NdFeB 자석 제조 Texas 캠퍼스 착공($1.25B+). 美 국방부 PPP 체결, 로봇 자석 공급 독점 가능성.',
+    'GaAs·InP 반도체 기판 제조. 로봇 LiDAR·근적외선 센서·파워 앰프 필수 재료. Northland AI 수요로 목표가 $125 상향.',
+    '6축 힘/토크 센서·정밀 저항. Physical AI·휴머노이드 로봇 핵심 감지 부품. Q1 2026 매출 $84.4M YoY +17.6%, 주문 $100M+ 돌파.',
+    '정밀 서보모터·모션 컨트롤 시스템. 의료·로보틱스·항공우주 3중 노출. 연매출 $554M, 시총 $1B로 멀티배거 가능.',
+    'FMCW 4D LiDAR-on-Chip 독자 기술. 속도 측정 가능, ToF 대비 날씨 간섭 면역. 2025 매출 +99% YoY, 목표가 $23~25.',
+    '엣지 AI 비전 SoC — 로봇·ADAS 양쪽 시장. 저전력 AI 추론 칩. 최근 12개월 주가 +25%, RSI 중립 구간.',
+    '의료·산업 로봇 정밀 서브시스템 공급. Q1 2026 수주 더블디짓 성장, 가이던스 상향. AI·의료·자동화 3중 노출.',
+    '美 방위 드론·해상 로봇. H.C. Wainwright 목표가 $20, Roth Capital $25. 최근 70%+ 급등, 단기 과열 주의.',
+    'Palladyne AI — 산업·방산 자율로봇 OS. Q1 2026 매출 100% YoY 성장, 신규 계약 $7M, 백로그 $17M. 고위험·고성장.',
+    'Ultralife — 로봇 전용 배터리·전력 시스템. 국방·산업 로봇 공급 이원화. 시총 $110M 극소형, 고위험.',
+    'AM 전자 PCB 3D 프린터. 로봇 보드·구조물 주문형 제조. 시총 $352M, 주식 희석 리스크 주의.'
+  ];
+
+  function makeChart(canvasRef, chartRef, cfg) {
+    useEffect(function() {
+      if (!canvasRef.current) return;
+      if (chartRef.current) { chartRef.current.destroy(); }
+      chartRef.current = new Chart(canvasRef.current, cfg);
+      return function() {
+        if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
+      };
+    }, []);
+  }
+
+  /* ── Tab1 밸류체인 ─────────────────────────────── */
+  function Tab1() {
+    var rows = [
+      { layer:'상류', label:'희소 재료·기판', desc:'NdFeB 자석, GaAs/InP 기판, 희토류 광물', tickers:'★ MP, ★ AXTI', choke:'재료(Material)' },
+      { layer:'중류 ①', label:'모터·감속기 생산', desc:'정밀 서보모터, 조화감속기, 베어링, AM 부품', tickers:'★ ALNT, NNDM', choke:'생산량(Production)' },
+      { layer:'중류 ②', label:'힘·토크 센서', desc:'6축 힘/토크, 정밀 저항 계측, Physical AI 감지', tickers:'★ VPG', choke:'감지(Sensor)' },
+      { layer:'중류 ③', label:'비전·LiDAR 칩', desc:'4D FMCW LiDAR, 엣지 AI 비전 SoC, 근적외선', tickers:'★ AEVA, ★ AMBA', choke:'광(Vision)' },
+      { layer:'중류 ④', label:'전력·배터리', desc:'로봇 전용 충방전 시스템, 자율 전원 모듈', tickers:'★ ULBI', choke:'전기(Power)' },
+      { layer:'하류 ①', label:'인증·정밀 서브시스템', desc:'의료·방산 규제 인증, 정밀 어셈블리 서브시스템', tickers:'★ NOVT, RCAT', choke:'인증(Cert)' },
+      { layer:'하류 ②', label:'로봇 AI 소프트웨어', desc:'자율 로봇 OS, 물리 AI 플랫폼, 방산 자율화', tickers:'★ PDYN', choke:'SW/AI' }
+    ];
+
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'12px', fontSize:'18px'}}, '🗺️ 로보틱스 밸류체인 맵'),
+      e('p', {style:{color:'#9ca3af', fontSize:'13px', marginBottom:'16px'}},
+        '메가 트렌드: 휴머노이드 로봇 대량 생산 (Tesla Optimus 연 100만대 목표) → 공급망 전역 병목 극심화'),
+      e('div', {style:{background:'#111827', borderRadius:'10px', padding:'16px', marginBottom:'20px',
+                       fontFamily:'monospace', fontSize:'13px', color:'#d1fae5', lineHeight:'2'}},
+        e('div', null, '[메가 트렌드]  휴머노이드 로봇 대량 생산'),
+        e('div', null, '      ↓'),
+        e('div', null, '[상류]  희소재료·기판  (★MP  ★AXTI)'),
+        e('div', null, '      ↓'),
+        e('div', null, '[중류]  모터·감지·비전·전력  (★ALNT  ★VPG  ★AEVA  ★AMBA  ★ULBI)'),
+        e('div', null, '      ↓'),
+        e('div', null, '[하류]  인증·AI-SW  (★NOVT  RCAT  ★PDYN)')
+      ),
+      rows.map(function(r) {
+        return e('div', {key:r.layer,
+          style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'10px',
+                 borderLeft:'4px solid '+(CHOKE_COLOR[r.choke]||THEME)}},
+          e('div', {style:{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:'6px', marginBottom:'6px'}},
+            e('span', {style:{color:CHOKE_COLOR[r.choke]||THEME, fontWeight:'bold', fontSize:'14px'}},
+              r.layer+' — '+r.label),
+            e('span', {style:{background:CHOKE_COLOR[r.choke]||THEME, color:'#000',
+                               borderRadius:'4px', padding:'2px 8px', fontSize:'11px', fontWeight:'bold'}}, r.choke)
+          ),
+          e('p', {style:{color:'#9ca3af', fontSize:'12px', marginBottom:'4px'}}, r.desc),
+          e('p', {style:{color:'#d1fae5', fontSize:'12px', fontWeight:'bold'}}, '관련 종목: '+r.tickers)
+        );
+      }),
+      e('div', {style:{background:'#064e3b', borderRadius:'8px', padding:'14px', marginTop:'16px'}},
+        e('p', {style:{color:'#6ee7b7', fontSize:'13px', fontWeight:'bold', marginBottom:'6px'}}, '💡 핵심 파생 논리'),
+        e('p', {style:{color:'#a7f3d0', fontSize:'12px', lineHeight:'1.7'}},
+          '휴머노이드 로봇 → 관절마다 액추에이터(대당 30~60개) → 감속기·모터·센서 동시 수요 폭증 ' +
+          '→ NdFeB 자석 중국 의존(90%) → 미국 내 공급 독점 기업 선점이 핵심 → ' +
+          '비전(LiDAR·AI칩) 없이 로봇 자율화 불가 → 전력·배터리가 자율 운영 병목')
+      )
+    );
+  }
+
+  /* ── Tab2 기술분석 ─────────────────────────────── */
+  function Tab2() {
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'16px', fontSize:'18px'}}, '🔬 기술 심층 배경 분석'),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#fbbf24', marginBottom:'10px', fontSize:'15px'}}, '① 기존 기술의 근본 한계'),
+        [
+          '희토류 자석 공급 병목 — 로봇 액추에이터 핵심인 NdFeB 자석을 중국이 90%+ 지배. AI 시대 로봇 수요 폭증 시 지정학적 리스크 직격.',
+          '조화감속기(Harmonic Drive) 과점 — 로봇 1대당 30~60개 필요, 전 세계 대규모 제조사 5개 미만. 수요 폭증 시 리드타임 6개월+로 생산 전체 대기.',
+          '힘/토크 센서 대량생산 부재 — 6축 F/T 센서는 정밀 협동작업 필수. 단일 그램 분해능 요구, 대량 공급 체계 갖춘 기업 극소수.'
+        ].map(function(t, i) {
+          return e('div', {key:i, style:{display:'flex', gap:'10px', marginBottom:'8px'}},
+            e('span', {style:{color:'#ef4444', fontWeight:'bold', flexShrink:0}}, (i+1)+'.'),
+            e('p', {style:{color:'#d1d5db', fontSize:'13px', lineHeight:'1.6'}}, t)
+          );
+        })
+      ),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#34d399', marginBottom:'10px', fontSize:'15px'}}, '② 신기술 우위성 — 왜 대체 불가인가'),
+        e('div', {style:{overflowX:'auto'}},
+          e('table', {style:{width:'100%', borderCollapse:'collapse', fontSize:'12px'}},
+            e('thead', null,
+              e('tr', null,
+                ['기술 영역', '기존 대비 개선', '핵심 수치'].map(function(h) {
+                  return e('th', {key:h, style:{background:'#064e3b', color:'#6ee7b7', padding:'8px', textAlign:'left'}}, h);
+                })
+              )
+            ),
+            e('tbody', null,
+              [
+                ['FMCW 4D LiDAR', 'ToF 대비 속도 측정 가능, 날씨 간섭 면역', '신호손실 -90%, 정확도 2× 향상'],
+                ['6축 힘/토크 센서', '단순 엔코더 대비 실시간 힘 피드백', '1g 분해능, 협동 로봇 필수'],
+                ['희토류 국내 공급', '중국 의존 → 미국 자체 생산', 'MP: 美 유일 통합, AXTI: GaAs 기판']
+              ].map(function(row, i) {
+                return e('tr', {key:i, style:{borderTop:'1px solid '+BD2}},
+                  row.map(function(c, j) {
+                    return e('td', {key:j, style:{padding:'8px', color:'#d1d5db'}}, c);
+                  })
+                );
+              })
+            )
+          )
+        )
+      ),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#60a5fa', marginBottom:'10px', fontSize:'15px'}}, '③ 결정적 흐름 — 3단계 타임라인'),
+        [
+          {stage:'1단계 — 수요 폭발', period:'2021~2023', color:'#a78bfa',
+           text:'Boston Dynamics·Agility Robotics 개발 가속. 산업 로봇에서 AI 로봇으로 패러다임 전환. 공급망 취약점 인식 시작.'},
+          {stage:'2단계 — 빅테크 전략 투자', period:'2023~2025', color:'#10b981',
+           text:'Tesla Optimus, Figure AI(MS·OpenAI·NVIDIA $675M 투자), 1X Technologies 등 수십억 달러 유입. NVIDIA Gr00t 물리AI 발표. 부품 수주잔고 급증.'},
+          {stage:'3단계 — 대량 생산·병목 심화', period:'2026~현재', color:'#f59e0b',
+           text:'Tesla Fremont 공장 Optimus 연산 전환(목표 100만대/년). 공급망 전역 병목. 액추에이터·센서·희토류 수급 전쟁 돌입.'}
+        ].map(function(s) {
+          return e('div', {key:s.stage, style:{borderLeft:'3px solid '+s.color, paddingLeft:'12px', marginBottom:'12px'}},
+            e('div', {style:{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:'4px', marginBottom:'4px'}},
+              e('span', {style:{color:s.color, fontWeight:'bold', fontSize:'14px'}}, s.stage),
+              e('span', {style:{color:'#9ca3af', fontSize:'12px'}}, s.period)
+            ),
+            e('p', {style:{color:'#d1d5db', fontSize:'13px', lineHeight:'1.6'}}, s.text)
+          );
+        })
+      ),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px'}},
+        e('h3', {style:{color:'#f472b6', marginBottom:'10px', fontSize:'15px'}}, '④ 시장 규모 데이터'),
+        e('div', {style:{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px'}},
+          [
+            ['현재 시장 규모', '$5~8B (2026E)'],
+            ['YoY 성장률', '+39~53%'],
+            ['CAGR (2026~2030)', '~47%'],
+            ['목표 시장 규모', '$38~39B (2030E)']
+          ].map(function(item) {
+            return e('div', {key:item[0], style:{background:'#111827', borderRadius:'6px', padding:'10px', textAlign:'center'}},
+              e('p', {style:{color:'#9ca3af', fontSize:'11px', marginBottom:'4px'}}, item[0]),
+              e('p', {style:{color:THEME, fontSize:'16px', fontWeight:'bold'}}, item[1])
+            );
+          })
+        )
+      )
+    );
+  }
+
+  /* ── Tab3 발굴종목 ─────────────────────────────── */
+  function Tab3() {
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'16px', fontSize:'18px'}}, '🔍 발굴 종목 카드 (11종목)'),
+      STOCKS.map(function(s, i) {
+        return e('div', {key:s.ticker,
+          style:{
+            background: BD,
+            border: '1px solid '+(s.warn ? '#f97316' : BD2),
+            borderRadius: '10px',
+            padding: '14px',
+            marginBottom: '12px',
+            borderLeft: '4px solid '+(CHOKE_COLOR[s.choke]||THEME)
+          }},
+          e('div', {style:{display:'flex', justifyContent:'space-between', alignItems:'center',
+                           flexWrap:'wrap', gap:'6px', marginBottom:'8px'}},
+            e('div', {style:{display:'flex', alignItems:'center', gap:'8px'}},
+              e('span', {style:{color:CHOKE_COLOR[s.choke]||THEME, fontWeight:'bold', fontSize:'18px'}}, s.ticker),
+              e('span', {style:{color:'#9ca3af', fontSize:'13px'}}, s.name),
+              s.warn ? e('span', {style:{background:'#92400e', color:'#fde68a',
+                                         borderRadius:'4px', padding:'1px 6px', fontSize:'10px', fontWeight:'bold'}}, '⚠️ 주의') : null
+            ),
+            e('span', {style:{background:CHOKE_COLOR[s.choke]||THEME, color:'#000',
+                               borderRadius:'4px', padding:'2px 8px', fontSize:'11px', fontWeight:'bold'}}, s.choke)
+          ),
+          e('div', {style:{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'8px', marginBottom:'10px'}},
+            [['현재가', '$'+s.price], ['시가총액', '$'+s.mcap+'B'], ['RSI', s.rsi]].map(function(item) {
+              return e('div', {key:item[0], style:{background:'#111827', borderRadius:'6px', padding:'8px', textAlign:'center'}},
+                e('p', {style:{color:'#6b7280', fontSize:'10px', marginBottom:'2px'}}, item[0]),
+                e('p', {style:{color:'#f9fafb', fontSize:'14px', fontWeight:'bold'}}, item[1])
+              );
+            })
+          ),
+          e('div', {style:{marginBottom:'8px'}},
+            e('div', {style:{display:'flex', justifyContent:'space-between', marginBottom:'4px'}},
+              e('span', {style:{color:'#9ca3af', fontSize:'11px'}}, '멀티배거 점수'),
+              e('span', {style:{color:CHOKE_COLOR[s.choke]||THEME, fontSize:'11px', fontWeight:'bold'}}, s.score+'/8')
+            ),
+            e('div', {style:{background:BD2, borderRadius:'4px', height:'6px'}},
+              e('div', {style:{background:CHOKE_COLOR[s.choke]||THEME, width:(s.score/8*100)+'%', height:'100%', borderRadius:'4px'}})
+            )
+          ),
+          e('p', {style:{color:'#d1d5db', fontSize:'12px', lineHeight:'1.6'}}, POINTS[i])
+        );
+      })
+    );
+  }
+
+  /* ── Tab4 비교차트 (hooks) ─────────────────────── */
+  function Tab4() {
+    var c1 = useRef(null); var r1 = useRef(null);
+    var c2 = useRef(null); var r2 = useRef(null);
+    var c3 = useRef(null); var r3 = useRef(null);
+
+    var labels = STOCKS.map(function(s){ return s.ticker; });
+    var colors = STOCKS.map(function(s){ return CHOKE_COLOR[s.choke]||THEME; });
+
+    var baseOpts = {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color:'#9ca3af' }, grid: { color:BD2 } },
+        y: { ticks: { color:'#e5e7eb' }, grid: { color:BD2 } }
+      },
+      responsive: true
+    };
+
+    makeChart(c1, r1, {
+      type: 'bar',
+      data: { labels: labels, datasets: [{ label:'시가총액($B)', data: STOCKS.map(function(s){return s.mcap;}), backgroundColor: colors }] },
+      options: Object.assign({}, baseOpts)
+    });
+    makeChart(c2, r2, {
+      type: 'bar',
+      data: { labels: labels, datasets: [{ label:'멀티배거점수', data: STOCKS.map(function(s){return s.score;}), backgroundColor: colors }] },
+      options: Object.assign({}, baseOpts, { scales: Object.assign({}, baseOpts.scales, { x: { min:0, max:8, ticks:{color:'#9ca3af'}, grid:{color:BD2} } }) })
+    });
+    makeChart(c3, r3, {
+      type: 'bar',
+      data: { labels: labels, datasets: [{ label:'RSI', data: STOCKS.map(function(s){return s.rsi;}), backgroundColor: colors }] },
+      options: Object.assign({}, baseOpts, { scales: Object.assign({}, baseOpts.scales, { x: { min:0, max:100, ticks:{color:'#9ca3af'}, grid:{color:BD2} } }) })
+    });
+
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'16px', fontSize:'18px'}}, '📊 비교 차트'),
+      [
+        {ref:c1, title:'시가총액 ($B)'},
+        {ref:c2, title:'멀티배거 점수 (/8)'},
+        {ref:c3, title:'RSI (30~55 목표 구간)'}
+      ].map(function(item, i) {
+        return e('div', {key:i, style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+          e('h3', {style:{color:'#9ca3af', fontSize:'13px', marginBottom:'10px'}}, item.title),
+          e('canvas', {ref:item.ref, height:320})
+        );
+      })
+    );
+  }
+
+  /* ── Tab5 멀티배거 (hooks) ─────────────────────── */
+  function Tab5() {
+    var sa = useState(STOCKS[0].ticker);
+    var sel = sa[0]; var setSel = sa[1];
+
+    var items = SCORES[sel] || [];
+    var total = items.reduce(function(a,b){return a+b;}, 0);
+    var stock = STOCKS.filter(function(s){return s.ticker===sel;})[0] || STOCKS[0];
+
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'16px', fontSize:'18px'}}, '🔟 멀티배거 분석 (Anna Yartseva 8항목)'),
+      e('div', {style:{display:'flex', flexWrap:'wrap', gap:'8px', marginBottom:'16px'}},
+        STOCKS.map(function(s) {
+          return e('button', {
+            key: s.ticker,
+            onClick: function(){ setSel(s.ticker); },
+            style:{
+              background: sel===s.ticker ? (CHOKE_COLOR[s.choke]||THEME) : BD2,
+              color: sel===s.ticker ? '#000' : '#e5e7eb',
+              border: 'none', borderRadius: '6px', padding: '6px 12px',
+              cursor: 'pointer', fontSize: '12px', fontWeight: 'bold'
+            }
+          }, s.ticker);
+        })
+      ),
+      e('div', {style:{background:BD, borderRadius:'10px', padding:'16px', marginBottom:'16px'}},
+        e('div', {style:{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px'}},
+          e('div', null,
+            e('h3', {style:{color:CHOKE_COLOR[stock.choke]||THEME, fontSize:'16px'}}, sel+' — '+stock.name),
+            e('p', {style:{color:'#9ca3af', fontSize:'12px'}}, stock.choke)
+          ),
+          e('span', {style:{background:CHOKE_COLOR[stock.choke]||THEME, color:'#000',
+                             borderRadius:'6px', padding:'4px 14px', fontWeight:'bold', fontSize:'16px'}}, total+'/8점')
+        ),
+        YARTSEVA.map(function(item, i) {
+          var pass = items[i]===1;
+          return e('div', {key:i,
+            style:{display:'flex', alignItems:'center', gap:'10px',
+                   padding:'8px 0', borderBottom:'1px solid '+BD2}},
+            e('span', {style:{fontSize:'16px'}}, pass ? '✅' : '❌'),
+            e('span', {style:{color: pass ? '#d1fae5' : '#6b7280', fontSize:'13px'}}, item)
+          );
+        })
+      )
+    );
+  }
+
+  /* ── Tab6 전략 ─────────────────────────────────── */
+  function Tab6() {
+    var ranking = STOCKS.slice().sort(function(a,b){
+      return b.score - a.score || a.rsi - b.rsi;
+    });
+
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'16px', fontSize:'18px'}}, '🎯 투자 전략'),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#fbbf24', marginBottom:'10px', fontSize:'14px'}}, '우선순위 순위표'),
+        ranking.map(function(s, i) {
+          return e('div', {key:s.ticker,
+            style:{display:'flex', alignItems:'center', gap:'12px',
+                   padding:'8px 0', borderBottom:'1px solid '+BD2}},
+            e('span', {style:{color:'#6b7280', fontSize:'13px', width:'22px', flexShrink:0}}, '#'+(i+1)),
+            e('span', {style:{color:CHOKE_COLOR[s.choke]||THEME, fontWeight:'bold',
+                               fontSize:'14px', width:'50px', flexShrink:0}}, s.ticker),
+            e('div', {style:{flex:1}},
+              e('div', {style:{background:BD2, borderRadius:'3px', height:'5px'}},
+                e('div', {style:{background:CHOKE_COLOR[s.choke]||THEME,
+                                  width:(s.score/8*100)+'%', height:'100%', borderRadius:'3px'}})
+              )
+            ),
+            e('span', {style:{color:'#9ca3af', fontSize:'12px', width:'35px', textAlign:'right', flexShrink:0}}, s.score+'/8')
+          );
+        })
+      ),
+
+      e('div', {style:{background:'#064e3b', borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#6ee7b7', marginBottom:'12px', fontSize:'14px'}}, '포트폴리오 제안'),
+        [
+          {label:'핵심 보유 (40%)', tickers:'VPG + ALNT + AEVA', desc:'병목 확실, 멀티배거 점수 6~7점. 수주잔고·매출 성장 검증.'},
+          {label:'성장 노출 (35%)', tickers:'AMBA + NOVT + AXTI', desc:'AI 비전·정밀 서브시스템·기판 3중 노출. 중형주 안정성.'},
+          {label:'투기·분산 (25%)', tickers:'PDYN + ULBI + MP + NNDM', desc:'고위험·고성장. 각 2~5% 소액 배분 권장.'}
+        ].map(function(p) {
+          return e('div', {key:p.label, style:{marginBottom:'12px'}},
+            e('div', {style:{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:'4px', marginBottom:'4px'}},
+              e('span', {style:{color:'#34d399', fontWeight:'bold', fontSize:'13px'}}, p.label),
+              e('span', {style:{color:'#6ee7b7', fontSize:'12px'}}, p.tickers)
+            ),
+            e('p', {style:{color:'#a7f3d0', fontSize:'12px'}}, p.desc)
+          );
+        })
+      ),
+
+      e('div', {style:{background:'#7c2d12', borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#fca5a5', marginBottom:'10px', fontSize:'14px'}}, '⚠️ 주의 종목'),
+        e('div', {style:{marginBottom:'8px'}},
+          e('span', {style:{color:'#f97316', fontWeight:'bold'}}, 'RCAT '),
+          e('span', {style:{color:'#fca5a5', fontSize:'13px'}},
+            '— 최근 5월~6월 70%+ 급등. 단기 과열 구간 진입. 추격 매수 위험. 조정 후 $10~11대 재진입 고려.')
+        ),
+        e('div', null,
+          e('span', {style:{color:'#f97316', fontWeight:'bold'}}, 'NNDM '),
+          e('span', {style:{color:'#fca5a5', fontSize:'13px'}},
+            '— 반복적 주식 희석 리스크. 마이크로캡 유동성 제한. 단순 테마 참여 시 소액만 고려.')
+        )
+      ),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px'}},
+        e('h3', {style:{color:'#60a5fa', marginBottom:'10px', fontSize:'14px'}}, '주요 촉매 & 리스크'),
+        e('div', {style:{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}},
+          e('div', null,
+            e('p', {style:{color:'#34d399', fontWeight:'bold', marginBottom:'6px', fontSize:'12px'}}, '✅ 상승 촉매'),
+            ['Tesla Optimus 양산 공식 발표', 'NVIDIA Gr00t 물리AI 2.0 출시', '희토류 탈중국화 법안 통과', '방산 로봇 예산 대폭 증가'].map(function(t, i) {
+              return e('p', {key:i, style:{color:'#d1d5db', fontSize:'12px', marginBottom:'4px'}}, '• '+t);
+            })
+          ),
+          e('div', null,
+            e('p', {style:{color:'#ef4444', fontWeight:'bold', marginBottom:'6px', fontSize:'12px'}}, '❌ 리스크'),
+            ['양산 일정 지연 (Optimus)', '중국 희토류 수출 제한 해제', '금리 상승 → 소형주 멀티플 압축', 'Tesla 부품 내재화 가속'].map(function(t, i) {
+              return e('p', {key:i, style:{color:'#d1d5db', fontSize:'12px', marginBottom:'4px'}}, '• '+t);
+            })
+          )
+        )
+      )
+    );
+  }
+
+  /* ── Main App ──────────────────────────────────── */
+  function App() {
+    var sa = useState(0);
+    var tab = sa[0]; var setTab = sa[1];
+
+    var TABS = ['🗺️ 밸류체인', '🔬 기술분석', '🔍 발굴종목', '📊 비교차트', '🔟 멀티배거', '🎯 전략'];
+
+    return e('div', {style:{maxWidth:'800px', margin:'0 auto', paddingBottom:'40px'}},
+      e('div', {style:{background:'linear-gradient(135deg,#064e3b,#065f46)', padding:'20px'}},
+        e('a', {href:'https://disntm90.github.io/disntm90/',
+                style:{color:'#6ee7b7', fontSize:'13px', textDecoration:'none', display:'block', marginBottom:'8px'}},
+          '← 목록으로'),
+        e('h1', {style:{color:'#fff', fontSize:'22px', fontWeight:'bold', marginBottom:'4px'}},
+          '🤖 로보틱스 종목발굴 대시보드'),
+        e('p', {style:{color:'#a7f3d0', fontSize:'13px'}}, '2026-06-14 · 11종목 · 탑다운 밸류체인 분석')
+      ),
+      e('div', {style:{background:'#111827', padding:'8px', display:'flex', overflowX:'auto', gap:'4px'}},
+        TABS.map(function(t, i) {
+          return e('button', {
+            key: i,
+            onClick: function(){ setTab(i); },
+            style:{
+              background: tab===i ? THEME : 'transparent',
+              color: tab===i ? '#000' : '#9ca3af',
+              border: 'none', borderRadius: '6px', padding: '8px 12px',
+              cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
+              whiteSpace: 'nowrap', flexShrink: 0
+            }
+          }, t);
+        })
+      ),
+      tab===0 && Tab1(),
+      tab===1 && Tab2(),
+      tab===2 && Tab3(),
+      tab===3 && e(Tab4, null),
+      tab===4 && e(Tab5, null),
+      tab===5 && Tab6()
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
+})();
+</script>
+</body>
+</html>
