@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SLNH — Soluna Holdings 분석 대시보드 2026-06-15</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#1a2540 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #1e3a5f;}
+.hdr h1{font-size:1.5rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#3b82f6;border-bottom-color:#3b82f6;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #1e3a5f;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#3b82f6;}
+.bx{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#3b82f6;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bb{background:rgba(59,130,246,0.15);color:#3b82f6;}
+canvas{max-width:100%;}
+.tw{background:#0d1426;border:1px solid #1e2d4a;border-radius:8px;padding:11px;margin-bottom:10px;}
+.tw-h{display:flex;gap:8px;align-items:center;margin-bottom:7px;}
+.av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.78rem;color:#fff;flex-shrink:0;}
+.nm{font-size:0.82rem;font-weight:600;color:#e2e8f0;}
+.hd{font-size:0.72rem;color:#64748b;}
+.tx{font-size:0.82rem;color:#cbd5e1;line-height:1.5;}
+.st{display:flex;gap:14px;margin-top:7px;font-size:0.72rem;color:#64748b;}
+.rc{background:#0d1426;border:1px solid #1e2d4a;border-radius:8px;padding:11px;margin-bottom:10px;}
+.rh{font-size:0.82rem;font-weight:600;color:#ff7849;margin-bottom:5px;}
+.rs{font-size:0.71rem;color:#64748b;margin-bottom:7px;}
+.rt{font-size:0.82rem;color:#cbd5e1;line-height:1.5;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(59,130,246,0.04);}
+.ti{border-bottom:1px solid #1e2d4a;padding:11px 0;}
+.ti:last-child{border-bottom:none;}
+.tn{font-size:0.87rem;font-weight:600;color:#3b82f6;margin-bottom:3px;}
+.td{font-size:0.8rem;color:#94a3b8;line-height:1.5;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.1rem;flex-shrink:0;width:26px;text-align:center;padding-top:1px;}
+.mb-lb{flex:1;font-size:0.82rem;color:#cbd5e1;}
+.mb-nt{font-size:0.71rem;color:#64748b;margin-top:2px;}
+.mb-st{font-size:0.78rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:6px;}
+.pf{height:100%;border-radius:3px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var PRICE_LABELS = ['Jan','Feb','Mar','Apr','May','Jun'];
+var PRICE_DATA   = [2.50, 2.20, 1.95, 1.58, 1.72, 1.85];
+var PRICE_MA20   = [null, null, null, 2.08, 1.86, 1.78];
+
+var QTR_LABELS  = ['Q2 2025','Q3 2025','Q4 2025','Q1 2026'];
+var QTR_HOST    = [2.1, 3.8, 5.5, 6.7];
+var QTR_MINE    = [2.9, 2.4, 2.3, 2.7];
+var QTR_EBITDA  = [-4.2, -3.8, -2.8, -2.1];
+
+var PEERS = [
+  {t:'SLNH', mc:0.233, gr:58,  rsi:40.3, c:'#3b82f6'},
+  {t:'IREN', mc:3.5,   gr:120, rsi:52,   c:'#10b981'},
+  {t:'MARA', mc:5.8,   gr:35,  rsi:48,   c:'#f59e0b'},
+  {t:'RIOT', mc:4.2,   gr:28,  rsi:45,   c:'#ef4444'},
+  {t:'CLSK', mc:3.6,   gr:45,  rsi:50,   c:'#8b5cf6'},
+];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 개요 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2', null, '🏢 기업 개요'),
+      e('p', {style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.7',marginBottom:'12px'}},
+        'Soluna Holdings(SLNH)는 재생에너지 기반 AI 데이터센터·비트코인 채굴 기업입니다. 풍력·태양광·수력 등 전력망 초과분(커튼 에너지)을 활용해 모듈식 데이터센터를 운영하며, Briscoe 150MW 풍력발전소를 직접 소유해 에너지 수직통합을 완성했습니다.'
+      ),
+      e('div', {className:'mg'},
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '현재가'), e('div', {className:'vl b'}, '$1.85')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '시가총액'), e('div', {className:'vl'}, '$233M')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '52주 최저'), e('div', {className:'vl r'}, '$0.415')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '52주 최고'), e('div', {className:'vl g'}, '$5.14')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, 'RSI(14)'), e('div', {className:'vl y'}, '40.3')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '애널리스트 목표가'), e('div', {className:'vl g'}, '$5.00 ▲')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '공매도 비율'), e('div', {className:'vl'}, '10.67%')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '기관 펀드 증가'), e('div', {className:'vl g'}, '+48.28%'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2', null, '⚡ 핵심 카탈리스트'),
+      e('div', {className:'bx'},
+        e('div', {className:'bt'}, '📡 데이터 호스팅 +178% YoY'),
+        e('div', {className:'bd'}, 'Q1 2026 데이터 호스팅 매출 $6.7M(+178% YoY)으로 전체 매출의 71% 차지. 4분기 연속 매출 순차 성장. AI 데이터센터 사업으로의 빠른 믹스 전환 중.')
+      ),
+      e('div', {className:'bx'},
+        e('div', {className:'bt'}, '🌊 4.3GW 파이프라인 확보'),
+        e('div', {className:'bd'}, 'Kati 1A 48MW(완공), Kati 2 JV 350MW(설계완료), Dorothy 3 300MW(토지확보) 포함 총 4.3GW. 현 운영 용량(147MW) 대비 약 30배.')
+      ),
+      e('div', {className:'bx'},
+        e('div', {className:'bt'}, '💨 Briscoe Wind Farm $53M 인수'),
+        e('div', {className:'bd'}, '150MW 풍력 직접 소유로 에너지 수직통합. 전력 비용 구조 개선 및 커튼 에너지 활용 극대화. 하이퍼스케일러 협상 레버리지 확보.')
+      ),
+      e('div', {className:'wx'},
+        e('div', {className:'wt'}, '⚠️ 리스크'),
+        e('div', {className:'wd'}, '순손실 -$17.9M(Q1 2026) · FCF 음수 · 2.46M 재판매 주식 희석 · 흑자 전환 시점 미확정')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2', null, '🏗️ 프로젝트 현황'),
+      e('div', {className:'table-wrap'},
+        e('table', null,
+          e('thead', null, e('tr', null,
+            e('th', null,'프로젝트'), e('th', null,'용량'), e('th', null,'상태'), e('th', null,'비고')
+          )),
+          e('tbody', null,
+            e('tr', null, e('td',null,'Dorothy 1A/2'), e('td',null,'운영중'), e('td',null,e('span',{className:'badge bg'},'운영')), e('td',null,'재생에너지')),
+            e('tr', null, e('td',null,'Kati 1A'), e('td',null,'48MW'), e('td',null,e('span',{className:'badge bb'},'완공')), e('td',null,'조기 완공')),
+            e('tr', null, e('td',null,'Kati 2 JV'), e('td',null,'350MW'), e('td',null,e('span',{className:'badge by'},'설계완료')), e('td',null,'Metrobloks JV')),
+            e('tr', null, e('td',null,'Dorothy 3'), e('td',null,'300MW'), e('td',null,e('span',{className:'badge by'},'토지확보')), e('td',null,'하이퍼스케일러 협상')),
+            e('tr', null, e('td',null,'Briscoe Wind'), e('td',null,'150MW'), e('td',null,e('span',{className:'badge bg'},'운영')), e('td',null,'$53M 인수'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술적분석 ── */
+function Tab2() {
+  var pr = useRef(null); var pc = useRef(null);
+  makeChart(pr, pc, {
+    type:'line',
+    data:{
+      labels: PRICE_LABELS,
+      datasets:[
+        {label:'SLNH 주가', data:PRICE_DATA, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.1)', tension:0.4, fill:true, pointBackgroundColor:'#3b82f6'},
+        {label:'MA20', data:PRICE_MA20, borderColor:'#f59e0b', borderDash:[5,5], tension:0.4, fill:false, pointRadius:0}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},
+        y:{ticks:{color:'#64748b',callback:function(v){return '$'+v.toFixed(2);}},grid:{color:'#1e2d4a'}}
+      }
+    }
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📈 주가 추이 (2026 YTD)'), e('canvas',{ref:pr})),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 기술적 지표'),
+      e('div', {className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'RSI(14)'),e('div',{className:'vl y'},'40.3 중립')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'MA20'),e('div',{className:'vl'},'$1.78')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'지지선'),e('div',{className:'vl b'},'$1.50')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'저항선'),e('div',{className:'vl r'},'$2.20')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'볼린저 상단'),e('div',{className:'vl'},'$2.35')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'볼린저 하단'),e('div',{className:'vl'},'$1.35'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 기술적 신호'),
+      e('div', {className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'지표'),e('th',null,'값'),e('th',null,'신호'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'RSI'),e('td',null,'40.3'),e('td',null,e('span',{className:'badge by'},'중립'))),
+            e('tr',null,e('td',null,'MACD'),e('td',null,'–0.05'),e('td',null,e('span',{className:'badge br'},'약세'))),
+            e('tr',null,e('td',null,'MA20 대비'),e('td',null,'현가 > MA20'),e('td',null,e('span',{className:'badge bg'},'강세'))),
+            e('tr',null,e('td',null,'볼린저밴드'),e('td',null,'중간'),e('td',null,e('span',{className:'badge by'},'중립'))),
+            e('tr',null,e('td',null,'공매도'),e('td',null,'10.67%'),e('td',null,e('span',{className:'badge by'},'모니터'))),
+            e('tr',null,e('td',null,'거래량'),e('td',null,'감소'),e('td',null,e('span',{className:'badge by'},'주의')))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 진입/청산 시나리오'),
+      e('div', {className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격'),e('th',null,'근거'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'이상 진입'),e('td',null,e('span',{style:{color:'#10b981'}},'$1.50~1.70')),e('td',null,'지지선 + RSI 과매도')),
+            e('tr',null,e('td',null,'현재 진입'),e('td',null,e('span',{style:{color:'#f59e0b'}},'$1.85')),e('td',null,'RSI 40, MA20 상회')),
+            e('tr',null,e('td',null,'1차 목표'),e('td',null,e('span',{style:{color:'#3b82f6'}},'$2.50')),e('td',null,'YTD 초기 고점')),
+            e('tr',null,e('td',null,'2차 목표'),e('td',null,e('span',{style:{color:'#3b82f6'}},'$5.00')),e('td',null,'애널리스트 목표가')),
+            e('tr',null,e('td',null,'손절선'),e('td',null,e('span',{style:{color:'#ef4444'}},'$1.30')),e('td',null,'지지선 하단'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 실적 ── */
+function Tab3() {
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{
+      labels:QTR_LABELS,
+      datasets:[
+        {label:'데이터 호스팅', data:QTR_HOST, backgroundColor:'#3b82f6'},
+        {label:'BTC 채굴',     data:QTR_MINE, backgroundColor:'#10b981'}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toFixed(1)+'M';}}}},
+      scales:{
+        x:{stacked:true,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},
+        y:{stacked:true,ticks:{color:'#64748b',callback:function(v){return '$'+v+'M';}},grid:{color:'#1e2d4a'}}
+      }
+    }
+  });
+  var er = useRef(null); var ec = useRef(null);
+  makeChart(er, ec, {
+    type:'bar',
+    data:{
+      labels:QTR_LABELS,
+      datasets:[{label:'조정 EBITDA', data:QTR_EBITDA, backgroundColor:['rgba(239,68,68,0.7)','rgba(239,68,68,0.7)','rgba(239,68,68,0.7)','rgba(239,68,68,0.7)']}]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}},tooltip:{callbacks:{label:function(c){return '조정 EBITDA: $'+c.parsed.y.toFixed(1)+'M';}}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},
+        y:{ticks:{color:'#64748b',callback:function(v){return '$'+v+'M';}},grid:{color:'#1e2d4a'}}
+      }
+    }
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💰 Q1 2026 핵심 실적'),
+      e('div', {className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'총 매출'),e('div',{className:'vl g'},'$9.4M')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'YoY 성장'),e('div',{className:'vl g'},'+58%')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'데이터 호스팅'),e('div',{className:'vl b'},'$6.7M')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'호스팅 YoY'),e('div',{className:'vl g'},'+178%')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'BTC 채굴'),e('div',{className:'vl'},'$2.7M')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'순손실'),e('div',{className:'vl r'},'-$17.9M')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'조정 EBITDA'),e('div',{className:'vl y'},'-$2.1M')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'EBITDA 개선'),e('div',{className:'vl g'},'+$444K YoY'))
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📊 분기 매출 구성'), e('canvas',{ref:rr})),
+    e('div', {className:'card'}, e('h2',null,'📉 조정 EBITDA 추이'), e('canvas',{ref:er})),
+    e('div', {className:'card'},
+      e('h2',null,'🔑 실적 하이라이트'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'4분기 연속 매출 순차 성장'),
+        e('div',{className:'bd'},'Q2 2025($5.0M) → Q3($6.2M) → Q4($7.8M) → Q1 2026($9.4M). 분기 평균 +23% 순차 성장.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'호스팅 비중 71%로 확대'),
+        e('div',{className:'bd'},'Q2 2025 42% → Q1 2026 71%. 고마진 AI 데이터센터 전환이 EBITDA 개선 핵심 드라이버.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'운영 용량 147MW · 해시레이트 사상 최고'),
+        e('div',{className:'wd'},'인프라 확장 지속. 단, 대규모 CAPEX로 순손실 지속. 흑자 전환은 Kati 2(350MW) 가동 후 예상.')
+      )
+    )
+  );
+}
+
+/* ── Tab 4: 재무 ── */
+function Tab4() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 핵심 재무 지표'),
+      e('div', {className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'P/S Ratio'),e('div',{className:'vl'},'~5.8x')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'EV/EBITDA'),e('div',{className:'vl r'},'적자')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'FCF'),e('div',{className:'vl r'},'음수')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'부채비율'),e('div',{className:'vl y'},'높음')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'기관 보유'),e('div',{className:'vl g'},'50개 기관')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'기관 펀드 증가'),e('div',{className:'vl g'},'+48.28%'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🏦 재무 상태'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'Q1 2026'),e('th',null,'평가'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'총 매출'),e('td',null,'$9.4M'),e('td',null,e('span',{className:'badge bg'},'▲성장'))),
+            e('tr',null,e('td',null,'호스팅 매출'),e('td',null,'$6.7M (71%)'),e('td',null,e('span',{className:'badge bg'},'▲폭증'))),
+            e('tr',null,e('td',null,'순손실'),e('td',null,'-$17.9M'),e('td',null,e('span',{className:'badge br'},'적자'))),
+            e('tr',null,e('td',null,'조정 EBITDA'),e('td',null,'-$2.1M'),e('td',null,e('span',{className:'badge by'},'개선중'))),
+            e('tr',null,e('td',null,'운영 용량'),e('td',null,'147MW'),e('td',null,e('span',{className:'badge bb'},'확대'))),
+            e('tr',null,e('td',null,'기관 매집'),e('td',null,'+48.28%'),e('td',null,e('span',{className:'badge bg'},'매집')))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💸 주요 자본 이벤트'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'시기'),e('th',null,'내용'),e('th',null,'규모'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'2026 Q1'),e('td',null,'Briscoe Wind Farm 인수'),e('td',null,'$53M')),
+            e('tr',null,e('td',null,'2026 Q1'),e('td',null,'주식 재판매 등록(희석)'),e('td',null,'2.46M주')),
+            e('tr',null,e('td',null,'2025'),e('td',null,'Kati 1A 개발 완료'),e('td',null,'48MW')),
+            e('tr',null,e('td',null,'2025'),e('td',null,'Metrobloks JV 계약'),e('td',null,'350MW'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔮 가치평가 시나리오'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'시나리오'),e('th',null,'가정'),e('th',null,'목표가'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{style:{color:'#ef4444'}},'Bear')),e('td',null,'성장 둔화, 희석 가속'),e('td',null,'$0.80')),
+            e('tr',null,e('td',null,e('span',{style:{color:'#f59e0b'}},'Base')),e('td',null,'현 성장률 유지'),e('td',null,'$2.50~3.00')),
+            e('tr',null,e('td',null,e('span',{style:{color:'#10b981'}},'Bull')),e('td',null,'Kati 2 가동+하이퍼스케일러'),e('td',null,'$5.00+')),
+            e('tr',null,e('td',null,e('span',{style:{color:'#3b82f6'}},'Super Bull')),e('td',null,'4.3GW 전체+AI 붐'),e('td',null,'$10.00+'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 5: 비교 ── */
+function Tab5() {
+  var mr = useRef(null); var mc = useRef(null);
+  makeChart(mr, mc, {
+    type:'bar',
+    data:{labels:PEERS.map(function(p){return p.t;}),datasets:[{label:'시가총액($B)',data:PEERS.map(function(p){return p.mc;}),backgroundColor:PEERS.map(function(p){return p.c;})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var gr = useRef(null); var gc = useRef(null);
+  makeChart(gr, gc, {
+    type:'bar',
+    data:{labels:PEERS.map(function(p){return p.t;}),datasets:[{label:'매출 YoY%',data:PEERS.map(function(p){return p.gr;}),backgroundColor:PEERS.map(function(p){return p.c;})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',callback:function(v){return v+'%';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🏆 동종 업계 비교'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'티커'),e('th',null,'시총'),e('th',null,'매출성장'),e('th',null,'RSI'),e('th',null,'특징'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{style:{color:'#3b82f6',fontWeight:700}},'SLNH')),e('td',null,'$233M'),e('td',null,e('span',{className:'badge bg'},'+58%')),e('td',null,'40.3'),e('td',null,'재생에너지+AI DC')),
+            e('tr',null,e('td',null,'IREN'),e('td',null,'$3.5B'),e('td',null,e('span',{className:'badge bg'},'+120%')),e('td',null,'52'),e('td',null,'MS $9.7B 계약')),
+            e('tr',null,e('td',null,'MARA'),e('td',null,'$5.8B'),e('td',null,e('span',{className:'badge by'},'+35%')),e('td',null,'48'),e('td',null,'최대 해시레이트')),
+            e('tr',null,e('td',null,'RIOT'),e('td',null,'$4.2B'),e('td',null,e('span',{className:'badge by'},'+28%')),e('td',null,'45'),e('td',null,'AMD AI 피봇')),
+            e('tr',null,e('td',null,'CLSK'),e('td',null,'$3.6B'),e('td',null,e('span',{className:'badge bg'},'+45%')),e('td',null,'50'),e('td',null,'그린 채굴'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'📈 매출 성장률 비교'), e('canvas',{ref:gr})),
+    e('div', {className:'card'},
+      e('h2',null,'⚖️ SLNH 포지셔닝'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'✅ 강점'),
+        e('div',{className:'bd'},'• 에너지 수직통합(Briscoe 150MW 풍력 직접 소유)\n• 4.3GW 파이프라인 — 시총 대비 압도적 잠재 규모\n• 커튼 에너지 활용 모델 — 복제 어려운 진입 장벽\n• 데이터 호스팅 178% 성장 — 업계 최고 전환 속도')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'❌ 약점'),
+        e('div',{className:'wd'},'• 시총 $233M — IREN($3.5B)/MARA($5.8B) 대비 자본력 열위\n• FCF 적자 지속 — 흑자 전환 시점 미확정\n• IREN의 MS $9.7B 계약 같은 확정 대형 계약 부재')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: X ── */
+var XC = [
+  {u:'RenewableAlpha',h:'@RenewAlpha',c:'#3b82f6',s:'bull',tx:'🟢 $SLNH Kati 2 JV(350MW) 완공 시 운영 용량 3배+. 시총 $233M에 이 파이프라인을 담아? 완전 미가격. AI 데이터센터 자산주로 리레이팅 가능.',lk:847,rt:234},
+  {u:'AIInfraWatcher',h:'@AIInfra_X',c:'#10b981',s:'bull',tx:'📡 $SLNH Q1 데이터호스팅 +178% YoY. 4분기 연속 성장. 이 회사 BTC 채굴사 아니다. AI 데이터센터 회사다. 시장이 아직 인식 못 하고 있어.',lk:623,rt:189},
+  {u:'WindEnergyThesis',h:'@WindThesis',c:'#06b6d4',s:'bull',tx:'💨 Briscoe 150MW 풍력 직접 소유 = 에너지 비용 수직통합. SLNH는 전기료 걱정 없는 유일한 그린 AI DC 기업. 이 해자를 $233M에 살 수 있음.',lk:512,rt:145},
+  {u:'SmallCapHunter',h:'@SCHunter99',c:'#a78bfa',s:'bull',tx:'🔍 $SLNH 기관 매집 +48%. 50개 기관이 들어왔다. 스마트머니가 3~6개월 먼저 움직인다. 지금 이게 조용히 쌓이는 구간.',lk:445,rt:132},
+  {u:'CryptoPowerBull',h:'@CryptoPower',c:'#f59e0b',s:'bull',tx:'$SLNH 파이프라인 4.3GW vs 현재가 $1.85. Dorothy 3 300MW + Kati 2 350MW 가동 날 완전히 다른 밸류에이션 받는다.',lk:389,rt:98},
+  {u:'DataCenterAnalyst',h:'@DC_Analyst',c:'#3b82f6',s:'bull',tx:'하이퍼스케일러가 재생에너지 DC 계약에 적극적. $SLNH Dorothy 3 300MW 하이퍼스케일러 협상 중. 계약 발표 시 멀티배거 촉매.',lk:334,rt:89},
+  {u:'GreenMiningDD',h:'@GreenMine_DD',c:'#10b981',s:'bull',tx:'$CLSK 시총 $3.6B, SLNH $233M. 재생에너지 비중은 SLNH가 더 높음. 이 격차가 말이 되나? 리레이팅 여지 충분.',lk:278,rt:73},
+  {u:'ShortBear2026',h:'@ShortBear',c:'#ef4444',s:'bear',tx:'⚠️ $SLNH 순손실 -$17.9M/분기. FCF 적자. 2.46M 재판매주 희석. 4.3GW 파이프라인 짓는 동안 자본 계속 조달해야 함.',lk:234,rt:67},
+  {u:'RSITrader',h:'@RSI_Trader',c:'#f59e0b',s:'neutral',tx:'📉 $SLNH RSI 40.3. 과매도 근접. $1.50 지지선이 관건. 깨지면 $1.20, 지키면 반등 $2.20 타겟. 현 레벨 리스크/리워드 나쁘지 않음.',lk:198,rt:54},
+  {u:'DilutionAlert',h:'@DilutAlert',c:'#ef4444',s:'bear',tx:'🚨 $SLNH 재판매 2.46M주. 지속적 주식 발행은 주주가치 침식. 희석 속도 vs 수익 성장 속도 계산하고 진입해야.',lk:187,rt:51},
+  {u:'HyperScalerWatch',h:'@HyperWatch',c:'#3b82f6',s:'bull',tx:'AI 데이터센터 전력 수요 2030년까지 3배. $SLNH 같은 재생에너지 DC는 ESG+전력비용 우위. 하이퍼스케일러 필수 파트너 될 것.',lk:156,rt:43},
+  {u:'MegawattMapper',h:'@MWMapper',c:'#a78bfa',s:'bull',tx:'147MW → +48MW(Kati 1A) → +350MW(Kati 2) → +300MW(Dorothy 3). 2027년 말 약 900MW 가능. $SLNH 현가 대비 완전 미가격.',lk:143,rt:38},
+  {u:'BitcoinMiningPro',h:'@BTCMiningPro',c:'#f59e0b',s:'neutral',tx:'$SLNH BTC 해시레이트 사상 최고. 반감기 후에도 채산성 유지. 주요 수익원이 데이터호스팅으로 전환 중 → BTC 가격 의존도 낮아짐.',lk:134,rt:35},
+  {u:'CurtailedEnergy',h:'@CurtailED',c:'#06b6d4',s:'bull',tx:'커튼 에너지(잉여 재생에너지) → BTC채굴/AI DC 수익화. $SLNH 비즈니스모델 자체가 진입장벽. 150MW 풍력 직접 소유로 완성.',lk:121,rt:29},
+  {u:'TargetWatch',h:'@TargetWatch',c:'#10b981',s:'bull',tx:'커버 애널리스트 1명, Strong Buy, 목표 $5.00(현가 대비 +170%). 커버리지 확대 시 기관 유입 가속. 지금은 사각지대 = 기회.',lk:98,rt:24},
+];
+
+function Tab6() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🐦 X 반응 — SLNH'),
+      XC.map(function(c,i){
+        return e('div', {key:i, className:'tw'},
+          e('div', {className:'tw-h'},
+            e('div', {className:'av', style:{background:c.c}}, c.u[0]),
+            e('div', null,
+              e('div', {className:'nm'}, c.u),
+              e('div', {className:'hd'}, c.h)
+            ),
+            e('span', {className:'badge '+(c.s==='bull'?'bg':c.s==='bear'?'br':'by'), style:{marginLeft:'auto'}},
+              c.s==='bull'?'강세':c.s==='bear'?'약세':'중립'
+            )
+          ),
+          e('div', {className:'tx'}, c.tx),
+          e('div', {className:'st'}, e('span',null,'♥ '+c.lk.toLocaleString()), e('span',null,'🔁 '+c.rt.toLocaleString()))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 7: Reddit ── */
+var RC = [
+  {sb:'r/wallstreetbets',u:'curtailed_energy_ape',uv:2847,cm:234,s:'bull',ti:'[DD] $SLNH — 4.3GW 파이프라인을 $233M에 사는 기회',tx:'오늘 SLNH 제대로 파봤는데 미쳤다. 현재 운영 147MW인데 파이프라인 4.3GW. Kati 2 350MW(JV 설계 완료), Dorothy 3 300MW(토지 확보)까지. 시총 $233M으로 이걸 담아? 계산이 안 된다.'},
+  {sb:'r/stocks',u:'renewable_dc_thesis',uv:1923,cm:178,s:'bull',ti:'SLNH 기관 매집 +48%: 스마트머니가 먼저 움직이고 있다',tx:'50개 기관, 43개 펀드가 Q1에 포지션 늘렸음. 기관이 늘어나면 보통 3~6개월 후 주가 반응. 애널리스트 커버 1명(목표 $5.00)인데 커버리지 늘어나면 터질 듯.'},
+  {sb:'r/investing',u:'green_mining_analyst',uv:1456,cm:145,s:'bull',ti:'SLNH vs IREN vs CLSK: 재생에너지 AI DC 경쟁 분석',tx:'IREN은 MS $9.7B 계약으로 검증됨. CLSK는 그린마이닝 대장. 그런데 시총: IREN $3.5B, CLSK $3.6B, SLNH $233M. SLNH 재생에너지 비중 더 높고 Briscoe 풍력 수직통합까지. 이 격차가 맞나?'},
+  {sb:'r/smallcapstocks',u:'multibagger_thesis',uv:1234,cm:123,s:'bull',ti:'내 포트폴리오 최대 포지션: SLNH 2년 테제',tx:'2027년 Kati 2(350MW)+Dorothy 3(300MW) 가동 시 매출 현재의 5~8배. 지금 P/S 5.8x인데 그때도 같은 멀티플이면 주가 5~8배. 하이퍼스케일러 계약 하나만 터지면 리레이팅.'},
+  {sb:'r/SecurityAnalysis',u:'bear_case_slnh',uv:876,cm:198,s:'bear',ti:'[Bear] SLNH: 파이프라인은 있는데 돈이 없다',tx:'파이프라인 4.3GW는 인상적. 근데 자본력이 문제. 순손실 -$17.9M/분기, FCF 적자. 이걸 다 짓기 위한 자본 어떻게 조달? 주식 발행 = 희석. 2.46M 재판매주 이미 등록됨.'},
+  {sb:'r/RenewableEnergy',u:'wind_power_investor',uv:743,cm:89,s:'bull',ti:'Briscoe Wind $53M 인수: SLNH 비즈니스모델 완성의 의미',tx:'150MW 풍력 직접 소유. 커튼 에너지 → 내 데이터센터에 직접 공급. 단순 비용 절감이 아닌 비즈니스모델 자체의 완성. 경쟁자가 복제하기 매우 어려운 구조.'},
+  {sb:'r/wallstreetbets',u:'short_squeeze_hunter',uv:634,cm:167,s:'bull',ti:'SLNH 공매도 10.67% + RSI 40 = 스퀴즈 셋업?',tx:'공매도 10.67%, 해소 2일. Q1 서프라이즈 또는 하이퍼스케일러 계약 시 쇼트커버링 연쇄 가능. 촉매 대기 중인 셋업.'},
+  {sb:'r/investing',u:'hyperscaler_watch',uv:521,cm:78,s:'bull',ti:'Dorothy 3 하이퍼스케일러 협상: 계약 시나리오',tx:'Dorothy 3 300MW, 하이퍼스케일러 협상 중이라는 단서. IREN이 MS 계약으로 주가 3배 된 것 기억? SLNH가 같은 계약 발표 시 시총 $233M이면 훨씬 더 큰 상승 여지.'},
+  {sb:'r/stocks',u:'technical_trader_slnh',uv:456,cm:56,s:'neutral',ti:'SLNH 기술적 분석: $1.50 지지선이 핵심',tx:'$1.85 현재가. MA20 $1.78 상회. RSI 40.3 중립. $1.50 지지선 깨지면 $1.20. 안 깨지면 $2.20 저항 타겟. 현 레벨 리스크/리워드 2:1 정도.'},
+  {sb:'r/SecurityAnalysis',u:'revenue_quality_check',uv:389,cm:67,s:'bull',ti:'데이터호스팅 178% 성장의 의미: 마진 구조 분석',tx:'BTC 채굴: 전력비용 높고 BTC 가격 의존. 데이터호스팅: 장기 계약, 안정적 매출, 높은 마진. Q1 71% → 내년 85%+ 예상 시 완전히 다른 밸류에이션.'},
+  {sb:'r/investing',u:'ai_dc_thesis_2027',uv:312,cm:45,s:'bull',ti:'2027년 AI 전력 수요와 SLNH: 왜 지금 사야 하나',tx:'AI DC 전력 수요 2030년까지 3배. 재생에너지 기반 DC는 ESG+비용 우위. SLNH 4.3GW 파이프라인이 이 수요를 먹을 준비를 하고 있음.'},
+  {sb:'r/smallcapstocks',u:'metrobloks_jv_deep',uv:278,cm:38,s:'bull',ti:'Kati 2 JV(350MW) Metrobloks 파트너십 심층',tx:'Metrobloks는 분산형 DC 전문. JV 구조라 SLNH 단독 자본 부담 분산. 350MW 가동 시 현재 운영 용량 3배+ 단번에 추가. Kati 1A 완공 후 다음 촉매.'},
+  {sb:'r/wallstreetbets',u:'yolo_slnh_position',uv:234,cm:156,s:'bull',ti:'SLNH 전 재산 10% 올인 이유',tx:'단순: 시총 $233M. 4.3GW 파이프라인. 하이퍼스케일러 협상. 기관 +48%. 목표 $5.00. RSI 40. 이 조합이면 리스크 감수할 만함. 희석 리스크는 있지만 성장이 이기면 됨.'},
+  {sb:'r/RenewableEnergy',u:'curtailed_power_model',uv:198,cm:29,s:'bull',ti:'커튼 에너지 모델: SLNH가 경쟁자가 없는 이유',tx:'커튼 에너지 = 전력망이 수용 못 해 버려지는 재생에너지. 원가 거의 0. 이걸 데이터센터로 흡수. 경쟁자 복제하려면 재생에너지 발전소 근처에 DC 짓고 풍력까지 사야 함.'},
+  {sb:'r/stocks',u:'slnh_realistic_bear',uv:167,cm:89,s:'bear',ti:'현실적 Bear: 파이프라인 ≠ 수익. 흑자 전환 언제?',tx:'4.3GW 파이프라인 모두 가동 2028~2030. 그 사이 자본 계속 필요. 주식 발행 지속. 흑자 전환 시점 불명확하면 희석이 주가를 누름.'},
+];
+
+function Tab7() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💬 Reddit 반응 — SLNH'),
+      RC.map(function(c,i){
+        return e('div', {key:i, className:'rc'},
+          e('div', {className:'rh'}, c.ti),
+          e('div', {className:'rs'}, c.sb+' • u/'+c.u+' • ▲'+c.uv.toLocaleString()+' • 댓글 '+c.cm),
+          e('div', {className:'rt'}, c.tx),
+          e('div', {style:{marginTop:'7px'}},
+            e('span', {className:'badge '+(c.s==='bull'?'bg':c.s==='bear'?'br':'by')},
+              c.s==='bull'?'강세':c.s==='bear'?'약세':'중립'
+            )
+          )
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 8: 용어 ── */
+var TERMS = [
+  {t:'커튼 에너지 (Curtailed Energy)',d:'재생에너지 발전량이 전력망 수용 용량을 초과할 때 버려지는 잉여 전력. SLNH는 이를 데이터센터 전력으로 활용해 원가를 극도로 낮춤.'},
+  {t:'데이터 호스팅 (Data Hosting)',d:'고객사의 서버를 SLNH 데이터센터에 입주시켜 전력·냉각·운영을 제공하고 요금을 받는 사업. 장기 계약 기반으로 BTC 채굴보다 안정적·고마진.'},
+  {t:'해시레이트 (Hashrate)',d:'비트코인 채굴 연산 속도 단위. 해시레이트가 높을수록 BTC 채굴 확률 증가. SLNH 해시레이트는 현재 사상 최고 수준.'},
+  {t:'JV (Joint Venture)',d:'두 기업이 공동 출자해 새 사업체를 설립하는 방식. Kati 2(350MW)는 Metrobloks와의 JV로, SLNH 단독 자본 부담을 줄이는 효과.'},
+  {t:'하이퍼스케일러 (Hyperscaler)',d:'Microsoft, Amazon, Google, Meta 등 대규모 클라우드·AI 인프라를 운영하는 빅테크 기업. 대형 계약 발표 시 수십억 달러 규모의 장기 수익 보장.'},
+  {t:'조정 EBITDA (Adjusted EBITDA)',d:'세금·이자·감가상각 전 영업이익에서 비경상 항목을 제거한 수익성 지표. SLNH는 -$2.1M으로 적자이나 전년比 개선 중.'},
+  {t:'수직통합 (Vertical Integration)',d:'공급망의 여러 단계를 직접 보유하는 전략. Briscoe Wind Farm 인수 = 전력 생산부터 데이터센터 운영까지 수직통합 완성.'},
+  {t:'공매도 비율 (Short Interest)',d:'전체 유통주식 중 공매도된 비중. SLNH 10.67%. 호재 발생 시 쇼트커버링으로 급등 가능.'},
+  {t:'FCF (Free Cash Flow)',d:'영업현금흐름에서 설비투자(CAPEX)를 차감한 순현금. SLNH는 대규모 인프라 투자로 FCF 음수. 투자 단계 기업의 특성.'},
+  {t:'P/S Ratio',d:'시가총액을 연간 매출로 나눈 밸류에이션 지표. SLNH 약 5.8x. 성장 스토리 대비 저평가 여지.'},
+  {t:'멀티배거 (Multibagger)',d:'투자 원금의 수 배 이상 수익을 내는 종목. Anna Yartseva 8항목 기준 SLNH는 5/8점으로 잠재력 보통~높음.'},
+  {t:'CAPEX',d:'설비투자(Capital Expenditure). 데이터센터·전력 인프라 구축 비용. SLNH는 현재 성장 투자 단계로 CAPEX가 FCF를 음수로 만드는 주원인.'},
+];
+
+function Tab8() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📖 핵심 용어 해설'),
+      TERMS.map(function(t,i){
+        return e('div', {key:i, className:'ti'},
+          e('div', {className:'tn'}, t.t),
+          e('div', {className:'td'}, t.d)
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 9: 멀티배거 ── */
+var MBI = [
+  {ic:'🏷️',lb:'소형주 (시총 $5B 이하)',   nt:'$233M — 멀티배거 가장 유리한 구간',       st:'p',sc:1},
+  {ic:'💵',lb:'합리적 밸류에이션',          nt:'P/S ~5.8x + 4.3GW 파이프라인 미반영',      st:'p',sc:1},
+  {ic:'📈',lb:'EBITDA/FCF 개선 추세',       nt:'EBITDA -$2.1M, 전년比 +$444K 개선 중',     st:'h',sc:0.5},
+  {ic:'⚡',lb:'자산 효율성 개선',           nt:'대규모 CAPEX 투자 단계. ROA 음수',         st:'f',sc:0},
+  {ic:'💰',lb:'FCF Yield 양전환 가능성',    nt:'FCF 아직 음수. 투자 단계 지속',            st:'f',sc:0},
+  {ic:'🚀',lb:'강력한 파이프라인/수요',     nt:'4.3GW 파이프라인, 하이퍼스케일러 협상, JV 계약',st:'p',sc:1},
+  {ic:'🏦',lb:'재무 건전성',               nt:'부채 있음, 자본 조달 지속. 기관 +48% 긍정적', st:'h',sc:0.5},
+  {ic:'📉',lb:'급등 후 추격 아닌가',        nt:'RSI 40.3, 현가 $1.85 vs 52W 고가 $5.14(-64%)',st:'p',sc:1},
+];
+
+function Tab9() {
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:['소형주','밸류에이션','EBITDA개선','자산효율','FCF yield','파이프라인','재무건전성','추격아닌가'],
+      datasets:[{
+        label:'SLNH',
+        data:[1,1,0.5,0,0,1,0.5,1],
+        backgroundColor:'rgba(59,130,246,0.2)',
+        borderColor:'#3b82f6',
+        pointBackgroundColor:'#3b82f6',
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+      scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}
+    }
+  });
+  var total = MBI.reduce(function(a,m){return a+m.sc;},0);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 체크리스트'),
+      e('div', {style:{textAlign:'center',padding:'14px 0',marginBottom:'10px'}},
+        e('div', {style:{fontSize:'2.8rem',fontWeight:700,color:'#3b82f6'}}, total+'/8'),
+        e('div', {style:{fontSize:'0.82rem',color:'#94a3b8',marginTop:'3px'}}, '멀티배거 점수 — 보통~높음'),
+        e('div', {className:'pb', style:{maxWidth:'180px',margin:'7px auto 0'}},
+          e('div', {className:'pf', style:{width:(total/8*100)+'%',background:'#3b82f6'}})
+        )
+      ),
+      MBI.map(function(m,i){
+        return e('div', {key:i, className:'mb-row'},
+          e('div', {className:'mb-ic'}, m.ic),
+          e('div', {style:{flex:1}},
+            e('div', {className:'mb-lb'}, m.lb),
+            e('div', {className:'mb-nt'}, m.nt)
+          ),
+          e('div', {className:'mb-st '+(m.st==='p'?'p':m.st==='h'?'h':'f')},
+            m.st==='p'?'✅ 충족':m.st==='h'?'⚠️ 부분':'❌ 미충족'
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 멀티배거 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 종합 투자 의견'),
+      e('div', {className:'bx'},
+        e('div',{className:'bt'},'🟡 선택적 매수 (Speculative Buy)'),
+        e('div',{className:'bd'},'멀티배거 5/8점. 4.3GW 파이프라인·178% 데이터호스팅 성장·기관 매집 등 강력한 성장 스토리. FCF 적자·희석 리스크 해소 전 소규모 포지션 권장. 하이퍼스케일러 계약 또는 Kati 2 착공이 핵심 촉매.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'등급'),e('th',null,'조건'),e('th',null,'목표'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{style:{color:'#10b981'}},'Strong Buy')),e('td',null,'하이퍼스케일러 계약'),e('td',null,'$5.00+')),
+            e('tr',null,e('td',null,e('span',{style:{color:'#3b82f6'}},'Buy')),e('td',null,'Kati 2 착공+분기 흑자 근접'),e('td',null,'$3.00')),
+            e('tr',null,e('td',null,e('span',{style:{color:'#f59e0b'}},'Hold')),e('td',null,'현 성장 지속, 촉매 대기'),e('td',null,'$2.00~2.50')),
+            e('tr',null,e('td',null,e('span',{style:{color:'#ef4444'}},'Reduce')),e('td',null,'희석 가속+성장 둔화'),e('td',null,'$1.20'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['📊개요','📈기술적분석','💰실적','📋재무','🔁비교','🐦X','💬Reddit','📖용어','🔟멀티배거'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, 'SLNH — Soluna Holdings'),
+      e('div', {className:'sub'}, '$1.85 | 시총 $233M | RSI 40.3 | 2026-06-15 | 재생에너지 AI 데이터센터')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? e(Tab2,null) :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? Tab4() :
+      tab===4 ? e(Tab5,null) :
+      tab===5 ? Tab6() :
+      tab===6 ? Tab7() :
+      tab===7 ? Tab8() :
+      e(Tab9,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
