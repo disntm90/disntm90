@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>800V DC 종목발굴 대시보드 2026-06-15</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0c1a2e 0%,#071424 100%);padding:18px 16px;border-bottom:2px solid #06b6d4;}
+.hdr h1{font-size:1.4rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.8rem;margin-top:3px;}
+.hdr .back{display:inline-block;margin-bottom:7px;font-size:0.76rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 10px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 13px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#06b6d4;border-bottom-color:#06b6d4;}
+.cnt{padding:14px;max-width:800px;margin:0 auto;}
+.card{background:#111827;border:1px solid #1e3a5f;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.vc-box{background:#0d1426;border:1px solid #06b6d4;border-radius:8px;padding:14px;font-family:monospace;font-size:0.78rem;color:#cbd5e1;line-height:1.8;white-space:pre-wrap;}
+.vc-hl{color:#06b6d4;font-weight:700;}
+.vc-star{color:#fbbf24;}
+.bx{background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#06b6d4;margin-bottom:5px;}
+.bx .bd{font-size:0.81rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.81rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.67rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bb{background:rgba(6,182,212,0.15);color:#06b6d4;}
+.sc{background:#111827;border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid;}
+.sc .sh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc .sn{font-size:1rem;font-weight:700;}
+.sc .sf{font-size:0.72rem;color:#64748b;margin-top:1px;}
+.sc .sm{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0;}
+.mc{background:#0d1426;border-radius:6px;padding:7px 8px;}
+.mc .lb{font-size:0.65rem;color:#64748b;text-transform:uppercase;}
+.mc .vl{font-size:0.9rem;font-weight:700;margin-top:1px;}
+.sc .sp{font-size:0.8rem;color:#94a3b8;line-height:1.5;}
+.sc .st{font-size:0.72rem;color:#64748b;margin-top:6px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:4px;}
+.pf{height:100%;border-radius:3px;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(6,182,212,0.04);}
+.mb-row{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1rem;flex-shrink:0;width:24px;text-align:center;}
+.mb-lb{flex:1;font-size:0.81rem;color:#cbd5e1;}
+.mb-nt{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.mb-st{font-size:0.76rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.sbtn{padding:6px 10px;border-radius:6px;border:1px solid #1e2d4a;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;margin:3px;}
+.sbtn.on{border-color:#06b6d4;color:#06b6d4;background:rgba(6,182,212,0.1);}
+.tl-item{border-left:2px solid #06b6d4;padding:10px 14px;margin-bottom:12px;position:relative;}
+.tl-item::before{content:'';width:10px;height:10px;background:#06b6d4;border-radius:50%;position:absolute;left:-6px;top:12px;}
+.tl-label{font-size:0.68rem;color:#06b6d4;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;}
+.tl-title{font-size:0.87rem;font-weight:600;color:#e2e8f0;margin:3px 0;}
+.tl-text{font-size:0.8rem;color:#94a3b8;line-height:1.6;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag,props){
+  var args=[tag,props];
+  for(var i=2;i<arguments.length;i++) args.push(arguments[i]);
+  return React.createElement.apply(React,args);
+};
+var useState=React.useState;
+var useEffect=React.useEffect;
+var useRef=React.useRef;
+
+var STOCKS=[
+  {ticker:'AEHR',name:'Aehr Test Systems',     price:14.50, mcap:0.37,rsi:42,score:7,choke:'인증(Testing)'},
+  {ticker:'NVTS',name:'Navitas Semiconductor', price:4.20,  mcap:0.85,rsi:45,score:7,choke:'GaN'},
+  {ticker:'BEEM',name:'Beam Global',           price:6.80,  mcap:0.11,rsi:43,score:6,choke:'충전(Off-Grid)'},
+  {ticker:'KULR',name:'KULR Technology',       price:3.97,  mcap:0.59,rsi:48,score:6,choke:'열관리(Thermal)'},
+  {ticker:'CPSH',name:'CPS Technologies',      price:3.80,  mcap:0.04,rsi:40,score:6,choke:'소재(Substrate)'},
+  {ticker:'WOLF',name:'Wolfspeed',             price:43.14, mcap:3.20,rsi:55,score:5,choke:'생산량(SiC)',warn:true},
+  {ticker:'POWI',name:'Power Integrations',    price:76.68, mcap:4.27,rsi:52,score:5,choke:'GaN'},
+  {ticker:'BLNK',name:'Blink Charging',        price:4.85,  mcap:0.22,rsi:44,score:5,choke:'충전(EV DC)'},
+  {ticker:'WBX', name:'Wallbox',               price:2.45,  mcap:0.28,rsi:46,score:5,choke:'충전(EV DC)'},
+  {ticker:'BELFA',name:'Bel Fuse',             price:92.00, mcap:0.62,rsi:50,score:5,choke:'파워컨버전'},
+  {ticker:'ALGM',name:'Allegro MicroSystems',  price:51.00, mcap:9.39,rsi:50,score:4,choke:'센싱(Sensing)',warn:true},
+];
+
+var CHOKE_COLOR={
+  '인증(Testing)': '#06b6d4',
+  'GaN':           '#3b82f6',
+  '생산량(SiC)':   '#10b981',
+  '열관리(Thermal)':'#ef4444',
+  '충전(Off-Grid)':'#f97316',
+  '충전(EV DC)':   '#f59e0b',
+  '파워컨버전':     '#8b5cf6',
+  '소재(Substrate)':'#a78bfa',
+  '센싱(Sensing)': '#ec4899',
+};
+
+var BD='#1e3a5f';
+
+var MBDETAIL={
+  AEHR:[
+    {ic:'🏷️',lb:'소형주',st:'p',nt:'$370M — 멀티배거 최적 구간'},
+    {ic:'💵',lb:'밸류에이션',st:'p',nt:'SiC 테스팅 독점 → 프리미엄 정당'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'h',nt:'Q3 EPS -$0.05 (추정 -$0.10 대폭 beat), 적자 축소'},
+    {ic:'⚡',lb:'자산 효율성',st:'p',nt:'Fab-light 모델, 자산 경량'},
+    {ic:'💰',lb:'FCF Yield',st:'h',nt:'FCF 개선 추세, 흑자 근접'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'p',nt:'SiC+GaN 테스팅 수요 폭증 (EV+AI DC 이중 시장)'},
+    {ic:'🏦',lb:'재무 건전성',st:'p',nt:'무부채, 현금 충분'},
+    {ic:'📉',lb:'추격 아닌가',st:'p',nt:'RSI 42, 고점 대비 -65%'},
+  ],
+  NVTS:[
+    {ic:'🏷️',lb:'소형주',st:'p',nt:'$850M — 멀티배거 가능 구간'},
+    {ic:'💵',lb:'밸류에이션',st:'p',nt:'GaN+SiC 초기 리더, P/S 합리적'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'h',nt:'성장 중, 적자 축소 중'},
+    {ic:'⚡',lb:'자산 효율성',st:'h',nt:'Fab-less, 투자 단계'},
+    {ic:'💰',lb:'FCF Yield',st:'f',nt:'FCF 음수, 투자 단계'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'p',nt:'NVIDIA Kyber 800VDC 공식 생태계 파트너'},
+    {ic:'🏦',lb:'재무 건전성',st:'h',nt:'관리 가능한 부채 수준'},
+    {ic:'📉',lb:'추격 아닌가',st:'p',nt:'RSI 45, 동종 대비 저평가'},
+  ],
+  BEEM:[
+    {ic:'🏷️',lb:'소형주',st:'p',nt:'$110M — 마이크로캡, 초고 멀티배거 잠재'},
+    {ic:'💵',lb:'밸류에이션',st:'p',nt:'오프그리드 DC충전 틈새 독점, 극저평가'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'h',nt:'초기 단계, 계약 기반 성장'},
+    {ic:'⚡',lb:'자산 효율성',st:'h',nt:'소규모 운영, 확장 초기'},
+    {ic:'💰',lb:'FCF Yield',st:'f',nt:'FCF 음수'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'p',nt:'오프그리드 DC충전 독점 특허, 군사·항만 수요'},
+    {ic:'🏦',lb:'재무 건전성',st:'h',nt:'소규모 부채, 리스크 존재'},
+    {ic:'📉',lb:'추격 아닌가',st:'p',nt:'RSI 43, 거의 주목받지 못한 구간'},
+  ],
+  KULR:[
+    {ic:'🏷️',lb:'소형주',st:'p',nt:'$590M — 멀티배거 가능 구간'},
+    {ic:'💵',lb:'밸류에이션',st:'p',nt:'800V AI DC 열관리 초기, 잠재 대비 저평가'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'h',nt:'JV $100M 잠재, Caban $30M 계약 확보'},
+    {ic:'⚡',lb:'자산 효율성',st:'h',nt:'소규모, 대형 계약으로 확장 단계'},
+    {ic:'💰',lb:'FCF Yield',st:'f',nt:'FCF 음수'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'p',nt:'OCP ORV3 800V BBU 전용 설계, AI DC 수요'},
+    {ic:'🏦',lb:'재무 건전성',st:'h',nt:'소규모 부채'},
+    {ic:'📉',lb:'추격 아닌가',st:'p',nt:'RSI 48, 52W 고점($43.92) 대비 -91%'},
+  ],
+  CPSH:[
+    {ic:'🏷️',lb:'소형주',st:'p',nt:'$40M — 마이크로캡, 극초기 발굴'},
+    {ic:'💵',lb:'밸류에이션',st:'p',nt:'SiC 모듈 기판 필수소재, 극저평가'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'h',nt:'소규모 흑적 혼재, 수주 기반 성장'},
+    {ic:'⚡',lb:'자산 효율성',st:'h',nt:'소규모 공장 운영'},
+    {ic:'💰',lb:'FCF Yield',st:'h',nt:'불안정하나 수주 증가시 개선'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'p',nt:'SiC MOSFET 모듈용 AlSiC 기판 수요 직결'},
+    {ic:'🏦',lb:'재무 건전성',st:'h',nt:'소기업 특유 리스크'},
+    {ic:'📉',lb:'추격 아닌가',st:'p',nt:'RSI 40, 커버리지 0명 = 완전 미발굴'},
+  ],
+  WOLF:[
+    {ic:'🏷️',lb:'소형주',st:'p',nt:'$3.2B — 기준 미충족 아니나 borderline'},
+    {ic:'💵',lb:'밸류에이션',st:'h',nt:'적자 기업, P/S 높음. AI 기대감 선반영'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'f',nt:'순손실 -$1.6B TTM, FCF 심각한 음수'},
+    {ic:'⚡',lb:'자산 효율성',st:'f',nt:'$6.5B 메가팹 투자, ROA 음수'},
+    {ic:'💰',lb:'FCF Yield',st:'f',nt:'FCF 대규모 음수'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'p',nt:'SiC 35% 글로벌 점유율, Mohawk Valley 메가팹'},
+    {ic:'🏦',lb:'재무 건전성',st:'f',nt:'부채 과다, 재무 스트레스 ⚠️'},
+    {ic:'📉',lb:'추격 아닌가',st:'h',nt:'RSI 55, 12개월 +3595% 이미 급등'},
+  ],
+  POWI:[
+    {ic:'🏷️',lb:'소형주',st:'p',nt:'$4.27B — 기준 충족'},
+    {ic:'💵',lb:'밸류에이션',st:'h',nt:'P/E 높음, NVIDIA 파트너 프리미엄'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'p',nt:'흑자 기업, 수익성 안정'},
+    {ic:'⚡',lb:'자산 효율성',st:'p',nt:'Fab-less, 고마진 구조'},
+    {ic:'💰',lb:'FCF Yield',st:'p',nt:'FCF 양수, 무배당'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'p',nt:'NVIDIA Kyber 800VDC 공식 보조 PSU'},
+    {ic:'🏦',lb:'재무 건전성',st:'p',nt:'무부채, 현금 충분'},
+    {ic:'📉',lb:'추격 아닌가',st:'f',nt:'RSI 52, $77로 이미 상당 반영'},
+  ],
+  BLNK:[
+    {ic:'🏷️',lb:'소형주',st:'p',nt:'$220M — 멀티배거 가능'},
+    {ic:'💵',lb:'밸류에이션',st:'p',nt:'FY26 가이던스 $105~115M 대비 저평가'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'h',nt:'적자 지속, 매출 성장 중'},
+    {ic:'⚡',lb:'자산 효율성',st:'h',nt:'충전 인프라 자산 확대 중'},
+    {ic:'💰',lb:'FCF Yield',st:'f',nt:'FCF 음수'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'p',nt:'Q1 DC 패스트 136 스탤, 800V 충전 확산 수혜'},
+    {ic:'🏦',lb:'재무 건전성',st:'h',nt:'부채 있음, 자본 조달 중'},
+    {ic:'📉',lb:'추격 아닌가',st:'p',nt:'RSI 44, 저점 구간'},
+  ],
+  WBX:[
+    {ic:'🏷️',lb:'소형주',st:'p',nt:'$280M — 멀티배거 가능'},
+    {ic:'💵',lb:'밸류에이션',st:'p',nt:'Q1 매출 $102M 대비 시총 저평가'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'h',nt:'매출 성장(+4% YoY), 수익성 개선 중'},
+    {ic:'⚡',lb:'자산 효율성',st:'h',nt:'유럽 시장 확장 중'},
+    {ic:'💰',lb:'FCF Yield',st:'h',nt:'FCF 개선 추세'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'p',nt:'Supernova PowerRing 800V 급속충전 배포'},
+    {ic:'🏦',lb:'재무 건전성',st:'h',nt:'부채 있음, 관리 중'},
+    {ic:'📉',lb:'추격 아닌가',st:'p',nt:'RSI 46, 유럽 EV 충전 성장 미가격'},
+  ],
+  BELFA:[
+    {ic:'🏷️',lb:'소형주',st:'p',nt:'$620M — 멀티배거 가능 구간'},
+    {ic:'💵',lb:'밸류에이션',st:'p',nt:'Forbes 최우수 소형주, 합리적 밸류'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'p',nt:'흑자 기업, 안정 성장'},
+    {ic:'⚡',lb:'자산 효율성',st:'p',nt:'운영 효율 우수'},
+    {ic:'💰',lb:'FCF Yield',st:'p',nt:'FCF 양수'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'h',nt:'데이터센터·산업 파워컨버전 간접 수혜'},
+    {ic:'🏦',lb:'재무 건전성',st:'p',nt:'안정적 재무'},
+    {ic:'📉',lb:'추격 아닌가',st:'h',nt:'RSI 50 중립, 이미 Forbes 주목'},
+  ],
+  ALGM:[
+    {ic:'🏷️',lb:'소형주',st:'f',nt:'$9.39B ❌ 기준($5B) 대폭 초과'},
+    {ic:'💵',lb:'밸류에이션',st:'f',nt:'목표가 $45 vs 현가 $51 — 오버밸류'},
+    {ic:'📈',lb:'EBITDA/FCF 개선',st:'p',nt:'흑자 기업'},
+    {ic:'⚡',lb:'자산 효율성',st:'p',nt:'Fab-less, 효율 우수'},
+    {ic:'💰',lb:'FCF Yield',st:'p',nt:'FCF 양수'},
+    {ic:'🚀',lb:'파이프라인/수요',st:'p',nt:'EV 전류 센서 시장 1위, 필수 탑재'},
+    {ic:'🏦',lb:'재무 건전성',st:'p',nt:'재무 건전'},
+    {ic:'📉',lb:'추격 아닌가',st:'f',nt:'RSI 50, 이미 충분히 알려진 종목'},
+  ],
+};
+
+function makeChart(cRef,chRef,cfg){
+  useEffect(function(){
+    if(!cRef.current) return;
+    if(chRef.current) chRef.current.destroy();
+    chRef.current=new Chart(cRef.current,cfg);
+    return function(){ if(chRef.current){chRef.current.destroy();chRef.current=null;} };
+  },[]);
+}
+
+/* ── Tab 1: 밸류체인 ── */
+function Tab1(){
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'🗺️ 800V DC 탑다운 밸류체인 맵'),
+      e('div',{className:'vc-box'},
+        e('span',{className:'vc-hl'},'[800V DC 메가트렌드]'),'\n',
+        '  ├── ',e('span',{className:'vc-hl'},'[EV 800V 플랫폼]'),' 포르쉐·현대·GM·BMW·리비안\n',
+        '  └── ',e('span',{className:'vc-hl'},'[AI DC 800V HVDC]'),' NVIDIA Kyber AI 팩토리 표준\n',
+        '              ↓\n',
+        e('span',{className:'vc-hl'},'[소재층]'),'  SiC 모듈 방열기판 · AlSiC 복합재\n',
+        '  ',e('span',{className:'vc-star'},'★'),' CPSH (CPS Technologies) — 마이크로캡 미발굴\n',
+        '              ↓\n',
+        e('span',{className:'vc-hl'},'[반도체층]'),' SiC 웨이퍼·MOSFET · GaN IC\n',
+        '  ',e('span',{className:'vc-star'},'★'),' WOLF(SiC 웨이퍼 35%) · ',e('span',{className:'vc-star'},'★★'),' NVTS(GaN+SiC) · POWI(GaN AI)\n',
+        '              ↓\n',
+        e('span',{className:'vc-hl'},'[테스팅층]'),'  SiC 웨이퍼 번인 테스트\n',
+        '  ',e('span',{className:'vc-star'},'★★★'),' AEHR — 웨이퍼레벨 유일, 대체불가 초병목\n',
+        '              ↓\n',
+        e('span',{className:'vc-hl'},'[열관리층]'),' 800V 랙·모듈 발열 처리\n',
+        '  ',e('span',{className:'vc-star'},'★'),' KULR — OCP ORV3 800V BBU 전용\n',
+        '              ↓\n',
+        e('span',{className:'vc-hl'},'[파워컨버전층]'),' 800V→저전압 변환 모듈\n',
+        '  BELFA · ALGM(센싱)\n',
+        '              ↓\n',
+        e('span',{className:'vc-hl'},'[충전 하류]'),' EV DC 패스트 충전 인프라\n',
+        '  ',e('span',{className:'vc-star'},'★'),' BEEM(오프그리드) · BLNK · WBX\n'
+      )
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'⚡ 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'🖥️ NVIDIA 800 VDC = AI DC 병목 촉매'),
+        e('div',{className:'bd'},'NVIDIA "Kyber" 800VDC 아키텍처가 AI 팩토리 표준으로 공식화. AI 랙이 600kW → 1MW로 증가하면서 54V HVDC로는 물리적으로 불가. 800V HVDC만이 해결책 → SiC/GaN 수요 폭증 → AEHR 테스팅 병목 심화 → NVTS·POWI 파워IC 수요 급증.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'🔋 EV 800V = 충전 혁명 촉매'),
+        e('div',{className:'bd'},'현대 아이오닉5·기아 EV6·포르쉐 타이칸 등 800V EV 확산. 350kW 급속충전(18~22분)은 800V 전용. SiC 없이는 800V 효율 처리 불가. 충전 인프라 BLNK·WBX·BEEM 수요도 직결.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'🎯 언섹시 층 우선 원칙 — AEHR & CPSH'),
+        e('div',{className:'bd'},'WOLF(SiC 웨이퍼)는 이미 모두 안다. 진짜 병목은: ① AEHR — SiC 출하 전 번인 테스트 유일 솔루션. SiC 팹이 아무리 많아도 AEHR 없으면 출하 불가. ② CPSH — SiC MOSFET 모듈 기판(AlSiC), 커버리지 0명, 시총 $40M.')
+      )
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'🔩 L3 병목 유형 분석'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,
+            e('th',null,'병목 유형'),e('th',null,'핵심 질문'),e('th',null,'해당 종목'),e('th',null,'심각도')
+          )),
+          e('tbody',null,
+            e('tr',null,e('td',null,'인증(Testing)'),e('td',null,'SiC 없이 번인 테스트 가능?'),e('td',null,'AEHR'),e('td',null,e('span',{className:'badge bg'},'최고'))),
+            e('tr',null,e('td',null,'생산량(SiC)'),e('td',null,'공급이 수요 30% 부족'),e('td',null,'WOLF'),e('td',null,e('span',{className:'badge bg'},'매우높음'))),
+            e('tr',null,e('td',null,'GaN 기술'),e('td',null,'800V→저전압 97%+ 효율 IC'),e('td',null,'NVTS · POWI'),e('td',null,e('span',{className:'badge by'},'높음'))),
+            e('tr',null,e('td',null,'열(Thermal)'),e('td',null,'800V 랙 발열 없이 AI DC 동작?'),e('td',null,'KULR'),e('td',null,e('span',{className:'badge by'},'높음'))),
+            e('tr',null,e('td',null,'소재(Material)'),e('td',null,'SiC 모듈 기판 대체 가능?'),e('td',null,'CPSH'),e('td',null,e('span',{className:'badge by'},'높음'))),
+            e('tr',null,e('td',null,'충전인프라'),e('td',null,'800V EV 충전망 충분한가?'),e('td',null,'BLNK·WBX·BEEM'),e('td',null,e('span',{className:'badge bb'},'보통')))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2(){
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'🔬 ① 기존 기술의 근본 한계'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'한계'),e('th',null,'400V·Si·54V 시스템'),e('th',null,'왜 AI시대에 더 심각한가'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'충전 속도 벽'),e('td',null,'최대 150kW'),e('td',null,'소비자 기대 20분 충전 불가. 800V로만 350kW 달성')),
+            e('tr',null,e('td',null,'AI 랙 전류 한계'),e('td',null,'54V에서 1MW = 18,500A'),e('td',null,'1MW 랙 시대 구리 배선 물리적 불가. 800V = 1,250A로 해결')),
+            e('tr',null,e('td',null,'Si IGBT 효율 한계'),e('td',null,'800V+ 스위칭 손실 급증'),e('td',null,'SiC MOSFET 없이 고효율 800V 처리 불가. Si 95% 한계'))
+          )
+        )
+      )
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'⚡ ② SiC / GaN 신기술 우위성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'지표'),e('th',null,'기존(Si/400V)'),e('th',null,'신기술(SiC/GaN 800V)'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'최대 충전속도'),e('td',null,'150kW'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'350kW (+133%)'))),
+            e('tr',null,e('td',null,'충전 시간'),e('td',null,'45분'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'18~22분'))),
+            e('tr',null,e('td',null,'전력 변환 효율'),e('td',null,'95% (Si IGBT)'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'97.6~98.5% (GaN/SiC)'))),
+            e('tr',null,e('td',null,'AI DC 배선 무게'),e('td',null,'기준 100%'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'50% 절감'))),
+            e('tr',null,e('td',null,'스위칭 손실'),e('td',null,'기준 100%'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'33% 수준 (3x 감소)'))),
+            e('tr',null,e('td',null,'AI DC 효율 개선'),e('td',null,'기준'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'+5% vs 54V HVDC')))
+          )
+        )
+      )
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'📅 ③ 결정적 흐름 타임라인'),
+      e('div',{className:'tl-item'},
+        e('div',{className:'tl-label'},'1단계 — EV 수요 폭발 (2019~2022)'),
+        e('div',{className:'tl-title'},'포르쉐 타이칸→현대 E-GMP, SiC 수요 폭발'),
+        e('div',{className:'tl-text'},'2019 타이칸 최초 800V EV 출시, 22분 충전 충격. 2021 현대 아이오닉5·기아 EV6로 대중화. SiC MOSFET 없이는 800V 고효율 처리 불가 → SiC 공급 30% 부족 시작.')
+      ),
+      e('div',{className:'tl-item'},
+        e('div',{className:'tl-label'},'2단계 — 빅테크 전략 투자 (2022~2025)'),
+        e('div',{className:'tl-title'},'NVIDIA 800VDC 아키텍처 설계, Wolfspeed $6.5B 메가팹'),
+        e('div',{className:'tl-text'},'GM Ultium·BMW·Rivian 등 800V OEM 확산. Wolfspeed 뉴욕주 Mohawk Valley SiC 메가팹 가동. NVIDIA가 OCP 서밋에서 800VDC AI 팩토리 아키텍처 발표 준비.')
+      ),
+      e('div',{className:'tl-item'},
+        e('div',{className:'tl-label'},'3단계 — AI DC 800V + 시장 폭증 (2025~현재)'),
+        e('div',{className:'tl-title'},'NVIDIA "Kyber" 800VDC 공식화, 생태계 전원 참여'),
+        e('div',{className:'tl-text'},'POWI·NVTS·TI·STM 등 공식 NVIDIA 800VDC 파트너 선언. AI 랙 600kW→1MW 로드맵 확정. SiC 공급 부족 심화 → AEHR 테스팅 병목이 전체 공급망 병목으로 부상.')
+      )
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'📊 ④ 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'현재'),e('th',null,'목표'),e('th',null,'CAGR'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'800V EV 아키텍처'),e('td',null,'$4.28B (2025)'),e('td',null,'$24.41B (2034)'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'21.3%'))),
+            e('tr',null,e('td',null,'EV 충전인프라 전체'),e('td',null,'$56.85B (2025)'),e('td',null,'$548.60B (2033)'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'32.8%'))),
+            e('tr',null,e('td',null,'SiC 파워 반도체'),e('td',null,'$1.88B (2025)'),e('td',null,'$4.58B (2030)'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'19.4%'))),
+            e('tr',null,e('td',null,'AI DC 800V 전환 수혜'),e('td',null,'$5B+ (2026)'),e('td',null,'$20B+ (2030)'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'~40%')))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3(){
+  return e('div',null,
+    STOCKS.map(function(s,i){
+      var CC=CHOKE_COLOR[s.choke]||'#64748b';
+      var BD2=s.warn?'#f97316':BD;
+      return e('div',{key:i,className:'sc',style:{borderColor:BD2}},
+        e('div',{className:'sh'},
+          e('div',null,
+            e('div',{className:'sn',style:{color:CC}},s.ticker),
+            e('div',{className:'sf'},s.name)
+          ),
+          e('div',{style:{textAlign:'right'}},
+            e('div',{style:{fontSize:'0.85rem',fontWeight:700,color:'#e2e8f0'}},'$'+s.price.toFixed(2)),
+            e('span',{className:'badge',style:{background:'rgba(6,182,212,0.12)',color:CC,marginTop:'3px',display:'block'}},s.choke)
+          )
+        ),
+        e('div',{className:'sm'},
+          e('div',{className:'mc'},e('div',{className:'lb'},'시총'),e('div',{className:'vl',style:{color:CC}},'$'+s.mcap.toFixed(2)+'B')),
+          e('div',{className:'mc'},e('div',{className:'lb'},'RSI'),e('div',{className:'vl',style:{color:s.rsi<40?'#10b981':s.rsi>60?'#ef4444':'#f59e0b'}},s.rsi)),
+          e('div',{className:'mc'},e('div',{className:'lb'},'멀티배거'),e('div',{className:'vl',style:{color:s.score>=7?'#10b981':s.score>=5?'#f59e0b':'#ef4444'}},s.score+'/8'))
+        ),
+        e('div',{className:'pb'},e('div',{className:'pf',style:{width:(s.score/8*100)+'%',background:CC}})),
+        s.warn && e('div',{style:{fontSize:'0.7rem',color:'#f97316',margin:'6px 0 4px'}},
+          s.ticker==='WOLF'?'⚠️ 재무 스트레스 — 순손실 -$1.6B TTM, 부채 과다. 진입 신중':
+          '⚠️ 시총 $9.39B (기준 초과) — 참고용 대형주'
+        ),
+        e('div',{className:'st'},
+          s.ticker==='AEHR'?'SiC 웨이퍼 번인 테스트 유일 솔루션. Q3 EPS 대폭 beat. 목표가 $29.33 vs 현가 $14.50':
+          s.ticker==='NVTS'?'GaN+SiC 통합, NVIDIA Kyber 800VDC 공식 파트너. AI DC+EV 이중 시장':
+          s.ticker==='BEEM'?'오프그리드 태양광 DC충전 독점 특허. 군사·항만·재난 전용 틈새. 마이크로캡 $110M':
+          s.ticker==='KULR'?'OCP ORV3 800V BBU 전용 설계. 글로벌 JV $100M, Caban $30M 계약. 52W 고점 대비 -91%':
+          s.ticker==='CPSH'?'SiC MOSFET 모듈용 AlSiC 방열기판 전문. 커버리지 0명, 시총 $40M 극초기 발굴':
+          s.ticker==='WOLF'?'SiC 웨이퍼 35% 점유, 메가팹 가동. 재무 스트레스 경보. AI 기대감 반영 구간':
+          s.ticker==='POWI'?'NVIDIA Kyber 800VDC 보조 PSU 레퍼런스. 흑자·무부채. RSI 52 이미 반영':
+          s.ticker==='BLNK'?'Q1 DC패스트 136 스탤 착공. FY26 가이던스 $105~115M. 800V 충전 확산 수혜':
+          s.ticker==='WBX'?'Q1 매출 $102M. Supernova PowerRing 800V 급속충전 유럽 배포':
+          s.ticker==='BELFA'?'2026 Forbes 최우수 소형주. 데이터센터·산업 파워컨버전 전략 재편':
+          'EV 전류 센서 시장 1위. 800V BMS 필수. 단, 시총 $9.39B, 목표가 $45 < 현가 $51'
+        )
+      );
+    })
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4(){
+  var labels=STOCKS.map(function(s){return s.ticker;});
+  var colors=STOCKS.map(function(s){return CHOKE_COLOR[s.choke]||'#64748b';});
+
+  var mr=useRef(null);var mc=useRef(null);
+  makeChart(mr,mc,{
+    type:'bar',
+    data:{labels:labels,datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mcap;}),backgroundColor:colors}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e2d4a'}}}}
+  });
+
+  var sr=useRef(null);var sc=useRef(null);
+  makeChart(sr,sc,{
+    type:'bar',
+    data:{labels:labels,datasets:[{label:'멀티배거 점수',data:STOCKS.map(function(s){return s.score;}),backgroundColor:colors}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e2d4a'}}}}
+  });
+
+  var rr=useRef(null);var rc=useRef(null);
+  makeChart(rr,rc,{
+    type:'bar',
+    data:{labels:labels,datasets:[{label:'RSI',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi<40?'rgba(16,185,129,0.7)':s.rsi>60?'rgba(239,68,68,0.7)':'rgba(245,158,11,0.7)';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:80,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#1e2d4a'}}}}
+  });
+
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📊 시가총액 비교'),e('canvas',{ref:mr})),
+    e('div',{className:'card'},e('h2',null,'🔟 멀티배거 점수 비교'),e('canvas',{ref:sr})),
+    e('div',{className:'card'},e('h2',null,'📈 RSI 비교'),e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5(){
+  var sa=useState('AEHR');var sel=sa[0];var setSel=sa[1];
+  var items=MBDETAIL[sel]||[];
+  var total=items.reduce(function(a,m){return a+(m.st==='p'?1:m.st==='h'?0.5:0);},0);
+  var s=STOCKS.find(function(x){return x.ticker===sel;})||STOCKS[0];
+  var CC=CHOKE_COLOR[s.choke]||'#64748b';
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 분석'),
+      e('div',{style:{display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'14px'}},
+        STOCKS.map(function(st,i){
+          return e('button',{key:i,className:'sbtn'+(sel===st.ticker?' on':''),onClick:function(){setSel(st.ticker);}},st.ticker);
+        })
+      ),
+      e('div',{style:{background:'#0d1426',borderRadius:'8px',padding:'12px',marginBottom:'12px',borderLeft:'3px solid '+CC}},
+        e('div',{style:{fontSize:'1.1rem',fontWeight:700,color:CC}},s.ticker+' — '+s.name),
+        e('div',{style:{fontSize:'0.78rem',color:'#64748b',marginTop:'2px'}},'$'+s.price.toFixed(2)+' | $'+s.mcap.toFixed(2)+'B | RSI '+s.rsi),
+        e('div',{style:{marginTop:'8px'}},
+          e('div',{style:{fontSize:'2.2rem',fontWeight:700,color:CC,display:'inline'}},total.toFixed(1)+'/8 '),
+          e('span',{style:{fontSize:'0.8rem',color:'#94a3b8'}},'멀티배거 점수')
+        ),
+        e('div',{className:'pb',style:{maxWidth:'160px',marginTop:'6px'}},
+          e('div',{className:'pf',style:{width:(total/8*100)+'%',background:CC}})
+        )
+      ),
+      items.map(function(m,i){
+        return e('div',{key:i,className:'mb-row'},
+          e('div',{className:'mb-ic'},m.ic),
+          e('div',{style:{flex:1}},
+            e('div',{className:'mb-lb'},m.lb),
+            e('div',{className:'mb-nt'},m.nt)
+          ),
+          e('div',{className:'mb-st '+(m.st==='p'?'p':m.st==='h'?'h':'f')},
+            m.st==='p'?'✅ 충족':m.st==='h'?'⚠️ 부분':'❌ 미충족'
+          )
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6(){
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,
+            e('th',null,'순위'),e('th',null,'티커'),e('th',null,'병목유형'),e('th',null,'점수'),e('th',null,'진입전략')
+          )),
+          e('tbody',null,
+            e('tr',null,e('td',null,'1★'),e('td',null,e('span',{style:{color:'#06b6d4',fontWeight:700}},'AEHR')),e('td',null,'SiC 테스팅 독점'),e('td',null,'7/8'),e('td',null,'즉시 진입 가능')),
+            e('tr',null,e('td',null,'2★'),e('td',null,e('span',{style:{color:'#3b82f6',fontWeight:700}},'NVTS')),e('td',null,'GaN NVIDIA파트너'),e('td',null,'7/8'),e('td',null,'즉시 진입 가능')),
+            e('tr',null,e('td',null,'3'),e('td',null,e('span',{style:{color:'#f97316',fontWeight:700}},'BEEM')),e('td',null,'오프그리드 DC충전'),e('td',null,'6/8'),e('td',null,'소규모 선취')),
+            e('tr',null,e('td',null,'4'),e('td',null,e('span',{style:{color:'#ef4444',fontWeight:700}},'KULR')),e('td',null,'800V 열관리'),e('td',null,'6/8'),e('td',null,'JV 발표 대기')),
+            e('tr',null,e('td',null,'5★'),e('td',null,e('span',{style:{color:'#a78bfa',fontWeight:700}},'CPSH')),e('td',null,'SiC 기판 소재'),e('td',null,'6/8'),e('td',null,'마이크로캡 소규모')),
+            e('tr',null,e('td',null,'6⚠️'),e('td',null,e('span',{style:{color:'#f97316',fontWeight:700}},'WOLF')),e('td',null,'SiC 웨이퍼'),e('td',null,'5/8'),e('td',null,'재무 안정 확인 후')),
+            e('tr',null,e('td',null,'7'),e('td',null,e('span',{style:{color:'#3b82f6',fontWeight:700}},'POWI')),e('td',null,'GaN AI DC PSU'),e('td',null,'5/8'),e('td',null,'하락 시 매수')),
+            e('tr',null,e('td',null,'8'),e('td',null,e('span',{style:{color:'#f59e0b',fontWeight:700}},'BLNK')),e('td',null,'EV DC 충전'),e('td',null,'5/8'),e('td',null,'가이던스 확인 후')),
+            e('tr',null,e('td',null,'9'),e('td',null,e('span',{style:{color:'#f59e0b',fontWeight:700}},'WBX')),e('td',null,'유럽 충전기'),e('td',null,'5/8'),e('td',null,'유럽 EV성장 모니터')),
+            e('tr',null,e('td',null,'10'),e('td',null,e('span',{style:{color:'#8b5cf6',fontWeight:700}},'BELFA')),e('td',null,'파워컨버전'),e('td',null,'5/8'),e('td',null,'안정형 보유')),
+            e('tr',null,e('td',null,'REF⚠️'),e('td',null,e('span',{style:{color:'#ec4899',fontWeight:700}},'ALGM')),e('td',null,'센싱(참고용)'),e('td',null,'4/8'),e('td',null,'시총 초과, 관찰만'))
+          )
+        )
+      )
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'🚀 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'🖥️ NVIDIA 800VDC AI 팩토리 계약 확대'),
+        e('div',{className:'bd'},'MS·AMZN·GOOG·Meta가 NVIDIA Kyber 800VDC 기반 AI 팩토리 발주 → NVTS·POWI·KULR 수혜. 계약 발표 즉시 멀티배거 촉매.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'🔬 AEHR SiC 대형 고객 계약'),
+        e('div',{className:'bt'},'AEHR 신규 SiC/GaN 테스팅 계약 → 분기 흑자 전환 촉매. 목표가 $29.33 vs 현가 $14.50 = 업사이드 +100%+.'),
+        e('div',{className:'bd'},'')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'🔋 KULR JV $100M 계약 공식화'),
+        e('div',{className:'bd'},'글로벌 배터리셀 제조사 JV 계약 공식 발표 시 KULR 재평가 촉매. 현재 $3.97, 52W 고점 $43.92 대비 -91%.')
+      )
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'⚠️ 주요 리스크'),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'SiC 공급 과잉 반전'),
+        e('div',{className:'wd'},'Wolfspeed 메가팹 + STM·onsemi 증설로 SiC 공급 과잉 전환 시 WOLF·AEHR 밸류에이션 압박.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'800VDC 도입 지연'),
+        e('div',{className:'wd'},'데이터센터의 800V HVDC 전환은 대규모 인프라 교체 필요. 기존 설비 내구성 이유로 도입 지연 가능.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'EV 수요 둔화'),
+        e('div',{className:'wd'},'EV 성장 속도 둔화 시 800V 충전 인프라(BLNK·WBX·BEEM) 수요 감소 직접 영향.')
+      )
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'📋 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'버킷'),e('th',null,'종목'),e('th',null,'비중'),e('th',null,'이유'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'핵심 병목'),e('td',null,'AEHR + NVTS'),e('td',null,'40%'),e('td',null,'대체불가, 독점적 병목')),
+            e('tr',null,e('td',null,'성장 소형주'),e('td',null,'KULR + BEEM + CPSH'),e('td',null,'30%'),e('td',null,'고리스크·고리워드')),
+            e('tr',null,e('td',null,'인프라 수혜'),e('td',null,'BLNK + WBX + BELFA'),e('td',null,'20%'),e('td',null,'EV 충전·파워컨버전')),
+            e('tr',null,e('td',null,'참고 포지션'),e('td',null,'POWI'),e('td',null,'10%'),e('td',null,'NVIDIA 파트너, 안정 수익'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App(){
+  var sa=useState(0);var tab=sa[0];var setTab=sa[1];
+  var TABS=['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div',null,
+    e('div',{className:'hdr'},
+      e('a',{href:'https://disntm90.github.io/disntm90/',className:'back'},'← 목록으로'),
+      e('h1',null,'⚡ 800V DC 인프라 종목발굴'),
+      e('div',{className:'sub'},'2026-06-15 | EV 충전 + AI DC 800V HVDC 이중 시장 | 11종목 | SiC·GaN·열관리·충전 병목 발굴')
+    ),
+    e('div',{className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button',{key:i,className:'tb'+(tab===i?' on':''),onClick:function(){setTab(i);}},n);
+      })
+    ),
+    e('div',{className:'cnt'},
+      tab===0?Tab1():
+      tab===1?Tab2():
+      tab===2?Tab3():
+      tab===3?e(Tab4,null):
+      tab===4?e(Tab5,null):
+      Tab6()
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
