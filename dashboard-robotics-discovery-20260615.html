@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🤖 로보틱스(응용·시스템) 종목발굴 — 2026-06-15</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f0f; color: #e5e7eb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+(function() {
+  var useState = React.useState;
+  var useEffect = React.useEffect;
+  var useRef = React.useRef;
+
+  function e() {
+    var args = Array.prototype.slice.call(arguments);
+    return React.createElement.apply(React, args);
+  }
+
+  var THEME = '#10b981';
+  var BD  = '#1f2937';
+  var BD2 = '#374151';
+
+  var CHOKE_COLOR = {
+    '시스템(System)':     '#10b981',
+    '인증(Cert)':         '#3b82f6',
+    '생산량(Production)': '#06b6d4',
+    '광(Vision)':         '#f59e0b',
+    '재료(Material)':     '#a78bfa',
+    'SW/AI':              '#ec4899'
+  };
+
+  var STOCKS = [
+    { ticker:'SERV', name:'Serve Robotics',     price:6.97,   mcap:0.54, rsi:48, score:6, choke:'시스템(System)' },
+    { ticker:'SYM',  name:'Symbotic',            price:41.63,  mcap:24.0, rsi:55, score:5, choke:'시스템(System)' },
+    { ticker:'KSCP', name:'Knightscope',         price:2.95,   mcap:0.04, rsi:45, score:5, choke:'시스템(System)', warn:true },
+    { ticker:'PRCT', name:'PROCEPT BioRobotics', price:26.45,  mcap:1.36, rsi:48, score:6, choke:'인증(Cert)' },
+    { ticker:'STXS', name:'Stereotaxis',         price:1.80,   mcap:0.18, rsi:45, score:6, choke:'인증(Cert)', warn:true },
+    { ticker:'TKR',  name:'Timken Company',      price:132.39, mcap:9.2,  rsi:47, score:5, choke:'생산량(Production)' },
+    { ticker:'RBC',  name:'RBC Bearings',        price:576.74, mcap:18.2, rsi:50, score:4, choke:'생산량(Production)' },
+    { ticker:'AMBA', name:'Ambarella',           price:68.72,  mcap:3.44, rsi:52, score:6, choke:'광(Vision)' },
+    { ticker:'AEVA', name:'Aeva Technologies',   price:14.50,  mcap:0.94, rsi:45, score:6, choke:'광(Vision)' },
+    { ticker:'MP',   name:'MP Materials',        price:57.82,  mcap:10.25,rsi:55, score:5, choke:'재료(Material)' },
+    { ticker:'PDYN', name:'Palladyne AI',        price:6.18,   mcap:0.30, rsi:42, score:5, choke:'SW/AI' }
+  ];
+
+  var YARTSEVA = [
+    '소형주 ($5B 이하)',
+    '고성장 매출 (YoY 20%+)',
+    '마진 개선 추이',
+    '내부자 매수',
+    '거대 TAM',
+    '부채 없는 재무',
+    '경제적 해자',
+    '근접 촉매'
+  ];
+
+  var SCORES = {
+    'SERV': [1,1,0,0,1,1,1,1],
+    'SYM':  [0,1,1,0,1,1,1,0],
+    'KSCP': [1,1,0,1,1,0,0,1],
+    'PRCT': [1,1,0,0,1,1,1,1],
+    'STXS': [1,1,0,1,1,1,1,0],
+    'TKR':  [0,1,1,0,1,0,1,1],
+    'RBC':  [0,1,1,0,1,0,1,0],
+    'AMBA': [1,1,1,0,1,1,1,0],
+    'AEVA': [1,1,0,0,1,1,1,1],
+    'MP':   [0,0,1,0,1,1,1,1],
+    'PDYN': [1,1,0,1,1,1,0,0]
+  };
+
+  var POINTS = [
+    'Uber 스핀오프 라스트마일 배달 로봇. Q1 2026 매출 +578% YoY, 전국 2,000대 운영(일 가동 812대). 반복매출 비중 50% 육박, 2026 가이던스 $26M 재확인.',
+    'AI 기반 창고 자동화 시스템 1위. Q2 FY26 매출 $676M +23% YoY, 흑자 전환($9M). Walmart 대형 고객. 시총 대형이나 자유현금흐름 재평가 기대.',
+    '자율 보안 순찰 로봇. Q1 2026 매출 +106% YoY($6M), 마진 흑자 전환(8%). 목표가 평균 $15(Strong Buy). 마이크로캡·순손실 확대 주의.',
+    'AQUABEAM 워터젯 전립선 수술 로봇. 2025 매출 $308M +37% YoY, 설치기반 확대로 소모품 반복매출. 애널 11명 Buy, 목표가 $35.44.',
+    '로봇 자기항법(RMN) 심혈관 카테터 수술. Robocath 인수($45M)로 PCI 시장 진출. 신형 시스템 출하 본격화. 마이크로캡($180M) 변동성 주의.',
+    '정밀 베어링·롤러스크류 글로벌 리더. YTD +59%, 5월 어닝 서프라이즈. Optimus 선형 액추에이터 롤러스크류 채택 — 휴머노이드 모션 핵심 병목.',
+    '고정밀 항공·로봇 베어링 전문. Agility Robotics 투자·전략 파트너. 휴머노이드 관절 베어링 수요 직접 노출. 대형주이나 진입장벽 극히 높음.',
+    '엣지 AI 비전 SoC — 로봇·ADAS 양쪽. 저전력 추론 칩으로 로봇 "눈" 담당. 최근 12개월 +25%, RSI 중립. 휴머노이드 비전 표준 후보.',
+    'FMCW 4D LiDAR-on-Chip 독자 기술. 속도 측정·날씨 면역. 2025 매출 +99% YoY, 산업 자동화·로봇 진출. 목표가 $23~25.',
+    '美 유일 희토류 통합 생산. NdFeB 자석 Texas 캠퍼스 착공($1.25B+), 국방부 PPP. 로봇 액추에이터 자석 = 중국 90% 의존 탈피의 유일 대안.',
+    'Palladyne AI — 산업·방산 자율로봇 OS. Q1 2026 매출 2배 YoY, 신규계약 $7M, 백로그 $17M. 로봇 두뇌 SW, 고위험·고성장.'
+  ];
+
+  function makeChart(canvasRef, chartRef, cfg) {
+    useEffect(function() {
+      if (!canvasRef.current) return;
+      if (chartRef.current) { chartRef.current.destroy(); }
+      chartRef.current = new Chart(canvasRef.current, cfg);
+      return function() {
+        if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
+      };
+    }, []);
+  }
+
+  /* ── Tab1 밸류체인 ─────────────────────────────── */
+  function Tab1() {
+    var rows = [
+      { layer:'터미널(L1)', label:'로봇 본체·시스템 통합', desc:'배달·창고·보안 로봇 본체 — 대량 생산에 들어가는 "터미널"', tickers:'★ SERV, ★ SYM, KSCP', choke:'시스템(System)' },
+      { layer:'터미널(L1)', label:'의료 수술 로봇', desc:'규제 인증이 진입장벽 — FDA 승인에 수년 소요', tickers:'★ PRCT, STXS', choke:'인증(Cert)' },
+      { layer:'중류(L3)', label:'정밀 모션 — 베어링·롤러스크류', desc:'관절마다 필수, 대규모 공급사 소수 — 옆으로 보기(언섹시 병목)', tickers:'★ TKR, RBC', choke:'생산량(Production)' },
+      { layer:'중류(L3)', label:'비전 — AI칩·LiDAR', desc:'로봇이 보지 못하면 자율화 불가 — 인지 병목', tickers:'★ AMBA, AEVA', choke:'광(Vision)' },
+      { layer:'상류(L2)', label:'희소 재료 — 자석', desc:'NdFeB 자석 중국 90% 의존 — 가장 깊은 병목', tickers:'★ MP', choke:'재료(Material)' },
+      { layer:'하류', label:'로봇 두뇌 — 자율 SW', desc:'하드웨어가 갖춰져도 SW 없이는 자율 불가', tickers:'★ PDYN', choke:'SW/AI' }
+    ];
+
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'12px', fontSize:'18px'}}, '🗺️ 로보틱스 밸류체인 맵 (응용·시스템 레이어)'),
+      e('p', {style:{color:'#9ca3af', fontSize:'13px', marginBottom:'8px'}},
+        'L1 터미널 먼저: "어떤 로봇이 대량 생산에 들어가는가?" → 배달·창고·보안·수술 로봇 본체와 통합기업을 선(先)정의'),
+      e('div', {style:{background:'#0e2a22', borderRadius:'8px', padding:'10px', marginBottom:'14px'}},
+        e('p', {style:{color:'#6ee7b7', fontSize:'12px', lineHeight:'1.6'}},
+          '※ 어제(06-14)는 부품 병목 레이어(센서·자석·칩) 중심. 오늘은 로봇 본체·통합기업(터미널) + 저평가 정밀모션 병목으로 차별화.')
+      ),
+      e('div', {style:{background:'#111827', borderRadius:'10px', padding:'16px', marginBottom:'20px',
+                       fontFamily:'monospace', fontSize:'13px', color:'#d1fae5', lineHeight:'2'}},
+        e('div', null, '[터미널] 로봇 본체  (★SERV  ★SYM  KSCP / ★PRCT  STXS)'),
+        e('div', null, '      ↑ 이 로봇을 만들려면 ↓'),
+        e('div', null, '[모션] 베어링·롤러스크류  (★TKR  RBC)'),
+        e('div', null, '[비전] AI칩·LiDAR  (★AMBA  AEVA)'),
+        e('div', null, '[재료] 희토류 자석  (★MP)'),
+        e('div', null, '[두뇌] 자율 SW  (★PDYN)')
+      ),
+      rows.map(function(r) {
+        return e('div', {key:r.layer+r.label,
+          style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'10px',
+                 borderLeft:'4px solid '+(CHOKE_COLOR[r.choke]||THEME)}},
+          e('div', {style:{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:'6px', marginBottom:'6px'}},
+            e('span', {style:{color:CHOKE_COLOR[r.choke]||THEME, fontWeight:'bold', fontSize:'14px'}},
+              r.layer+' — '+r.label),
+            e('span', {style:{background:CHOKE_COLOR[r.choke]||THEME, color:'#000',
+                               borderRadius:'4px', padding:'2px 8px', fontSize:'11px', fontWeight:'bold'}}, r.choke)
+          ),
+          e('p', {style:{color:'#9ca3af', fontSize:'12px', marginBottom:'4px'}}, r.desc),
+          e('p', {style:{color:'#d1fae5', fontSize:'12px', fontWeight:'bold'}}, '관련 종목: '+r.tickers)
+        );
+      }),
+      e('div', {style:{background:'#064e3b', borderRadius:'8px', padding:'14px', marginTop:'16px'}},
+        e('p', {style:{color:'#6ee7b7', fontSize:'13px', fontWeight:'bold', marginBottom:'6px'}}, '💡 핵심 파생 논리 (옆으로 보기)'),
+        e('p', {style:{color:'#a7f3d0', fontSize:'12px', lineHeight:'1.7'}},
+          '로봇 본체(터미널)가 대량 생산되면 → Optimus가 채택한 롤러스크류·베어링(TKR·RBC)이 관절마다 필수 ' +
+          '→ 이미 주목받는 감속기·센서 "옆"에 위치한 정밀 모션 부품이 덜 반영된 병목 ' +
+          '→ 동시에 수술·창고·배달 로봇은 각자 인증·고객 집중·반복매출로 별도 해자 형성')
+      )
+    );
+  }
+
+  /* ── Tab2 기술분석 ─────────────────────────────── */
+  function Tab2() {
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'16px', fontSize:'18px'}}, '🔬 기술 심층 배경 분석'),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#fbbf24', marginBottom:'10px', fontSize:'15px'}}, '① 기존 기술의 근본 한계'),
+        [
+          '롤러스크류·베어링 공급 과점 — 휴머노이드는 선형 액추에이터에 행성형 롤러스크류 필수(Optimus 채택). 고충격 하중을 견디는 정밀 스크류 제조사는 소수, 리드타임 장기화.',
+          '수술 로봇 인증 장벽 — 의료 로봇은 FDA·CE 승인에 수년 소요. 승인 후에도 임상 데이터 축적이 필요해 신규 진입이 사실상 봉쇄, 기존 플레이어 해자 강력.',
+          '시스템 통합 복잡성 — 창고·배달 로봇은 단일 부품이 아닌 SW+HW+플릿 운영 통합. 고객 집중·자본 집약도가 높아 스케일업 자체가 병목.'
+        ].map(function(t, i) {
+          return e('div', {key:i, style:{display:'flex', gap:'10px', marginBottom:'8px'}},
+            e('span', {style:{color:'#ef4444', fontWeight:'bold', flexShrink:0}}, (i+1)+'.'),
+            e('p', {style:{color:'#d1d5db', fontSize:'13px', lineHeight:'1.6'}}, t)
+          );
+        })
+      ),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#34d399', marginBottom:'10px', fontSize:'15px'}}, '② 신기술 우위성 — 왜 대체 불가인가'),
+        e('div', {style:{overflowX:'auto'}},
+          e('table', {style:{width:'100%', borderCollapse:'collapse', fontSize:'12px'}},
+            e('thead', null,
+              e('tr', null,
+                ['기술 영역', '기존 대비 우위', '핵심 수치'].map(function(h) {
+                  return e('th', {key:h, style:{background:'#064e3b', color:'#6ee7b7', padding:'8px', textAlign:'left'}}, h);
+                })
+              )
+            ),
+            e('tbody', null,
+              [
+                ['행성형 롤러스크류', '볼스크류 대비 고충격 하중 내구', '하중 3~6×, 휴머노이드 동적 동작 필수'],
+                ['로봇 자기항법(RMN)', '수동 카테터 대비 정밀·무방사선', '시술 정확도↑, 의사 방사선 노출 제거'],
+                ['반복매출 시스템', '단발 판매 → 소모품·SW 구독', 'SERV 반복매출 50%, PRCT 소모품 모델']
+              ].map(function(row, i) {
+                return e('tr', {key:i, style:{borderTop:'1px solid '+BD2}},
+                  row.map(function(c, j) {
+                    return e('td', {key:j, style:{padding:'8px', color:'#d1d5db'}}, c);
+                  })
+                );
+              })
+            )
+          )
+        )
+      ),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#60a5fa', marginBottom:'10px', fontSize:'15px'}}, '③ 결정적 흐름 — 3단계 타임라인'),
+        [
+          {stage:'1단계 — 응용 검증', period:'2021~2023', color:'#a78bfa',
+           text:'배달(Serve)·창고(Symbotic)·수술(PROCEPT) 로봇 상용 배치 시작. 단순 데모에서 실제 매출 발생 단계로 전환. 시스템 통합 난이도 인식.'},
+          {stage:'2단계 — 상업 스케일업', period:'2024~2025', color:'#10b981',
+           text:'BYD-UBTECH(100~200대), GXO-Agility(100대), BMW-Figure 등 자동차·물류 현장 배치 본격화. Symbotic 흑자 전환, Serve 매출 +578%.'},
+          {stage:'3단계 — 대량 생산·부품 병목', period:'2026~현재', color:'#f59e0b',
+           text:'UBTECH 연 5,000대(10배↑), Tesla Optimus 양산 추진. 로봇 본체 수요 폭증이 롤러스크류·베어링·자석 등 정밀 부품 병목으로 직결.'}
+        ].map(function(s) {
+          return e('div', {key:s.stage, style:{borderLeft:'3px solid '+s.color, paddingLeft:'12px', marginBottom:'12px'}},
+            e('div', {style:{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:'4px', marginBottom:'4px'}},
+              e('span', {style:{color:s.color, fontWeight:'bold', fontSize:'14px'}}, s.stage),
+              e('span', {style:{color:'#9ca3af', fontSize:'12px'}}, s.period)
+            ),
+            e('p', {style:{color:'#d1d5db', fontSize:'13px', lineHeight:'1.6'}}, s.text)
+          );
+        })
+      ),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px'}},
+        e('h3', {style:{color:'#f472b6', marginBottom:'10px', fontSize:'15px'}}, '④ 시장 규모 데이터'),
+        e('div', {style:{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px'}},
+          [
+            ['글로벌 로봇 시장 (2030E)', '$200B+'],
+            ['휴머노이드 시장 (2050E)', '$5조 (Morgan Stanley)'],
+            ['UBTECH 생산량 (2026)', '5,000대 (10배↑)'],
+            ['휴머노이드 CAGR', '+39~53%']
+          ].map(function(item) {
+            return e('div', {key:item[0], style:{background:'#111827', borderRadius:'6px', padding:'10px', textAlign:'center'}},
+              e('p', {style:{color:'#9ca3af', fontSize:'11px', marginBottom:'4px'}}, item[0]),
+              e('p', {style:{color:THEME, fontSize:'15px', fontWeight:'bold'}}, item[1])
+            );
+          })
+        )
+      )
+    );
+  }
+
+  /* ── Tab3 발굴종목 ─────────────────────────────── */
+  function Tab3() {
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'16px', fontSize:'18px'}}, '🔍 발굴 종목 카드 (11종목)'),
+      STOCKS.map(function(s, i) {
+        return e('div', {key:s.ticker,
+          style:{
+            background: BD,
+            border: '1px solid '+(s.warn ? '#f97316' : BD2),
+            borderRadius: '10px',
+            padding: '14px',
+            marginBottom: '12px',
+            borderLeft: '4px solid '+(CHOKE_COLOR[s.choke]||THEME)
+          }},
+          e('div', {style:{display:'flex', justifyContent:'space-between', alignItems:'center',
+                           flexWrap:'wrap', gap:'6px', marginBottom:'8px'}},
+            e('div', {style:{display:'flex', alignItems:'center', gap:'8px'}},
+              e('span', {style:{color:CHOKE_COLOR[s.choke]||THEME, fontWeight:'bold', fontSize:'18px'}}, s.ticker),
+              e('span', {style:{color:'#9ca3af', fontSize:'13px'}}, s.name),
+              s.warn ? e('span', {style:{background:'#92400e', color:'#fde68a',
+                                         borderRadius:'4px', padding:'1px 6px', fontSize:'10px', fontWeight:'bold'}}, '⚠️ 주의') : null
+            ),
+            e('span', {style:{background:CHOKE_COLOR[s.choke]||THEME, color:'#000',
+                               borderRadius:'4px', padding:'2px 8px', fontSize:'11px', fontWeight:'bold'}}, s.choke)
+          ),
+          e('div', {style:{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'8px', marginBottom:'10px'}},
+            [['현재가', '$'+s.price], ['시가총액', '$'+s.mcap+'B'], ['RSI', s.rsi]].map(function(item) {
+              return e('div', {key:item[0], style:{background:'#111827', borderRadius:'6px', padding:'8px', textAlign:'center'}},
+                e('p', {style:{color:'#6b7280', fontSize:'10px', marginBottom:'2px'}}, item[0]),
+                e('p', {style:{color:'#f9fafb', fontSize:'14px', fontWeight:'bold'}}, item[1])
+              );
+            })
+          ),
+          e('div', {style:{marginBottom:'8px'}},
+            e('div', {style:{display:'flex', justifyContent:'space-between', marginBottom:'4px'}},
+              e('span', {style:{color:'#9ca3af', fontSize:'11px'}}, '멀티배거 점수'),
+              e('span', {style:{color:CHOKE_COLOR[s.choke]||THEME, fontSize:'11px', fontWeight:'bold'}}, s.score+'/8')
+            ),
+            e('div', {style:{background:BD2, borderRadius:'4px', height:'6px'}},
+              e('div', {style:{background:CHOKE_COLOR[s.choke]||THEME, width:(s.score/8*100)+'%', height:'100%', borderRadius:'4px'}})
+            )
+          ),
+          e('p', {style:{color:'#d1d5db', fontSize:'12px', lineHeight:'1.6'}}, POINTS[i])
+        );
+      })
+    );
+  }
+
+  /* ── Tab4 비교차트 (hooks) ─────────────────────── */
+  function Tab4() {
+    var c1 = useRef(null); var r1 = useRef(null);
+    var c2 = useRef(null); var r2 = useRef(null);
+    var c3 = useRef(null); var r3 = useRef(null);
+
+    var labels = STOCKS.map(function(s){ return s.ticker; });
+    var colors = STOCKS.map(function(s){ return CHOKE_COLOR[s.choke]||THEME; });
+
+    var baseOpts = {
+      indexAxis: 'y',
+      plugins: { legend: { display:false } },
+      scales: {
+        x: { ticks:{color:'#9ca3af'}, grid:{color:BD2} },
+        y: { ticks:{color:'#e5e7eb'}, grid:{color:BD2} }
+      },
+      responsive: true
+    };
+
+    makeChart(c1, r1, {
+      type:'bar',
+      data:{ labels:labels, datasets:[{ label:'시가총액($B)', data:STOCKS.map(function(s){return s.mcap;}), backgroundColor:colors }] },
+      options: Object.assign({}, baseOpts)
+    });
+    makeChart(c2, r2, {
+      type:'bar',
+      data:{ labels:labels, datasets:[{ label:'멀티배거점수', data:STOCKS.map(function(s){return s.score;}), backgroundColor:colors }] },
+      options: Object.assign({}, baseOpts, { scales:{ x:{min:0,max:8,ticks:{color:'#9ca3af'},grid:{color:BD2}}, y:{ticks:{color:'#e5e7eb'},grid:{color:BD2}} } })
+    });
+    makeChart(c3, r3, {
+      type:'bar',
+      data:{ labels:labels, datasets:[{ label:'RSI', data:STOCKS.map(function(s){return s.rsi;}), backgroundColor:colors }] },
+      options: Object.assign({}, baseOpts, { scales:{ x:{min:0,max:100,ticks:{color:'#9ca3af'},grid:{color:BD2}}, y:{ticks:{color:'#e5e7eb'},grid:{color:BD2}} } })
+    });
+
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'16px', fontSize:'18px'}}, '📊 비교 차트'),
+      [
+        {ref:c1, title:'시가총액 ($B) — 로그성 격차 주의'},
+        {ref:c2, title:'멀티배거 점수 (/8)'},
+        {ref:c3, title:'RSI (30~55 목표 구간)'}
+      ].map(function(item, i) {
+        return e('div', {key:i, style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+          e('h3', {style:{color:'#9ca3af', fontSize:'13px', marginBottom:'10px'}}, item.title),
+          e('canvas', {ref:item.ref, height:320})
+        );
+      })
+    );
+  }
+
+  /* ── Tab5 멀티배거 (hooks) ─────────────────────── */
+  function Tab5() {
+    var sa = useState(STOCKS[0].ticker);
+    var sel = sa[0]; var setSel = sa[1];
+
+    var items = SCORES[sel] || [];
+    var total = items.reduce(function(a,b){return a+b;}, 0);
+    var stock = STOCKS.filter(function(s){return s.ticker===sel;})[0] || STOCKS[0];
+
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'16px', fontSize:'18px'}}, '🔟 멀티배거 분석 (Anna Yartseva 8항목)'),
+      e('div', {style:{display:'flex', flexWrap:'wrap', gap:'8px', marginBottom:'16px'}},
+        STOCKS.map(function(s) {
+          return e('button', {
+            key: s.ticker,
+            onClick: function(){ setSel(s.ticker); },
+            style:{
+              background: sel===s.ticker ? (CHOKE_COLOR[s.choke]||THEME) : BD2,
+              color: sel===s.ticker ? '#000' : '#e5e7eb',
+              border:'none', borderRadius:'6px', padding:'6px 12px',
+              cursor:'pointer', fontSize:'12px', fontWeight:'bold'
+            }
+          }, s.ticker);
+        })
+      ),
+      e('div', {style:{background:BD, borderRadius:'10px', padding:'16px', marginBottom:'16px'}},
+        e('div', {style:{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px'}},
+          e('div', null,
+            e('h3', {style:{color:CHOKE_COLOR[stock.choke]||THEME, fontSize:'16px'}}, sel+' — '+stock.name),
+            e('p', {style:{color:'#9ca3af', fontSize:'12px'}}, stock.choke)
+          ),
+          e('span', {style:{background:CHOKE_COLOR[stock.choke]||THEME, color:'#000',
+                             borderRadius:'6px', padding:'4px 14px', fontWeight:'bold', fontSize:'16px'}}, total+'/8점')
+        ),
+        YARTSEVA.map(function(item, i) {
+          var pass = items[i]===1;
+          return e('div', {key:i,
+            style:{display:'flex', alignItems:'center', gap:'10px',
+                   padding:'8px 0', borderBottom:'1px solid '+BD2}},
+            e('span', {style:{fontSize:'16px'}}, pass ? '✅' : '❌'),
+            e('span', {style:{color: pass ? '#d1fae5' : '#6b7280', fontSize:'13px'}}, item)
+          );
+        })
+      )
+    );
+  }
+
+  /* ── Tab6 전략 ─────────────────────────────────── */
+  function Tab6() {
+    var ranking = STOCKS.slice().sort(function(a,b){
+      return b.score - a.score || a.rsi - b.rsi;
+    });
+
+    return e('div', {style:{padding:'20px'}},
+      e('h2', {style:{color:THEME, marginBottom:'16px', fontSize:'18px'}}, '🎯 투자 전략'),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#fbbf24', marginBottom:'10px', fontSize:'14px'}}, '우선순위 순위표'),
+        ranking.map(function(s, i) {
+          return e('div', {key:s.ticker,
+            style:{display:'flex', alignItems:'center', gap:'12px',
+                   padding:'8px 0', borderBottom:'1px solid '+BD2}},
+            e('span', {style:{color:'#6b7280', fontSize:'13px', width:'22px', flexShrink:0}}, '#'+(i+1)),
+            e('span', {style:{color:CHOKE_COLOR[s.choke]||THEME, fontWeight:'bold',
+                               fontSize:'14px', width:'50px', flexShrink:0}}, s.ticker),
+            e('div', {style:{flex:1}},
+              e('div', {style:{background:BD2, borderRadius:'3px', height:'5px'}},
+                e('div', {style:{background:CHOKE_COLOR[s.choke]||THEME,
+                                  width:(s.score/8*100)+'%', height:'100%', borderRadius:'3px'}})
+              )
+            ),
+            e('span', {style:{color:'#9ca3af', fontSize:'12px', width:'35px', textAlign:'right', flexShrink:0}}, s.score+'/8')
+          );
+        })
+      ),
+
+      e('div', {style:{background:'#064e3b', borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#6ee7b7', marginBottom:'12px', fontSize:'14px'}}, '포트폴리오 제안'),
+        [
+          {label:'핵심 보유 (40%)', tickers:'SERV + PRCT + AMBA', desc:'응용 검증 + 인증 해자 + 비전 표준. 매출 고성장·반복매출·6/8점.'},
+          {label:'성장 노출 (35%)', tickers:'AEVA + TKR + SYM', desc:'LiDAR·정밀모션·창고시스템. 본체 양산 시 직접 수혜하는 중핵 공급망.'},
+          {label:'투기·분산 (25%)', tickers:'STXS + KSCP + MP + PDYN', desc:'마이크로캡·재료·SW. 각 2~5% 소액 배분 권장.'}
+        ].map(function(p) {
+          return e('div', {key:p.label, style:{marginBottom:'12px'}},
+            e('div', {style:{display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:'4px', marginBottom:'4px'}},
+              e('span', {style:{color:'#34d399', fontWeight:'bold', fontSize:'13px'}}, p.label),
+              e('span', {style:{color:'#6ee7b7', fontSize:'12px'}}, p.tickers)
+            ),
+            e('p', {style:{color:'#a7f3d0', fontSize:'12px'}}, p.desc)
+          );
+        })
+      ),
+
+      e('div', {style:{background:'#7c2d12', borderRadius:'8px', padding:'14px', marginBottom:'14px'}},
+        e('h3', {style:{color:'#fca5a5', marginBottom:'10px', fontSize:'14px'}}, '⚠️ 주의 종목'),
+        e('div', {style:{marginBottom:'8px'}},
+          e('span', {style:{color:'#f97316', fontWeight:'bold'}}, 'KSCP '),
+          e('span', {style:{color:'#fca5a5', fontSize:'13px'}},
+            '— 시총 $42M 초소형주. 순손실 확대($10.3M), 변동성·희석 리스크 극대. 매출 급성장은 긍정이나 소액만 고려.')
+        ),
+        e('div', null,
+          e('span', {style:{color:'#f97316', fontWeight:'bold'}}, 'STXS '),
+          e('span', {style:{color:'#fca5a5', fontSize:'13px'}},
+            '— 시총 $180M 마이크로캡. Robocath 인수 통합 리스크. 신형 시스템 상업화 속도가 관건. 분할 매수 권장.')
+        )
+      ),
+
+      e('div', {style:{background:BD, borderRadius:'8px', padding:'14px'}},
+        e('h3', {style:{color:'#60a5fa', marginBottom:'10px', fontSize:'14px'}}, '주요 촉매 & 리스크'),
+        e('div', {style:{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}},
+          e('div', null,
+            e('p', {style:{color:'#34d399', fontWeight:'bold', marginBottom:'6px', fontSize:'12px'}}, '✅ 상승 촉매'),
+            ['Tesla Optimus 양산 → 롤러스크류 수요', '수술로봇 FDA 신적응증 승인', 'Serve 신규 도시 확장·플릿 증대', 'Symbotic 신규 대형 고객'].map(function(t, i) {
+              return e('p', {key:i, style:{color:'#d1d5db', fontSize:'12px', marginBottom:'4px'}}, '• '+t);
+            })
+          ),
+          e('div', null,
+            e('p', {style:{color:'#ef4444', fontWeight:'bold', marginBottom:'6px', fontSize:'12px'}}, '❌ 리스크'),
+            ['SYM 고객 집중(Walmart) 의존', '수술로봇 수익성 적자 지속', '금리 → 소형주 멀티플 압축', '중국 부품 단가 경쟁'].map(function(t, i) {
+              return e('p', {key:i, style:{color:'#d1d5db', fontSize:'12px', marginBottom:'4px'}}, '• '+t);
+            })
+          )
+        )
+      )
+    );
+  }
+
+  /* ── Main App ──────────────────────────────────── */
+  function App() {
+    var sa = useState(0);
+    var tab = sa[0]; var setTab = sa[1];
+
+    var TABS = ['🗺️ 밸류체인', '🔬 기술분석', '🔍 발굴종목', '📊 비교차트', '🔟 멀티배거', '🎯 전략'];
+
+    return e('div', {style:{maxWidth:'800px', margin:'0 auto', paddingBottom:'40px'}},
+      e('div', {style:{background:'linear-gradient(135deg,#064e3b,#065f46)', padding:'20px'}},
+        e('a', {href:'https://disntm90.github.io/disntm90/',
+                style:{color:'#6ee7b7', fontSize:'13px', textDecoration:'none', display:'block', marginBottom:'8px'}},
+          '← 목록으로'),
+        e('h1', {style:{color:'#fff', fontSize:'22px', fontWeight:'bold', marginBottom:'4px'}},
+          '🤖 로보틱스 종목발굴 — 응용·시스템 레이어'),
+        e('p', {style:{color:'#a7f3d0', fontSize:'13px'}}, '2026-06-15 · 11종목 · 터미널(로봇 본체) 탑다운 분석')
+      ),
+      e('div', {style:{background:'#111827', padding:'8px', display:'flex', overflowX:'auto', gap:'4px'}},
+        TABS.map(function(t, i) {
+          return e('button', {
+            key: i,
+            onClick: function(){ setTab(i); },
+            style:{
+              background: tab===i ? THEME : 'transparent',
+              color: tab===i ? '#000' : '#9ca3af',
+              border:'none', borderRadius:'6px', padding:'8px 12px',
+              cursor:'pointer', fontSize:'12px', fontWeight:'bold',
+              whiteSpace:'nowrap', flexShrink:0
+            }
+          }, t);
+        })
+      ),
+      tab===0 && Tab1(),
+      tab===1 && Tab2(),
+      tab===2 && Tab3(),
+      tab===3 && e(Tab4, null),
+      tab===4 && e(Tab5, null),
+      tab===5 && Tab6()
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
+})();
+</script>
+</body>
+</html>
