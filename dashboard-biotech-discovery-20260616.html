@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>🔬 제약·신약 종목발굴 대시보드 — 2026-06-16</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f0a1e;color:#f1f5f9;font-family:'Segoe UI',sans-serif;font-size:14px}
+a{color:#ec4899;text-decoration:none}
+a:hover{text-decoration:underline}
+.hdr{background:linear-gradient(135deg,#1a0a2e 0%,#2d0a3e 50%,#1a0a2e 100%);border-bottom:1px solid #ec4899;padding:16px 20px}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.hdr h1{font-size:20px;font-weight:700;color:#f8fafc}
+.hdr-meta{font-size:11px;color:#94a3b8;margin-top:4px}
+.back-btn{background:rgba(236,72,153,0.15);border:1px solid #ec4899;color:#ec4899;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.back-btn:hover{background:rgba(236,72,153,0.3)}
+.tabs{display:flex;overflow-x:auto;background:#1a0a2e;border-bottom:1px solid #2d1b4e;padding:0 12px;gap:2px}
+.tab{padding:10px 14px;cursor:pointer;font-size:12px;font-weight:600;color:#94a3b8;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.tab.active{color:#ec4899;border-color:#ec4899}
+.tab:hover{color:#f472b6}
+.content{padding:16px;max-width:900px;margin:0 auto}
+.section-title{font-size:16px;font-weight:700;color:#ec4899;margin:20px 0 12px;display:flex;align-items:center;gap:8px}
+.card{background:#1a0a2e;border:1px solid #2d1b4e;border-radius:12px;padding:16px;margin-bottom:14px}
+.card:hover{border-color:#ec4899;transition:border-color .2s}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.ticker{font-size:18px;font-weight:800;color:#ec4899}
+.company{font-size:13px;color:#94a3b8;margin-top:2px}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.badge-choke{background:rgba(236,72,153,0.2);color:#f472b6}
+.badge-warn{background:rgba(245,158,11,0.2);color:#fbbf24;font-size:10px;margin-left:4px}
+.stats-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+.stat{flex:1;min-width:80px}
+.stat-label{font-size:10px;color:#64748b;margin-bottom:2px}
+.stat-value{font-size:14px;font-weight:700;color:#f8fafc}
+.stat-value.green{color:#10b981}
+.stat-value.yellow{color:#fbbf24}
+.stat-value.pink{color:#ec4899}
+.point-text{font-size:12px;color:#cbd5e1;line-height:1.6}
+.mb-bar-wrap{margin-top:10px}
+.mb-bar-label{font-size:11px;color:#64748b;margin-bottom:4px}
+.mb-bar-outer{background:#0f0a1e;border-radius:4px;height:8px;overflow:hidden}
+.mb-bar-inner{height:100%;border-radius:4px;background:linear-gradient(90deg,#ec4899,#f472b6);transition:width .5s}
+.chart-wrap{background:#1a0a2e;border:1px solid #2d1b4e;border-radius:12px;padding:16px;margin-bottom:16px;position:relative}
+.chart-wrap canvas{max-height:400px}
+.chain-box{background:#1a0a2e;border:1px solid #2d1b4e;border-radius:12px;padding:18px;margin-bottom:14px;font-size:13px;line-height:1.8;color:#cbd5e1}
+.chain-box code{background:#2d1b4e;padding:2px 6px;border-radius:4px;font-family:monospace;color:#f472b6}
+.chain-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chain-node{background:#2d1b4e;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600}
+.chain-node.star{background:rgba(236,72,153,0.3);border:1px solid #ec4899;color:#f8fafc}
+.chain-arrow{color:#ec4899;font-size:16px}
+.tech-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:14px}
+.tech-card{background:#1a0a2e;border:1px solid #2d1b4e;border-radius:10px;padding:14px}
+.tech-card h4{font-size:13px;font-weight:700;color:#ec4899;margin-bottom:8px}
+.tech-item{margin:6px 0;font-size:12px;color:#cbd5e1;line-height:1.5;padding-left:14px;position:relative}
+.tech-item::before{content:'▸';position:absolute;left:0;color:#ec4899}
+.timeline-step{background:#1a0a2e;border-left:3px solid #ec4899;padding:10px 14px;margin:8px 0;border-radius:0 8px 8px 0}
+.timeline-step h5{font-size:12px;font-weight:700;color:#f472b6;margin-bottom:4px}
+.timeline-step p{font-size:12px;color:#94a3b8;line-height:1.5}
+.mkt-table{width:100%;border-collapse:collapse;font-size:12px}
+.mkt-table th{background:#2d1b4e;color:#ec4899;font-weight:600;padding:8px;text-align:left}
+.mkt-table td{padding:8px;border-bottom:1px solid #2d1b4e;color:#cbd5e1}
+.mkt-table tr:last-child td{border-bottom:none}
+.mb-detail{background:#1a0a2e;border:1px solid #2d1b4e;border-radius:10px;padding:14px;margin-top:12px}
+.mb-item{display:flex;align-items:flex-start;gap:10px;margin:8px 0;font-size:12px;color:#cbd5e1;line-height:1.5}
+.mb-check{font-size:15px;flex-shrink:0}
+.strategy-card{background:#1a0a2e;border:1px solid #2d1b4e;border-radius:10px;padding:14px;margin-bottom:12px}
+.strategy-card h4{font-size:13px;font-weight:700;color:#ec4899;margin-bottom:10px}
+.rank-row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:12px}
+.rank-num{width:24px;height:24px;border-radius:50%;background:rgba(236,72,153,0.3);color:#f472b6;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px}
+.rank-info{flex:1}
+.rank-ticker{font-weight:700;color:#f8fafc}
+.rank-reason{color:#94a3b8;font-size:11px;margin-top:1px}
+.btn-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.btn{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #2d1b4e;background:transparent;color:#94a3b8;transition:all .2s}
+.btn.active{background:rgba(236,72,153,0.3);border-color:#ec4899;color:#f472b6}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin:2px}
+.disclaimer{font-size:11px;color:#475569;text-align:center;padding:20px;line-height:1.6;border-top:1px solid #2d1b4e;margin-top:20px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = React.createElement;
+
+var THEME = '#ec4899';
+var BG = '#0f0a1e';
+var BD = '#2d1b4e';
+
+var STOCKS = [
+  {ticker:'PYXS', name:'Pyxis Oncology',           price:1.74,  mcap:0.11, rsi:38, score:7, choke:'ADC 플랫폼'},
+  {ticker:'ATNM', name:'Actinium Pharmaceuticals', price:1.15,  mcap:0.05, rsi:40, score:7, choke:'소재(Ac-225)'},
+  {ticker:'CATX', name:'Perspective Therapeutics', price:4.55,  mcap:0.18, rsi:43, score:6, choke:'소재(α입자)'},
+  {ticker:'STRO', name:'Sutro Biopharma',          price:25.00, mcap:0.41, rsi:44, score:6, choke:'ADC 제조기술'},
+  {ticker:'NUVB', name:'Nuvation Bio',             price:5.40,  mcap:0.85, rsi:45, score:6, choke:'신기전(합성치사)'},
+  {ticker:'BCYC', name:'Bicycle Therapeutics',     price:18.00, mcap:0.55, rsi:47, score:5, choke:'ADC 표적'},
+  {ticker:'RXRX', name:'Recursion Pharma',         price:3.20,  mcap:1.67, rsi:45, score:5, choke:'AI 신약'},
+  {ticker:'SDGR', name:'Schrodinger',              price:19.50, mcap:1.20, rsi:48, score:5, choke:'AI 시뮬레이션'},
+  {ticker:'ABSI', name:'Absci',                    price:7.50,  mcap:0.50, rsi:42, score:5, choke:'AI 단백질'},
+  {ticker:'ARWR', name:'Arrowhead Pharma',         price:28.00, mcap:2.85, rsi:50, score:4, choke:'RNA치료제', warn:true},
+  {ticker:'IMVX', name:'Immunovant',               price:24.00, mcap:1.90, rsi:50, score:4, choke:'자가면역/FcRn', warn:true},
+];
+
+var CHOKE_COLOR = {
+  'ADC 플랫폼':      '#ec4899',
+  'ADC 제조기술':    '#f97316',
+  'ADC 표적':        '#f43f5e',
+  '소재(Ac-225)':    '#8b5cf6',
+  '소재(α입자)':     '#a78bfa',
+  'AI 신약':         '#3b82f6',
+  'AI 시뮬레이션':   '#06b6d4',
+  'AI 단백질':       '#0ea5e9',
+  '신기전(합성치사)':'#f59e0b',
+  'RNA치료제':       '#10b981',
+  '자가면역/FcRn':   '#64748b',
+};
+
+var POINTS = {
+  PYXS: '시총 $112M vs 현금 $540M → EV = -$428M. 현금이 시총의 4.8배! 목표가 $6.83 (+293%). ADC 플랫폼 Dalton/Empower의 종양특이적 클리퍼 기술 보유.',
+  ATNM: '전 세계 Ac-225 생산시설 2~3곳뿐. DOE $88.8M Oak Ridge 투자. ACTIMAB-A 임상 진행 중. 방사성동위원소 공급 독점 포지션.',
+  CATX: 'α입자 방출 Pb-212 표적치료. 목표가 $10~16 (+120~252%). 빅파마 M&A 후보. BMS RayzeBio $4.1B 인수 파급효과 예상.',
+  STRO: '세포외합성·부위특이적 ADC 독점 제조기술. Astellas $10M 마일스톤(2026.4). STRO-004 2026 중반 데이터 발표 예정.',
+  NUVB: 'GSK 파트너십. 합성치사(PRMT5+MTA) 기전 — KRAS 돌연변이 표적. 목표가 $10.78~12.33 (+100~128%). 임상 2상 진행 중.',
+  BCYC: '이환식 펩타이드로 고체 종양 침투 최적화. Bayer 파트너십. ADC 페이로드 전달의 새로운 표적 플랫폼.',
+  RXRX: 'Roche $150M 계약. P/B 1.78x (5년 평균 3.64x). 2027년까지 현금 확보. AI 신약 발굴 플랫폼 강자.',
+  SDGR: '임상 직접 개발 중단 → 소프트웨어 집중으로 $70M/yr 절감. Bunsen AI 2026 여름 출시. 파트너십 수익 모델 전환.',
+  ABSI: '제로샷 항체 설계 플랫폼. AstraZeneca + Merck 파트너십. 단백질 생성 AI로 항체 발굴 기간 단축.',
+  ARWR: '⚠️ 이미 알려진 RNAi 종목. 간 표적 RNA 치료제 다파글리플로진 협력. RSI 50 — 모멘텀 주의.',
+  IMVX: '⚠️ batoclimab FcRn 억제제 Phase 2b/3. argenX·UCB와 경쟁 심화. 차별화된 IgG4 특이성이 포인트.',
+};
+
+var MB_ITEMS = {
+  PYXS: [
+    {ok:true,  label:'혁신적 제품·서비스', note:'ADC Dalton(클리퍼 기술) + Empower 이중 플랫폼 보유'},
+    {ok:true,  label:'대규모 주소 가능 시장', note:'ADC 시장 $15.6B→$71.6B (CAGR 28.9%)'},
+    {ok:true,  label:'유리한 산업 트렌드', note:'빅파마 ADC M&A 러시 (Pfizer Seagen $43B)'},
+    {ok:true,  label:'강력한 재무 지표', note:'현금 $540M > 시총 $112M → EV 음수 (극도 저평가)'},
+    {ok:true,  label:'현명한 자본 배분', note:'ADC 플랫폼 집중 투자, 현금 런웨이 충분'},
+    {ok:true,  label:'증가하는 시장 점유율', note:'AGEN ADC 파이프라인 인수로 플랫폼 확장'},
+    {ok:false, label:'강력한 경쟁 우위', note:'임상 초기 — 승인 파이프라인 부재'},
+    {ok:false, label:'멀티배거 가능성', note:'목표가 $6.83 (현재 $1.74) — 약 293% 상승 여력'},
+  ],
+  ATNM: [
+    {ok:true,  label:'혁신적 제품·서비스', note:'Ac-225 방사성 동위원소 — 전 세계 2~3개 시설만 생산 가능'},
+    {ok:true,  label:'대규모 주소 가능 시장', note:'방사성의약품 시장 $2.4B→$4.5B (CAGR 10.9%)'},
+    {ok:true,  label:'유리한 산업 트렌드', note:'DOE $88.8M Oak Ridge 투자, 빅파마 RayzeBio $4.1B 인수'},
+    {ok:true,  label:'강력한 재무 지표', note:'시총 $50M 극소형 — 카탈리스트 시 폭발 잠재력'},
+    {ok:true,  label:'현명한 자본 배분', note:'임상 파이프라인 집중 (ACTIMAB-A)'},
+    {ok:false, label:'증가하는 시장 점유율', note:'아직 초기 임상 — 수익 없음'},
+    {ok:true,  label:'강력한 경쟁 우위', note:'Ac-225 공급 병목 — 대체 불가 소재 독점 포지션'},
+    {ok:false, label:'멀티배거 가능성', note:'목표가 $5.00 (현재 $1.15) — 약 331% 상승 여력'},
+  ],
+  STRO: [
+    {ok:true,  label:'혁신적 제품·서비스', note:'세포외합성(cell-free) 부위특이적 ADC 제조 — 독점 기술'},
+    {ok:true,  label:'대규모 주소 가능 시장', note:'ADC CDMO 시장 급성장 ($71.6B ADC 시장 파생)'},
+    {ok:true,  label:'유리한 산업 트렌드', note:'Astellas $10M 마일스톤(2026.4), STRO-004 데이터 2026 중반'},
+    {ok:true,  label:'강력한 재무 지표', note:'복수 파트너십 마일스톤 수익으로 현금 확보'},
+    {ok:true,  label:'현명한 자본 배분', note:'플랫폼 기술 라이선싱 + 자체 파이프라인 이중 전략'},
+    {ok:true,  label:'증가하는 시장 점유율', note:'파트너사 수 지속 증가'},
+    {ok:false, label:'강력한 경쟁 우위', note:'Synaffix·Immunomedics 경쟁 존재'},
+    {ok:false, label:'멀티배거 가능성', note:'STRO-004 성공 시 재평가 가능성'},
+  ],
+};
+
+function makeChart(canvasRef, chartRef, cfg) {
+  var useState = React.useState;
+  var useEffect = React.useEffect;
+  useEffect(function() {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(canvasRef.current, cfg);
+    return function() { if (chartRef.current) chartRef.current.destroy(); };
+  }, []);
+}
+
+function Tab1() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🗺️ 밸류체인 맵'),
+    e('div', {className:'chain-box'},
+      e('div', {style:{marginBottom:12,color:'#f472b6',fontWeight:700}}, '메가 트렌드: ADC × 방사성의약품 × AI 신약 설계 → 정밀 종양학 혁명'),
+      e('div', {className:'chain-row'},
+        e('div', {className:'chain-node star'}, '★ 동위원소 공급 (Ac-225, Pb-212)'),
+        e('div', {className:'chain-arrow'}, '→'),
+        e('div', {className:'chain-node star'}, '★ ADC 제조 플랫폼'),
+        e('div', {className:'chain-arrow'}, '→'),
+        e('div', {className:'chain-node'}, 'ADC 링커·페이로드'),
+        e('div', {className:'chain-arrow'}, '→'),
+        e('div', {className:'chain-node star'}, '★ 표적 항체 설계'),
+      ),
+      e('div', {style:{textAlign:'center',color:THEME,fontSize:16,margin:'6px 0'}}, '↓ ↓ ↓'),
+      e('div', {className:'chain-row'},
+        e('div', {className:'chain-node star'}, '★ AI 단백질 설계 (제로샷)'),
+        e('div', {className:'chain-arrow'}, '→'),
+        e('div', {className:'chain-node star'}, '★ 합성치사·신기전 임상'),
+        e('div', {className:'chain-arrow'}, '→'),
+        e('div', {className:'chain-node'}, '임상 CRO·CMO'),
+        e('div', {className:'chain-arrow'}, '→'),
+        e('div', {className:'chain-node'}, '빅파마 M&A / 파트너십'),
+      ),
+      e('div', {style:{marginTop:16,fontSize:12,color:'#94a3b8'}},'★ = 핵심 병목 노드 (대체 불가, 진입장벽 높음)'),
+    ),
+    e('div', {className:'section-title'}, '💡 핵심 파생 논리'),
+    e('div', {className:'chain-box'},
+      e('div', {style:{fontWeight:700,color:'#f472b6',marginBottom:8}}, '왜 지금 제약·신약인가?'),
+      e('div', {className:'tech-item'}, '빅파마 현금 실탄: Pfizer Seagen $43B, AbbVie ImmunoGen $10.1B → 미검증 플랫폼 마이크로캡 M&A 러시 시작'),
+      e('div', {className:'tech-item'}, 'ADC = "표적 미사일" — 기존 항암제 부작용 없이 암세포만 타격 → FDA 가속 승인 트랙'),
+      e('div', {className:'tech-item'}, 'Ac-225 전 세계 2~3개 시설만 생산 → 공급 병목이 방사성의약품 성장의 유일한 제약'),
+      e('div', {className:'tech-item'}, 'AI 신약 설계: 항체 발굴 기간 5년→6개월 단축 → 임상 성공률 3배 향상 가능성'),
+      e('div', {className:'tech-item'}, '합성치사(Synthetic Lethality): KRAS 돌연변이 등 "불치" 타깃에 처음으로 접근 가능한 기전'),
+    ),
+    e('div', {className:'section-title'}, '🔬 병목 유형별 발굴 현황'),
+    e('div', {className:'chain-box'},
+      [
+        {type:'소재(동위원소)', stocks:'ATNM, CATX', color:'#8b5cf6'},
+        {type:'ADC 제조기술', stocks:'PYXS, STRO, BCYC', color:'#ec4899'},
+        {type:'신기전·표적', stocks:'NUVB, BCYC', color:'#f59e0b'},
+        {type:'AI 신약 설계', stocks:'RXRX, SDGR, ABSI', color:'#3b82f6'},
+        {type:'RNA 치료제', stocks:'ARWR', color:'#10b981'},
+        {type:'자가면역·FcRn', stocks:'IMVX', color:'#64748b'},
+      ].map(function(row) {
+        return e('div', {key:row.type, style:{display:'flex',alignItems:'center',gap:10,margin:'6px 0'}},
+          e('div', {style:{width:12,height:12,borderRadius:3,background:row.color,flexShrink:0}}),
+          e('div', {style:{fontSize:12,fontWeight:700,color:'#f8fafc',minWidth:130}}, row.type),
+          e('div', {style:{fontSize:12,color:'#94a3b8'}}, row.stocks),
+        );
+      })
+    ),
+  );
+}
+
+function Tab2() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '❌ 기존 기술의 근본 한계'),
+    e('div', {className:'tech-card'},
+      e('h4', null, '① 전통 항암 화학요법의 3가지 구조적 한계'),
+      e('div', {className:'tech-item'}, '비선택성 독성: 암세포와 정상세포를 구분 못해 전신 부작용 → 투약 용량 제한, 환자 삶의 질 급락'),
+      e('div', {className:'tech-item'}, '내성 메커니즘: 단일 기전 표적 → 암세포가 우회 경로 발달, 반응 기간 평균 6~12개월에 그침'),
+      e('div', {className:'tech-item'}, '물리적 접근 한계: 고형 종양 내부는 혈관 밀도 낮음 → 기존 약물 침투 불가, 종양 중심부 치료 실패'),
+    ),
+    e('div', {className:'section-title'}, '✅ 신기술 우위성 — 왜 대체 불가인가'),
+    e('div', {className:'tech-card'},
+      e('h4', null, '② 정밀 종양학 기술의 정량 우위'),
+      e('div', {className:'tech-item'}, 'ADC (항체-약물 접합체): 표적 특이성 1000:1 이상 개선, 페이로드 독성 정상세포 노출 90% 감소'),
+      e('div', {className:'tech-item'}, '방사성의약품 (α입자): 방사선 도달 거리 40~80μm (세포 2~3개) → 종양만 정밀 타격, 주변 조직 피해 최소'),
+      e('div', {className:'tech-item'}, '합성치사: KRAS G12C 등 기존 "undruggable" 표적 접근 가능 — 전체 고형암의 30% 이상이 KRAS 돌연변이'),
+      e('div', {className:'tech-item'}, 'AI 신약 설계: 항체 발굴 기간 5년→6개월, 임상 진입 성공률 기존 5%→15~20% 예상'),
+    ),
+    e('div', {className:'section-title'}, '📅 결정적 흐름 — 3단계 타임라인'),
+    e('div', {className:'timeline-step'},
+      e('h5', null, '1단계 — ADC 승인 러시 (2019~2022)'),
+      e('p', null, 'Enhertu(DS-8201) FDA 승인 → ADC가 "개념"에서 "표준 치료"로 격상. Kadcyla 이후 2세대 ADC의 폭발적 성과 확인. 빅파마가 ADC 플랫폼 보유 기업 M&A 검토 본격화.'),
+    ),
+    e('div', {className:'timeline-step'},
+      e('h5', null, '2단계 — 빅파마 M&A 전쟁 (2023~2024)'),
+      e('p', null, 'Pfizer-Seagen $43B, AbbVie-ImmunoGen $10.1B, BMS-RayzeBio $4.1B, Novartis-Morphosys $2.9B. ADC·방사성의약품 플랫폼 확보가 생존 전략으로 부상. 미검증 마이크로캡도 프리미엄 M&A 대상 확인.'),
+    ),
+    e('div', {className:'timeline-step'},
+      e('h5', null, '3단계 — 차세대 플랫폼 임상 폭발 (2025~현재)'),
+      e('p', null, 'ADC 3세대(이중특이적·조건부 활성화) + AI 단백질 설계 + 합성치사 임상 2상 데이터 쏟아짐. DOE $88.8M Ac-225 생산 투자 발표. AI 신약 기업 빅파마 계약 연이어 체결 (Roche $150M+). 2026~2027년이 진짜 임상 데이터 빅뱅 시즌.'),
+    ),
+    e('div', {className:'section-title'}, '📊 시장 규모 데이터'),
+    e('table', {className:'mkt-table'},
+      e('thead', null, e('tr', null,
+        e('th', null, '세그먼트'),
+        e('th', null, '현재'),
+        e('th', null, 'YoY'),
+        e('th', null, 'CAGR'),
+        e('th', null, '2030~2031 전망'),
+      )),
+      e('tbody', null,
+        [
+          ['ADC 시장', '$15.6B (2025)', '+32%', '28.9%', '$71.6B (2031)'],
+          ['방사성의약품', '$2.4B (2025)', '+18%', '10.9%', '$4.5B (2031)'],
+          ['AI 신약 개발', '$2.3B (2025)', '+45%', '~38%', '$11.8B (2030)'],
+          ['표적 항암제 전체', '$120B (2025)', '+12%', '8.5%', '$230B (2032)'],
+        ].map(function(row) {
+          return e('tr', {key:row[0]},
+            row.map(function(cell, i) { return e('td', {key:i}, cell); })
+          );
+        })
+      )
+    ),
+  );
+}
+
+function Tab3() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔍 발굴 종목 (11종목)'),
+    STOCKS.map(function(s) {
+      return e('div', {key:s.ticker, className:'card', style:{border:'1px solid '+(s.warn?'#f97316':BD)}},
+        e('div', {className:'card-header'},
+          e('div', null,
+            e('div', {className:'ticker'}, s.ticker),
+            e('div', {className:'company'}, s.name),
+          ),
+          e('div', {style:{textAlign:'right'}},
+            e('div', {className:'badge badge-choke', style:{background:'rgba(0,0,0,0.3)',borderColor:(CHOKE_COLOR[s.choke]||THEME),border:'1px solid',color:(CHOKE_COLOR[s.choke]||THEME)}}, s.choke),
+            s.warn ? e('div', {className:'badge badge-warn', style:{marginTop:4}}, '⚠️ 주의') : null,
+          ),
+        ),
+        e('div', {className:'stats-row'},
+          e('div', {className:'stat'}, e('div', {className:'stat-label'}, '현재가'), e('div', {className:'stat-value pink'}, '$'+s.price.toFixed(2))),
+          e('div', {className:'stat'}, e('div', {className:'stat-label'}, '시가총액'), e('div', {className:'stat-value'}, '$'+(s.mcap>=1?s.mcap.toFixed(1)+'B':Math.round(s.mcap*1000)+'M'))),
+          e('div', {className:'stat'}, e('div', {className:'stat-label'}, 'RSI'), e('div', {className:'stat-value '+(s.rsi<40?'green':s.rsi>55?'yellow':'')}, s.rsi)),
+          e('div', {className:'stat'}, e('div', {className:'stat-label'}, '멀티배거'), e('div', {className:'stat-value pink'}, s.score+'/8')),
+        ),
+        e('div', {className:'point-text'}, POINTS[s.ticker]),
+        e('div', {className:'mb-bar-wrap'},
+          e('div', {className:'mb-bar-label'}, '멀티배거 점수'),
+          e('div', {className:'mb-bar-outer'}, e('div', {className:'mb-bar-inner', style:{width:Math.round(s.score/8*100)+'%'}})),
+        ),
+      );
+    })
+  );
+}
+
+function Tab4() {
+  var useRef = React.useRef;
+  var mc1 = useRef(null); var cr1 = useRef(null);
+  var mc2 = useRef(null); var cr2 = useRef(null);
+  var mc3 = useRef(null); var cr3 = useRef(null);
+
+  var labels = STOCKS.map(function(s){return s.ticker;});
+  var bgColors = STOCKS.map(function(s){return CHOKE_COLOR[s.choke]||THEME;});
+
+  makeChart(mc1, cr1, {
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mcap;}),backgroundColor:bgColors,borderRadius:4}]
+    },
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'#2d1b4e'}},y:{ticks:{color:'#f8fafc'},grid:{color:'#2d1b4e'}}},responsive:true}
+  });
+
+  makeChart(mc2, cr2, {
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[{label:'멀티배거 점수',data:STOCKS.map(function(s){return s.score;}),backgroundColor:bgColors,borderRadius:4}]
+    },
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#94a3b8'},grid:{color:'#2d1b4e'}},y:{ticks:{color:'#f8fafc'},grid:{color:'#2d1b4e'}}},responsive:true}
+  });
+
+  makeChart(mc3, cr3, {
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[{label:'RSI',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:bgColors,borderRadius:4}]
+    },
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:20,max:70,ticks:{color:'#94a3b8'},grid:{color:'#2d1b4e'}},y:{ticks:{color:'#f8fafc'},grid:{color:'#2d1b4e'}}},responsive:true}
+  });
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '시가총액 비교 ($B)'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc1})),
+    e('div', {className:'section-title'}, '멀티배거 점수 비교'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc2})),
+    e('div', {className:'section-title'}, 'RSI 비교'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc3})),
+  );
+}
+
+function Tab5() {
+  var useState = React.useState;
+  var sel = useState('PYXS');
+  var current = sel[0];
+  var setSel = sel[1];
+
+  var mbTickers = Object.keys(MB_ITEMS);
+  var items = MB_ITEMS[current] || MB_ITEMS['PYXS'];
+  var score = items.filter(function(i){return i.ok;}).length;
+
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔟 Anna Yartseva 멀티배거 8항목'),
+    e('div', {className:'btn-group'},
+      mbTickers.map(function(t){
+        return e('button', {key:t, className:'btn'+(current===t?' active':''), onClick:function(){setSel(t);}}, t);
+      })
+    ),
+    e('div', {className:'mb-detail'},
+      e('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}},
+        e('div', {style:{fontWeight:700,color:'#f8fafc',fontSize:15}}, current+' — '+STOCKS.find(function(s){return s.ticker===current;}).name),
+        e('div', {style:{fontSize:20,fontWeight:800,color:THEME}}, score+'/8'),
+      ),
+      items.map(function(item, i){
+        return e('div', {key:i, className:'mb-item'},
+          e('div', {className:'mb-check'}, item.ok?'✅':'❌'),
+          e('div', null,
+            e('div', {style:{fontWeight:700,color:'#f8fafc',fontSize:12}}, item.label),
+            e('div', {style:{color:'#94a3b8',fontSize:11,marginTop:2}}, item.note),
+          )
+        );
+      }),
+      e('div', {style:{marginTop:14,fontSize:11,color:'#475569'}}, '* 멀티배거 상세 데이터: PYXS, ATNM, STRO만 제공. 나머지 종목은 발굴 카드 참고.'),
+    ),
+    e('div', {className:'section-title', style:{marginTop:20}}, '📊 8항목 요약'),
+    e('div', {className:'card', style:{fontSize:12,color:'#94a3b8',lineHeight:2}},
+      e('div', null, '① 혁신적 제품·서비스 — 기존과 다른 방식으로 문제 해결'),
+      e('div', null, '② 대규모 TAM — 최소 $1B+ 주소 가능 시장'),
+      e('div', null, '③ 유리한 산업 트렌드 — 메가 트렌드가 등에 있는가'),
+      e('div', null, '④ 강력한 재무 지표 — 성장률, 마진, 현금흐름'),
+      e('div', null, '⑤ 현명한 자본 배분 — 적절한 R&D·M&A 투자'),
+      e('div', null, '⑥ 증가하는 시장 점유율 — 경쟁자 대비 확장 중'),
+      e('div', null, '⑦ 강력한 경쟁 우위 — 특허·네트워크·규모 해자'),
+      e('div', null, '⑧ 멀티배거 가능성 — 현재가 대비 3~10배 여지'),
+    ),
+  );
+}
+
+function Tab6() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🎯 우선순위 전략'),
+    e('div', {className:'strategy-card'},
+      e('h4', null, '🥇 1순위 — 즉시 관심 (Score 6~7 + 촉매 근접)'),
+      [
+        {t:'PYXS', r:'현금이 시총 4.8배, EV 음수 — 하방이 막힌 초저평가'},
+        {t:'ATNM', r:'Ac-225 공급 병목 독점 포지션, 방사성의약품 M&A 타깃'},
+        {t:'STRO', r:'Astellas 마일스톤 + STRO-004 2026 중반 데이터 카탈리스트'},
+        {t:'CATX', r:'α입자 방사성의약품 빅파마 M&A 후보 (BMS RayzeBio 파급)'},
+        {t:'NUVB', r:'GSK 파트너십, 합성치사 신기전 임상 2상 진행'},
+      ].map(function(item, i){
+        return e('div', {key:item.t, className:'rank-row'},
+          e('div', {className:'rank-num'}, i+1),
+          e('div', {className:'rank-info'},
+            e('div', {className:'rank-ticker'}, item.t),
+            e('div', {className:'rank-reason'}, item.r),
+          )
+        );
+      }),
+    ),
+    e('div', {className:'strategy-card'},
+      e('h4', null, '🥈 2순위 — AI 신약 플랫폼 (Score 5, 중기 보유)'),
+      [
+        {t:'RXRX', r:'Roche $150M + P/B 역사 저점, 2027년까지 현금 안정'},
+        {t:'SDGR', r:'임상 중단→소프트웨어 집중 전환, Bunsen AI 2026 여름 출시'},
+        {t:'BCYC', r:'Bayer 파트너십, 이환식 펩타이드 ADC 표적 플랫폼 독자성'},
+        {t:'ABSI', r:'제로샷 항체 설계, AZ+Merck 파트너십 다변화'},
+      ].map(function(item, i){
+        return e('div', {key:item.t, className:'rank-row'},
+          e('div', {className:'rank-num', style:{background:'rgba(59,130,246,0.3)',color:'#60a5fa'}}, i+1),
+          e('div', {className:'rank-info'},
+            e('div', {className:'rank-ticker'}, item.t),
+            e('div', {className:'rank-reason'}, item.r),
+          )
+        );
+      }),
+    ),
+    e('div', {className:'strategy-card'},
+      e('h4', null, '⚠️ 3순위 — 모멘텀 주의 (RSI 50+, 이미 알려진 종목)'),
+      [
+        {t:'ARWR', r:'이미 알려진 RNAi 플레이어, RSI 50 — 추가 상승 여력 제한적'},
+        {t:'IMVX', r:'batoclimab Phase 2b/3 진행, argenX·UCB 강한 경쟁'},
+      ].map(function(item, i){
+        return e('div', {key:item.t, className:'rank-row'},
+          e('div', {className:'rank-num', style:{background:'rgba(245,158,11,0.3)',color:'#fbbf24'}}, '!'),
+          e('div', {className:'rank-info'},
+            e('div', {className:'rank-ticker'}, item.t),
+            e('div', {className:'rank-reason'}, item.r),
+          )
+        );
+      }),
+    ),
+    e('div', {className:'strategy-card'},
+      e('h4', null, '📌 포트폴리오 제안 (총 5종목, 분산)'),
+      e('div', {style:{fontSize:12,color:'#cbd5e1',lineHeight:1.9}},
+        e('div', null, '• PYXS 30% — 현금 안전판 + 플랫폼 옵션'),
+        e('div', null, '• ATNM 20% — 동위원소 병목 소형 스윙'),
+        e('div', null, '• STRO 20% — ADC 제조기술 + 근접 카탈리스트'),
+        e('div', null, '• NUVB 15% — 신기전 임상 2상 바이너리'),
+        e('div', null, '• RXRX 15% — AI 신약 역사 저점 중장기'),
+      ),
+    ),
+    e('div', {className:'strategy-card'},
+      e('h4', null, '⚡ 주요 카탈리스트 & 리스크'),
+      e('div', {style:{fontSize:12,color:'#cbd5e1',lineHeight:1.8}},
+        e('div', {style:{color:'#10b981',fontWeight:700,marginBottom:6}}, '▶ 카탈리스트'),
+        e('div', null, '• STRO-004 임상 2상 데이터 (2026 중반)'),
+        e('div', null, '• Bunsen AI(SDGR) 출시 파트너십 계약 (2026 여름)'),
+        e('div', null, '• DOE Oak Ridge Ac-225 생산 확대 투자 집행'),
+        e('div', null, '• 빅파마 ADC·방사성의약품 추가 M&A (연중 상시)'),
+        e('div', {style:{color:'#ef4444',fontWeight:700,margin:'10px 0 6px'}}, '▶ 리스크'),
+        e('div', null, '• 임상 실패: 바이오텍 단일종목 -50~-90% 가능성 상존'),
+        e('div', null, '• 자본 소진: 현금 런웨이 2년 이하 소형주 주의'),
+        e('div', null, '• FDA 규제 변화: 가속 승인 트랙 강화 가능성'),
+        e('div', null, '• M&A 지연: 빅파마 딜 협상 결렬 시 주가 급락'),
+      ),
+    ),
+    e('div', {className:'disclaimer'},
+      '본 대시보드는 투자 정보 제공 목적으로만 활용되며, 투자 권유나 조언이 아닙니다.',
+      e('br'),
+      '모든 투자 결정은 개인의 판단과 책임 하에 이루어져야 합니다. 바이오텍 투자는 임상 실패 등 높은 위험을 수반합니다.',
+      e('br'),
+      '분석 기준일: 2026-06-16',
+    ),
+  );
+}
+
+function App() {
+  var useState = React.useState;
+  var ts = useState(0);
+  var tab = ts[0];
+  var setTab = ts[1];
+
+  var TABS = ['🗺️ 밸류체인','🔬 기술분석','🔍 발굴종목','📊 비교차트','🔟 멀티배거','🎯 전략'];
+
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('div', {className:'hdr-top'},
+        e('div', null,
+          e('h1', null, '🔬 제약·신약 종목발굴'),
+          e('div', {className:'hdr-meta'}, '밸류체인 탑다운 × 병목 발굴 | 2026-06-16 | 11종목'),
+        ),
+        e('a', {href:'https://disntm90.github.io/disntm90/', className:'back-btn'}, '← 목록으로'),
+      ),
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(t,i){
+        return e('div', {key:i, className:'tab'+(tab===i?' active':''), onClick:function(){setTab(i);}}, t);
+      })
+    ),
+    tab===0 ? Tab1() : null,
+    tab===1 ? Tab2() : null,
+    tab===2 ? Tab3() : null,
+    tab===3 ? e(Tab4Wrap, null) : null,
+    tab===4 ? e(Tab5Wrap, null) : null,
+    tab===5 ? Tab6() : null,
+  );
+}
+
+function Tab4Wrap() { return Tab4(); }
+function Tab5Wrap() { return Tab5(); }
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
+</script>
+</body>
+</html>
