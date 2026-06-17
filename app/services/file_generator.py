@@ -260,7 +260,7 @@ def generate_yield_condef(triggered_by: str = "scheduler") -> dict:
 
     # 정렬된 code_type 값을 <Yield> 태그로 추가
     for code_type in df["code_type"]:
-        ET.SubElement(ranked_def, "Yield").text = str(code_type)
+        ET.SubElement(ranked_def, "Yield").text = str(code_type).upper()
 
     ET.indent(root, space="  ")    # 들여쓰기 적용 (가독성)
     output_path = GENERATED_DIR / filename
@@ -345,7 +345,7 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
     # code_id 기준 중복 제거 후 code_id 오름차순 정렬
     df_secondary = df_raw.drop_duplicates(subset=["code_id"]).sort_values(by=["code_id"])
     secondary_lines = [
-        f'\t\t<ScrapCode ID="{_xml_attr(row.code_id)}" Name="{_xml_attr(row.code_desc)}"/>'
+        f'\t\t<ScrapCode ID="{_xml_attr(str(row.code_id).upper())}" Name="{_xml_attr(str(row.code_desc).upper())}"/>'
         for row in df_secondary.itertuples(index=False)
     ]
     secondary_xml = "\n".join(secondary_lines)
@@ -357,7 +357,7 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
     df.sort_values(by=["prime_code", "code_id"], inplace=True)
 
     scrap_map_lines = [
-        f'\t\t<ScrapMap RejectCode="{_xml_attr(row.code_type)}" PrimeCode="{_xml_attr(row.prime_code)}" SecondaryCode="{_xml_attr(row.code_id)}"/>'
+        f'\t\t<ScrapMap RejectCode="{_xml_attr(str(row.code_type).upper())}" PrimeCode="{_xml_attr(str(row.prime_code).upper())}" SecondaryCode="{_xml_attr(str(row.code_id).upper())}"/>'
         for row in df.itertuples(index=False)
     ]
     scrap_maps_xml = "\n".join(scrap_map_lines)
