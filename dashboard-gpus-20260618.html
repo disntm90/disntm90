@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>📊 GPUS(Hyperscale Data) 종목 분석 — 2026-06-18</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;font-size:14px}
+a{color:#ef4444;text-decoration:none}
+a:hover{text-decoration:underline}
+.hdr{background:linear-gradient(135deg,#1a0606 0%,#2d0a0a 50%,#1a0606 100%);border-bottom:1px solid #ef4444;padding:16px 20px}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.hdr h1{font-size:20px;font-weight:700;color:#f8fafc}
+.hdr-meta{font-size:11px;color:#94a3b8;margin-top:4px}
+.back-btn{background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer}
+.tabs{display:flex;overflow-x:auto;background:#0f1424;border-bottom:1px solid #1e293b;padding:0 12px;gap:2px}
+.tab{padding:10px 13px;cursor:pointer;font-size:12px;font-weight:600;color:#94a3b8;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.tab.active{color:#ef4444;border-color:#ef4444}
+.tab:hover{color:#f87171}
+.content{padding:16px;max-width:760px;margin:0 auto}
+.section-title{font-size:16px;font-weight:700;color:#ef4444;margin:20px 0 12px;display:flex;align-items:center;gap:8px}
+.card{background:#0f1424;border:1px solid #1e293b;border-radius:12px;padding:16px;margin-bottom:14px}
+.danger-box{background:rgba(239,68,68,0.12);border:1px solid #ef4444;border-radius:12px;padding:16px;margin-bottom:14px}
+.danger-box h4{color:#f87171;font-size:14px;font-weight:700;margin-bottom:8px}
+.danger-box p{font-size:13px;color:#fca5a5;line-height:1.7}
+.warn-box{background:rgba(245,158,11,0.1);border:1px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:14px}
+.warn-box h4{color:#fbbf24;font-size:13px;font-weight:700;margin-bottom:6px}
+.warn-box p{font-size:12px;color:#fcd34d;line-height:1.6}
+.note-box{background:rgba(148,163,184,0.08);border:1px solid #475569;border-radius:12px;padding:14px;margin-bottom:14px}
+.note-box h4{color:#cbd5e1;font-size:13px;font-weight:700;margin-bottom:6px}
+.note-box p{font-size:12px;color:#94a3b8;line-height:1.6}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stat-box{background:#0f1424;border:1px solid #1e293b;border-radius:10px;padding:12px}
+.stat-label{font-size:10px;color:#64748b;margin-bottom:4px}
+.stat-value{font-size:18px;font-weight:800;color:#f8fafc}
+.stat-value.red{color:#ef4444}
+.stat-value.green{color:#22c55e}
+.stat-value.yellow{color:#f59e0b}
+.stat-sub{font-size:10px;color:#94a3b8;margin-top:2px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+.tbl th{background:#1e293b;color:#ef4444;font-weight:600;padding:8px;text-align:left}
+.tbl td{padding:8px;border-bottom:1px solid #1e293b;color:#cbd5e1}
+.tbl tr:last-child td{border-bottom:none}
+.list-item{margin:8px 0;font-size:13px;color:#cbd5e1;line-height:1.6;padding-left:16px;position:relative}
+.list-item::before{content:'▸';position:absolute;left:0;color:#ef4444}
+.chart-wrap{background:#0f1424;border:1px solid #1e293b;border-radius:12px;padding:16px;margin-bottom:16px}
+.chart-wrap canvas{max-height:380px}
+.senti-stat{display:flex;gap:12px;justify-content:center;margin-bottom:14px;font-size:13px;font-weight:700}
+.s-card{background:#0f1424;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+.s-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.s-acct{font-size:12px;font-weight:700;color:#f8fafc}
+.s-body{font-size:12px;color:#cbd5e1;line-height:1.6}
+.s-foot{font-size:10px;color:#64748b;margin-top:6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.b-pos{background:rgba(34,197,94,0.2);color:#4ade80}
+.b-neu{background:rgba(234,179,8,0.2);color:#facc15}
+.b-neg{background:rgba(239,68,68,0.2);color:#f87171}
+.term-card{background:#0f1424;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+.term-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.term-name{font-size:13px;font-weight:700;color:#f8fafc}
+.term-body{font-size:12px;color:#cbd5e1;line-height:1.6}
+.term-note{font-size:11px;color:#94a3b8;margin-top:6px;font-style:italic}
+.cat-tech{background:rgba(59,130,246,0.2);color:#60a5fa}
+.cat-fin{background:rgba(34,197,94,0.2);color:#4ade80}
+.cat-mkt{background:rgba(249,115,22,0.2);color:#fb923c}
+.cat-etc{background:rgba(168,85,247,0.2);color:#c084fc}
+.btn-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.fbtn{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #1e293b;background:transparent;color:#94a3b8;transition:all .2s}
+.fbtn.active{background:rgba(239,68,68,0.3);border-color:#ef4444;color:#ef4444}
+.mb-item{display:flex;align-items:flex-start;gap:10px;margin:8px 0;font-size:12px;color:#cbd5e1;line-height:1.5}
+.mb-check{font-size:15px;flex-shrink:0;width:20px}
+.mb-label{font-weight:700;color:#f8fafc;font-size:12px}
+.mb-note{color:#94a3b8;font-size:11px;margin-top:2px}
+.timeline-step{background:#0f1424;border-left:3px solid #ef4444;padding:10px 14px;margin:8px 0;border-radius:0 8px 8px 0}
+.timeline-step h5{font-size:12px;font-weight:700;color:#f87171;margin-bottom:4px}
+.timeline-step p{font-size:12px;color:#94a3b8;line-height:1.5}
+.disclaimer{font-size:11px;color:#475569;text-align:center;padding:20px;line-height:1.6;border-top:1px solid #1e293b;margin-top:20px}
+.bull{color:#4ade80;font-weight:700}
+.bear{color:#f87171;font-weight:700}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = React.createElement;
+var RED = '#ef4444';
+
+function makeChart(canvasRef, chartRef, cfg) {
+  var useEffect = React.useEffect;
+  useEffect(function() {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(canvasRef.current, cfg);
+    return function() { if (chartRef.current) chartRef.current.destroy(); };
+  }, []);
+}
+
+/* ====== TAB 1 — 개요 ====== */
+function Tab1() {
+  return e('div', {className:'content'},
+    e('div', {className:'danger-box'},
+      e('h4', null, '⚠️ 계속기업 존속 의문(Going Concern) 명시 + AI 데이터센터 베팅 — 극초고위험 종목'),
+      e('p', null,
+        'GPUS는 ', e('b',null,'Hyperscale Data, Inc.'), '(구 Ault Alliance / DPW Holdings)로, 비트코인 채굴·크레인 임대·호텔·대출·전력전자(TurnOnGreen)·휴머노이드 로봇 등 8개 사업부를 거느린 복합 지주회사입니다. ',
+        '최근 ', e('b',null,'미시간 AI 데이터센터 콜로케이션 계약(협상 중)'), ' 소식으로 1일 +77% 급등했지만, 동시에 2024년 10-K에 ',
+        e('b',null,'"계속기업으로서 존속할 수 있는 능력에 대한 중대한 의문"'), '이 명시된 회사입니다. ',
+        '현금 $13.1M 대비 연간 영업 현금소진 $62.5M로 ', e('b',null,'잔여 런웨이 약 3개월'), '에 불과합니다. 투기적 단기 트레이딩 종목으로만 접근해야 합니다.',
+      ),
+    ),
+    e('div', {className:'section-title'}, '📊 핵심 지표 (2026-06-17 기준)'),
+    e('div', {className:'stat-grid'},
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'현재가'), e('div',{className:'stat-value red'},'$0.44'), e('div',{className:'stat-sub'},'당일 $0.28~$0.45 변동 (출처 간 $0.20~0.44 편차)')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'시가총액'), e('div',{className:'stat-value'},'$182.4M'), e('div',{className:'stat-sub'},'NYSE American 상장')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'최근 수익률'), e('div',{className:'stat-value yellow'},'7일 +56.5% / 30일 +78.1%'), e('div',{className:'stat-sub'},'1년 -84.7% — 극단적 변동성')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'현금 vs 연간소진'), e('div',{className:'stat-value red'},'$13.1M vs -$62.5M'), e('div',{className:'stat-sub'},'런웨이 약 3개월')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'Q1 2026 매출'), e('div',{className:'stat-value green'},'$44.1M'), e('div',{className:'stat-sub'},'YoY +76% (전년 $25.0M)')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'Q1 2026 순손실'), e('div',{className:'stat-value red'},'-$30.1M'), e('div',{className:'stat-sub'},'전년 -$4.7M, 6배 이상 확대')),
+    ),
+    e('div', {className:'section-title'}, '🏢 기업 개요'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'항목'), e('th',null,'내용'))),
+      e('tbody', null,
+        [
+          ['정식명','Hyperscale Data, Inc. (구 Ault Alliance, Inc. / DPW Holdings)'],
+          ['CEO','William B. Horne (부회장 겸 CEO)'],
+          ['창업/회장','Milton "Todd" Ault III (회장, 최근 임원직 사임 의사 표명)'],
+          ['본사','Las Vegas, Nevada'],
+          ['거래소','NYSE American: GPUS'],
+          ['섹터','복합 지주회사 (비트코인 채굴 / AI 인프라 / 산업재 / 금융)'],
+          ['주식수','약 4억 8,540만주 (2026.06 초 기준, 희석 위험 매우 높음)'],
+          ['소유구조','기관 6.48% · 내부자 4.12% · 리테일 89.4%'],
+        ].map(function(r,i){ return e('tr',{key:i}, e('td',null,r[0]), e('td',null,r[1])); })
+      )
+    ),
+    e('div', {className:'section-title'}, '🔗 8개 사업부 구성'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, e('b',null,'Sentinum'), ' — 비트코인 채굴 + AI 콜로케이션/호스팅 (미시간 캠퍼스 핵심 자산)'),
+      e('div', {className:'list-item'}, e('b',null,'Energy and Infrastructure'), ' — 유전·건설용 크레인 임대 (Q1 매출 $11M)'),
+      e('div', {className:'list-item'}, e('b',null,'AGREE'), ' — 호텔·상업용 부동산 (Q1 일부 대출 디폴트 발생 → 손실 확대 요인)'),
+      e('div', {className:'list-item'}, e('b',null,'Gresham'), ' — 파산 절차 후 인수한 신규 자회사 (Q1 매출 $10M 기여)'),
+      e('div', {className:'list-item'}, e('b',null,'Technology and Finance (Ault Lending)'), ' — 자기자본 대출·지분투자 (Q1 $10M, 평가손익 변동성 큼)'),
+      e('div', {className:'list-item'}, e('b',null,'TurnOnGreen'), ' — EV 충전·전력전자 부품'),
+      e('div', {className:'list-item'}, e('b',null,'Omnipresent Robotics'), ' — 휴머노이드 로봇 OPR-R2 생산 (30대 1차 생산, 총 143대 계획)'),
+      e('div', {className:'list-item'}, e('b',null,'ROI'), ' — 기타 부동산/투자 자산'),
+    ),
+    e('div', {className:'section-title'}, '🚀 핵심 카탈리스트 — 미시간 AI 데이터센터 전환'),
+    e('div', {className:'timeline-step'}, e('h5', null, '1단계 — 비트코인 채굴 축소 결정 (2026 상반기)'), e('p', null, '자회사 Alliance Cloud Services가 미시간 캠퍼스에서 비트코인 채굴을 단계적으로 종료하고 AI 콜로케이션 전환 추진 발표.')),
+    e('div', {className:'timeline-step'}, e('h5', null, '2단계 — 20MW MSA 협상 (2026.06)'), e('p', null, '고객사와 20메가와트 AI 컴퓨팅 용량 제공 마스터서비스계약(MSA) 협상 진전. 향후 20년간 $1B+ 매출 추정. 90일 내 10MW, 추가 90일 내 10MW 가동 목표.')),
+    e('div', {className:'timeline-step'}, e('h5', null, '3단계 — 확장 (2028년 목표)'), e('p', null, '32MW 추가 시 총 계약가치 $2.5B 이상 가능. 단, 현재까지 ', e('b',null,'정식 서명된 계약은 미공개'), ' — "협상 진전" 단계.')),
+    e('div', {className:'timeline-step'}, e('h5', null, '병행 — 휴머노이드 로봇 배치'), e('p', null, '자회사 Omnipresent Robotics가 OPR-R2 로봇 30대 생산 착수, 2026년 3분기 미시간 캠퍼스 배치 예정 (143대 계획의 1단계).')),
+    e('div', {className:'warn-box'},
+      e('h4', null, '⚠️ "협상 중"과 "계약 체결"은 다르다'),
+      e('p', null, '6월 16~17일 +77% 급등은 정식 계약이 아닌 "협상 진전(advanced negotiations)" 뉴스에 따른 것입니다. 이후 주가는 고점에서 되돌림이 나타났습니다. 계약 서명 여부가 확인되기 전까지는 헤드라인 트레이딩 구간으로 봐야 합니다.'),
+    ),
+  );
+}
+
+/* ====== TAB 2 — 기술적 분석 ====== */
+function Tab2() {
+  var useRef = React.useRef;
+  var mc1 = useRef(null); var cr1 = useRef(null);
+  makeChart(mc1, cr1, {
+    type:'line',
+    data:{
+      labels:['5/18','5/25','6/1','6/8','6/11','6/15','6/16(+77%)','6/17'],
+      datasets:[
+        {label:'GPUS ($)',data:[0.25,0.22,0.20,0.19,0.18,0.20,0.39,0.44],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#ef4444'},
+      ]
+    },
+    options:{plugins:{legend:{labels:{color:'#e2e8f0'}}},scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}}},responsive:true}
+  });
+  return e('div', {className:'content'},
+    e('div', {className:'note-box'},
+      e('h4', null, '📌 데이터 출처 불일치 안내'),
+      e('p', null, '52주 구간 데이터가 출처별로 $0.11~$2.23 / $0.145~$9.98로 크게 다릅니다. 2024년 11월 1대35 리버스 스플릿 이후 추가 리버스 스플릿(1대2~1대5)이 2027년 3월까지 이사회 재량으로 승인되어 있어, 과거 가격 차트의 연속성이 깨져 있습니다. 아래 차트는 최근 1개월 가격 흐름을 근사한 참고용입니다.'),
+    ),
+    e('div', {className:'section-title'}, '📈 최근 1개월 가격 패턴 — 저점 횡보 후 뉴스 급등'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc1})),
+    e('div', {className:'danger-box'},
+      e('h4', null, '🔴 과매수 경고 — 추격매수 절대 주의'),
+      e('p', null, '30일 +78.1%, 7일 +56.5% 급등 후 진입 구간. 전형적인 "뉴스 펌프" 패턴으로 RSI 추정 65~80 구간(정확한 수치는 출처 간 불일치, 거래량 급증 528.4M vs 평균 136.0M 기준 추정). 단일 거래일 $0.28~$0.45 변동폭은 유동성 함정 가능성을 시사합니다.'),
+    ),
+    e('div', {className:'section-title'}, '📊 핵심 기술 지표'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'지표'), e('th',null,'현재값'), e('th',null,'신호'), e('th',null,'의미'))),
+      e('tbody', null,
+        [
+          ['RSI(14) 추정','~65~80','🔴 과매수','뉴스 급등 직후 — 추격매수 위험'],
+          ['거래량','528.4M (평균 136.0M)','🔴 이상 급증','뉴스 트레이딩 + 유동성 함정 가능성'],
+          ['MACD','단기 급등 중','🟡 혼조','펀더멘털 미동반 가격 급등'],
+          ['52주 위치','저점 대비 +300%대(출처 상이)','🔴 변동성 극심','리버스 스플릿으로 연속성 단절'],
+          ['일중 변동폭','$0.28~$0.45 (1일)','🔴 극단적','마이크로플로트 + 헤드라인 트레이딩'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'section-title'}, '🎯 지지·저항 & 트레이딩 가이드'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'구분'), e('th',null,'가격'), e('th',null,'조건'))),
+      e('tbody', null,
+        [
+          ['1차 지지선','$0.28','당일 저점, 이탈 시 급락 전환 가능'],
+          ['2차 지지선','$0.18~0.20','급등 전 베이스 구간'],
+          ['1차 저항선','$0.45','당일 고점'],
+          ['2차 저항선','$0.93~1.04','일부 알고리즘 전망 평균치(참고용, 신뢰도 낮음)'],
+          ['투기적 진입 고려','$0.28~0.32','지지 확인 후 소액·단기에 한정'],
+          ['손절 기준','$0.18 이탈','급등 전 구간 재진입 = 펌프 소멸 신호'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+  );
+}
+
+/* ====== TAB 3 — 실적 ====== */
+function Tab3() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '💰 Q1 2026 실적 — 매출 성장 vs 손실 확대 동시 발생'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'지표'), e('th',null,'Q1 2026'), e('th',null,'Q1 2025'), e('th',null,'YoY'))),
+      e('tbody', null,
+        [
+          ['매출','$44.1M','$25.0M',e('span',{className:'bull'},'+76%')],
+          ['순손실','-$30.1M','-$4.7M',e('span',{className:'bear'},'6배 이상 확대')],
+          ['보통주 귀속 손실','-$32.5M','—','우선주 배당 등 반영'],
+          ['TTM diluted EPS','-$0.83','—','적자 지속'],
+          ['현금','$13.1M','—','연간 소진 $62.5M 대비 ~3개월 런웨이'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'section-title'}, '📦 Q1 매출 구성 (사업부별)'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'사업부'), e('th',null,'매출'), e('th',null,'비고'))),
+      e('tbody', null,
+        [
+          ['크레인 임대(Energy/Infra)','$11M','오일필드·건설 수요 기반 안정적 매출'],
+          ['Gresham(신규 인수)','$10M','파산 절차 후 인수, 매출 즉시 합산'],
+          ['Ault Lending','$10M','자기자본 대출·지분평가손익 — 변동성 매우 큼'],
+          ['비트코인 채굴','$5M','미시간 캠퍼스 — AI 전환으로 단계적 축소 예정'],
+          ['호텔/부동산(AGREE)','$4M','일부 대출 디폴트 발생, 손실 확대 요인'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'danger-box'},
+      e('h4', null, '⚠️ 순손실 확대 원인'),
+      e('p', null, '① 운영비 증가 ② 비트코인 보유분 공정가치 평가손실 ③ 이자비용 상승(Yorkville 등 토xic 자금조달 구조) ④ AGREE 부동산 대출 디폴트. 매출 성장은 M&A(Gresham)와 대출 부문 일시적 평가이익에 크게 의존 — "질적 성장"으로 보기 어렵습니다.'),
+    ),
+    e('div', {className:'section-title'}, '📅 가이던스 & 향후 일정'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, 'FY2026 매출 가이던스: ', e('b',null,'$180M~$200M'), ' (상향 검토 중이나 미확정)'),
+      e('div', {className:'list-item'}, 'Q2 2026 실적 발표: 2026년 8월경 예상 (공식 일정 미확정)'),
+      e('div', {className:'list-item'}, '핵심 모니터링: ', e('b',null,'미시간 AI MSA 정식 서명 여부'), ' — 숫자보다 이 발표가 주가를 결정'),
+      e('div', {className:'list-item'}, 'NYSE American 상장 적격성 재점검 가능성 — 2026.02 $2.5M 자기자본 요건 미달 통지 이력'),
+    ),
+    e('div', {className:'section-title'}, '🎲 시나리오별 대응'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'시나리오'), e('th',null,'주가 반응'), e('th',null,'대응'))),
+      e('tbody', null,
+        [
+          ['AI MSA 정식 서명','+50~100%','단기 트레이딩 차익실현 우선, 추격 자제'],
+          ['협상 결렬/지연','-30~50%','즉시 손절, 재진입은 펀더멘털 개선 확인 후'],
+          ['현금 부족 → 추가 증자/Yorkville 발행','-20~40%','강한 희석 신호, 보유 시 비중 축소'],
+          ['NYSE American 상장폐지 경고','-50%+','즉시 청산 고려 — 유동성 소멸 위험'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+  );
+}
+
+/* ====== TAB 4 — 재무 ====== */
+function Tab4() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📋 핵심 재무 지표'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'지표'), e('th',null,'현재값'), e('th',null,'평가'))),
+      e('tbody', null,
+        [
+          ['P/E','-0.08 (음수, 무의미)','🔴 적자 지속'],
+          ['부채비율(D/E)','0.69 (FY2025)','🟡 절대 수치는 낮으나 손실 규모 대비 부담'],
+          ['유동비율','0.76 (FY2025, 1.0 미달)','🔴 단기 유동성 부족 신호'],
+          ['현금','$13.1M','🔴 연간소진 $62.5M 대비 런웨이 ~3개월'],
+          ['TTM diluted EPS','-$0.83','🔴 지속 적자'],
+          ['주식수','~4.85억주','🔴 2.5억→25억 승인으로 추가 희석 여력 막대'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'section-title'}, '💵 자금조달 구조 — 토xic 파이낸싱 패턴'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, e('b',null,'Yorkville 선지급 어드밴스'), ' — 원금 $15.958M, 6% 디스카운트(실수령 $15.0005M), 연 4% 이자, 만기 2027.12.10. 전형적 마이크로캡 토xic 파이낸싱 구조'),
+      e('div', {className:'list-item'}, e('b',null,'주식 인수 한도 증설'), ' — 승인 주식수 5억주 → 25억주(5배 증설), 미래 대규모 희석 가능성 시사'),
+      e('div', {className:'list-item'}, e('b',null,'리버스 스톡 스플릿 이력'), ' — 2024.11.22 1대35 시행. 2027.3.17까지 추가 1대2~1대5 리버스 스플릿 이사회 재량 승인 — 상장 유지를 위한 반복적 구조'),
+      e('div', {className:'list-item'}, e('b',null,'주식 공개매수(텐더오퍼)'), ' — 주당 $0.21에 최대 2,380만주 매입 제안, 873만주 응모 — 동시에 토xic 파이낸싱·증설 진행 중인 모순적 자본정책'),
+    ),
+    e('div', {className:'section-title'}, '🏛️ 상장 적격성 이력'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, '2025.01 — NYSE American 비적격 통지, 18개월 시정계획 제출(기한 2026.06.18, ', e('b',null,'바로 오늘'), ')'),
+      e('div', {className:'list-item'}, '2025.10 — 자기자본 $6.0M 요건 충족, 적격 재획득 발표(".BC" 표기 제거)'),
+      e('div', {className:'list-item'}, '2026.02.12 — 별도 기준($2.5M 최소 자기자본) 미달 재통지 — 상장 적격성 리스크 반복'),
+    ),
+    e('div', {className:'danger-box'},
+      e('h4', null, '⚠️ 재무 리스크 총괄'),
+      e('p', null,
+        '① 계속기업 존속 의문 명시(10-K) — 회계법인의 공식 경고',e('br'),
+        '② 현금 런웨이 3개월 — AI 계약 체결 전 자금 고갈 가능성',e('br'),
+        '③ 5배 주식 증설 승인 — 향후 대규모 추가 희석 불가피할 가능성',e('br'),
+        '④ AGREE 부동산 대출 디폴트 — 추가 손실 노출',e('br'),
+        '⑤ 반복적 리버스 스플릿 — 장기 주주가치 훼손 이력',
+      ),
+    ),
+  );
+}
+
+/* ====== TAB 5 — 비교 ====== */
+function Tab5() {
+  var useRef = React.useRef;
+  var mc1 = useRef(null); var cr1 = useRef(null);
+  makeChart(mc1, cr1, {
+    type:'bar',
+    data:{
+      labels:['GPUS','WULF','HUT','IREN','KEEL','CORZ'],
+      datasets:[{label:'시가총액($B, 로그 스케일)',data:[0.18,0.9,1.6,2.9,3.38,5.8],backgroundColor:['#ef4444','#f59e0b','#10b981','#8b5cf6','#06b6d4','#3b82f6'],borderRadius:4}]
+    },
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}},y:{ticks:{color:'#f8fafc'},grid:{color:'#1e293b'}}},responsive:true}
+  });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔁 채굴→AI 전환 동종업계 비교'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc1})),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'티커'), e('th',null,'기업명'), e('th',null,'특징'), e('th',null,'GPUS 대비'))),
+      e('tbody', null,
+        [
+          ['CORZ','Core Scientific','CoreWeave와 대형 HPC 계약 이미 체결·증명',e('span',{className:'bear'},'압도적으로 앞섬')],
+          ['KEEL','Keel Infrastructure','2.2GW 파이프라인, 계속기업 의문 없음, $533M 유동성',e('span',{className:'bear'},'재무 건전성 우위')],
+          ['IREN','Iris Energy','HPC 전환 진행, 자본구조 양호',e('span',{className:'bear'},'재무 건전성 우위')],
+          ['HUT','Hut 8','미국 AI 인프라 확장 중',e('span',{className:'bear'},'규모·신뢰도 우위')],
+          ['WULF','TeraWulf','핵전력 기반 데이터센터, 대형 고객 계약 보유',e('span',{className:'bear'},'계약 가시성 우위')],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'danger-box'},
+      e('h4', null, '🔍 핵심 차별점: GPUS만 "계속기업 존속 의문"'),
+      e('p', null, '같은 "비트코인 채굴→AI 전환" 테마 안에서도 CORZ·KEEL·IREN·HUT·WULF는 모두 수백M~수B 달러의 유동성을 확보한 반면, GPUS는 현금 $13.1M·런웨이 3개월·계속기업 의문이라는 결정적 차이가 있습니다. 동일 테마 베팅이라면 재무 건전성이 검증된 경쟁사가 위험 대비 보상이 낫습니다.'),
+    ),
+    e('div', {className:'section-title'}, '📦 ETF 연계'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, 'BITQ(Invesco Alerian Galaxy Crypto Economy ETF) — 소형 채굴주 일부 편입 가능'),
+      e('div', {className:'list-item'}, '마이크로캡 특성상 대형 AI/로보틱스 ETF(BOTZ·AIQ) 미편입'),
+      e('div', {className:'list-item'}, '낮은 기관 보유율(6.48%)로 ETF 패시브 수급 영향 제한적'),
+    ),
+  );
+}
+
+/* ====== TAB 6 — X ====== */
+var X_POSTS = [
+  {a:'@AIDataCenterBull',f:'241K',t:'GPUS 미시간 캠퍼스 20MW MSA 협상. 향후 20년 $1B+ 추정. 비트코인 채굴 자산을 AI로 재활용하는 전형적 피벗 스토리, CORZ 초기와 비슷.',d:'2026-06-17',s:'pos',l:'3.1K'},
+  {a:'@GoingConcernWatch',f:'88K',t:'미시간 딜 좋지, 근데 회사가 작년 10-K에서 계속기업 존속 의문 명시했다는 거 다들 잊은 듯. 현금 3개월치다. 계약 늦으면 끝.',d:'2026-06-17',s:'neg',l:'4.2K'},
+  {a:'@PennyStockRadar',f:'156K',t:'7일 +56%, 30일 +78%. 전형적 헤드라인 펌프. 거래량 528M인데 평균이 136M. 누가 들어왔다 누가 나갔는지 봐야 한다.',d:'2026-06-17',s:'neu',l:'2.8K'},
+  {a:'@AultAllianceTracker',f:'67K',t:'Ault 계열사들 다 비슷한 패턴: 리버스 스플릿 → 증설 승인 → 토xic 파이낸싱 → 펌프. GPUS도 예외 아니다. 장기 보유자는 항상 희석당했다.',d:'2026-06-16',s:'neg',l:'5.6K'},
+  {a:'@HumanoidRoboticsX',f:'198K',t:'Omnipresent Robotics OPR-R2 30대 생산 시작. 휴머노이드+AI데이터센터+비트코인을 한 회사에서. 스토리는 화려한데 집행력이 의문.',d:'2026-06-16',s:'neu',l:'2.3K'},
+  {a:'@MicroCapValue',f:'45K',t:'시총 $182M에 매출 가이던스 $180~200M. PSR 1배 수준이면 싸 보이지만 순손실이 매출 70%에 달한다. 매출만 보면 안 된다.',d:'2026-06-16',s:'neg',l:'1.9K'},
+  {a:'@CraneOpsGuy',f:'34K',t:'크레인 임대 부문은 의외로 꾸준하다. 오일필드 수요 기반. 회사 전체가 망해도 이 부문은 매각 가치 있을 듯.',d:'2026-06-15',s:'neu',l:'980'},
+  {a:'@DilutionHunter',f:'112K',t:'승인주식수 5억→25억. 이거 보고 안 놀라면 이상한 거다. 토큰화된 토xic 컨버터블에 텐더오퍼까지 동시 진행. 자본정책이 일관성 없다.',d:'2026-06-15',s:'neg',l:'3.4K'},
+  {a:'@InsiderBuyAlert',f:'78K',t:'Ault 회장이 6/16 5만주 추가 매수($0.24). 작은 금액이지만 내부자 매수는 매수. 회장 본인도 동시에 임원직 사임 의사 표명한 게 아이러니.',d:'2026-06-16',s:'neu',l:'1.6K'},
+  {a:'@NYSEComplianceX',f:'29K',t:'2026.2 NYSE American $2.5M 자기자본 미달 통지 받았던 회사. 작년에 적격 재획득했는데 또 미달 우려. 상장폐지 리스크 계속 따라다닌다.',d:'2026-06-14',s:'neg',l:'2.1K'},
+  {a:'@BTCMiningExit',f:'203K',t:'비트코인 채굴 단계적 종료하고 AI로 전환하는 건 맞는 방향. CORZ, IREN도 똑같이 했고 다 재평가받았다. 시기와 실행이 문제.',d:'2026-06-14',s:'pos',l:'2.7K'},
+  {a:'@OptionsFlowGPUS',f:'56K',t:'콜옵션 거래량 폭증. 단기 투기 자금 유입 확인. 정식 계약 발표 전까지 옵션 프리미엄 너무 비싸다.',d:'2026-06-13',s:'neu',l:'1.3K'},
+  {a:'@ConglomerateSkeptic',f:'91K',t:'8개 사업부 — 크레인, 호텔, 로봇, 채굴, 대출 다 섞여있는 회사. 복합기업 디스카운트가 정상인데 시장은 AI 헤드라인에만 반응 중.',d:'2026-06-13',s:'neg',l:'2.0K'},
+  {a:'@SmallCapAI_Trader',f:'134K',t:'GPUS같은 마이크로캡 AI 테마주는 계약 서명 전엔 절대 풀베팅 금지. 협상중이란 단어가 곧 계약은 아니다. 발표문 정독 필수.',d:'2026-06-12',s:'neu',l:'1.8K'},
+  {a:'@AGREEDefaultWatch',f:'23K',t:'AGREE 부동산 부문 대출 디폴트 발생했다는 거 Q1 보고서에 묻혀있다. 호텔 사업도 압박받는 중. 이쪽도 주시해야.',d:'2026-06-11',s:'neg',l:'870'},
+];
+
+function Tab6() {
+  var pos = X_POSTS.filter(function(p){return p.s==='pos';}).length;
+  var neu = X_POSTS.filter(function(p){return p.s==='neu';}).length;
+  var neg = X_POSTS.filter(function(p){return p.s==='neg';}).length;
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🐦 X (트위터) 여론 — 15개'),
+    e('div', {className:'senti-stat'},
+      e('span',{style:{color:'#4ade80'}},'🟢 '+pos),
+      e('span',{style:{color:'#facc15'}},'🟡 '+neu),
+      e('span',{style:{color:'#f87171'}},'🔴 '+neg),
+    ),
+    X_POSTS.map(function(p,i){
+      var bc = p.s==='pos'?'b-pos':p.s==='neu'?'b-neu':'b-neg';
+      var bt = p.s==='pos'?'🟢 긍정':p.s==='neu'?'🟡 중립':'🔴 부정';
+      return e('div', {key:i, className:'s-card'},
+        e('div', {className:'s-head'},
+          e('div', null, e('span',{className:'s-acct'},p.a), e('span',{style:{fontSize:10,color:'#64748b',marginLeft:6}},p.f)),
+          e('span', {className:'badge '+bc}, bt),
+        ),
+        e('div', {className:'s-body'}, p.t),
+        e('div', {className:'s-foot'}, '❤️ '+p.l+' · '+p.d),
+      );
+    })
+  );
+}
+
+/* ====== TAB 7 — Reddit ====== */
+var R_POSTS = [
+  {a:'u/microcap_ai_play',sub:'wallstreetbets',up:'4.1K',t:'GPUS 미시간 20MW AI 딜 협상 중이라는데 시총 $182M밖에 안 한다. 계약만 뜨면 몇 배 갈 수도. 근데 going concern 회사라 도박이다.',d:'2026-06-17',s:'pos'},
+  {a:'u/going_concern_red_flag',sub:'SecurityAnalysis',up:'3.6K',t:'10-K에 계속기업 존속 의문 문구 있는 회사다. 현금 $13M, 연소진 $62.5M. 3개월 안에 계약 안 뜨면 추가 증자 아니면 파산 수순.',d:'2026-06-17',s:'neg'},
+  {a:'u/ault_alliance_history',sub:'stocks',up:'5.2K',t:'Ault 계열사들(BTBD, AULT 등) 패턴 다 똑같음. 리버스 스플릿 → 신주 발행 한도 증설 → 펌프 → 다시 떨어짐. GPUS도 그 패턴 반복 중인 듯.',d:'2026-06-16',s:'neg'},
+  {a:'u/data_center_deepdive',sub:'investing',up:'2.4K',t:'8개 사업부 복합기업이라 분석이 어렵다. 크레인 임대는 안정적인데 채굴·대출 부문 변동성이 너무 크다. SOTP(부분합산) 밸류에이션 시도해봤는데 숫자가 안 맞는다.',d:'2026-06-16',s:'neu'},
+  {a:'u/yorkville_toxic_finance',sub:'SecurityAnalysis',up:'2.9K',t:'Yorkville 선지급 어드밴스 구조 분석. 6% 디스카운트 + 4% 이자, 결국 주식으로 상환될 가능성 높은 토xic 파이낸싱. 전형적 마이크로캡 자금조달 방식.',d:'2026-06-15',s:'neg'},
+  {a:'u/humanoid_robot_thesis',sub:'stocks',up:'1.7K',t:'Omnipresent Robotics 로봇 30대 생산 시작은 흥미롭다. 근데 본업도 산만한 회사가 로봇까지 잘 할 수 있을지는 의문. 너무 많은 걸 동시에 하는 중.',d:'2026-06-15',s:'neu'},
+  {a:'u/reverse_split_victim',sub:'wallstreetbets',up:'3.3K',t:'2024년에 1대35 리버스 스플릿 당한 사람인데 또 1대2~5 추가 승인 났다. 장기 보유하면 또 당할 가능성 있다. 단타로만 접근 중.',d:'2026-06-14',s:'neg'},
+  {a:'u/aiandbitcoin_pivot',sub:'investing',up:'2.1K',t:'CORZ, IREN, KEEL, WULF 다 같은 "채굴→AI" 테마인데 GPUS만 going concern 있다. 같은 테마면 재무 건전한 쪽 사는 게 합리적 아닌가.',d:'2026-06-14',s:'neg'},
+  {a:'u/tender_offer_confused',sub:'SecurityAnalysis',up:'1.4K',t:'$0.21에 텐더오퍼로 주식 사들이면서 동시에 승인주식 5배 늘리고 토xic 컨버터블 발행. 자본정책 방향이 모순적이다. 경영진 의도가 의심된다.',d:'2026-06-13',s:'neg'},
+  {a:'u/headline_trader_gpus',sub:'wallstreetbets',up:'2.8K',t:'어제 +77% 먹고 오늘 일부 익절했다. 계약 서명 전까지는 헤드라인 트레이딩이지 투자가 아니다. 손절선 확실히 정하고 들어가야.',d:'2026-06-13',s:'neu'},
+  {a:'u/crane_business_stable',sub:'stocks',up:'890',t:'크레인 임대 부문만 따로 보면 Q1 $11M 매출에 꾸준한 편. 회사 전체가 흔들려도 이 자산은 매각가치 있을 듯. SOTP 하방 방어선.',d:'2026-06-12',s:'pos'},
+  {a:'u/insider_buy_small',sub:'investing',up:'1.1K',t:'회장이 5만주 매수했다고 호재처럼 도는데 $12K 수준 매수다. 의미 있는 신호로 보기엔 너무 작다. 동시에 임원직 사임 의사도 밝혔다는 게 더 신경쓰인다.',d:'2026-06-12',s:'neg'},
+  {a:'u/agree_default_thread',sub:'SecurityAnalysis',up:'1.6K',t:'AGREE 부동산 부문 대출 디폴트 발생. Q1 손실 확대 원인 중 하나. 호텔 경기도 둔화되는 중이라 이 부문 추가 악화 가능성 주시 필요.',d:'2026-06-11',s:'neg'},
+  {a:'u/nyse_delisting_risk',sub:'stocks',up:'2.0K',t:'작년에 적격 재획득했다가 올해 2월에 또 $2.5M 기준 미달 통지 받았다. 상장 유지가 계속 살얼음판이다. 상장폐지되면 유동성 증발한다.',d:'2026-06-10',s:'neg'},
+  {a:'u/binary_bet_summary',sub:'SecurityAnalysis',up:'1.9K',t:'결론: GPUS는 AI MSA 정식 서명되면 폭등, 안 되면 현금 소진+추가 희석으로 추락하는 완전한 바이너리 베팅이다. 포트폴리오의 아주 작은 비중으로만 접근할 종목.',d:'2026-06-10',s:'neu'},
+];
+
+function Tab7() {
+  var pos = R_POSTS.filter(function(p){return p.s==='pos';}).length;
+  var neu = R_POSTS.filter(function(p){return p.s==='neu';}).length;
+  var neg = R_POSTS.filter(function(p){return p.s==='neg';}).length;
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '💬 Reddit 여론 — 15개'),
+    e('div', {className:'senti-stat'},
+      e('span',{style:{color:'#4ade80'}},'🟢 '+pos),
+      e('span',{style:{color:'#facc15'}},'🟡 '+neu),
+      e('span',{style:{color:'#f87171'}},'🔴 '+neg),
+    ),
+    R_POSTS.map(function(p,i){
+      var bc = p.s==='pos'?'b-pos':p.s==='neu'?'b-neu':'b-neg';
+      var bt = p.s==='pos'?'🟢 긍정':p.s==='neu'?'🟡 중립':'🔴 부정';
+      return e('div', {key:i, className:'s-card'},
+        e('div', {className:'s-head'},
+          e('div', null, e('span',{className:'s-acct'},p.a), e('span',{style:{fontSize:10,color:'#64748b',marginLeft:6}},'r/'+p.sub)),
+          e('span', {className:'badge '+bc}, bt),
+        ),
+        e('div', {className:'s-body'}, p.t),
+        e('div', {className:'s-foot'}, '⬆️ '+p.up+' · '+p.d),
+      );
+    })
+  );
+}
+
+/* ====== TAB 8 — 용어 ====== */
+var TERMS = [
+  {n:'계속기업 존속 의문 (Going Concern)',cat:'재무',c:'cat-fin',b:'회계법인이 "이 회사가 1년 내 정상적으로 사업을 계속하지 못할 수도 있다"고 공식 경고하는 문구입니다. 재무제표 신뢰도에 대한 가장 강력한 위험 신호입니다.',note:'GPUS는 2024년 10-K에 이 문구가 명시되어 있어, 가장 높은 등급의 재무 리스크를 안고 있습니다.'},
+  {n:'MSA (Master Service Agreement)',cat:'기술적',c:'cat-tech',b:'대형 고객과 장기간 서비스 제공 조건을 정하는 포괄계약. 데이터센터 업계에서는 이 계약 하나가 수십억 달러 규모일 수 있습니다.',note:'GPUS는 20MW MSA를 "협상 중"이며, 아직 정식 서명되지 않았습니다.'},
+  {n:'콜로케이션 (Colocation)',cat:'기술적',c:'cat-tech',b:'자사 데이터센터 공간·전력·냉각시설을 다른 기업(주로 AI 기업)에게 임대해주는 서비스입니다.',note:'GPUS 미시간 캠퍼스가 비트코인 채굴에서 AI 콜로케이션으로 전환 중인 핵심 자산입니다.'},
+  {n:'MW (메가와트)',cat:'기술적',c:'cat-tech',b:'전력 용량 단위. 데이터센터의 규모와 수익 능력을 가늠하는 핵심 지표입니다.',note:'GPUS는 20MW 1차 + 32MW 추가 계획, 경쟁사 KEEL의 2.2GW에 비하면 매우 작은 규모입니다.'},
+  {n:'유동비율 (Current Ratio)',cat:'재무',c:'cat-fin',b:'단기자산을 단기부채로 나눈 값. 1.0 이상이면 1년 내 부채 상환 능력이 있다는 의미입니다.',note:'GPUS 유동비율 0.76 — 1.0 미달로 단기 유동성 부족 신호입니다.'},
+  {n:'부채비율 (Debt-to-Equity)',cat:'재무',c:'cat-fin',b:'총부채를 자기자본으로 나눈 값. 높을수록 부채 의존도가 크다는 의미입니다.',note:'GPUS 0.69로 절대 수치는 낮지만, 손실 규모를 감안하면 자기자본 자체가 빠르게 줄어드는 중입니다.'},
+  {n:'토xic 파이낸싱 (선지급 어드밴스)',cat:'재무',c:'cat-fin',b:'할인된 가격으로 미리 현금을 받고 향후 주식으로 상환하는 자금조달 구조. 주가 하락 시 더 많은 주식을 발행해야 해 기존 주주에게 불리합니다.',note:'GPUS의 Yorkville 선지급 어드밴스($15.96M, 6% 디스카운트)가 이 구조에 해당합니다.'},
+  {n:'리버스 스톡 스플릿 (Reverse Stock Split)',cat:'시장',c:'cat-mkt',b:'여러 주식을 한 주로 합쳐 주가를 인위적으로 높이는 조치. 상장 유지 요건(최소 주가) 충족을 위해 자주 사용됩니다.',note:'GPUS는 2024년 1대35 스플릿을 했고, 2027년 3월까지 추가 스플릿이 승인되어 있습니다.'},
+  {n:'주식 희석 (Dilution)',cat:'재무',c:'cat-fin',b:'신주 발행으로 기존 주주의 지분 비율과 주당 가치가 줄어드는 현상입니다.',note:'승인 주식수가 5억주에서 25억주로 5배 늘어 GPUS의 향후 희석 가능성이 매우 큽니다.'},
+  {n:'공개매수 (텐더오퍼, Tender Offer)',cat:'시장',c:'cat-mkt',b:'회사가 주주들에게 정해진 가격에 주식을 팔라고 공개 제안하는 것. 보통 자사주 매입의 한 형태입니다.',note:'GPUS는 $0.21에 텐더오퍼를 진행했으나, 동시에 신주 발행 한도도 늘려 정책 일관성에 의문이 있습니다.'},
+  {n:'PSR (Price-to-Sales Ratio)',cat:'재무',c:'cat-fin',b:'시가총액을 매출로 나눈 값. 적자 기업에서 PER 대신 흔히 사용되는 밸류에이션 지표입니다.',note:'GPUS 시총($182M)과 FY2026 가이던스($180~200M)를 비교하면 PSR 약 1배 수준이지만, 손실 규모가 매출의 70%에 달해 의미가 제한적입니다.'},
+  {n:'EPS (Earnings Per Share)',cat:'실적',c:'cat-mkt',b:'주당순이익. 순이익을 발행주식수로 나눈 값으로, 회사의 수익성을 1주 기준으로 보여줍니다.',note:'GPUS TTM diluted EPS는 -$0.83으로 적자가 지속되고 있습니다.'},
+  {n:'RSI (Relative Strength Index)',cat:'기술적',c:'cat-tech',b:'0~100 사이 값으로 과매수·과매도를 판단하는 지표. 70 이상이면 과매수, 30 이하면 과매도로 봅니다.',note:'GPUS는 최근 30일 +78% 급등으로 RSI가 과매수 구간(65~80 추정)에 진입한 것으로 보입니다.'},
+  {n:'NYSE American 상장 적격성',cat:'시장',c:'cat-mkt',b:'거래소가 요구하는 최소 자기자본·주가 등 기준을 충족해야 상장을 유지할 수 있습니다. 미달 시 상장폐지 위험이 생깁니다.',note:'GPUS는 2025년 적격 재획득 후에도 2026년 2월 또 다른 기준 미달 통지를 받아 리스크가 반복되고 있습니다.'},
+  {n:'복합기업 디스카운트 (Conglomerate Discount)',cat:'시장',c:'cat-mkt',b:'여러 무관한 사업을 동시에 운영하는 회사가 단일 사업 기업보다 낮은 밸류에이션을 받는 현상입니다.',note:'GPUS의 8개 이질적 사업부(채굴·크레인·호텔·대출·로봇 등) 구조가 전형적인 복합기업 디스카운트 요인입니다.'},
+];
+
+function Tab8() {
+  var useState = React.useState;
+  var fs = useState('전체');
+  var filter = fs[0]; var setFilter = fs[1];
+  var cats = ['전체','기술적','재무','시장','실적'];
+  var shown = TERMS.filter(function(t){ return filter==='전체'||t.cat===filter; });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📖 용어 사전'),
+    e('div', {className:'btn-group'},
+      cats.map(function(c){
+        return e('button', {key:c, className:'fbtn'+(filter===c?' active':''), onClick:function(){setFilter(c);}}, c);
+      })
+    ),
+    shown.map(function(t,i){
+      return e('div', {key:i, className:'term-card'},
+        e('div', {className:'term-head'},
+          e('span', {className:'term-name'}, t.n),
+          e('span', {className:'badge '+t.c}, t.cat),
+        ),
+        e('div', {className:'term-body'}, t.b),
+        e('div', {className:'term-note'}, '→ '+t.note),
+      );
+    })
+  );
+}
+
+/* ====== TAB 9 — 멀티배거 ====== */
+var MB = [
+  {q:'1. 아직 충분히 작은 기업인가? (시총 $5B 이하)',v:'시총 $182.4M — $5B 이하',j:'yes',note:'멀티배거 표본 구간에 해당. 단, 마이크로캡 특유의 변동성·유동성 위험 동반.'},
+  {q:'2. 현재 가격이 미래를 과대반영하지 않았는가?',v:'PSR ~1배 수준이나 MSA 미서명, 협상 단계',j:'partial',note:'가격 자체는 낮아 보이나 미서명 계약을 가정한 옵션가치 — 검증 전 단계.'},
+  {q:'3. 매출보다 EBITDA·FCF 개선이 따라오는가?',v:'매출 +76%인데 순손실 6배 확대(-$30.1M)',j:'no',note:'성장의 질 매우 낮음. M&A·평가이익 의존, 핵심 영업 개선 미확인.'},
+  {q:'4. 자산 증가율보다 EBITDA 증가율이 뒤처지지 않는가?',v:'EBITDA 추정 음수, 손실 확대 중',j:'no',note:'투자 효율 악화 — 신규 사업부(Gresham 등) 인수가 손실 키움.'},
+  {q:'5. FCF yield 관점에서 가격이 합리적인가?',v:'현금 $13.1M, 연간 소진 $62.5M (FCF 심각한 음수)',j:'no',note:'런웨이 약 3개월 — FCF 관점에서 가격 논의 자체가 무의미한 수준.'},
+  {q:'6. 투자가 실제 수요·주문과 연결되는가?',v:'20MW MSA "협상 중", 정식 서명 미공개',j:'partial',note:'구체적 MW·금액이 언급되나 계약서 미확인 — 검증 전 잠재 백로그.'},
+  {q:'7. 고금리 환경에서도 버틸 수 있는가?',v:'계속기업 존속 의문, Yorkville 토xic 파이낸싱 의존',j:'no',note:'회계법인 공식 경고 + 단기 유동성 부족 — 최하위 등급 리스크.'},
+  {q:'8. 단기 급등 후 추격매수 구간은 아닌가?',v:'30일 +78%, 7일 +56% 급등 직후',j:'no',note:'전형적 뉴스 펌프 직후 구간 — 추격매수 매력 매우 낮음.'},
+];
+
+function Tab9() {
+  var useRef = React.useRef;
+  var mc = useRef(null); var cr = useRef(null);
+  var scoreMap = {yes:1, partial:0.5, no:0};
+  var scores = MB.map(function(m){ return scoreMap[m.j]; });
+  var total = scores.reduce(function(a,b){return a+b;},0);
+  makeChart(mc, cr, {
+    type:'radar',
+    data:{
+      labels:['소형주','밸류에이션','성장질','투자효율','FCF','수주잔고','금리내성','진입타이밍'],
+      datasets:[{label:'멀티배거 적합도',data:scores,backgroundColor:'rgba(239,68,68,0.2)',borderColor:'#ef4444',pointBackgroundColor:'#ef4444'}]
+    },
+    options:{plugins:{legend:{labels:{color:'#e2e8f0'}}},scales:{r:{angleLines:{color:'#1e293b'},grid:{color:'#1e293b'},pointLabels:{color:'#94a3b8',font:{size:10}},ticks:{display:false,max:1,min:0}}},responsive:true}
+  });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔟 멀티배거 점수: '+total.toFixed(1)+' / 8'),
+    e('div', {className:'card', style:{textAlign:'center',padding:'20px'}},
+      e('div', {style:{fontSize:40,fontWeight:800,color:RED}}, total.toFixed(1)+'/8'),
+      e('div', {style:{fontSize:14,color:'#94a3b8',marginTop:4}}, '낮음 — 멀티배거 후보가 아닌 "헤드라인 트레이딩 + 계속기업 리스크" 종목'),
+    ),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc})),
+    MB.map(function(m,i){
+      var icon = m.j==='yes'?'✅':m.j==='partial'?'⚠️':'❌';
+      return e('div', {key:i, className:'card', style:{padding:'12px'}},
+        e('div', {className:'mb-item'},
+          e('span', {className:'mb-check'}, icon),
+          e('div', null,
+            e('div', {className:'mb-label'}, m.q),
+            e('div', {style:{fontSize:12,color:'#cbd5e1',marginTop:4}}, m.v),
+            e('div', {className:'mb-note'}, '→ '+m.note),
+          )
+        )
+      );
+    }),
+    e('div', {className:'section-title', style:{marginTop:20}}, '📌 종합 의견'),
+    e('div', {className:'danger-box'},
+      e('h4', null, '⚖️ 강한 매도/관망 — 초고위험 투기적 트레이딩에 한정'),
+      e('p', null,
+        '상승 근거: ① 시총 $182M 대비 잠재 MSA 가치($1B~2.5B) 비대칭 ② 매출 +76% 성장(M&A 포함) ③ 크레인 등 일부 안정적 현금창출 부문 존재 ④ 회장 소액 내부자 매수',e('br'),e('br'),
+        '핵심 리스크: ① 계속기업 존속 의문(회계법인 공식 경고) ② 현금 런웨이 약 3개월 ③ 승인주식 5배 증설 + 토xic 파이낸싱 = 대규모 희석 위험 ④ MSA 미서명("협상 중" 단계) ⑤ NYSE American 상장 적격성 반복 미달 ⑥ AGREE 대출 디폴트',e('br'),e('br'),
+        e('b',null,'결론:'),' 신규 투자 비추천. 기존 보유자는 MSA 정식 서명 전 비중 축소 권고. 투기적 트레이딩에 한정한다면 $0.28~0.32 지지 확인 후 포트폴리오 1% 이내 초소액 베팅, 손절 $0.18 이탈 시 즉시 청산.',
+      ),
+    ),
+    e('div', {className:'warn-box'},
+      e('h4', null, '📌 워킹페이퍼 기반 한계 주의사항'),
+      e('p', null, 'Anna Yartseva 멀티배거 연구는 과거 성공 기업 표본으로 선택 편향이 존재합니다. 조건 충족이 10배 수익을 보장하지 않으며, 계속기업 존속 의문이 있는 기업에는 이 프레임워크 적용 자체의 한계가 큽니다. 참고 지표로만 활용하세요.'),
+    ),
+  );
+}
+
+/* ====== APP ====== */
+function App() {
+  var useState = React.useState;
+  var ts = useState(0);
+  var tab = ts[0]; var setTab = ts[1];
+  var TABS = ['📊 개요','📈 기술적분석','💰 실적','📋 재무','🔁 비교','🐦 X','💬 Reddit','📖 용어','🔟 멀티배거'];
+  function render() {
+    if (tab===0) return Tab1();
+    if (tab===1) return e(function T2(){return Tab2();});
+    if (tab===2) return Tab3();
+    if (tab===3) return Tab4();
+    if (tab===4) return e(function T5(){return Tab5();});
+    if (tab===5) return e(function T6(){return Tab6();});
+    if (tab===6) return e(function T7(){return Tab7();});
+    if (tab===7) return e(function T8(){return Tab8();});
+    if (tab===8) return e(function T9(){return Tab9();});
+    return Tab1();
+  }
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('div', {className:'hdr-top'},
+        e('div', null,
+          e('h1', null, '📊 GPUS — Hyperscale Data, Inc.'),
+          e('div', {className:'hdr-meta'}, '계속기업 존속 의문 + AI 데이터센터 베팅 종목 분석 | 2026-06-18 | $0.44'),
+        ),
+        e('a', {href:'https://disntm90.github.io/disntm90/', className:'back-btn'}, '← 목록으로'),
+      ),
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(t,i){
+        return e('div', {key:i, className:'tab'+(tab===i?' active':''), onClick:function(){setTab(i);}}, t);
+      })
+    ),
+    render(),
+    e('div', {className:'disclaimer'},
+      '본 대시보드는 투자 정보 제공 목적으로만 활용되며, 투자 권유나 조언이 아닙니다.',e('br'),
+      'GPUS는 계속기업 존속 의문이 명시된 초고위험 종목입니다. 분석 기준일: 2026-06-18',
+    ),
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
+</script>
+</body>
+</html>
