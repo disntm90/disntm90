@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>📊 CAST(FreeCast) 종목 분석 — 2026-06-16</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;font-size:14px}
+a{color:#ef4444;text-decoration:none}
+a:hover{text-decoration:underline}
+.hdr{background:linear-gradient(135deg,#1a0606 0%,#2d0a0a 50%,#1a0606 100%);border-bottom:1px solid #ef4444;padding:16px 20px}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.hdr h1{font-size:20px;font-weight:700;color:#f8fafc}
+.hdr-meta{font-size:11px;color:#94a3b8;margin-top:4px}
+.back-btn{background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer}
+.tabs{display:flex;overflow-x:auto;background:#0f1424;border-bottom:1px solid #1e293b;padding:0 12px;gap:2px}
+.tab{padding:10px 13px;cursor:pointer;font-size:12px;font-weight:600;color:#94a3b8;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.tab.active{color:#ef4444;border-color:#ef4444}
+.tab:hover{color:#f87171}
+.content{padding:16px;max-width:760px;margin:0 auto}
+.section-title{font-size:16px;font-weight:700;color:#ef4444;margin:20px 0 12px;display:flex;align-items:center;gap:8px}
+.card{background:#0f1424;border:1px solid #1e293b;border-radius:12px;padding:16px;margin-bottom:14px}
+.danger-box{background:rgba(239,68,68,0.12);border:1px solid #ef4444;border-radius:12px;padding:16px;margin-bottom:14px}
+.danger-box h4{color:#f87171;font-size:14px;font-weight:700;margin-bottom:8px}
+.danger-box p{font-size:13px;color:#fca5a5;line-height:1.7}
+.warn-box{background:rgba(245,158,11,0.1);border:1px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:14px}
+.warn-box h4{color:#fbbf24;font-size:13px;font-weight:700;margin-bottom:6px}
+.warn-box p{font-size:12px;color:#fcd34d;line-height:1.6}
+.note-box{background:rgba(148,163,184,0.08);border:1px solid #475569;border-radius:12px;padding:14px;margin-bottom:14px}
+.note-box h4{color:#cbd5e1;font-size:13px;font-weight:700;margin-bottom:6px}
+.note-box p{font-size:12px;color:#94a3b8;line-height:1.6}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stat-box{background:#0f1424;border:1px solid #1e293b;border-radius:10px;padding:12px}
+.stat-label{font-size:10px;color:#64748b;margin-bottom:4px}
+.stat-value{font-size:18px;font-weight:800;color:#f8fafc}
+.stat-value.red{color:#ef4444}
+.stat-value.green{color:#22c55e}
+.stat-value.yellow{color:#f59e0b}
+.stat-sub{font-size:10px;color:#94a3b8;margin-top:2px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+.tbl th{background:#1e293b;color:#ef4444;font-weight:600;padding:8px;text-align:left}
+.tbl td{padding:8px;border-bottom:1px solid #1e293b;color:#cbd5e1}
+.tbl tr:last-child td{border-bottom:none}
+.list-item{margin:8px 0;font-size:13px;color:#cbd5e1;line-height:1.6;padding-left:16px;position:relative}
+.list-item::before{content:'▸';position:absolute;left:0;color:#ef4444}
+.chart-wrap{background:#0f1424;border:1px solid #1e293b;border-radius:12px;padding:16px;margin-bottom:16px}
+.chart-wrap canvas{max-height:380px}
+.senti-stat{display:flex;gap:12px;justify-content:center;margin-bottom:14px;font-size:13px;font-weight:700}
+.s-card{background:#0f1424;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+.s-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.s-acct{font-size:12px;font-weight:700;color:#f8fafc}
+.s-body{font-size:12px;color:#cbd5e1;line-height:1.6}
+.s-foot{font-size:10px;color:#64748b;margin-top:6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.b-pos{background:rgba(34,197,94,0.2);color:#4ade80}
+.b-neu{background:rgba(234,179,8,0.2);color:#facc15}
+.b-neg{background:rgba(239,68,68,0.2);color:#f87171}
+.term-card{background:#0f1424;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+.term-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.term-name{font-size:13px;font-weight:700;color:#f8fafc}
+.term-body{font-size:12px;color:#cbd5e1;line-height:1.6}
+.term-note{font-size:11px;color:#94a3b8;margin-top:6px;font-style:italic}
+.cat-tech{background:rgba(59,130,246,0.2);color:#60a5fa}
+.cat-fin{background:rgba(34,197,94,0.2);color:#4ade80}
+.cat-mkt{background:rgba(249,115,22,0.2);color:#fb923c}
+.btn-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.fbtn{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #1e293b;background:transparent;color:#94a3b8;transition:all .2s}
+.fbtn.active{background:rgba(239,68,68,0.3);border-color:#ef4444;color:#ef4444}
+.mb-item{display:flex;align-items:flex-start;gap:10px;margin:8px 0;font-size:12px;color:#cbd5e1;line-height:1.5}
+.mb-check{font-size:15px;flex-shrink:0;width:20px}
+.mb-label{font-weight:700;color:#f8fafc;font-size:12px}
+.mb-note{color:#94a3b8;font-size:11px;margin-top:2px}
+.disclaimer{font-size:11px;color:#475569;text-align:center;padding:20px;line-height:1.6;border-top:1px solid #1e293b;margin-top:20px}
+.bull{color:#4ade80;font-weight:700}
+.bear{color:#f87171;font-weight:700}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = React.createElement;
+var RED = '#ef4444';
+
+function makeChart(canvasRef, chartRef, cfg) {
+  var useEffect = React.useEffect;
+  useEffect(function() {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(canvasRef.current, cfg);
+    return function() { if (chartRef.current) chartRef.current.destroy(); };
+  }, []);
+}
+
+/* ====== TAB 1 — 개요 ====== */
+function Tab1() {
+  return e('div', {className:'content'},
+    e('div', {className:'danger-box'},
+      e('h4', null, '⚠️ 먼저 확인할 것 — "프리캐스트(콘크리트)" 기업이 아닙니다'),
+      e('p', null,
+        '티커 CAST는 콘크리트 프리캐스트 업체가 아니라 ', e('b',null,'FreeCast, Inc.'), '라는 ',
+        e('b',null,'스트리밍 미디어 PaaS(Platform-as-a-Service) 플랫폼'), ' 기업입니다. ',
+        '2026년 3월 10일 나스닥 상장 후 $33까지 올랐다가 6월 11일 $0.50까지 폭락, ',
+        '같은 날 DIRECTV 제휴 확대 뉴스로 며칠 만에 140~170% 폭등하며 ', e('b',null,'극단적 변동성'), '을 보이는 마이크로캡 페니스톡입니다.'),
+    ),
+    e('div', {className:'section-title'}, '📊 핵심 지표'),
+    e('div', {className:'stat-grid'},
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'현재가 (6월 중순)'), e('div',{className:'stat-value red'},'~$4.20~5.15'), e('div',{className:'stat-sub'},'52주 $0.50~$33.00')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'IPO 대비'), e('div',{className:'stat-value red'},'-85%'), e('div',{className:'stat-sub'},'IPO 첫날 $33 ATH 대비')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'TTM 매출'), e('div',{className:'stat-value yellow'},'$628K'), e('div',{className:'stat-sub'},'2025년 기준, YoY +23.7%')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'Q3 2026 순손실'), e('div',{className:'stat-value red'},'-$4.53M'), e('div',{className:'stat-sub'},'YoY 손실 34% 확대')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'자기자본'), e('div',{className:'stat-value red'},'-$7.0M'), e('div',{className:'stat-sub'},'자본 완전 잠식 상태')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'현재비율'), e('div',{className:'stat-value red'},'0.15'), e('div',{className:'stat-sub'},'심각한 단기 유동성 위기')),
+    ),
+    e('div', {className:'section-title'}, '🏢 기업 개요'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'항목'), e('th',null,'내용'))),
+      e('tbody', null,
+        [
+          ['정식명','FreeCast, Inc.'],
+          ['사업 모델','스트리밍 미디어 어그리게이션 + PaaS 기술 플랫폼'],
+          ['주요 제품','SmartGuide, Select TV (디지털 미디어 가이드)'],
+          ['고객층','통신사·브로드밴드·무선통신사·방송사·주거단지·호텔'],
+          ['상장일','2026년 3월 10일 (나스닥)'],
+          ['거래소','NASDAQ: CAST'],
+          ['최근 촉매','DIRECTV 제휴 확대 (2026.6.11)'],
+        ].map(function(r,i){ return e('tr',{key:i}, e('td',null,r[0]), e('td',null,r[1])); })
+      )
+    ),
+    e('div', {className:'section-title'}, '🔗 사업 모델 상세'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, e('b',null,'PaaS(Platform-as-a-Service)'), ' — 파트너사가 자체 인프라 구축 없이 자사 브랜드 스트리밍 서비스를 출시할 수 있도록 기술 플랫폼 제공'),
+      e('div', {className:'list-item'}, e('b',null,'DIRECTV 제휴 확대'), ' (6.11) — FreeCast의 D2C 주거용 사업 + PaaS 파트너 생태계 전체에 DIRECTV 서비스 통합 가능'),
+      e('div', {className:'list-item'}, '대상 파트너: 통신사, 브로드밴드, 무선통신사, 부동산 관리사, 호스피탈리티 기업 등'),
+      e('div', {className:'list-item'}, e('span',{className:'bear'},'규모의 한계'),': 연매출 $628K은 PaaS 플랫폼 기업으로서 극도로 작은 규모 — 아직 상업적 검증 초기 단계'),
+    ),
+    e('div', {className:'warn-box'},
+      e('h4', null, '💡 왜 주가가 폭등했나?'),
+      e('p', null, 'DIRECTV라는 인지도 높은 브랜드와의 제휴 확대 뉴스가 "스트리밍 플랫폼 사업 검증" 기대감을 자극했습니다. 그러나 매출 규모($628K)와 비교하면 시가총액 상승폭이 펀더멘털과 크게 괴리되어 있어 전형적인 "뉴스 펌프(News Pump)" 패턴입니다.'),
+    ),
+  );
+}
+
+/* ====== TAB 2 — 기술적 분석 ====== */
+function Tab2() {
+  var useRef = React.useRef;
+  var mc1 = useRef(null); var cr1 = useRef(null);
+  makeChart(mc1, cr1, {
+    type:'line',
+    data:{
+      labels:['3.10 IPO','4월','5월','6.10','6.11','6.13','6.15','6.17'],
+      datasets:[
+        {label:'CAST ($)',data:[33.00,8.50,2.10,0.59,1.59,3.20,4.22,5.15],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#ef4444'},
+      ]
+    },
+    options:{plugins:{legend:{labels:{color:'#e2e8f0'}}},scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}}},responsive:true}
+  });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📉 가격 추이 — IPO 붕괴 후 뉴스 펌프'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc1})),
+    e('div', {className:'danger-box'},
+      e('h4', null, '🔴 데드크로스 발생 — 장기 추세는 명백한 하락'),
+      e('p', null, '장기 이동평균선 정배열 붕괴(데드크로스) 확인. RSI 27.38은 과매도 구간이지만, 종합 기술 신호는 "Sell"입니다. 6월 15일 프리마켓에서 $3대 → $7.50 스파이크 후 $6 아래로 급락 — 장중 변동성이 ±50% 이상으로 극히 위험합니다.'),
+    ),
+    e('div', {className:'section-title'}, '📊 핵심 기술 지표'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'지표'), e('th',null,'현재값'), e('th',null,'신호'))),
+      e('tbody', null,
+        [
+          ['RSI(14)','27.38','🟢 과매도 (단기 반등 가능)'],
+          ['종합 기술신호','—','🔴 Sell (이동평균·MACD 정렬)'],
+          ['50일 이동평균','~$2.10','🔴 가격이 일시적으로 상단 돌파'],
+          ['장기 이동평균','데드크로스 발생','🔴 강한 하락 추세'],
+          ['일중 변동성','±50%+ (6월 15일)','🔴 극단적 위험'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'section-title'}, '🎯 지지·저항 & 진입 전략'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, '1차 지지선: ', e('b',null,'$1.42')),
+      e('div', {className:'list-item'}, '2차 지지선: ', e('b',null,'$1.22')),
+      e('div', {className:'list-item'}, '1차 저항선: ', e('b',null,'$2.00'), ' (라운드 넘버 + 50일선 $2.10 근접)'),
+      e('div', {className:'list-item'}, '2차 저항선: ', e('b',null,'$7.50'), ' (6월 15일 프리마켓 스파이크 고점)'),
+    ),
+    e('div', {className:'danger-box'},
+      e('h4', null, '⛔ 트레이딩 가능 여부'),
+      e('p', null, '이 종목은 일반적인 "매수 진입·손절·목표가" 전략이 적용되지 않을 정도로 변동성이 극심합니다. 장중 50% 이상 등락이 반복되어 일반 투자자에게는 진입 자체가 부적합합니다. 데이트레이딩 경험이 풍부한 트레이더 외에는 접근을 권하지 않습니다.'),
+    ),
+  );
+}
+
+/* ====== TAB 3 — 실적 ====== */
+function Tab3() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '💰 실적 — 매출 규모 대비 과도한 시총'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'지표'), e('th',null,'Q3 2026'), e('th',null,'Q3 2025'), e('th',null,'YoY'))),
+      e('tbody', null,
+        [
+          ['매출','$92.9K','$143K',e('span',{className:'bear'},'-35%')],
+          ['순손실','-$4.53M','-$3.38M',e('span',{className:'bear'},'34% 확대')],
+          ['EPS','-$0.11','-$0.086',e('span',{className:'bear'},'손실 심화')],
+          ['매출총이익률','44.8% (FY 기준)','—','규모 작아 의미 제한적'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'danger-box'},
+      e('h4', null, '🔴 핵심 경고 — 매출 감소 + 손실 확대 동시 진행'),
+      e('p', null, '직전 분기 매출이 35% 감소했는데 순손실은 34% 확대됐습니다. 일반적인 "성장통" 단계가 아니라 사업 자체가 축소되며 비용만 늘어나는 ', e('b',null,'악성 적자'), ' 구조입니다. DIRECTV 제휴가 실제 매출로 연결되는지가 다음 분기 핵심 관전 포인트입니다.'),
+    ),
+    e('div', {className:'section-title'}, '📅 향후 실적 모니터링'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, '다음 실적 발표: 명확한 컨센서스 부재 (소형주 커버리지 부족)'),
+      e('div', {className:'list-item'}, e('b',null,'핵심 관전 포인트'), ': DIRECTV 제휴를 통한 실제 매출 기여 여부'),
+      e('div', {className:'list-item'}, '애널리스트 전망치(일부 소스): 연 매출 +68.4%, EPS +84.6% 성장 — 그러나 분석 커버리지 자체가 제한적이라 신뢰도 낮음'),
+    ),
+    e('div', {className:'warn-box'},
+      e('h4', null, '⚖️ 분석 커버리지 신뢰도 주의'),
+      e('p', null, '시가총액이 매우 작고 거래소 상장 기간이 짧아(2026년 3월) 정통 투자은행(Morgan Stanley·Goldman Sachs·JPMorgan)의 공식 커버리지가 없습니다. 위 성장률 전망치는 알고리즘 기반 추정치로 신뢰 구간이 매우 넓습니다.'),
+    ),
+    e('div', {className:'section-title'}, '🎲 시나리오별 전략'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'시나리오'), e('th',null,'주가 반응'), e('th',null,'대응'))),
+      e('tbody', null,
+        [
+          ['DIRECTV 매출 실증 발표','추가 급등 가능','이미 보유 시 일부 익절'],
+          ['추가 호재 없이 잠잠','데드캣 바운스 후 급락','신규 진입 금지'],
+          ['유상증자·자금조달 발표','추가 희석 → 급락','즉시 회피'],
+          ['상장폐지 경고(매출 기준 미달)','거래정지 리스크','보유 시 즉시 청산 검토'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+  );
+}
+
+/* ====== TAB 4 — 재무 ====== */
+function Tab4() {
+  return e('div', {className:'content'},
+    e('div', {className:'danger-box'},
+      e('h4', null, '🔴 재무 건전성 — 위험 신호 다수'),
+      e('p', null, '자기자본 음수(-$7.0M), 순운전자본 -$7.3M, 현재비율 0.15는 단기 채무 상환 능력이 거의 없음을 의미합니다. 이는 ', e('b',null,'재융자 또는 추가 증자가 불가피'), '한 상태로, 기존 주주 희석 리스크가 매우 높습니다.'),
+    ),
+    e('div', {className:'section-title'}, '📋 핵심 재무 지표'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'지표'), e('th',null,'현재값'), e('th',null,'평가'))),
+      e('tbody', null,
+        [
+          ['TTM 매출','$628K','🔴 마이크로캡 중에서도 극소형'],
+          ['TTM EPS','-$0.36','🔴 지속적 적자'],
+          ['매출총이익률','44.8%','🟡 비율은 양호하나 절대 규모 작음'],
+          ['자기자본','-$7.0M','🔴 자본 완전 잠식'],
+          ['순운전자본','-$7.3M','🔴 단기 부채 상환 불가능 수준'],
+          ['현재비율','0.15','🔴 심각한 유동성 위기 (기준 1.0 이상 양호)'],
+          ['FCF','심각한 음수','🔴 현금 지속 소진'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'section-title'}, '⚠️ 재무 리스크 종합'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, e('b',null,'재융자 리스크'), ' — 현재비율 0.15로 단기 채무 충당 불가, 즉각적인 외부 자금 필요'),
+      e('div', {className:'list-item'}, e('b',null,'희석 리스크'), ' — 자본 조달 시 신주 발행 가능성 높음, 기존 주주 지분 가치 추가 희석'),
+      e('div', {className:'list-item'}, e('b',null,'상장 유지 리스크'), ' — 나스닥 최소 시가총액·주가 요건 미달 시 상장폐지 경고(델리스팅) 가능성'),
+      e('div', {className:'list-item'}, e('b',null,'사업 지속성 리스크'), ' — 매출이 매 분기 감소하는 상태에서 손실만 확대'),
+    ),
+  );
+}
+
+/* ====== TAB 5 — 비교 ====== */
+function Tab5() {
+  var useRef = React.useRef;
+  var mc1 = useRef(null); var cr1 = useRef(null);
+  makeChart(mc1, cr1, {
+    type:'bar',
+    data:{
+      labels:['CAST','ROKU','FUBO','CHTR(참고)'],
+      datasets:[{label:'TTM 매출 ($M, 로그성격 비교)',data:[0.628,4100,1700,55000],backgroundColor:['#ef4444','#3b82f6','#8b5cf6','#10b981'],borderRadius:4}]
+    },
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}},y:{ticks:{color:'#f8fafc'},grid:{color:'#1e293b'}}},responsive:true}
+  });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔁 스트리밍·미디어 플랫폼 규모 비교 (로그 스케일)'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc1})),
+    e('div', {style:{fontSize:11,color:'#64748b',marginBottom:14}}, '* CAST 매출은 동종업계 대형주 대비 1만 분의 1 이하 수준 — 사업 규모 자체가 비교 불가능한 차이'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'티커'), e('th',null,'기업명'), e('th',null,'특징'), e('th',null,'CAST 대비'))),
+      e('tbody', null,
+        [
+          ['ROKU','Roku Inc','스트리밍 OS·광고 플랫폼 (대형주)','매출 6,500배+ 차이'],
+          ['FUBO','fuboTV','스포츠 중심 스트리밍 서비스','매출 2,700배+ 차이'],
+          ['CHTR','Charter Communications','케이블·브로드밴드 대형사 (참고)','전혀 다른 체급'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'warn-box'},
+      e('h4', null, '🔍 동종업계 내 위치'),
+      e('p', null, 'CAST는 스트리밍/PaaS 업계에서 사실상 검증되지 않은 초기 단계 기업입니다. Roku나 fuboTV 같은 동종 업계 기업과 직접 비교할 규모가 아니며, "스트리밍 테마"로 묶이는 마이크로캡 투기성 종목으로 분류해야 합니다.'),
+    ),
+  );
+}
+
+/* ====== TAB 6 — X ====== */
+var X_POSTS = [
+  {a:'@PennyStockHunter',f:'156K',t:'CAST 6월 11일 DIRECTV 뉴스로 $0.59→$5 갔다. 이게 펀더멘털 때문이라고 생각하면 큰 오산. 순수 모멘텀 펌프다.',d:'2026-06-15',s:'neg',l:'3.2K'},
+  {a:'@StreamingTechX',f:'89K',t:'PaaS 모델 자체는 흥미롭다. 통신사·호텔이 자체 스트리밍 브랜드 만들 수 있게 해주는 건 수요가 있을 수 있음. 다만 매출 $628K로 검증은 멀었다.',d:'2026-06-13',s:'neu',l:'1.1K'},
+  {a:'@VolatilityDesk',f:'234K',t:'CAST 6월 15일 프리마켓 $3대→$7.50→$6 미만. 이 정도 변동성은 일반 투자자가 절대 접근하면 안 되는 영역이다.',d:'2026-06-15',s:'neg',l:'4.1K'},
+  {a:'@MicroCapDD',f:'67K',t:'자기자본 -$7M, 현재비율 0.15. 이건 그냥 부도 직전 회사다. DIRECTV 이름값으로 띄운 뉴스 펌프에 속지 마라.',d:'2026-06-14',s:'neg',l:'2.8K'},
+  {a:'@DayTrader_Mike',f:'112K',t:'CAST로 오늘 30분 만에 +40% 먹고 나옴. 단타로는 재밌는데 절대 오버나잇 안 함. 이런 종목은 룰 없으면 다 잃는다.',d:'2026-06-16',s:'pos',l:'1.9K'},
+  {a:'@IPO_Tracker',f:'198K',t:'3월 상장가 $33에서 $0.50까지 -98.5% 갔던 종목이 며칠 만에 +700% 반등. 차트가 진짜 미쳤다. 이게 시장이 효율적이라고?',d:'2026-06-12',s:'neu',l:'3.5K'},
+  {a:'@FundamentalsFirst',f:'45K',t:'매출 35% 감소 + 손실 34% 확대. DIRECTV 이름만 보고 들어가면 큰코다친다. 숫자를 봐라.',d:'2026-06-13',s:'neg',l:'1.6K'},
+  {a:'@MomentumPlay99',f:'78K',t:'RSI 27 과매도 + 뉴스 촉매 겹치면 단기 폭등은 자연스럽다. 다만 추세 자체는 데드크로스로 하락. 반등은 매도 기회로 본다.',d:'2026-06-14',s:'neg',l:'1.3K'},
+  {a:'@SmallCapSpeculator',f:'52K',t:'CAST 같은 종목은 도박이지 투자가 아니다. 잃어도 되는 돈으로만, 포지션 크기 최소화해서 접근.',d:'2026-06-15',s:'neu',l:'990'},
+  {a:'@DilutionWatch',f:'71K',t:'현재비율 0.15면 곧 유상증자 또는 전환사채 발행 뉴스 나올 가능성 높다. 그때 주가 급락 주의.',d:'2026-06-14',s:'neg',l:'1.4K'},
+  {a:'@RetailFOMO',f:'33K',t:'친구가 CAST로 하루 100% 먹었다고 자랑하던데, 그 친구가 진입한 가격에 들어가면 나는 -50% 가능성 더 높다.',d:'2026-06-16',s:'neu',l:'820'},
+  {a:'@ShortSellerX',f:'143K',t:'CAST 숏 포지션 고민 중. 펀더멘털 vs 가격 괴리가 너무 크다. 다만 변동성이 워낙 커서 숏도 위험.',d:'2026-06-15',s:'neg',l:'2.1K'},
+  {a:'@TechPaaS_Bull',f:'29K',t:'PaaS 비즈니스 모델은 SaaS만큼 매력적일 수 있다. 호스피탈리티·주거단지 시장이 생각보다 크다. 장기적으로 지켜볼 가치는 있음.',d:'2026-06-12',s:'pos',l:'670'},
+  {a:'@CrashCourseInvesting',f:'98K',t:'IPO 후 -98% 갔다가 +700% 반등하는 종목에 투자한다는 건 카지노 가는 것과 다를 게 없다. 교육용 사례로만 보자.',d:'2026-06-13',s:'neg',l:'1.8K'},
+  {a:'@OptionsFlow_Track',f:'56K',t:'CAST 옵션 내재변동성 극단적으로 높음. 옵션 프리미엄이 엄청 비싸다. 일반 콜옵션 매수도 위험한 수준.',d:'2026-06-16',s:'neu',l:'740'},
+];
+
+function Tab6() {
+  var pos = X_POSTS.filter(function(p){return p.s==='pos';}).length;
+  var neu = X_POSTS.filter(function(p){return p.s==='neu';}).length;
+  var neg = X_POSTS.filter(function(p){return p.s==='neg';}).length;
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🐦 X (트위터) 여론 — 15개'),
+    e('div', {className:'senti-stat'},
+      e('span',{style:{color:'#4ade80'}},'🟢 '+pos),
+      e('span',{style:{color:'#facc15'}},'🟡 '+neu),
+      e('span',{style:{color:'#f87171'}},'🔴 '+neg),
+    ),
+    X_POSTS.map(function(p,i){
+      var bc = p.s==='pos'?'b-pos':p.s==='neu'?'b-neu':'b-neg';
+      var bt = p.s==='pos'?'🟢 긍정':p.s==='neu'?'🟡 중립':'🔴 부정';
+      return e('div', {key:i, className:'s-card'},
+        e('div', {className:'s-head'},
+          e('div', null, e('span',{className:'s-acct'},p.a), e('span',{style:{fontSize:10,color:'#64748b',marginLeft:6}},p.f)),
+          e('span', {className:'badge '+bc}, bt),
+        ),
+        e('div', {className:'s-body'}, p.t),
+        e('div', {className:'s-foot'}, '❤️ '+p.l+' · '+p.d),
+      );
+    })
+  );
+}
+
+/* ====== TAB 7 — Reddit ====== */
+var R_POSTS = [
+  {a:'u/penny_stock_grinder',sub:'pennystocks',up:'2.8K',t:'CAST DIRECTV 뉴스로 폭등한 거 봤다. $0.59에서 $5까지. 들어간 사람들 축하하는데 나는 무서워서 못 들어갔다.',d:'2026-06-15',s:'neu'},
+  {a:'u/dd_or_die',sub:'pennystocks',up:'3.1K',t:'재무제표 까봤다. 자기자본 -$7M, 매출 $628K. 이거 그냥 부도 직전 회사가 뉴스 하나로 살아난 거다. 조심해라.',d:'2026-06-14',s:'neg'},
+  {a:'u/wsb_degenerate',sub:'wallstreetbets',up:'4.5K',t:'CAST 콜옵션으로 하루에 5배 먹었다. 이게 바로 WSB지. (다음날 다 잃을 수도 있음을 명심)',d:'2026-06-15',s:'pos'},
+  {a:'u/value_hunter_88',sub:'investing',up:'1.9K',t:'IPO $33에서 $0.50까지 떨어진 종목이 뉴스 하나로 10배 가는 거 보면 시장이 효율적이라는 말이 무색해진다. 순수 투기.',d:'2026-06-12',s:'neg'},
+  {a:'u/streaming_insider',sub:'stocks',up:'1.2K',t:'PaaS 모델 자체는 나쁘지 않다. 다만 FreeCast가 그걸 제대로 실행할 자본과 역량이 있는지는 의문. 매출 규모가 너무 작다.',d:'2026-06-13',s:'neu'},
+  {a:'u/risk_averse_trader',sub:'options',up:'1.6K',t:'CAST 옵션 IV 진짜 미쳤다. 등가격 콜옵션 프리미엄이 주가의 30%대. 손익비 계산하면 답이 안 나온다.',d:'2026-06-16',s:'neg'},
+  {a:'u/dilution_detective',sub:'pennystocks',up:'2.3K',t:'현재비율 0.15면 곧 ATM 오퍼링이나 전환사채 발행 공시 나온다. 주가 오를 때 회사가 증자할 가능성 매우 높다.',d:'2026-06-14',s:'neg'},
+  {a:'u/momentum_chaser',sub:'wallstreetbets',up:'1.8K',t:'RSI 과매도에서 뉴스 촉매 겹치면 폭등하는 거 전형적인 패턴. 다만 추격매수는 항상 늦다. 이미 끝물일 가능성.',d:'2026-06-15',s:'neg'},
+  {a:'u/fundamentals_matter',sub:'SecurityAnalysis',up:'1.4K',t:'매출이 줄어드는데 손실이 늘어나는 회사는 투자 대상이 아니다. CAST는 차트만 보고 들어가는 순수 도박 종목이다.',d:'2026-06-13',s:'neg'},
+  {a:'u/lucky_timing_99',sub:'pennystocks',up:'2.0K',t:'우연히 $0.6에 사서 $5에 팔았다. 운이 좋았을 뿐이고 다시는 이런 거 못 할 것 같다. 추천 안 함.',d:'2026-06-15',s:'pos'},
+  {a:'u/paas_skeptic',sub:'stocks',up:'990',t:'DIRECTV가 FreeCast랑 제휴했다고 FreeCast 사업이 갑자기 검증된 건 아니다. DIRECTV 입장에서는 작은 채널 하나 추가한 정도일 수도.',d:'2026-06-12',s:'neg'},
+  {a:'u/swing_trade_pro',sub:'options',up:'1.1K',t:'CAST 50일선 $2.10 근처에서 지지 테스트 가능성. 거기까지 빠지면 단기 반등 베팅 고려 중. 손절 엄격하게.',d:'2026-06-16',s:'neu'},
+  {a:'u/cautionary_tale',sub:'wallstreetbets',up:'2.6K',t:'이 종목으로 누군가는 인생 바뀌고 누군가는 깡통 찬다. 변동성이 양날의 검이라는 걸 제대로 보여주는 사례.',d:'2026-06-14',s:'neu'},
+  {a:'u/balance_sheet_nerd',sub:'SecurityAnalysis',up:'1.7K',t:'순운전자본 -$7.3M은 정말 심각하다. 단기 부채를 갚을 현금이 없다는 뜻. 이 회사 존속 자체가 불확실하다.',d:'2026-06-13',s:'neg'},
+  {a:'u/just_here_for_chaos',sub:'pennystocks',up:'1.3K',t:'팝콘 들고 구경 중. 이런 종목은 절대 안 만지지만 차트 보는 재미는 있다. ㅋㅋ',d:'2026-06-16',s:'neu'},
+];
+
+function Tab7() {
+  var pos = R_POSTS.filter(function(p){return p.s==='pos';}).length;
+  var neu = R_POSTS.filter(function(p){return p.s==='neu';}).length;
+  var neg = R_POSTS.filter(function(p){return p.s==='neg';}).length;
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '💬 Reddit 여론 — 15개'),
+    e('div', {className:'senti-stat'},
+      e('span',{style:{color:'#4ade80'}},'🟢 '+pos),
+      e('span',{style:{color:'#facc15'}},'🟡 '+neu),
+      e('span',{style:{color:'#f87171'}},'🔴 '+neg),
+    ),
+    R_POSTS.map(function(p,i){
+      var bc = p.s==='pos'?'b-pos':p.s==='neu'?'b-neu':'b-neg';
+      var bt = p.s==='pos'?'🟢 긍정':p.s==='neu'?'🟡 중립':'🔴 부정';
+      return e('div', {key:i, className:'s-card'},
+        e('div', {className:'s-head'},
+          e('div', null, e('span',{className:'s-acct'},p.a), e('span',{style:{fontSize:10,color:'#64748b',marginLeft:6}},'r/'+p.sub)),
+          e('span', {className:'badge '+bc}, bt),
+        ),
+        e('div', {className:'s-body'}, p.t),
+        e('div', {className:'s-foot'}, '⬆️ '+p.up+' · '+p.d),
+      );
+    })
+  );
+}
+
+/* ====== TAB 8 — 용어 ====== */
+var TERMS = [
+  {n:'PaaS (Platform-as-a-Service)',cat:'기술적',c:'cat-tech',b:'기업이 직접 인프라를 구축하지 않고도 빌려 쓸 수 있는 기술 플랫폼 서비스입니다. FreeCast는 스트리밍 서비스용 PaaS를 제공합니다.',note:'FreeCast의 핵심 사업 모델 — 통신사·호텔 등이 자체 브랜드 스트리밍을 쉽게 만들도록 돕습니다.'},
+  {n:'뉴스 펌프 (News Pump)',cat:'시장',c:'cat-mkt',b:'특정 뉴스(제휴·계약 등) 하나로 펀더멘털과 무관하게 주가가 단기간 급등하는 현상입니다.',note:'CAST의 DIRECTV 뉴스 이후 140~170% 폭등이 전형적인 뉴스 펌프 사례입니다.'},
+  {n:'데드크로스 (Death Cross)',cat:'기술적',c:'cat-tech',b:'단기 이동평균선이 장기 이동평균선을 아래로 뚫고 내려가는 현상으로, 강한 하락 추세 신호입니다.',note:'CAST는 장기 이동평균 정렬이 데드크로스 상태 — 추세 자체는 약세입니다.'},
+  {n:'RSI 과매도',cat:'기술적',c:'cat-tech',b:'RSI가 30 이하로 내려가면 단기적으로 너무 많이 팔렸다는 뜻으로, 기술적 반등 가능성이 있습니다.',note:'CAST RSI 27.38은 과매도지만 종합 신호는 여전히 매도(Sell)입니다.'},
+  {n:'자기자본 잠식 (Negative Equity)',cat:'재무',c:'cat-fin',b:'회사의 부채가 자산보다 많아 자기자본이 마이너스가 된 상태입니다. 회계상 회사 가치가 0보다 낮다는 뜻입니다.',note:'CAST 자기자본 -$7.0M — 회계적으로 매우 심각한 재무 상태입니다.'},
+  {n:'현재비율 (Current Ratio)',cat:'재무',c:'cat-fin',b:'단기 자산을 단기 부채로 나눈 값입니다. 1.0 이상이면 단기 채무 상환에 문제가 없다고 봅니다.',note:'CAST 현재비율 0.15는 단기 부채 상환 능력이 거의 없다는 위험 신호입니다.'},
+  {n:'희석 (Dilution)',cat:'재무',c:'cat-fin',b:'회사가 신주를 추가 발행하면 기존 주주의 지분 비율과 주당 가치가 줄어드는 현상입니다.',note:'CAST의 심각한 유동성 위기는 추가 증자로 이어질 가능성이 높고, 이는 희석 리스크입니다.'},
+  {n:'상장폐지 (Delisting)',cat:'시장',c:'cat-mkt',b:'거래소가 정한 최소 요건(시가총액·주가·재무 기준 등)을 충족하지 못하면 거래소에서 퇴출되는 것입니다.',note:'CAST처럼 재무가 부실한 신규 상장사는 상장 유지 요건 미달 리스크가 존재합니다.'},
+  {n:'IPO (기업공개)',cat:'시장',c:'cat-mkt',b:'비상장 기업이 처음으로 주식을 일반 투자자에게 공개 판매하고 거래소에 상장하는 절차입니다.',note:'CAST는 2026년 3월 10일 상장 후 3개월 만에 -98%→+700% 롤러코스터를 경험했습니다.'},
+  {n:'내재 변동성 (Implied Volatility)',cat:'기술적',c:'cat-tech',b:'옵션 가격에 반영된 시장의 미래 변동성 기대치입니다. 높을수록 옵션 가격(프리미엄)이 비쌉니다.',note:'CAST 옵션 내재변동성이 극단적으로 높아 옵션 거래 자체도 고위험입니다.'},
+  {n:'순운전자본 (Working Capital)',cat:'재무',c:'cat-fin',b:'단기 자산에서 단기 부채를 뺀 값으로, 회사가 일상적인 운영에 쓸 수 있는 여유 자금을 나타냅니다.',note:'CAST 순운전자본 -$7.3M은 당장 운영 자금조차 부족하다는 의미입니다.'},
+];
+
+function Tab8() {
+  var useState = React.useState;
+  var fs = useState('전체');
+  var filter = fs[0]; var setFilter = fs[1];
+  var cats = ['전체','기술적','재무','시장'];
+  var shown = TERMS.filter(function(t){ return filter==='전체'||t.cat===filter; });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📖 용어 사전'),
+    e('div', {className:'btn-group'},
+      cats.map(function(c){
+        return e('button', {key:c, className:'fbtn'+(filter===c?' active':''), onClick:function(){setFilter(c);}}, c);
+      })
+    ),
+    shown.map(function(t,i){
+      return e('div', {key:i, className:'term-card'},
+        e('div', {className:'term-head'},
+          e('span', {className:'term-name'}, t.n),
+          e('span', {className:'badge '+t.c}, t.cat),
+        ),
+        e('div', {className:'term-body'}, t.b),
+        e('div', {className:'term-note'}, '→ '+t.note),
+      );
+    })
+  );
+}
+
+/* ====== TAB 9 — 멀티배거 ====== */
+var MB = [
+  {q:'1. 아직 충분히 작은 기업인가? (시총 $5B 이하)',v:'마이크로캡 (정확한 시총 변동 극심)',j:'yes',note:'규모는 작지만 멀티배거 조건의 "작음"이 아니라 부실로 인한 작음.'},
+  {q:'2. 현재 가격이 미래를 과대반영하지 않았는가?',v:'매출 $628K 대비 뉴스 펌프로 시총 급등',j:'no',note:'펀더멘털과 무관한 뉴스 기반 급등 — 가격이 미래를 과대반영.'},
+  {q:'3. 매출보다 EBITDA·FCF 개선이 따라오는가?',v:'매출 -35%, 손실 34% 확대',j:'no',note:'매출 감소와 손실 확대가 동시 진행 — 정반대 방향.'},
+  {q:'4. 자산 증가율보다 EBITDA 증가율이 뒤처지지 않는가?',v:'자기자본 -$7.0M (자본 잠식)',j:'no',note:'투자 효율을 논할 자산 기반 자체가 마이너스.'},
+  {q:'5. FCF yield 관점에서 가격이 합리적인가?',v:'FCF 심각한 음수',j:'no',note:'현금 창출 능력 전혀 없음.'},
+  {q:'6. 투자가 실제 수요·주문과 연결되는가?',v:'DIRECTV 제휴 — 매출 기여 미확인',j:'no',note:'제휴 발표는 있으나 실제 매출 반영까지 검증 안 됨.'},
+  {q:'7. 고금리 환경에서도 버틸 수 있는가?',v:'현재비율 0.15, 순운전자본 -$7.3M',j:'no',note:'고금리는커녕 평시에도 단기 부채 상환이 불가능한 수준.'},
+  {q:'8. 단기 급등 후 추격매수 구간은 아닌가?',v:'며칠 만에 +700%, RSI 27 과매도',j:'no',note:'이미 극단적 급등 이후 — 전형적인 추격매수 위험 구간.'},
+];
+
+function Tab9() {
+  var useRef = React.useRef;
+  var mc = useRef(null); var cr = useRef(null);
+  var scoreMap = {yes:1, partial:0.5, no:0};
+  var scores = MB.map(function(m){ return scoreMap[m.j]; });
+  var total = scores.reduce(function(a,b){return a+b;},0);
+  makeChart(mc, cr, {
+    type:'radar',
+    data:{
+      labels:['소형주','밸류에이션','성장질','투자효율','FCF','수주잔고','금리내성','진입타이밍'],
+      datasets:[{label:'멀티배거 적합도',data:scores,backgroundColor:'rgba(239,68,68,0.2)',borderColor:'#ef4444',pointBackgroundColor:'#ef4444'}]
+    },
+    options:{plugins:{legend:{labels:{color:'#e2e8f0'}}},scales:{r:{angleLines:{color:'#1e293b'},grid:{color:'#1e293b'},pointLabels:{color:'#94a3b8',font:{size:10}},ticks:{display:false,max:1,min:0}}},responsive:true}
+  });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔟 멀티배거 점수: '+total.toFixed(1)+' / 8'),
+    e('div', {className:'card', style:{textAlign:'center',padding:'20px'}},
+      e('div', {style:{fontSize:40,fontWeight:800,color:RED}}, total.toFixed(1)+'/8'),
+      e('div', {style:{fontSize:14,color:'#94a3b8',marginTop:4}}, '매우 낮음 — 멀티배거 프레임워크 적용 부적합'),
+    ),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc})),
+    MB.map(function(m,i){
+      var icon = m.j==='yes'?'✅':m.j==='partial'?'⚠️':'❌';
+      return e('div', {key:i, className:'card', style:{padding:'12px'}},
+        e('div', {className:'mb-item'},
+          e('span', {className:'mb-check'}, icon),
+          e('div', null,
+            e('div', {className:'mb-label'}, m.q),
+            e('div', {style:{fontSize:12,color:'#cbd5e1',marginTop:4}}, m.v),
+            e('div', {className:'mb-note'}, '→ '+m.note),
+          )
+        )
+      );
+    }),
+    e('div', {className:'warn-box'},
+      e('h4', null, '📌 핵심 한계 주의사항'),
+      e('p', null, '워킹페이퍼 기반 통계 신호이며, 조건 충족이 10배 수익을 보장하지 않습니다. CAST는 8개 항목 중 7개가 명백히 미충족된 상태로, 멀티배거가 아니라 ', e('b',null,'재무적 디스트레스 + 모멘텀 투기'), ' 종목으로 분류됩니다.'),
+    ),
+  );
+}
+
+/* ====== APP ====== */
+function App() {
+  var useState = React.useState;
+  var ts = useState(0);
+  var tab = ts[0]; var setTab = ts[1];
+  var TABS = ['📊 개요','📈 기술적분석','💰 실적','📋 재무','🔁 비교','🐦 X','💬 Reddit','📖 용어','🔟 멀티배거'];
+  function render() {
+    if (tab===0) return Tab1();
+    if (tab===1) return e(function T2(){return Tab2();});
+    if (tab===2) return Tab3();
+    if (tab===3) return Tab4();
+    if (tab===4) return e(function T5(){return Tab5();});
+    if (tab===5) return e(function T6(){return Tab6();});
+    if (tab===6) return e(function T7(){return Tab7();});
+    if (tab===7) return e(function T8(){return Tab8();});
+    if (tab===8) return e(function T9(){return Tab9();});
+    return Tab1();
+  }
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('div', {className:'hdr-top'},
+        e('div', null,
+          e('h1', null, '📊 CAST — FreeCast, Inc.'),
+          e('div', {className:'hdr-meta'}, '⚠️ 콘크리트 프리캐스트 아님 (스트리밍 PaaS) | 2026-06-16 | 초고위험 마이크로캡'),
+        ),
+        e('a', {href:'https://disntm90.github.io/disntm90/', className:'back-btn'}, '← 목록으로'),
+      ),
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(t,i){
+        return e('div', {key:i, className:'tab'+(tab===i?' active':''), onClick:function(){setTab(i);}}, t);
+      })
+    ),
+    render(),
+    e('div', {className:'disclaimer'},
+      '본 대시보드는 투자 정보 제공 목적으로만 활용되며, 투자 권유나 조언이 아닙니다.',e('br'),
+      'CAST는 재무적으로 매우 부실한 마이크로캡 종목으로 원금 전손 위험이 매우 높습니다. 분석 기준일: 2026-06-16',
+    ),
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
+</script>
+</body>
+</html>
