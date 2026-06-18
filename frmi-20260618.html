@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>📊 FRMI(Fermi Inc.) 종목 분석 — 2026-06-18</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;font-size:14px}
+a{color:#f59e0b;text-decoration:none}
+a:hover{text-decoration:underline}
+.hdr{background:linear-gradient(135deg,#1a1206 0%,#2d1f0a 50%,#1a1206 100%);border-bottom:1px solid #f59e0b;padding:16px 20px}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.hdr h1{font-size:20px;font-weight:700;color:#f8fafc}
+.hdr-meta{font-size:11px;color:#94a3b8;margin-top:4px}
+.back-btn{background:rgba(245,158,11,0.15);border:1px solid #f59e0b;color:#f59e0b;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer}
+.tabs{display:flex;overflow-x:auto;background:#0f1424;border-bottom:1px solid #1e293b;padding:0 12px;gap:2px}
+.tab{padding:10px 13px;cursor:pointer;font-size:12px;font-weight:600;color:#94a3b8;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.tab.active{color:#f59e0b;border-color:#f59e0b}
+.tab:hover{color:#fbbf24}
+.content{padding:16px;max-width:760px;margin:0 auto}
+.section-title{font-size:16px;font-weight:700;color:#f59e0b;margin:20px 0 12px;display:flex;align-items:center;gap:8px}
+.card{background:#0f1424;border:1px solid #1e293b;border-radius:12px;padding:16px;margin-bottom:14px}
+.pivot-box{background:rgba(245,158,11,0.08);border:1px solid #f59e0b;border-radius:12px;padding:16px;margin-bottom:14px}
+.pivot-box h4{color:#fbbf24;font-size:14px;font-weight:700;margin-bottom:8px}
+.pivot-box p{font-size:13px;color:#fde68a;line-height:1.7}
+.danger-box{background:rgba(239,68,68,0.12);border:1px solid #ef4444;border-radius:12px;padding:16px;margin-bottom:14px}
+.danger-box h4{color:#f87171;font-size:14px;font-weight:700;margin-bottom:8px}
+.danger-box p{font-size:13px;color:#fca5a5;line-height:1.7}
+.warn-box{background:rgba(245,158,11,0.1);border:1px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:14px}
+.warn-box h4{color:#fbbf24;font-size:13px;font-weight:700;margin-bottom:6px}
+.warn-box p{font-size:12px;color:#fcd34d;line-height:1.6}
+.note-box{background:rgba(148,163,184,0.08);border:1px solid #475569;border-radius:12px;padding:14px;margin-bottom:14px}
+.note-box h4{color:#cbd5e1;font-size:13px;font-weight:700;margin-bottom:6px}
+.note-box p{font-size:12px;color:#94a3b8;line-height:1.6}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stat-box{background:#0f1424;border:1px solid #1e293b;border-radius:10px;padding:12px}
+.stat-label{font-size:10px;color:#64748b;margin-bottom:4px}
+.stat-value{font-size:18px;font-weight:800;color:#f8fafc}
+.stat-value.amber{color:#f59e0b}
+.stat-value.red{color:#ef4444}
+.stat-value.green{color:#22c55e}
+.stat-value.yellow{color:#f59e0b}
+.stat-sub{font-size:10px;color:#94a3b8;margin-top:2px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+.tbl th{background:#1e293b;color:#f59e0b;font-weight:600;padding:8px;text-align:left}
+.tbl td{padding:8px;border-bottom:1px solid #1e293b;color:#cbd5e1}
+.tbl tr:last-child td{border-bottom:none}
+.list-item{margin:8px 0;font-size:13px;color:#cbd5e1;line-height:1.6;padding-left:16px;position:relative}
+.list-item::before{content:'▸';position:absolute;left:0;color:#f59e0b}
+.chart-wrap{background:#0f1424;border:1px solid #1e293b;border-radius:12px;padding:16px;margin-bottom:16px}
+.chart-wrap canvas{max-height:380px}
+.senti-stat{display:flex;gap:12px;justify-content:center;margin-bottom:14px;font-size:13px;font-weight:700}
+.s-card{background:#0f1424;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+.s-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.s-acct{font-size:12px;font-weight:700;color:#f8fafc}
+.s-body{font-size:12px;color:#cbd5e1;line-height:1.6}
+.s-foot{font-size:10px;color:#64748b;margin-top:6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.b-pos{background:rgba(34,197,94,0.2);color:#4ade80}
+.b-neu{background:rgba(234,179,8,0.2);color:#facc15}
+.b-neg{background:rgba(239,68,68,0.2);color:#f87171}
+.term-card{background:#0f1424;border:1px solid #1e293b;border-radius:10px;padding:12px;margin-bottom:10px}
+.term-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.term-name{font-size:13px;font-weight:700;color:#f8fafc}
+.term-body{font-size:12px;color:#cbd5e1;line-height:1.6}
+.term-note{font-size:11px;color:#94a3b8;margin-top:6px;font-style:italic}
+.cat-tech{background:rgba(59,130,246,0.2);color:#60a5fa}
+.cat-fin{background:rgba(34,197,94,0.2);color:#4ade80}
+.cat-mkt{background:rgba(249,115,22,0.2);color:#fb923c}
+.cat-etc{background:rgba(168,85,247,0.2);color:#c084fc}
+.btn-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.fbtn{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #1e293b;background:transparent;color:#94a3b8;transition:all .2s}
+.fbtn.active{background:rgba(245,158,11,0.3);border-color:#f59e0b;color:#f59e0b}
+.mb-item{display:flex;align-items:flex-start;gap:10px;margin:8px 0;font-size:12px;color:#cbd5e1;line-height:1.5}
+.mb-check{font-size:15px;flex-shrink:0;width:20px}
+.mb-label{font-weight:700;color:#f8fafc;font-size:12px}
+.mb-note{color:#94a3b8;font-size:11px;margin-top:2px}
+.timeline-step{background:#0f1424;border-left:3px solid #f59e0b;padding:10px 14px;margin:8px 0;border-radius:0 8px 8px 0}
+.timeline-step h5{font-size:12px;font-weight:700;color:#fbbf24;margin-bottom:4px}
+.timeline-step p{font-size:12px;color:#94a3b8;line-height:1.5}
+.disclaimer{font-size:11px;color:#475569;text-align:center;padding:20px;line-height:1.6;border-top:1px solid #1e293b;margin-top:20px}
+.bull{color:#4ade80;font-weight:700}
+.bear{color:#f87171;font-weight:700}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = React.createElement;
+var AMBER = '#f59e0b';
+
+function makeChart(canvasRef, chartRef, cfg) {
+  var useEffect = React.useEffect;
+  useEffect(function() {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); }
+    chartRef.current = new Chart(canvasRef.current, cfg);
+    return function() { if (chartRef.current) chartRef.current.destroy(); };
+  }, []);
+}
+
+/* ====== TAB 1 — 개요 ====== */
+function Tab1() {
+  return e('div', {className:'content'},
+    e('div', {className:'danger-box'},
+      e('h4', null, '⚠️ 제로 매출 + 이사회 장악 분쟁 + 증권사기 조사 동시 진행'),
+      e('p', null,
+        'FRMI는 전 텍사스 주지사·에너지장관 ', e('b',null,'Rick Perry'), '가 공동창업한 ', e('b',null,'Fermi Inc.(Fermi America)'), '로, ',
+        e('b',null,'천연가스 11GW + 원자력 4.4GW(AP1000 4기) = 총 17GW'), ' 규모의 "Project Matador" AI 전력·데이터센터 캠퍼스를 텍사스 애머릴로에 건설 중입니다. ',
+        '2025년 10월 IPO 직후 첫 대형 임차 후보(아마존으로 알려짐)가 $150M 건설지원금 약정을 ', e('b',null,'2025.12.12 파기'), '하면서 주가가 80% 이상 폭락했고, ',
+        '이후 ', e('b',null,'증권집단소송·로펌 조사'), '가 진행 중입니다. 2026년 6월에는 해임된 전 CEO ', e('b',null,'Toby Neugebauer가 이사회 장악을 시도'), '하는 경영권 분쟁이 격화되고 있습니다. ',
+        '현재까지 ', e('b',null,'매출 0달러'), '이며, 모든 가치는 미래 전력·임대 계약에 대한 기대에 근거합니다.',
+      ),
+    ),
+    e('div', {className:'section-title'}, '📊 핵심 지표 (2026-06-17 기준)'),
+    e('div', {className:'stat-grid'},
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'현재가'), e('div',{className:'stat-value amber'},'$8.83'), e('div',{className:'stat-sub'},'전일 +12.76%')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'시가총액'), e('div',{className:'stat-value'},'$5.52B'), e('div',{className:'stat-sub'},'IPO 당시 $16~19B 대비 대폭 축소')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'52주 범위'), e('div',{className:'stat-value yellow'},'$4.47~$36.99'), e('div',{className:'stat-sub'},'IPO 후 8개월 내 -88%→+98% 극단 변동')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'FY2025 순손실'), e('div',{className:'stat-value red'},'-$486.3M'), e('div',{className:'stat-sub'},'첫 영업연도, 매출 $0')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'Q1 2026 순손실'), e('div',{className:'stat-value red'},'-$189M'), e('div',{className:'stat-sub'},'비현금 주식보상 $134M+상환손실 $25M 포함')),
+      e('div', {className:'stat-box'}, e('div',{className:'stat-label'},'현금 vs 부채'), e('div',{className:'stat-value red'},'$207.5M vs $421.3M'), e('div',{className:'stat-sub'},'유동비율 0.5')),
+    ),
+    e('div', {className:'section-title'}, '🏢 기업 개요'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'항목'), e('th',null,'내용'))),
+      e('tbody', null,
+        [
+          ['정식명','Fermi Inc. (Fermi America)'],
+          ['공동창업','Rick Perry(전 텍사스 주지사·美 에너지장관), 아들 Griffin Perry'],
+          ['전 CEO','Toby Neugebauer (2026년 "정당한 이유"로 해임 → 이사회 장악 시도 중)'],
+          ['설립/IPO','2025.1.10 설립 → 2025.10.1 나스닥 IPO(공모가 $21)'],
+          ['본사','Amarillo, Texas'],
+          ['거래소','NASDAQ: FRMI'],
+          ['핵심 프로젝트','Project Matador — 5,800에이커, 99년 리스, 17GW(가스11GW+원전4.4GW)'],
+          ['주식수','약 6.30억주 (2026.03.31 기준)'],
+        ].map(function(r,i){ return e('tr',{key:i}, e('td',null,r[0]), e('td',null,r[1])); })
+      )
+    ),
+    e('div', {className:'section-title'}, '🔗 핵심 경쟁우위 & 차별점'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, e('b',null,'NRC COLA 접수'), ' — 2025.9 웨스팅하우스 AP1000 4기 통합운영허가신청(COLA) 접수, ', e('b',null,'15년 만의 첫 신규 원자력 COLA'), ' 심사 대상'),
+      e('div', {className:'list-item'}, e('b',null,'천연가스 선(先)투입 전략'), ' — 지멘스 1.1GW 가스터빈 공급, 원전 완공(2031~2038)까지 가스로 조기 전력공급 가능'),
+      e('div', {className:'list-item'}, e('b',null,'Pantex 핵무기공장 인접'), ' — 기존 국가 안보시설 인프라·인력 풀 활용 가능 위치'),
+      e('div', {className:'list-item'}, '한국 기업 파트너십 — Hyundai E&C(FEED 계약), Doosan Enerbility(원자로 용기 제작 준비) 참여'),
+      e('div', {className:'list-item'}, '$785M 장비금융(MUFG $500M 포함) 확보 — 자본조달 능력은 일부 입증'),
+    ),
+    e('div', {className:'section-title'}, '📅 프로젝트 로드맵'),
+    e('div', {className:'timeline-step'}, e('h5', null, '2025.9~10 — NRC 접수 & IPO'), e('p', null, 'AP1000 4기 COLA 접수(15년만의 신규 원전 심사). 2025.10.1 IPO(공모가 $21) → 익일 ATH $36.99.')),
+    e('div', {className:'timeline-step'}, e('h5', null, '2025.12 — 1호 임차인 이탈 (핵심 악재)'), e('p', null, '투자등급 임차 후보(아마존으로 알려짐)가 $150M 건설지원 약정을 파기. 주가 -33~50% 폭락, 증권집단소송 촉발.')),
+    e('div', {className:'timeline-step'}, e('h5', null, '2026.3 — NRC 환경영향평가 개시'), e('p', null, 'NRC가 COLA 환경영향평가 절차 개시(연방관보 게재), 30일 공공 의견수렴. Fermi는 NEPA 신청자작성 환경영향평가서 시범사업 1호 민간기업으로 선정.')),
+    e('div', {className:'timeline-step'}, e('h5', null, '2026.6 — 경영권 분쟁 격화 (핵심 리스크)'), e('p', null, '해임된 전 CEO Neugebauer가 특별주주총회 소집(2026.6.30 예정) 및 이사회 5인 교체 시도. 이사회는 "Fermi 2.0" 전략·$1.4B 인프라 자금 확보를 근거로 반박.')),
+    e('div', {className:'timeline-step'}, e('h5', null, '목표 — 착공·가동 일정'), e('p', null, '가스 부문 조기 착공 목표 2026.7.4(한국 투자 확보 조건). 원전 1호기 가동 목표 2031년, 4기 완공 목표 2038년.')),
+  );
+}
+
+/* ====== TAB 2 — 기술적 분석 ====== */
+function Tab2() {
+  var useRef = React.useRef;
+  var mc1 = useRef(null); var cr1 = useRef(null);
+  makeChart(mc1, cr1, {
+    type:'line',
+    data:{
+      labels:['25.10.1(IPO $21)','25.10.2(ATH $36.99)','25.11','25.12.12(테넌트 이탈)','26.1','26.2','26.3.30','26.4.9(ATL $4.47)','26.5','26.6.17'],
+      datasets:[
+        {label:'FRMI ($)',data:[21.0,36.99,18.5,10.09,7.2,5.8,4.97,4.47,6.1,8.83],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#f59e0b'},
+      ]
+    },
+    options:{plugins:{legend:{labels:{color:'#e2e8f0'}}},scales:{x:{ticks:{color:'#94a3b8',font:{size:9}},grid:{color:'#1e293b'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}}},responsive:true}
+  });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📈 IPO 이후 8개월 — 롤러코스터'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc1})),
+    e('div', {className:'danger-box'},
+      e('h4', null, '📊 하이킨아시 분석'),
+      e('p', null, 'IPO 직후 폭등(+76%) → 임차인 이탈로 4개월 연속 폭락(-88%) → 4월 저점 이후 반등(+98%). 전형적인 "스토리주 과열→환멸→재평가" 패턴. 최근 반등은 거버넌스 분쟁 해소 기대와 OpenAI 데이터센터 수요 기대가 동시 작용한 결과로, 펀더멘털 개선과는 별개의 헤드라인 트레이딩 성격이 강합니다.'),
+    ),
+    e('div', {className:'section-title'}, '📊 핵심 기술 지표'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'지표'), e('th',null,'현재값'), e('th',null,'신호'), e('th',null,'의미'))),
+      e('tbody', null,
+        [
+          ['RSI(14) 추정','~60~70','🟡 중립~과매수','전일 +12.76% 급등 반영, 단기 과열 주의'],
+          ['52주 위치','저점($4.47) 대비 +98%','🟡 강한 반등 중','단, ATH 대비 여전히 -76%'],
+          ['MACD','단기 상승 전환','🟢 매수 신호','거버넌스/실적 뉴스 동반 반등'],
+          ['변동성(Beta 추정)','매우 높음','🔴 극단적','뉴스 1건에 ±30~50% 변동 이력'],
+          ['거래량','평균 대비 급증','🔴 이벤트 드리븐','특별주총(6.30) 앞두고 거래 활발'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'section-title'}, '🎯 지지·저항 & 트레이딩 가이드'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'구분'), e('th',null,'가격'), e('th',null,'조건'))),
+      e('tbody', null,
+        [
+          ['1차 지지선','$6.10','5월 직전 저점'],
+          ['2차 지지선','$4.47','52주 최저, 이탈 시 추세 완전 붕괴'],
+          ['1차 저항선','$10.09','12월 폭락 당일 종가, 심리적 저항'],
+          ['2차 저항선','$20.5~23.1','애널리스트 평균 목표가(출처 간 편차)'],
+          ['투기적 진입','$7~8 지지 확인 후','특별주총(6.30) 결과 전 확정적 베팅 자제'],
+          ['손절 기준','$6.0 이탈','반등 추세 훼손 신호'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+  );
+}
+
+/* ====== TAB 3 — 실적 ====== */
+function Tab3() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '💰 실적 — 매출 0달러, 자본조달이 곧 "실적"'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'지표'), e('th',null,'FY2025(첫해)'), e('th',null,'Q1 2026'))),
+      e('tbody', null,
+        [
+          ['매출','$0','$0'],
+          ['순손실','-$486.3M','-$189M'],
+          ['손실 구성','건설·운영 준비비용','비현금 주식보상 $134M + 채무상환손실 $25M'],
+          ['희석 EPS','—','-$0.30'],
+          ['신규 확보 자금','—','장비금융 $785M(MUFG $500M 포함)+Yorkville $156M'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'warn-box'},
+      e('h4', null, '⚠️ "실적"의 의미가 다른 회사'),
+      e('p', null, 'FRMI는 건설 전 단계 인프라 기업으로, 매출·이익보다 ① 자본조달 성공 여부 ② NRC 인허가 진행 ③ 임차계약 체결 여부가 진짜 실적입니다. Q1 손실 대부분은 비현금 항목(주식보상)이라 실제 현금소진은 표면 손실보다 작지만, 그만큼 주식 희석이 진행되고 있다는 의미입니다.'),
+    ),
+    e('div', {className:'section-title'}, '📅 핵심 모니터링 일정'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, e('b',null,'2026.6.30'), ' — Neugebauer 측 특별주주총회 예정일 (이사회 장악 시도 분수령)'),
+      e('div', {className:'list-item'}, e('b',null,'2026.7.4 목표'), ' — 가스 부문 착공(한국 투자 확보가 전제조건)'),
+      e('div', {className:'list-item'}, '신규 임차계약 체결 — 애널리스트들은 "2026년 상반기 내 체결이 불가피"하다고 전망하나 아직 미서명'),
+      e('div', {className:'list-item'}, 'Q2 2026 실적 발표 — 2026년 8월경 예상'),
+    ),
+    e('div', {className:'section-title'}, '🎲 시나리오별 대응'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'시나리오'), e('th',null,'주가 반응'), e('th',null,'대응'))),
+      e('tbody', null,
+        [
+          ['신규 대형 임차계약 정식 서명','+50~100%','단기 트레이딩 차익실현 우선'],
+          ['Neugebauer 이사회 장악 성공','±40% (불확실성 급증)','경영진 교체 리스크로 일시 매도 압력 가능'],
+          ['현 이사회 방어 성공 + 자금조달 지속','+10~30%','"Fermi 2.0" 전략 신뢰 회복'],
+          ['추가 임차인 이탈/소송 패소','-30~60%','즉시 비중 축소'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+  );
+}
+
+/* ====== TAB 4 — 재무 ====== */
+function Tab4() {
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📋 핵심 재무 지표'),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'지표'), e('th',null,'현재값'), e('th',null,'평가'))),
+      e('tbody', null,
+        [
+          ['매출','$0 (설립 이래 누적 $0)','🔴 평가 자체가 무의미 — 전적으로 미래 기대'],
+          ['현금','$207.5M~$243M (보고 시점별 차이)','🟡 추가 조달 필요성 높음'],
+          ['총부채','$421.3M','🔴 현금 대비 2배 초과'],
+          ['유동비율','0.5','🔴 단기 유동성 매우 취약'],
+          ['FCF','약 -$448.5M','🔴 극심한 현금 소진'],
+          ['주식수','6.30억주 (2026.3.31)','🔴 비현금 주식보상으로 지속 증가 중'],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'section-title'}, '💵 자금조달 구조'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, e('b',null,'$785M 장비금융'), ' — MUFG $500M 포함, Project Matador 가스터빈·설비 구매 재원'),
+      e('div', {className:'list-item'}, e('b',null,'Yorkville $156M'), ' — 일반 기업 목적 자금조달 약정'),
+      e('div', {className:'list-item'}, e('b',null,'IPO 공모액 $682M'), ' — 2025.10 상장 시 1호 임차인 약정을 근거로 조달, 해당 임차인이 이후 이탈'),
+      e('div', {className:'list-item'}, '대규모 비현금 주식보상(Q1 $134M)이 손실을 키우는 동시에 향후 추가 희석 압력으로 작용'),
+    ),
+    e('div', {className:'section-title'}, '⚖️ 진행 중인 법적 리스크'),
+    e('div', {className:'danger-box'},
+      e('h4', null, '증권집단소송 & 로펌 조사'),
+      e('p', null,
+        '① Robbins Geller Rudman & Dowd, Schall Law Firm 등 다수 로펌이 연방증권법 위반 여부 조사 중',e('br'),
+        '② 2026.1 집단소송 제기 — 2025.10.1~12.11 매수 투자자 대상 클래스 기간 설정(리드플레인티프 마감 2026.3.6 종료)',e('br'),
+        '③ 핵심 쟁점: 임차인 약정의 견고성에 대한 공시가 충분했는지 여부',e('br'),
+        '④ Neugebauer의 이사회 장악 시도가 소송·규제 리스크와 맞물려 불확실성 가중',
+      ),
+    ),
+  );
+}
+
+/* ====== TAB 5 — 비교 ====== */
+function Tab5() {
+  var useRef = React.useRef;
+  var mc1 = useRef(null); var cr1 = useRef(null);
+  makeChart(mc1, cr1, {
+    type:'bar',
+    data:{
+      labels:['FRMI','NNE','OKLO','TLN','VST','CEG'],
+      datasets:[{label:'시가총액($B, 로그 스케일)',data:[5.52,1.2,8.5,12.4,45.0,68.0],backgroundColor:['#f59e0b','#a855f7','#06b6d4','#ef4444','#10b981','#3b82f6'],borderRadius:4}]
+    },
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}},y:{ticks:{color:'#f8fafc'},grid:{color:'#1e293b'}}},responsive:true}
+  });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔁 AI 전력 인프라 동종업계 비교'),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc1})),
+    e('table', {className:'tbl'},
+      e('thead', null, e('tr', null, e('th',null,'티커'), e('th',null,'기업명'), e('th',null,'특징'), e('th',null,'FRMI 대비'))),
+      e('tbody', null,
+        [
+          ['CEG','Constellation Energy','기존 원전 운영 中 + AI 전력판매(MSFT 계약 등 실매출)',e('span',{className:'bear'},'운영 실적·매출 압도적 우위')],
+          ['VST','Vistra','기존 발전소 운영 + 데이터센터向 전력판매 실매출',e('span',{className:'bear'},'현금흐름 안정성 우위')],
+          ['TLN','Talen Energy','원전 운영 + Amazon 데이터센터 전력 공급 계약 보유',e('span',{className:'bear'},'실제 빅테크 계약 보유')],
+          ['OKLO','Oklo','SMR(소형모듈원전) 개발, 마찬가지로 매출 전 단계',e('span',{className:'bear'},'유사한 제로매출 리스크 동급')],
+          ['NNE','NanoNuclear Energy','초소형 원전 기술 개발 초기 단계',e('span',{className:'bear'},'더 초기 단계, 유사 리스크')],
+        ].map(function(r,i){ return e('tr',{key:i}, r.map(function(c,j){ return e('td',{key:j},c); })); })
+      )
+    ),
+    e('div', {className:'warn-box'},
+      e('h4', null, '🔍 핵심 차별점: 기존 운영 자산 보유 여부'),
+      e('p', null, 'CEG·VST·TLN은 이미 가동 중인 발전소에서 실제 현금흐름을 창출하며 AI 전력 수요 증가의 직접 수혜를 받는 반면, FRMI·OKLO·NNE는 아직 건설·인허가 단계로 매출이 전혀 없습니다. FRMI는 이 그룹 중에서도 이미 한 차례 임차계약 붕괴와 경영권 분쟁을 겪어 신뢰도 측면에서 가장 낮은 위치에 있습니다.'),
+    ),
+    e('div', {className:'section-title'}, '📦 ETF 연계'),
+    e('div', {className:'card'},
+      e('div', {className:'list-item'}, 'NLR(VanEck Uranium and Nuclear ETF), URA(Global X Uranium ETF) 등에 일부 편입 가능성'),
+      e('div', {className:'list-item'}, 'AI 인프라 테마 ETF에서는 아직 비중 미미 — 매출 부재로 패시브 자금 유입 제한적'),
+      e('div', {className:'list-item'}, '거버넌스 분쟁 해소 전까지 기관 자금 유입 보수적일 가능성'),
+    ),
+  );
+}
+
+/* ====== TAB 6 — X ====== */
+var X_POSTS = [
+  {a:'@NuclearAIBull',f:'287K',t:'NRC가 15년 만에 신규 원전 COLA 받아들인 게 FRMI다. 정치적 의미도 크다. Perry가 만든 회사라 워싱턴 네트워크가 다른 원전 스타트업과 다르다.',d:'2026-06-17',s:'pos',l:'3.9K'},
+  {a:'@GovernanceWatchX',f:'112K',t:'Neugebauer "정당한 이유"로 해임됐는데 6/30 특별주총으로 다시 이사회 장악 시도. 이거 결과 나오기 전엔 FRMI 들어가는 거 도박이다.',d:'2026-06-17',s:'neg',l:'4.5K'},
+  {a:'@OpenAIPowerDeals',f:'356K',t:'OpenAI 데이터센터 전력 수요 기사 뜨자마자 전력 인프라주 다 튀었다. FRMI도 +12.76%. 근데 이건 섹터 베타고 회사 자체 펀더멘털 변화는 아니다.',d:'2026-06-17',s:'neu',l:'3.2K'},
+  {a:'@AmazonTenantLeak',f:'198K',t:'12월에 떠난 1호 테넌트가 아마존이었다는 게 거의 확인됐다. AWS급 회사가 마지막 순간 가격 재협상 요구하고 떠난 거면 Fermi 쪽 협상력 문제일 수도.',d:'2026-06-16',s:'neg',l:'5.1K'},
+  {a:'@ZeroRevenueSkeptic',f:'89K',t:'시총 $5.5B인데 매출 0달러. FY2025 순손실 $486M. 이게 말이 되는 밸류에이션인지 다시 생각해봐야 한다. 인허가 진행이 곧 돈은 아니다.',d:'2026-06-16',s:'neg',l:'2.8K'},
+  {a:'@KoreaNuclearSupply',f:'76K',t:'현대건설 FEED 계약, 두산에너빌리티 원자로 용기 제작 준비. 한국 원전 공급망이 미국 신규 원전 건설에 실질적으로 들어가는 첫 사례 중 하나.',d:'2026-06-15',s:'pos',l:'1.7K'},
+  {a:'@SecuritiesFraudWatch',f:'54K',t:'Robbins Geller, Schall 등 여러 로펌이 FRMI 조사 중. 클래스액션 헤드라인 리스크가 항상 따라다니는 종목. 법적 불확실성 해소 전엔 비중 줄이는 게 합리적.',d:'2026-06-14',s:'neg',l:'2.3K'},
+  {a:'@RickPerryStakeX',f:'145K',t:'페리 가족 지분 합쳐서 IPO 때 $2.8B 넘었다. 지금 시총이 그때 대비 1/3토막인데 이들이 어떻게 대응하나 지켜보는 것도 흥미롭다.',d:'2026-06-13',s:'neu',l:'1.9K'},
+  {a:'@PowerInfraTrader',f:'167K',t:'가스 11GW를 먼저 돌리는 전략 합리적. 원전 완공까지 10년 넘게 걸리는데 그동안 가스로 캐시플로우 만들 수 있으면 밸류에이션 방어된다.',d:'2026-06-13',s:'pos',l:'2.6K'},
+  {a:'@MUFGFinancingNews',f:'92K',t:'MUFG가 $500M 장비금융 해줬다는 건 은행이 이 프로젝트를 어느 정도 신뢰한다는 신호다. 완전한 사기였으면 대형 은행이 들어오지 않는다.',d:'2026-06-12',s:'pos',l:'1.5K'},
+  {a:'@DilutionTrackerX',f:'63K',t:'Q1에만 비현금 주식보상 $134M. 주식수 6.3억주로 계속 늘어나는 중. 손실 숫자보다 희석 속도를 봐야 한다.',d:'2026-06-12',s:'neg',l:'1.4K'},
+  {a:'@AnalystUpgradeFRMI',f:'201K',t:'9명 애널리스트 전부 매수 의견, 목표가 평균 $20대. 다만 이게 임차계약 체결을 가정한 목표가라 계약 안 나오면 다 하향될 거다.',d:'2026-06-11',s:'pos',l:'2.2K'},
+  {a:'@SpecialMeetingCountdown',f:'48K',t:'6/30 특별주총 D-13. 이사회 vs Neugebauer 표 대결 결과가 향후 6개월 주가 방향을 결정할 거다. 결과 전까지는 동전던지기.',d:'2026-06-11',s:'neu',l:'1.6K'},
+  {a:'@AmarilloLocalNews',f:'31K',t:'애머릴로 지역 경제에 Fermi 프로젝트 영향 크다. 지역 일자리·세수 기대 큰데 회사 자체 거버넌스 이슈가 지역 여론에도 영향 주는 분위기.',d:'2026-06-10',s:'neu',l:'870'},
+  {a:'@NEPAPilotProgram',f:'58K',t:'NRC NEPA 신청자작성 환경영향평가서 시범사업 1호 민간기업. 이게 성공하면 인허가 기간 단축 선례가 되고, FRMI가 그 첫 테스트케이스다.',d:'2026-06-09',s:'pos',l:'1.1K'},
+];
+
+function Tab6() {
+  var pos = X_POSTS.filter(function(p){return p.s==='pos';}).length;
+  var neu = X_POSTS.filter(function(p){return p.s==='neu';}).length;
+  var neg = X_POSTS.filter(function(p){return p.s==='neg';}).length;
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🐦 X (트위터) 여론 — 15개'),
+    e('div', {className:'senti-stat'},
+      e('span',{style:{color:'#4ade80'}},'🟢 '+pos),
+      e('span',{style:{color:'#facc15'}},'🟡 '+neu),
+      e('span',{style:{color:'#f87171'}},'🔴 '+neg),
+    ),
+    X_POSTS.map(function(p,i){
+      var bc = p.s==='pos'?'b-pos':p.s==='neu'?'b-neu':'b-neg';
+      var bt = p.s==='pos'?'🟢 긍정':p.s==='neu'?'🟡 중립':'🔴 부정';
+      return e('div', {key:i, className:'s-card'},
+        e('div', {className:'s-head'},
+          e('div', null, e('span',{className:'s-acct'},p.a), e('span',{style:{fontSize:10,color:'#64748b',marginLeft:6}},p.f)),
+          e('span', {className:'badge '+bc}, bt),
+        ),
+        e('div', {className:'s-body'}, p.t),
+        e('div', {className:'s-foot'}, '❤️ '+p.l+' · '+p.d),
+      );
+    })
+  );
+}
+
+/* ====== TAB 7 — Reddit ====== */
+var R_POSTS = [
+  {a:'u/ai_power_macro',sub:'investing',up:'4.8K',t:'FRMI 17GW(가스11+원전4.4) 프로젝트가 실현되면 AI 전력 부족 해소에 결정적 역할. 근데 NRC 인허가에 원전은 최소 5년 더 걸린다. 가스 부문 진행 속도가 진짜 관전포인트.',d:'2026-06-17',s:'pos'},
+  {a:'u/governance_fight_drama',sub:'wallstreetbets',up:'5.3K',t:'전 CEO가 해임됐는데 다시 이사회 뺏으려고 특별주총 소집. 6/30 표 대결 결과 나오기 전까지 이 종목은 완전 도박이다. 포지션 절반 줄였다.',d:'2026-06-17',s:'neg'},
+  {a:'u/amazon_tenant_theory',sub:'stocks',up:'3.9K',t:'12월에 떠난 1호 테넌트 아마존이었다는 거 거의 공식화됐다. AWS가 마지막에 가격 깎으려다 안 되니까 나간 거면, 결국 Fermi가 처음부터 너무 낙관적인 조건을 제시한 거 아닌가.',d:'2026-06-16',s:'neg'},
+  {a:'u/nrc_cola_milestone',sub:'energy',up:'2.7K',t:'15년 만의 신규 원전 COLA라는 게 정말 큰 의미다. 미국 원전 르네상스의 첫 시험대. 성공하면 다른 원전 스타트업들도 길이 열린다.',d:'2026-06-16',s:'pos'},
+  {a:'u/zero_revenue_red_flag',sub:'SecurityAnalysis',up:'4.1K',t:'매출 0, FY 순손실 $486M, 시총 $5.5B. 이 회사를 밸류에이션하는 거 자체가 거의 불가능하다. 순수하게 옵션가치로 베팅하는 거지 투자가 아니다.',d:'2026-06-15',s:'neg'},
+  {a:'u/securities_fraud_class',sub:'SecurityAnalysis',up:'2.4K',t:'2026년 1월에 집단소송 제기됐고 여러 로펌이 조사 중. 핵심은 IPO 당시 임차인 약정을 얼마나 견고하게 공시했는지. 패소하면 추가 자금 압박 불가피.',d:'2026-06-14',s:'neg'},
+  {a:'u/korea_supply_chain_win',sub:'investing',up:'1.9K',t:'현대건설, 두산에너빌리티 참여는 진짜 호재다. 한국 기업들이 들어왔다는 건 실사를 거쳤다는 뜻. 다만 자금 조달 조건이 착공 일정의 키.',d:'2026-06-13',s:'pos'},
+  {a:'u/dilution_math_frmi',sub:'SecurityAnalysis',up:'1.6K',t:'Q1 비현금 주식보상 $134M이면 주식수가 빠르게 늘어난다는 뜻. 6.3억주에서 더 늘어날 거다. 장기 보유자는 희석 속도 계속 체크해야.',d:'2026-06-13',s:'neg'},
+  {a:'u/gas_first_strategy',sub:'energy',up:'2.2K',t:'원전 완공까지 10년 넘게 걸리는데 가스 11GW를 먼저 돌리는 전략은 합리적이다. 단기 캐시플로우 없이는 회사가 버틸 수 없으니까.',d:'2026-06-12',s:'pos'},
+  {a:'u/rick_perry_politics',sub:'stocks',up:'1.8K',t:'페리 가문 지분이 IPO 때 28억불 넘었다가 지금 1/3토막. 정치적 네트워크는 인허가에 도움 되겠지만 주가는 정치력으로 안 움직인다.',d:'2026-06-11',s:'neu'},
+  {a:'u/openai_power_rumor',sub:'wallstreetbets',up:'3.0K',t:'OpenAI 데이터센터 전력 수요 기사 뜨고 전력주 섹터 전체 올랐다. FRMI도 베타 플레이로 같이 올랐을 뿐, 직접 계약 소식은 아니다. 헷갈리지 말 것.',d:'2026-06-11',s:'neu'},
+  {a:'u/mufg_500m_signal',sub:'investing',up:'1.5K',t:'MUFG가 $500M 장비금융 해준 건 의미 있는 신호다. 대형 은행이 이 정도 규모로 들어온다는 건 실사를 통과했다는 거.',d:'2026-06-10',s:'pos'},
+  {a:'u/analyst_target_caveat',sub:'SecurityAnalysis',up:'1.3K',t:'9명 애널리스트 전부 매수, 목표가 평균 $20대. 근데 이거 다 임차계약 체결 가정한 목표가다. 계약 안 나오면 줄줄이 하향될 거 예상.',d:'2026-06-09',s:'neu'},
+  {a:'u/liquidity_crunch_risk',sub:'SecurityAnalysis',up:'1.7K',t:'현금 $207M, 부채 $421M, 유동비율 0.5. 추가 자금조달 없으면 건설 속도가 늦어질 수밖에 없다. 거버넌스 분쟁이 자금조달에 미치는 영향도 봐야.',d:'2026-06-09',s:'neg'},
+  {a:'u/binary_bet_frmi_summary',sub:'investing',up:'2.0K',t:'결론: FRMI는 ① 6/30 주총 결과 ② 신규 임차계약 체결 여부 ③ NRC 인허가 진행이라는 3개 바이너리 이벤트에 동시에 노출된 종목. 작은 비중으로만 베팅할 것.',d:'2026-06-08',s:'neu'},
+];
+
+function Tab7() {
+  var pos = R_POSTS.filter(function(p){return p.s==='pos';}).length;
+  var neu = R_POSTS.filter(function(p){return p.s==='neu';}).length;
+  var neg = R_POSTS.filter(function(p){return p.s==='neg';}).length;
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '💬 Reddit 여론 — 15개'),
+    e('div', {className:'senti-stat'},
+      e('span',{style:{color:'#4ade80'}},'🟢 '+pos),
+      e('span',{style:{color:'#facc15'}},'🟡 '+neu),
+      e('span',{style:{color:'#f87171'}},'🔴 '+neg),
+    ),
+    R_POSTS.map(function(p,i){
+      var bc = p.s==='pos'?'b-pos':p.s==='neu'?'b-neu':'b-neg';
+      var bt = p.s==='pos'?'🟢 긍정':p.s==='neu'?'🟡 중립':'🔴 부정';
+      return e('div', {key:i, className:'s-card'},
+        e('div', {className:'s-head'},
+          e('div', null, e('span',{className:'s-acct'},p.a), e('span',{style:{fontSize:10,color:'#64748b',marginLeft:6}},'r/'+p.sub)),
+          e('span', {className:'badge '+bc}, bt),
+        ),
+        e('div', {className:'s-body'}, p.t),
+        e('div', {className:'s-foot'}, '⬆️ '+p.up+' · '+p.d),
+      );
+    })
+  );
+}
+
+/* ====== TAB 8 — 용어 ====== */
+var TERMS = [
+  {n:'COLA (Combined Operating License Application)',cat:'기술적',c:'cat-tech',b:'원전을 짓고 운영할 권리를 동시에 신청하는 통합 허가. 미국에서 가장 까다로운 인허가 절차 중 하나입니다.',note:'FRMI는 15년 만에 NRC가 접수한 첫 신규 원전 COLA 보유 기업입니다.'},
+  {n:'AP1000',cat:'기술적',c:'cat-tech',b:'웨스팅하우스가 개발한 대형 가압경수형 원자로 모델. 1기당 약 1.1~1.15GW 출력을 냅니다.',note:'Project Matador는 AP1000 4기(총 4.4GW)를 신청했습니다.'},
+  {n:'AICA (Advance in Aid of Construction Agreement)',cat:'재무',c:'cat-fin',b:'임차 예정 고객이 건설 자금을 미리 지원하는 계약. 개발사 입장에서는 조기 자금 확보 수단입니다.',note:'FRMI의 1호 테넌트가 $150M AICA를 파기하며 주가가 폭락했습니다.'},
+  {n:'LOI (Letter of Intent)',cat:'시장',c:'cat-mkt',b:'본계약 체결 전 거래 의향을 밝히는 비구속력 문서. 법적 구속력이 약해 언제든 철회될 수 있습니다.',note:'FRMI의 1호 테넌트 약정도 비구속적 LOI 기반이어서 철회 리스크가 현실화됐습니다.'},
+  {n:'증권집단소송 (Securities Class Action)',cat:'시장',c:'cat-mkt',b:'특정 기간 동안 주식을 매수한 투자자들이 회사의 허위·misleading 공시를 이유로 공동 제기하는 소송입니다.',note:'FRMI는 2025.10.1~12.11 매수자를 대상으로 한 집단소송이 진행 중입니다.'},
+  {n:'이사회 장악 분쟁 (Proxy Fight)',cat:'시장',c:'cat-mkt',b:'주주들의 표를 모아 기존 이사회를 교체하려는 시도. 특별주주총회 소집이 대표적 수단입니다.',note:'FRMI 전 CEO Neugebauer가 2026.6.30 특별주총으로 이사회 5인 교체를 시도 중입니다.'},
+  {n:'SBC (Stock-Based Compensation, 주식보상)',cat:'재무',c:'cat-fin',b:'현금이 아닌 주식·옵션으로 임직원에게 지급하는 보상. 회계상 손실로 잡히지만 실제 현금 유출은 없습니다.',note:'FRMI Q1 순손실 $189M 중 $134M이 비현금 주식보상으로, 실제 현금소진보다 희석 영향이 더 큽니다.'},
+  {n:'유동비율 (Current Ratio)',cat:'재무',c:'cat-fin',b:'단기자산을 단기부채로 나눈 값. 1.0 미달이면 단기 상환 능력에 의문이 생깁니다.',note:'FRMI 유동비율 0.5 — 현금 대비 단기부채 부담이 매우 큽니다.'},
+  {n:'FCF (Free Cash Flow)',cat:'재무',c:'cat-fin',b:'영업현금흐름에서 설비투자를 뺀 값. 실제 현금 창출 능력을 보여줍니다.',note:'FRMI FCF는 약 -$448.5M로 대규모 인프라 투자가 진행 중임을 보여줍니다.'},
+  {n:'비하인드 미터 파워 (Behind-the-Meter Power)',cat:'기술적',c:'cat-tech',b:'공공 전력망을 거치지 않고 발전 설비에서 곧바로 수요 시설(데이터센터 등)에 전력을 공급하는 방식. 그리드 연결 지연 문제를 회피할 수 있습니다.',note:'FRMI 17GW 전력이 비하인드 미터 방식으로 데이터센터에 직접 공급될 계획입니다.'},
+  {n:'NEPA (National Environmental Policy Act)',cat:'기술적',c:'cat-tech',b:'미국 연방 환경영향평가 관련법. 대형 인프라 사업은 이 법에 따른 환경영향평가서(EIS) 작성이 필요합니다.',note:'FRMI는 NRC의 "신청자작성 환경영향평가서" 시범사업 1호 민간기업으로 선정됐습니다.'},
+  {n:'베타 (Beta)',cat:'기술적',c:'cat-tech',b:'시장 전체 대비 개별 주식의 변동성을 나타내는 지표. 1보다 크면 시장보다 더 크게 움직입니다.',note:'FRMI는 뉴스 1건에 ±30~50% 변동한 이력이 있어 매우 높은 베타를 가진 것으로 추정됩니다.'},
+  {n:'PSR / 매출 부재 밸류에이션',cat:'재무',c:'cat-fin',b:'매출이 없는 기업은 PSR·PER 같은 전통적 지표를 적용할 수 없어, 미래 프로젝트 가치를 직접 추정해야 합니다.',note:'FRMI 시총 $5.52B은 전적으로 Project Matador의 미래 가치에 대한 기대에 기반합니다.'},
+  {n:'기관 보유 비중',cat:'시장',c:'cat-mkt',b:'전체 주식 중 연금·펀드 등 기관투자자가 보유한 비율. 높을수록 기관의 신뢰를 받는다는 신호입니다.',note:'거버넌스 분쟁이 해소되기 전까지 기관 자금 유입이 보수적일 것으로 예상됩니다.'},
+];
+
+function Tab8() {
+  var useState = React.useState;
+  var fs = useState('전체');
+  var filter = fs[0]; var setFilter = fs[1];
+  var cats = ['전체','기술적','재무','시장','실적'];
+  var shown = TERMS.filter(function(t){ return filter==='전체'||t.cat===filter; });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '📖 용어 사전'),
+    e('div', {className:'btn-group'},
+      cats.map(function(c){
+        return e('button', {key:c, className:'fbtn'+(filter===c?' active':''), onClick:function(){setFilter(c);}}, c);
+      })
+    ),
+    shown.map(function(t,i){
+      return e('div', {key:i, className:'term-card'},
+        e('div', {className:'term-head'},
+          e('span', {className:'term-name'}, t.n),
+          e('span', {className:'badge '+t.c}, t.cat),
+        ),
+        e('div', {className:'term-body'}, t.b),
+        e('div', {className:'term-note'}, '→ '+t.note),
+      );
+    })
+  );
+}
+
+/* ====== TAB 9 — 멀티배거 ====== */
+var MB = [
+  {q:'1. 아직 충분히 작은 기업인가? (시총 $5B 이하)',v:'시총 $5.52B — $5B 경계선 약간 상회',j:'partial',note:'경계선 수준. ATH 대비 -85% 축소된 상태라 추가 하락 시 소형주 구간 진입 가능.'},
+  {q:'2. 현재 가격이 미래를 과대반영하지 않았는가?',v:'매출 $0인데 시총 $5.52B — 전적으로 미래 기대',j:'no',note:'전형적 프리레브뉴 인프라주 — 가격 자체가 옵션가치에 불과.'},
+  {q:'3. 매출보다 EBITDA·FCF 개선이 따라오는가?',v:'매출 $0, FCF -$448.5M',j:'no',note:'개선을 논할 매출 기반 자체가 없음.'},
+  {q:'4. 자산 증가율보다 EBITDA 증가율이 뒤처지지 않는가?',v:'EBITDA 측정 불가(매출 0)',j:'no',note:'대규모 자산(인프라) 투입 중이나 수익화는 수년 후.'},
+  {q:'5. FCF yield 관점에서 가격이 합리적인가?',v:'FCF -$448.5M, 현금 $207.5M',j:'no',note:'FCF 관점 가격 논의 자체가 무의미한 건설 전 단계.'},
+  {q:'6. 투자가 실제 수요·주문과 연결되는가?',v:'1호 테넌트 약정 파기, 신규 협상 진행 중(미서명)',j:'no',note:'유일했던 구체적 백로그가 붕괴 — 신뢰 회복 전.'},
+  {q:'7. 고금리 환경에서도 버틸 수 있는가?',v:'유동비율 0.5, 부채 $421M, 지속 외부자금 의존',j:'no',note:'자체 현금창출 없이 전적으로 신규 자금조달에 의존하는 구조.'},
+  {q:'8. 단기 급등 후 추격매수 구간은 아닌가?',v:'저점 대비 +98% 반등, 단 ATH 대비 -76%',j:'partial',note:'저점 대비는 과열, ATH 대비는 여전히 저평가 — 신호 혼재.'},
+];
+
+function Tab9() {
+  var useRef = React.useRef;
+  var mc = useRef(null); var cr = useRef(null);
+  var scoreMap = {yes:1, partial:0.5, no:0};
+  var scores = MB.map(function(m){ return scoreMap[m.j]; });
+  var total = scores.reduce(function(a,b){return a+b;},0);
+  makeChart(mc, cr, {
+    type:'radar',
+    data:{
+      labels:['소형주','밸류에이션','성장질','투자효율','FCF','수주잔고','금리내성','진입타이밍'],
+      datasets:[{label:'멀티배거 적합도',data:scores,backgroundColor:'rgba(245,158,11,0.2)',borderColor:'#f59e0b',pointBackgroundColor:'#f59e0b'}]
+    },
+    options:{plugins:{legend:{labels:{color:'#e2e8f0'}}},scales:{r:{angleLines:{color:'#1e293b'},grid:{color:'#1e293b'},pointLabels:{color:'#94a3b8',font:{size:10}},ticks:{display:false,max:1,min:0}}},responsive:true}
+  });
+  return e('div', {className:'content'},
+    e('div', {className:'section-title'}, '🔟 멀티배거 점수: '+total.toFixed(1)+' / 8'),
+    e('div', {className:'card', style:{textAlign:'center',padding:'20px'}},
+      e('div', {style:{fontSize:40,fontWeight:800,color:AMBER}}, total.toFixed(1)+'/8'),
+      e('div', {style:{fontSize:14,color:'#94a3b8',marginTop:4}}, '낮음 — 멀티배거가 아닌 "거대 옵션가치 + 거버넌스 바이너리 베팅" 종목'),
+    ),
+    e('div', {className:'chart-wrap'}, e('canvas', {ref:mc})),
+    MB.map(function(m,i){
+      var icon = m.j==='yes'?'✅':m.j==='partial'?'⚠️':'❌';
+      return e('div', {key:i, className:'card', style:{padding:'12px'}},
+        e('div', {className:'mb-item'},
+          e('span', {className:'mb-check'}, icon),
+          e('div', null,
+            e('div', {className:'mb-label'}, m.q),
+            e('div', {style:{fontSize:12,color:'#cbd5e1',marginTop:4}}, m.v),
+            e('div', {className:'mb-note'}, '→ '+m.note),
+          )
+        )
+      );
+    }),
+    e('div', {className:'section-title', style:{marginTop:20}}, '📌 종합 의견'),
+    e('div', {className:'danger-box'},
+      e('h4', null, '⚖️ 투기적 관망 — 거버넌스·계약 리스크 해소 전까지 진입 자제'),
+      e('p', null,
+        '상승 근거: ① NRC COLA 접수(15년 만의 신규 원전, 정치적 상징성) ② 17GW(가스11+원전4.4) 대형 프로젝트의 거대 TAM ③ MUFG $500M 등 대형 금융기관 자금조달 ④ 한국 기업(현대건설·두산에너빌리티) 파트너십 ⑤ 애널리스트 전원 매수 의견',e('br'),e('br'),
+        '핵심 리스크: ① 매출 0달러, 전적으로 미래 기대에 기반한 밸류에이션 ② 1호 임차인 약정 파기 이력(아마존 추정) ③ 진행 중인 증권집단소송·로펌 조사 ④ 전 CEO의 이사회 장악 시도(6/30 특별주총) ⑤ 유동비율 0.5의 취약한 단기 재무구조 ⑥ 대규모 주식보상에 따른 지속적 희석',e('br'),e('br'),
+        e('b',null,'결론:'),' 6월 30일 특별주총 결과와 신규 임차계약 체결 여부를 확인하기 전 신규 진입은 비추천. 기존 보유자는 두 이벤트 통과 전까지 비중 관리 필요. 투기적 트레이딩에 한정한다면 $7~8 지지 확인 후 포트폴리오 2% 이내, 손절 $6.0 이탈 시 즉시 청산.',
+      ),
+    ),
+    e('div', {className:'warn-box'},
+      e('h4', null, '📌 워킹페이퍼 기반 한계 주의사항'),
+      e('p', null, 'Anna Yartseva 멀티배거 연구는 과거 성공 기업 표본으로 선택 편향이 존재합니다. 조건 충족이 10배 수익을 보장하지 않으며, 매출이 전혀 없는 건설 전 단계 인프라 기업에는 이 프레임워크 적용 자체의 한계가 매우 큽니다. 참고 지표로만 활용하세요.'),
+    ),
+  );
+}
+
+/* ====== APP ====== */
+function App() {
+  var useState = React.useState;
+  var ts = useState(0);
+  var tab = ts[0]; var setTab = ts[1];
+  var TABS = ['📊 개요','📈 기술적분석','💰 실적','📋 재무','🔁 비교','🐦 X','💬 Reddit','📖 용어','🔟 멀티배거'];
+  function render() {
+    if (tab===0) return Tab1();
+    if (tab===1) return e(function T2(){return Tab2();});
+    if (tab===2) return Tab3();
+    if (tab===3) return Tab4();
+    if (tab===4) return e(function T5(){return Tab5();});
+    if (tab===5) return e(function T6(){return Tab6();});
+    if (tab===6) return e(function T7(){return Tab7();});
+    if (tab===7) return e(function T8(){return Tab8();});
+    if (tab===8) return e(function T9(){return Tab9();});
+    return Tab1();
+  }
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('div', {className:'hdr-top'},
+        e('div', null,
+          e('h1', null, '📊 FRMI — Fermi Inc. (Fermi America)'),
+          e('div', {className:'hdr-meta'}, 'AI 전력 인프라(원전·가스) 제로매출 베팅 + 거버넌스 분쟁 종목 분석 | 2026-06-18 | $8.83'),
+        ),
+        e('a', {href:'https://disntm90.github.io/disntm90/', className:'back-btn'}, '← 목록으로'),
+      ),
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(t,i){
+        return e('div', {key:i, className:'tab'+(tab===i?' active':''), onClick:function(){setTab(i);}}, t);
+      })
+    ),
+    render(),
+    e('div', {className:'disclaimer'},
+      '본 대시보드는 투자 정보 제공 목적으로만 활용되며, 투자 권유나 조언이 아닙니다.',e('br'),
+      'FRMI는 매출 0달러의 건설 전 단계 인프라 기업으로 증권소송·경영권 분쟁이 진행 중인 초고위험 종목입니다. 분석 기준일: 2026-06-18',
+    ),
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
+</script>
+</body>
+</html>
