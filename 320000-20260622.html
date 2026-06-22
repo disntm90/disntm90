@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>한울반도체(320000) 분석 대시보드 2026-06-22</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#1a2540 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #1e3a5f;}
+.hdr h1{font-size:1.5rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#3b82f6;border-bottom-color:#3b82f6;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #1e3a5f;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#3b82f6;}
+.bx{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#3b82f6;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;white-space:pre-line;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;white-space:pre-line;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;white-space:pre-line;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bb{background:rgba(59,130,246,0.15);color:#3b82f6;}
+canvas{max-width:100%;}
+.tw{background:#0d1426;border:1px solid #1e2d4a;border-radius:8px;padding:11px;margin-bottom:10px;}
+.tw-h{display:flex;gap:8px;align-items:center;margin-bottom:7px;}
+.av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.78rem;color:#fff;flex-shrink:0;}
+.nm{font-size:0.82rem;font-weight:600;color:#e2e8f0;}
+.hd{font-size:0.72rem;color:#64748b;}
+.tx{font-size:0.82rem;color:#cbd5e1;line-height:1.5;}
+.st{display:flex;gap:14px;margin-top:7px;font-size:0.72rem;color:#64748b;}
+.rc{background:#0d1426;border:1px solid #1e2d4a;border-radius:8px;padding:11px;margin-bottom:10px;}
+.rh{font-size:0.82rem;font-weight:600;color:#ff7849;margin-bottom:5px;}
+.rs{font-size:0.71rem;color:#64748b;margin-bottom:7px;}
+.rt{font-size:0.82rem;color:#cbd5e1;line-height:1.5;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(59,130,246,0.04);}
+.ti{border-bottom:1px solid #1e2d4a;padding:11px 0;}
+.ti:last-child{border-bottom:none;}
+.tn{font-size:0.87rem;font-weight:600;color:#3b82f6;margin-bottom:3px;}
+.td{font-size:0.8rem;color:#94a3b8;line-height:1.5;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.1rem;flex-shrink:0;width:26px;text-align:center;padding-top:1px;}
+.mb-lb{flex:1;font-size:0.82rem;color:#cbd5e1;}
+.mb-nt{font-size:0.71rem;color:#64748b;margin-top:2px;}
+.mb-st{font-size:0.78rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:6px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #1e3a5f;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var PRICE_LABELS = ['6/12','6/15','6/16','6/17','6/18','6/19','6/22'];
+var PRICE_DATA   = [8200, 8600, 9450, 11000, 14300, 17820, 22300];
+
+var REV_LABELS = ['2024년(연간)','2025 3Q 누적','Q1 2026(분기)'];
+var REV_DATA   = [94.53, null, 113.32];
+
+var PEERS = [
+  {t:'320000 한울반도체', mc:0.07, c:'#3b82f6'},
+  {t:'052710 아모텍',     mc:0.10, c:'#10b981'},
+  {t:'001820 삼화콘덴서', mc:1.30, c:'#f59e0b'},
+  {t:'6981.T 무라타제작소', mc:161, c:'#a78bfa'},
+];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 개요 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2', null, '🏢 기업 개요'),
+      e('p', {style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.7',marginBottom:'12px'}},
+        '한울반도체(KOSDAQ:320000, 구 윈텍·2024.6 사명변경)는 영상처리+AI 분석 기반 정밀검사장비 전문기업입니다. MLCC(적층세라믹콘덴서) 외관검사기 및 자동 복합 특성검사기(분당 8,000개, 국내 최초 개발)가 핵심 매출원이며, OLED/디스플레이 검사장비·2차전지 동박필름 외관검사·X-ray 검사·AI 머신비전 사업도 함께 영위합니다. 최대주주는 레이저 장비 전문 상장사 이오테크닉스(지분 약 50%, 경영진 포함 70.54%)이며, 2026년 3월 삼성전자 출신 김기원 부회장을 영입했습니다.'
+      ),
+      e('div', {className:'mg'},
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '현재가(6/22 10:30)'), e('div', {className:'vl b'}, '22,300원')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '전일대비'), e('div', {className:'vl g'}, '+25.14%')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '시가총액(추정)'), e('div', {className:'vl y'}, '약 900억원')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, 'PBR'), e('div', {className:'vl y'}, '1.53~2.11x(출처상이)')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, 'PER'), e('div', {className:'vl r'}, '산출불가(적자)')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '주요매출처 비중'), e('div', {className:'vl'}, '오에스티 ~60%')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '최대주주'), e('div', {className:'vl b'}, '이오테크닉스 70.54%')),
+        e('div', {className:'mc'}, e('div', {className:'lb'}, '투자경고종목'), e('div', {className:'vl r'}, '지정예고(6/23 발효)'))
+      )
+    ),
+    e('div', {className:'dx'},
+      e('div', {className:'dt'}, '🔴 투자경고종목 지정예고 (2026.6.23 발효)'),
+      e('div', {className:'dd'}, '2거래일 연속 상한가(6/18, 6/19)에 이어 6/22 장중 추가 +25.14% 급등하며 한국거래소가 단기과열 완화를 위한 투자경고종목 지정을 예고했습니다. 지정 후에는 신용거래 제한·매매정지 등 거래 제약이 발생할 수 있어 추격매수에 극히 신중해야 합니다.')
+    ),
+    e('div', {className:'wx'},
+      e('div', {className:'wt'}, '⚠️ 데이터 변동성·불확실성 안내'),
+      e('div', {className:'wd'}, '2026.4.17 액면병합(5:1, 주당가액 100원→500원)으로 과거 가격·주식수 비교 시 반드시 환산이 필요합니다. 시가총액은 병합+급등 이후 정확한 발행주식수를 확인하지 못해 추정치이며, PBR도 출처에 따라 1.53x~2.11x로 편차가 있습니다. 6/22 가격은 오전 10시30분 시점 기준으로 당일 종가와 다를 수 있습니다.')
+    ),
+    e('div', {className:'card'},
+      e('h2', null, '⚡ 핵심 카탈리스트'),
+      e('div', {className:'bx'},
+        e('div', {className:'bt'}, '🤝 무라타(세계 1위 MLCC사) 마운터 설비 MOU'),
+        e('div', {className:'bd'}, '2026.6.18 일본 후쿠이무라타(무라타제작소 자회사)와 "MFS" MLCC 제조공정용 마운터 설비 공동개발 MOU 체결.\n⚠️ MOU는 법적 구속력 없는 협력의향서이며 구체적 계약금액·물량은 미공개입니다. 확정 공급계약으로 전환되는지가 핵심 관찰포인트입니다.')
+      ),
+      e('div', {className:'bx'},
+        e('div', {className:'bt'}, '🏛️ 중소벤처기업부 국책과제 단독 선정'),
+        e('div', {className:'bd'}, '2026.6.22 "생성형 AI 기반 온디바이스 비전 검사" 과제 단독 선정. 검사속도 분당 7,000개→13,000개, 정확도 95%→98% 목표.\nR&D 보조금 성격의 과제로, 즉시 매출에 기여하는 확정 매출이 아님을 유의해야 합니다.')
+      ),
+      e('div', {className:'bx'},
+        e('div', {className:'bt'}, '👔 임원 자사주 매수'),
+        e('div', {className:'bd'}, '2026.6.1 김기원 부회장(전 삼성전자 부사장) 4,500주 + 대표이사 4,040주 장내 매수. 신규 영입 경영진의 자사주 매수는 신뢰 신호로 해석 가능.')
+      ),
+      e('div', {className:'wx'},
+        e('div', {className:'wt'}, '최대주주 구조'),
+        e('div', {className:'wd'}, '레이저장비 전문 상장사 이오테크닉스가 최대주주(지분 약 50%, 경영진 포함 70.54%)로 경영 안정성 측면에서는 긍정적이나, 유통주식수가 적어 변동성을 키우는 요인이기도 합니다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2', null, '🏗️ 사업부문 매출 비중'),
+      e('div', {className:'table-wrap'},
+        e('table', null,
+          e('thead', null, e('tr', null,
+            e('th', null,'부문'), e('th', null,'내용'), e('th', null,'매출비중')
+          )),
+          e('tbody', null,
+            e('tr', null, e('td',null,'CI'), e('td',null,'MLCC 검사장비(외관검사기·복합특성검사기)'), e('td',null,e('span',{className:'badge bb'},'51.03%'))),
+            e('tr', null, e('td',null,'FI'), e('td',null,'OLED/디스플레이 검사장비'), e('td',null,e('span',{className:'badge by'},'22.51%'))),
+            e('tr', null, e('td',null,'유지보수'), e('td',null,'설비 유지보수·부품'), e('td',null,e('span',{className:'badge bg'},'17.87%'))),
+            e('tr', null, e('td',null,'LI'), e('td',null,'2차전지 동박필름 외관검사·X-ray'), e('td',null,e('span',{className:'badge bb'},'8.45%')))
+          )
+        )
+      ),
+      e('div', {className:'wx'}, e('div',{className:'wd'},'사업부문 구분 및 비중은 단일 출처 기준으로, 추가 검증이 필요한 참고치입니다.'))
+    )
+  );
+}
+
+/* ── Tab 2: 기술적분석 ── */
+function Tab2() {
+  var pr = useRef(null); var pc = useRef(null);
+  makeChart(pr, pc, {
+    type:'line',
+    data:{
+      labels: PRICE_LABELS,
+      datasets:[
+        {label:'한울반도체 주가(원)', data:PRICE_DATA, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.1)', tension:0.3, fill:true, pointBackgroundColor:'#3b82f6'}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},
+        y:{ticks:{color:'#64748b',callback:function(v){return v.toLocaleString()+'원';}},grid:{color:'#1e2d4a'}}
+      }
+    }
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📈 주가 추이 (2026.6, 액면병합 후 기준)'), e('canvas',{ref:pr})),
+    e('div', {className:'wx'},
+      e('div', {className:'wt'}, '⚠️ 2거래일 연속 상한가 + 추가 급등'),
+      e('div', {className:'wd'}, '6/18, 6/19 이틀 연속 상한가(코스닥 ±30%) 기록 후 6/22 장중에도 +25.14% 추가 급등. 6/12 대비 6/22까지 약 8거래일 만에 +170% 이상 상승한 전형적 단기 과열 구간입니다. 차트의 일부 구간(6/12~6/17)은 정확한 일별 종가가 확인되지 않아 추정치입니다.')
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 기술적 지표'),
+      e('div', {className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'RSI(14)'),e('div',{className:'vl r'},'확인 안됨 — 정성적 과매수 추정')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'MA20'),e('div',{className:'vl'},'확인 안됨')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'연속 상한가'),e('div',{className:'vl r'},'2거래일(6/18,6/19)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'6/22 등락률'),e('div',{className:'vl g'},'+25.14%(장중)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'볼린저밴드'),e('div',{className:'vl r'},'상단 이탈 추정')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'단기 누적 상승률(6/12~6/22)'),e('div',{className:'vl r'},'+170%~ 추정'))
+      )
+    ),
+    e('div', {className:'dx'},
+      e('div', {className:'dt'}, '🔴 투자경고종목 지정예고 — 추격매수 경계'),
+      e('div', {className:'dd'}, '거래소가 6/23 투자경고종목으로 지정을 예고할 정도의 단기 급등이며, 정밀한 RSI·이동평균 수치는 확인되지 않았으나 가격 패턴 자체가 명백한 단기 과열 신호입니다. 현재가 추격매수는 권장하지 않으며, 지정 이후 변동성 완화 구간에서의 재평가가 필요합니다.')
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 기술적 신호 요약'),
+      e('div', {className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'지표'),e('th',null,'값'),e('th',null,'신호'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'RSI'),e('td',null,'확인 안됨'),e('td',null,e('span',{className:'badge br'},'추정 과매수'))),
+            e('tr',null,e('td',null,'연속 상한가'),e('td',null,'2거래일'),e('td',null,e('span',{className:'badge br'},'단기 과열'))),
+            e('tr',null,e('td',null,'투자경고종목'),e('td',null,'지정예고(6/23)'),e('td',null,e('span',{className:'badge br'},'거래소 경고'))),
+            e('tr',null,e('td',null,'거래량'),e('td',null,'확인 안됨'),e('td',null,e('span',{className:'badge by'},'관심 집중 추정'))),
+            e('tr',null,e('td',null,'단기 누적상승'),e('td',null,'+170%~(추정)'),e('td',null,e('span',{className:'badge br'},'추격금지 권장')))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 실적 ── */
+function Tab3() {
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{
+      labels:REV_LABELS,
+      datasets:[{label:'매출(억원)', data:REV_DATA, backgroundColor:['#3b82f6','#1e2d4a','#10b981']}]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y==null?'데이터 없음':'매출: '+c.parsed.y+'억원';}}}},
+      scales:{
+        x:{ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},
+        y:{ticks:{color:'#64748b',callback:function(v){return v+'억';}},grid:{color:'#1e2d4a'}}
+      }
+    }
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💰 Q1 2026 핵심 실적'),
+      e('div', {className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'매출'),e('div',{className:'vl g'},'113.32억원')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'매출 YoY'),e('div',{className:'vl g'},'+414.39%')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'영업손실'),e('div',{className:'vl r'},'-42.42억원')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'순손실'),e('div',{className:'vl r'},'-60.61억원')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'2025 3Q누적 매출'),e('div',{className:'vl r'},'-28.1% YoY')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'2025 3Q누적 영업손실'),e('div',{className:'vl r'},'+73% 확대'))
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📊 매출 추이 (기간 단위 상이 — 참고용)'), e('canvas',{ref:rr})),
+    e('div', {className:'wx'},
+      e('div', {className:'wt'}, '⚠️ 차트 단위 주의'),
+      e('div', {className:'wd'}, '2024년은 연간 누적, 2025 3Q는 전년동기 대비 변화율만 확인되어 절대 매출액 데이터를 표시하지 않았습니다(데이터 없음). Q1 2026은 분기 단독 수치입니다. 세 구간은 기간 단위가 달라 직접적인 절대값 비교에는 한계가 있습니다.')
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔑 실적 하이라이트'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'Q1 2026 매출 +414% 급증'),
+        e('div',{className:'bd'},'전년동기 대비 5배 이상 매출 증가. 무라타 MOU·국책과제 등 모멘텀과 시기적으로 맞물려 시장의 관심을 받았으나, 일회성 대형 수주 여부 등 매출 구성의 질은 확인되지 않았습니다.')
+      ),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'매출 급증 vs 손익 악화 — 심각한 괴리'),
+        e('div',{className:'dd'},'매출이 +414% 폭증했음에도 영업손실(-42.4억원)·순손실(-60.6억원)은 오히려 확대되었습니다. "매출은 늘었는데 적자는 더 커지는" 전형적인 성장의 질(Growth Quality) 경고 신호입니다. 2024년 연간(영업손실 -43.98억원, 순손실 -208.5억원)·2025년 상반기(영업손실 +141.1% 확대)까지 포함하면 적자 기조가 장기간 지속되고 있습니다. 무라타 MOU 관련 선행 R&D·인력투자가 비용을 키웠을 가능성이 있으나 확인되지 않았습니다.')
+      )
+    )
+  );
+}
+
+/* ── Tab 4: 재무 ── */
+function Tab4() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 핵심 재무 지표'),
+      e('div', {className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'PBR'),e('div',{className:'vl y'},'1.53x / 2.11x(출처상이)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'PER'),e('div',{className:'vl r'},'산출불가(적자)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'PSR'),e('div',{className:'vl'},'확인 안됨')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'ROE'),e('div',{className:'vl'},'확인 안됨(적자 추정 음수)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'부채비율'),e('div',{className:'vl'},'확인 안됨')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'현금성자산'),e('div',{className:'vl'},'확인 안됨'))
+      )
+    ),
+    e('div', {className:'dx'},
+      e('div', {className:'dt'}, '🔴 액면병합 + 유상증자 — 희석 리스크 중첩'),
+      e('div', {className:'dd'}, '2026.4.17 액면병합(5:1, 주당가액 100원→500원)을 거친 직후, 470만주(228.6억원) 규모 유상증자 신주가 2026.7.31 상장 예정입니다. 액면병합은 주식수만 줄이는 형식적 조정이지만, 직후의 유상증자는 실질적인 지분 희석을 의미합니다. 7/31 신주 상장 시점의 수급 부담을 반드시 고려해야 합니다.')
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💸 주요 자본 이벤트'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'시기'),e('th',null,'내용'),e('th',null,'규모'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'2026.04.17'),e('td',null,'액면병합 5:1(100원→500원)'),e('td',null,e('span',{className:'badge by'},'완료'))),
+            e('tr',null,e('td',null,'2026.06.01'),e('td',null,'임원(부회장·대표이사) 자사주 매수'),e('td',null,'8,540주')),
+            e('tr',null,e('td',null,'2026.06.18'),e('td',null,'후쿠이무라타 MLCC 마운터 MOU'),e('td',null,e('span',{className:'badge by'},'MOU(비구속)'))),
+            e('tr',null,e('td',null,'2026.06.22'),e('td',null,'중기부 국책과제 단독선정'),e('td',null,e('span',{className:'badge bb'},'R&D과제'))),
+            e('tr',null,e('td',null,'2026.07.31'),e('td',null,'유상증자 신주 상장(예정)'),e('td',null,e('span',{className:'badge br'},'470만주/228.6억원')))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔮 가치평가 시나리오'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'시나리오'),e('th',null,'가정'),e('th',null,'코멘트'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{style:{color:'#ef4444'}},'Bear')),e('td',null,'투자경고종목 지정 후 급락, MOU 무산'),e('td',null,'액면병합 전 가격대 회귀 가능')),
+            e('tr',null,e('td',null,e('span',{style:{color:'#f59e0b'}},'Base')),e('td',null,'단기 급등분 되돌림, 유상증자 물량 소화'),e('td',null,'과열 해소 후 펀더멘털 재평가')),
+            e('tr',null,e('td',null,e('span',{style:{color:'#10b981'}},'Bull')),e('td',null,'무라타 MOU의 확정계약 전환 + 흑자전환'),e('td',null,'재료 현실화 시 추가 모멘텀'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 5: 비교 ── */
+function Tab5() {
+  var mr = useRef(null); var mc = useRef(null);
+  makeChart(mr, mc, {
+    type:'bar',
+    data:{labels:PEERS.map(function(p){return p.t;}),datasets:[{label:'시가총액(억원, 로그축 환산 전 단위:억원)',data:PEERS.map(function(p){return p.mc*1300;}),backgroundColor:PEERS.map(function(p){return p.c;})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return v.toLocaleString()+'억';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🏆 비교 종목'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'종목'),e('th',null,'밸류체인 위치'),e('th',null,'비고'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{style:{color:'#3b82f6',fontWeight:700}},'320000 한울반도체')),e('td',null,'MLCC 검사장비(부품 아님)'),e('td',null,'무라타 MOU, 적자, 단기 급등')),
+            e('tr',null,e('td',null,'052710 아모텍'),e('td',null,'MLCC 부품 완제품 제조'),e('td',null,e('span',{className:'badge by'},'다른 밸류체인 단계'))),
+            e('tr',null,e('td',null,'001820 삼화콘덴서'),e('td',null,'MLCC 부품 완제품 제조'),e('td',null,e('span',{className:'badge by'},'다른 밸류체인 단계, 시총 10배+'))),
+            e('tr',null,e('td',null,'6981.T 무라타제작소'),e('td',null,'MLCC 완제품 글로벌 1위'),e('td',null,'한울 MOU 파트너, 기준점(참고용)'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교(로그축)'), e('canvas',{ref:mr})),
+    e('div', {className:'bx'},
+      e('div',{className:'bt'},'⚠️ 동종업계 비교 한계 — 명확히 밝힘'),
+      e('div',{className:'bd'},'사전 조사에서 코세스(089890)·제이앤티씨(204270)·와이씨켐(112290)·톱텍(108230)·인텍플러스(064290)·에스에프에이(056190)·미코(059090) 등 MLCC 관련주로 거론되던 종목들을 심층 검증한 결과, 모두 MLCC와 직접적인 사업 연관성이 없는 것으로 확인되어 비교군에서 제외했습니다.\n순수 MLCC "검사장비" 동종업체(상장사)는 확인되지 않았습니다. 위 표의 아모텍·삼화콘덴서는 MLCC "완제품" 제조사로서 한울반도체(검사장비 공급사)와는 밸류체인 단계가 다른 참고용 비교임을 명시합니다.')
+    )
+  );
+}
+
+/* ── Tab 6: X ── */
+function Tab6() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🐦 X(Twitter) 반응 — 데이터 부재 고지'),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'영어권 X·Reddit 언급 확인 안됨'),
+        e('div',{className:'wd'},'한울반도체(320000)는 코스닥 소형 검사장비주로, 영어권 X(Twitter)·Reddit에서 유의미한 언급이 검색상 확인되지 않았습니다(0건). 이는 국내 투자자 중심 종목 특성상 자연스러운 결과입니다. 존재하지 않는 게시물을 가상으로 작성하는 것은 데이터 조작이므로, 대신 실제로 확인된 내부자 매매·지배구조·기관 동향 데이터로 대체합니다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'✅ 검증된 내부자·지배구조 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'일자'),e('th',null,'내용'),e('th',null,'평가'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'2026.06.01'),e('td',null,'김기원 부회장(전 삼성전자 부사장) 4,500주 매수'),e('td',null,e('span',{className:'badge bg'},'긍정 신호'))),
+            e('tr',null,e('td',null,'2026.06.01'),e('td',null,'대표이사 4,040주 매수'),e('td',null,e('span',{className:'badge bg'},'긍정 신호'))),
+            e('tr',null,e('td',null,'상시'),e('td',null,'최대주주 이오테크닉스 지분 70.54%(경영진포함)'),e('td',null,e('span',{className:'badge bb'},'경영안정/유통물량 적음'))),
+            e('tr',null,e('td',null,'확인안됨'),e('td',null,'증권사 애널리스트 커버리지'),e('td',null,e('span',{className:'badge by'},'확인된 커버리지 없음')))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 7: Reddit ── */
+function Tab7() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💬 국내 투자자 커뮤니티 반응 — 정직한 고지'),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'개별 게시물 인용 대신 거래소 공식 조치로 대체'),
+        e('div',{className:'wd'},'네이버 종목토론실 등 국내 익명 커뮤니티에는 6/18~6/22 상한가 행진 기간 동안 게시물이 급증했을 것으로 추정되나, 익명 게시판 게시물은 신뢰도 있는 출처 인용이 어려워 본 분석에서는 가상의 게시물을 작성하지 않습니다.\n대신 시장 전체의 과열 인식을 가장 신뢰도 높게 보여주는 한국거래소의 공식 조치(투자경고종목 지정예고)를 핵심 "시장 반응" 지표로 제시합니다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📉 시장 과열도 — 가격 행동 기반'),
+      e('div', {className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'일자'),e('th',null,'등락'),e('th',null,'의미'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'6/18'),e('td',null,e('span',{className:'badge br'},'상한가(+30%)')),e('td',null,'무라타 MOU 보도 직후')),
+            e('tr',null,e('td',null,'6/19'),e('td',null,e('span',{className:'badge br'},'상한가(+30%)')),e('td',null,'2거래일 연속 상한가')),
+            e('tr',null,e('td',null,'6/22'),e('td',null,e('span',{className:'badge br'},'+25.14%(장중)')),e('td',null,'국책과제 선정 + 투자경고 지정예고')),
+            e('tr',null,e('td',null,'6/23(예정)'),e('td',null,e('span',{className:'badge by'},'투자경고종목 지정')),e('td',null,'거래소 단기과열 완화조치 발효'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 8: 용어 ── */
+var TERMS = [
+  {t:'MLCC (Multi-Layer Ceramic Capacitor)',d:'적층세라믹콘덴서. 전자기기 회로의 전류를 안정화하는 핵심 부품으로, AI서버·전장 등 고성능 기기에 탑재량이 급증하고 있음.'},
+  {t:'MOU (양해각서)',d:'법적 구속력이 없는 협력 의향서. 한울반도체-무라타 간 체결된 MOU는 구체적 계약금액·물량이 비공개로, 확정 공급계약과 구분해야 함.'},
+  {t:'액면병합',d:'여러 주식을 하나로 합쳐 주식수를 줄이고 주당 가액을 높이는 조치. 한울반도체는 2026.4.17 5:1 병합(100원→500원) 시행 — 과거 데이터 비교 시 환산 필요.'},
+  {t:'유상증자',d:'신주를 발행해 자금을 조달하는 것. 한울반도체는 470만주(228.6억원) 규모로 2026.7.31 상장 예정 — 지분 희석 및 수급 부담 요인.'},
+  {t:'투자경고종목',d:'한국거래소가 단기간 급등 등 비정상적 시세를 보인 종목에 지정하는 제도. 지정 시 신용거래 제한 등 거래 제약이 발생할 수 있음. 한울반도체는 6/23 발효 예고.'},
+  {t:'PBR (Price to Book Ratio)',d:'주가를 주당순자산으로 나눈 지표. 한울반도체는 출처별로 1.53x~2.11x로 편차가 있어 정확한 수치 확인이 필요.'},
+  {t:'PER (Price to Earnings Ratio)',d:'주가를 주당순이익으로 나눈 지표. 한울반도체는 순손실 상태로 산출이 불가능함.'},
+  {t:'밸류체인 (Value Chain)',d:'원자재부터 완제품까지의 생산·유통 단계. 한울반도체는 MLCC "검사장비" 공급사로, MLCC "완제품" 제조사(아모텍·삼화콘덴서)와는 다른 단계에 위치.'},
+  {t:'온디바이스 AI (On-device AI)',d:'클라우드 연결 없이 기기 자체에서 처리하는 AI. 한울반도체의 국책과제명에 포함된 핵심 기술 방향.'},
+  {t:'마운터 (Mounter)',d:'부품을 정밀하게 장착·실장하는 설비. 한울반도체-무라타 MOU의 핵심 대상인 "MFS" 설비가 MLCC 제조공정용 마운터.'},
+  {t:'멀티배거 (Multibagger)',d:'투자 원금의 수 배 이상 수익을 내는 종목. Anna Yartseva 8항목 체크리스트 기준 한울반도체는 약 2.5/8점으로 낮은 수준.'},
+  {t:'성장의 질 (Growth Quality)',d:'매출 성장이 실제 수익성 개선으로 이어지는지를 보는 개념. 한울반도체는 매출 +414% 급증에도 적자가 오히려 확대되어 성장의 질이 낮다고 평가.'},
+];
+
+function Tab8() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📖 핵심 용어 해설'),
+      TERMS.map(function(t,i){
+        return e('div', {key:i, className:'ti'},
+          e('div', {className:'tn'}, t.t),
+          e('div', {className:'td'}, t.d)
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 9: 멀티배거 ── */
+var MBI = [
+  {ic:'🏷️',lb:'1. 아직 충분히 작은 기업인가?',          nt:'시가총액 약 900억원(추정) — 압도적으로 작은 소형주',                      st:'p',sc:1},
+  {ic:'💵',lb:'2. 현재 가격이 미래를 과대반영 안했나?',    nt:'2거래일 연속 상한가+추가 +25% 급등, 투자경고종목 지정예고 — 명백한 과대반영', st:'f',sc:0},
+  {ic:'📈',lb:'3. 매출보다 EBITDA·FCF 개선이 따라오는가?', nt:'매출 +414% 급증에도 영업손실·순손실 오히려 확대 — 정반대 패턴',          st:'f',sc:0},
+  {ic:'⚡',lb:'4. 자산 증가율보다 EBITDA 증가율이 뒤처지지 않는가?', nt:'자산·EBITDA 데이터 확인 안됨',                              st:'h',sc:0.5},
+  {ic:'💰',lb:'5. FCF yield 관점에서 가격이 합리적인가?',  nt:'FCF 확인 안됨. 다만 지속적 순손실로 음수일 가능성 높음(미확정)',          st:'h',sc:0.5},
+  {ic:'🚀',lb:'6. 투자가 실제 수요·주문과 연결되는가?',    nt:'무라타는 MOU(비구속·금액미공개), 국책과제는 R&D보조금 성격 — 확정 수주 아님', st:'h',sc:0.5},
+  {ic:'🏦',lb:'7. 고금리 환경에서도 버틸 수 있는가?',      nt:'228.6억원 유상증자 진행 중 — 외부 자금조달 필요성 자체가 약한 신호',       st:'f',sc:0},
+  {ic:'📉',lb:'8. 단기 급등 후 추격매수 구간은 아닌가?',   nt:'2거래일 연속 상한가+투자경고종목 지정예고 — 전형적 추격매수 위험 구간',     st:'f',sc:0},
+];
+
+function Tab9() {
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:['소형주','밸류에이션','수익성개선','자산효율','FCF yield','확정수요','재무건전성','추격아닌가'],
+      datasets:[{
+        label:'한울반도체',
+        data:[1,0,0,0.5,0.5,0.5,0,0],
+        backgroundColor:'rgba(239,68,68,0.2)',
+        borderColor:'#ef4444',
+        pointBackgroundColor:'#ef4444',
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+      scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}
+    }
+  });
+  var total = MBI.reduce(function(a,m){return a+m.sc;},0);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 체크리스트'),
+      e('div', {style:{textAlign:'center',padding:'14px 0',marginBottom:'10px'}},
+        e('div', {style:{fontSize:'2.8rem',fontWeight:700,color:'#ef4444'}}, total+'/8'),
+        e('div', {style:{fontSize:'0.82rem',color:'#94a3b8',marginTop:'3px'}}, '멀티배거 점수 — 낮음'),
+        e('div', {className:'pb', style:{maxWidth:'180px',margin:'7px auto 0'}},
+          e('div', {className:'pf', style:{width:(total/8*100)+'%',background:'#ef4444'}})
+        )
+      ),
+      MBI.map(function(m,i){
+        return e('div', {key:i, className:'mb-row'},
+          e('div', {className:'mb-ic'}, m.ic),
+          e('div', {style:{flex:1}},
+            e('div', {className:'mb-lb'}, m.lb),
+            e('div', {className:'mb-nt'}, m.nt)
+          ),
+          e('div', {className:'mb-st '+(m.st==='p'?'p':m.st==='h'?'h':'f')},
+            m.st==='p'?'✅ 충족':m.st==='h'?'⚠️ 부분':'❌ 미충족'
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 멀티배거 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('h2',null,'⚠️ 한계 주의사항'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'}, '워킹페이퍼 기반 통계 신호로, 이 조건 충족이 10배 수익을 보장하지 않습니다. 본 분석은 종목발굴 단계의 6/8점 평가를 심층 리서치를 통해 2.5/8점으로 대폭 하향 조정한 결과로, 발굴 단계의 표면적 모멘텀과 심층 분석의 펀더멘털 사이에는 상당한 괴리가 존재함을 명확히 알립니다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 종합 투자 의견'),
+      e('div', {className:'dx'},
+        e('div',{className:'dt'},'🔴 중립~매도 (추격매수 금지) — 투기적 관망 권장'),
+        e('div',{className:'dd'},'멀티배거 2.5/8점(낮음). 무라타 MOU·국책과제 선정 등 헤드라인은 매력적이나, (1) 매출 +414% 급증에도 적자 확대라는 성장의 질 경고, (2) MOU는 비구속적 협력의향서로 확정계약이 아님, (3) 액면병합 직후 228.6억원 유상증자라는 이중 희석 구조, (4) 2거래일 연속 상한가+투자경고종목 지정예고라는 명백한 단기 과열 신호가 동시에 존재합니다. 현재가 추격매수는 권장하지 않으며, 투자경고종목 지정 이후 변동성 완화·무라타 MOU의 확정계약 전환 여부·분기 실적의 흑자전환 여부를 확인한 뒤 재평가하는 것이 합리적입니다.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'등급'),e('th',null,'조건'),e('th',null,'코멘트'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{style:{color:'#10b981'}},'Buy 재평가')),e('td',null,'무라타 MOU 확정계약 전환 + 분기 흑자전환'),e('td',null,'재료 현실화 확인 후')),
+            e('tr',null,e('td',null,e('span',{style:{color:'#f59e0b'}},'Hold/관망')),e('td',null,'투자경고종목 지정 후 변동성 완화 대기'),e('td',null,'7/31 유상증자 물량 소화 확인')),
+            e('tr',null,e('td',null,e('span',{style:{color:'#ef4444'}},'추격매수 금지')),e('td',null,'현재 구간(2거래일 연속 상한가+급등)'),e('td',null,'단기 과열, 거래소 경고 단계'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['📊개요','📈기술적분석','💰실적','📋재무','🔁비교','🐦X','💬Reddit','📖용어','🔟멀티배거'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '한울반도체 — 320000 (KOSDAQ)'),
+      e('div', {className:'sub'}, '22,300원 | 시총 약900억원(추정) | 2026-06-22 | MLCC 검사장비 · 투자경고종목 지정예고')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? e(Tab1,null) :
+      tab===1 ? e(Tab2,null) :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      tab===5 ? e(Tab6,null) :
+      tab===6 ? e(Tab7,null) :
+      tab===7 ? e(Tab8,null) :
+      e(Tab9,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
