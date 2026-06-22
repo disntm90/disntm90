@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>금(Gold) 종목발굴 대시보드 2026-06-22</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#163a3d 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #0e5258;}
+.hdr h1{font-size:1.5rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#06b6d4;border-bottom-color:#06b6d4;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #14454a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#06b6d4;}
+.bx{background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#06b6d4;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bb{background:rgba(6,182,212,0.15);color:#06b6d4;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(6,182,212,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#06b6d4;}
+.sc-nm{font-size:0.75rem;color:#64748b;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 8px;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #1e3a5f;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#06b6d4;color:#001a1f;border-color:#06b6d4;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.0rem;flex-shrink:0;width:24px;text-align:center;}
+.mb-lb{flex:1;font-size:0.78rem;color:#cbd5e1;}
+.mb-st{font-size:0.74rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#06b6d4;color:#001a1f;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var STOCKS = [
+  {t:'NG',   nm:'NovaGold Resources', price:'$8.89',  mc:3.91, pos:'상류·전기★', moat:'높음', pt:'Donlin Creek 3,900만oz 세계최대 미개발 고품위 자원. 천연가스 파이프라인·발전소 미건설이 유일 발목.', mb:3,   rsi:55, bn:'전기'},
+  {t:'IAUX', nm:'i-80 Gold',         price:'$1.63',  mc:1.45, pos:'상류/중류·인증★', moat:'높음', pt:'네바다 기존 허가 브라운필드 자산 다수 보유. 신규 진입자는 10~20년 허가 필요한 진입장벽.', mb:4.5, rsi:48, bn:'인증'},
+  {t:'SKE',  nm:'Skeena Resources',  price:'C$28.85',mc:3.58, pos:'상류·생산량★', moat:'보통', pt:'Eskay Creek 세계 최고품위 노천광, 2027 가동 목표. 자금조달 완료, 생산 임박.', mb:4,   rsi:52, bn:'생산량'},
+  {t:'CXB',  nm:'Calibre Mining',    price:'C$2.89', mc:1.90, pos:'중류·생산량', moat:'보통', pt:'니카라과·네바다·뉴펀들랜드 다광산 운영, 성장 파이프라인 보유한 저평가 중형 생산사.', mb:5,   rsi:50, bn:'생산량'},
+  {t:'WDO',  nm:'Wesdome Gold Mines',price:'C$27.14',mc:2.70, pos:'중류·수율', moat:'보통', pt:'Eagle River/Kiena 고품위 지하광산. 품위 자체가 업계 최저 원가 구조를 만드는 해자.', mb:4,   rsi:53, bn:'수율'},
+  {t:'HYMC', nm:'Hycroft Mining',    price:'$26.03', mc:2.35, pos:'중류·수율', moat:'낮음~보통', pt:'히프리치 공법 개선으로 저품위 광석 회수율 향상. 단, 52주 $2.93→$58.73 이미 폭등한 고위험 종목.', mb:2.5, rsi:68, bn:'수율'},
+  {t:'JMAT', nm:'Johnson Matthey',   price:'£18.88', mc:4.40, pos:'중류·열★', moat:'높음', pt:'LBMA 인증 정제시설 전세계 80곳뿐. 고온 제련 공정이 진입장벽인 정제 핵심노드.', mb:2.5, rsi:47, bn:'열'},
+  {t:'DNL',  nm:'Dyno Nobel',        price:'A$3.86', mc:4.40, pos:'중류·재료★', moat:'높음', pt:'전세계 폭약시장 15% 점유. 폭약 없이는 채굴 자체가 불가능한 필수 투입재 공급사.', mb:2,   rsi:58, bn:'재료'},
+  {t:'SAND', nm:'Sandstorm Gold',    price:'$12.12', mc:3.56, pos:'하류·로열티', moat:'높음', pt:'운영 리스크 없이 영업마진 80%+ 캡쳐. 금값 상승의 무위험 레버리지 구조.', mb:4,   rsi:51, bn:'로열티'},
+  {t:'ELE',  nm:'Elemental Altus(Royalty)', price:'C$21.89', mc:0.47, pos:'하류·로열티★★', moat:'높음', pt:'EMX Royalty 합병으로 200개+ 로열티 보유한 $1B 로열티사로 재탄생. 발굴종목 중 시총 최소.', mb:6,   rsi:60, bn:'로열티'},
+  {t:'EQX',  nm:'Equinox Gold',      price:'$10.57', mc:8.30, pos:'하류·생산량(참고)', moat:'보통', pt:'다광산 생산 포트폴리오. $5B 기준 초과로 발굴 우선순위는 낮으나 비교 참고용.', mb:3,   rsi:49, bn:'생산량'},
+  {t:'RGLD', nm:'Royal Gold',        price:'$214.82',mc:20.0, pos:'하류·기준점', moat:'매우높음', pt:'이미 모두가 아는 대형 로열티사. 표면적 수혜주라 발굴 우선순위 최하위, 비교 기준점.', mb:1.5, rsi:46, bn:'기준점'},
+];
+
+var BOTTLENECKS = ['전체','생산량','인증','열','전기','수율','재료','로열티'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: 탈달러화 · 중앙은행 금매입 + 재정적자 헤지]\n\n  → 상류(탐사·개발)        → 중류(채굴·가공·소재)        → 하류(자본·유통)\n     NG ★전기                CXB 생산량                    SAND 로열티\n     IAUX ★인증              WDO 수율                      ELE ★★로열티·소형\n     SKE ★생산량             HYMC 수율                     EQX 생산량(참고)\n                             JMAT ★열                       RGLD 기준점\n                             DNL ★재료'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'금값 상승 → 채굴사 마진 확대 → 신규 광산 개발 가속'),
+        e('div',{className:'bd'},'하지만 신규 그린필드 허가는 10~20년 소요. 따라서 ① 기존 허가 자산을 가진 기업(i-80 Gold), ② 이미 인프라가 갖춰진 고품위 자산(Skeena, Wesdome)이 진짜 수혜를 본다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'채굴 붐 → 필수 투입재(폭약·시약) 수요 급증'),
+        e('div',{className:'bd'},'폭약 없이는 광석을 캐낼 수 없고, 정제시설 없이는 금괴로 만들 수 없다. Dyno Nobel(폭약)·Johnson Matthey(정제) 같은 "옆 층" 병목이 채굴주보다 덜 주목받고 있다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'로열티/스트리밍 모델 — 운영 리스크 없는 자본배분'),
+        e('div',{className:'bd'},'Royal Gold·Sandstorm은 이미 유명하지만, Elemental Altus처럼 시총이 작고 막 통합(EMX 합병)을 마친 신생 로열티사가 진짜 멀티배거 후보.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'SKE, CXB, EQX'),e('td',null,'수요 대비 공급 가능한가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'IAUX'),e('td',null,'허가에 수년 걸리는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'열')),e('td',null,'JMAT'),e('td',null,'고온 제련 없이 정제 불가능한가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'전기')),e('td',null,'NG'),e('td',null,'전력망 없이 가동 불가능한가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'수율')),e('td',null,'WDO, HYMC'),e('td',null,'회수율이 수익성을 좌우하는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'재료')),e('td',null,'DNL'),e('td',null,'특수 소재 없이 채굴 불가능한가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'로열티')),e('td',null,'SAND, ELE, RGLD'),e('td',null,'무위험 자본배분 구조인가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 기존 시스템의 근본 한계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 통화체제 신뢰 한계'),
+        e('div',{className:'bd'},'무제한 화폐발행(QE)으로 법정화폐 구매력이 구조적으로 희석. AI 시대 데이터센터·국방 투자 확대로 재정적자가 GDP 대비 더 커지며 디폴트 리스크 헤지 수요 급증.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 지정학적 무기화 리스크'),
+        e('div',{className:'bd'},'2022년 러시아 외환보유고 $3,000억 동결 사건으로 전세계 중앙은행이 "달러 자산은 정치적 무기가 될 수 있다"는 사실을 학습. 외환보유고의 달러 의존 자체가 안보 리스크로 인식.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 채굴 공급 구조적 한계'),
+        e('div',{className:'bd'},'신규 대형 광산 발견 급감, 평균 광석 품위 1.1g/t 이하로 하락(채굴원가 매년 3~5%↑), 신규 허가 절차 평균 10~20년 소요로 공급이 가격 상승을 따라가지 못함.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 신모델 우위성 (정량 비교)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'모델'),e('th',null,'기존 대비 우위'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'로열티/스트리밍'),e('td',null,'영업마진 80%+ (채굴사 30~40% 대비)')),
+            e('tr',null,e('td',null,'브라운필드 재허가'),e('td',null,'재가동 1~3년 (그린필드 10~20년 대비 80%↓)')),
+            e('tr',null,e('td',null,'고품위 지하광산'),e('td',null,'채굴원가 30~50%↓ (저품위 광산 대비)'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'1단계 — 지정학적 트리거 (2022~2023)'),
+        e('div',{className:'bd'},'러시아-우크라이나 전쟁 발발, 서방의 러시아 외환보유고 동결 → 전세계 중앙은행이 달러 의존 리스크를 처음으로 실감.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2단계 — 중앙은행 매입 가속 (2023~2025)'),
+        e('div',{className:'bd'},'중국·인도·터키·폴란드 등 신흥국 중앙은행 연 1,000톤+ 매입 지속 → BRICS+ 금 보유 비중 11.2%(2019)→17.4%(2026).')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'3단계 — 개인·ETF 합류 & 가격 폭등 (2026~현재)'),
+        e('div',{className:'bd'},'2026.1 금 $5,608/oz 사상 최고치, GDXJ(주니어금광ETF) 12개월 +203% → 중앙은행 95%가 향후 12개월 금 보유 확대 예상(WGC 사상 최고치), 개인 자금까지 본격 유입.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'금 현물가 (2026.1 ATH)'),e('td',null,'$5,608/oz')),
+            e('tr',null,e('td',null,'금 현물가 (2026.6 현재)'),e('td',null,'~$4,300/oz')),
+            e('tr',null,e('td',null,'중앙은행 연간 매입'),e('td',null,'~1,000톤+/년')),
+            e('tr',null,e('td',null,'BRICS+ 금 보유 비중'),e('td',null,'17.4% (2019년 11.2%)')),
+            e('tr',null,e('td',null,'중앙은행 보유확대 계획 비율'),e('td',null,'43% (2년전 29%)')),
+            e('tr',null,e('td',null,'GDXJ 12개월 수익률'),e('td',null,'+203%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 12개'),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.95rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#06b6d4'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mc = useRef(null);
+  makeChart(mr, mc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#06b6d4'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[10]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    var base = s.mb/8;
+    return [
+      s.mc<5?1:s.mc<10?0.5:0,
+      s.bn==='로열티'?1:0.5,
+      s.bn==='로열티'?1:0.5,
+      0.5,
+      s.bn==='로열티'?1:0,
+      s.bn==='생산량'||s.bn==='인증'?1:0.5,
+      s.mc<3?0.5:1,
+      s.rsi>65?0:s.rsi<35?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:MB_LABELS,
+      datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(6,182,212,0.2)', borderColor:'#06b6d4', pointBackgroundColor:'#06b6d4'}]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){
+          return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t);
+        })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#06b6d4'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('h2',null,'⚠️ 한계 주의사항'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.pos+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (3~6개월)'),
+        e('div',{className:'bd'},'중앙은행 분기별 매입 데이터 발표, FOMC 금리 결정, NovaGold Donlin 가스파이프라인 자금조달 발표')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~18개월)'),
+        e('div',{className:'bd'},'Skeena Eskay Creek 2027 가동 임박 뉴스플로우, Elemental Altus 추가 로열티 인수, i-80 Gold 신규 광산 재가동')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'공통 리스크'),
+        e('div',{className:'dd'},'금값이 $4,300대에서 추가 조정 시 전 종목 동반 하락 가능. Hycroft류 이미 폭등한 종목은 단기 과열 리스크 특히 큼. 환율(CAD/AUD/GBP) 노출 종목 다수 — 통화 리스크 고려 필요.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'핵심(로열티)'),e('td',null,'ELE, SAND'),e('td',null,'40%')),
+            e('tr',null,e('td',null,'성장(생산량)'),e('td',null,'CXB, SKE'),e('td',null,'30%')),
+            e('tr',null,e('td',null,'병목(인증·소재)'),e('td',null,'IAUX, DNL'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'고위험(전기·수율)'),e('td',null,'NG, HYMC'),e('td',null,'10%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🥇 금(Gold) 종목발굴'),
+      e('div', {className:'sub'}, '탈달러화·중앙은행 매입 밸류체인 분석 | 2026-06-22 | 12개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
