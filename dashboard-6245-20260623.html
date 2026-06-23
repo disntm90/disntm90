@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Hirano Tecseed (6245.T) 종목분석 2026-06-23</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#163a3d 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #0e5258;}
+.hdr h1{font-size:1.4rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.8rem;margin-top:4px;}
+.hdr .px{margin-top:8px;font-size:1.1rem;color:#10b981;font-weight:700;}
+.hdr .px small{color:#64748b;font-weight:400;font-size:0.72rem;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#06b6d4;border-bottom-color:#06b6d4;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #14454a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.66rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.05rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#06b6d4;}
+.bx{background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#06b6d4;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.gx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.gx .gt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.gx .gd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bb{background:rgba(6,182,212,0.15);color:#06b6d4;}
+.bp{background:rgba(168,85,247,0.15);color:#a855f7;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(6,182,212,0.04);}
+.gauge{display:flex;justify-content:space-between;background:#0d1426;border-radius:8px;overflow:hidden;margin:10px 0;}
+.gauge div{flex:1;text-align:center;padding:9px 2px;font-size:0.68rem;color:#64748b;border-right:1px solid #111827;}
+.gauge div.on{background:#10b981;color:#001a1f;font-weight:700;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.0rem;flex-shrink:0;width:24px;text-align:center;}
+.mb-lb{flex:1;font-size:0.76rem;color:#cbd5e1;line-height:1.4;}
+.mb-st{font-size:0.74rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.tg{display:inline-block;padding:2px 6px;border-radius:5px;font-size:0.66rem;margin-left:4px;}
+.tg.b{background:rgba(59,130,246,0.15);color:#3b82f6;}
+.tg.g{background:rgba(34,197,94,0.15);color:#22c55e;}
+.tg.o{background:rgba(249,115,22,0.15);color:#f97316;}
+.tg.p{background:rgba(168,85,247,0.15);color:#a855f7;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #1e3a5f;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#06b6d4;color:#001a1f;border-color:#06b6d4;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+function makeChart(cRef, chRef, cfg, deps) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, deps||[]);
+}
+
+/* ── Tab 1: 개요 ── */
+function Tab1() {
+  var sr = useRef(null); var sc = useRef(null);
+  makeChart(sr, sc, {
+    type:'doughnut',
+    data:{labels:['도공기(코팅머신) 70.1%','화공기 26.4%','기타 3.5%'],datasets:[{data:[70.1,26.4,3.5],backgroundColor:['#06b6d4','#3b82f6','#64748b'],borderColor:'#0a0f1e',borderWidth:2}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🏢 기업 개요'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'상장'),e('div',{className:'vl'},'도쿄 스탠다드')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'상장일'),e('div',{className:'vl'},'1962.04')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'직원 수'),e('div',{className:'vl'},'약 419명')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'섹터'),e('div',{className:'vl'},'산업기계'))
+      ),
+      e('div',{style:{marginTop:'10px',fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.6'}},
+        '필름·금속박·유리 등 다양한 소재에 극박막을 도포하는 ',e('b',{style:{color:'#06b6d4'}},'코팅머신(塗工機/도공기)'),' 전문 산업기계 메이커. 도공기·화공기·기타 3개 세그먼트로 구성된다.')
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 세그먼트별 매출 구성 (FY2022/3 기준)'),
+      e('canvas',{ref:sr})
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚠️ 발굴 가설 대비 정정 (정직성)'),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'"순수 MLCC 플레이"가 아니다'),
+        e('div',{className:'wd'},'종목발굴 때는 "MLCC 그린시트 적층·캐스팅 설비 전문"으로 분류했으나, 실제 매출의 70%는 도공기(코팅머신) 전반이다. MLCC용 세라믹 슬러리 도포(성막) 장치는 그 일부이자 "확대를 노리는 성장 타깃 시장"이지 현재 주력이 아니다. 최근 실적 급변동(FY26/3 매출 -33.2%)의 진짜 원인은 MLCC가 아니라 북미 EV 배터리 전극 코팅 설비 수주 감소다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'그럼에도 MLCC 노출은 실재한다'),
+        e('div',{className:'bd'},'MLCC 제조공정에서 세라믹 재료를 균일하게 도포하는 박막 도포장치는 필수재다. 무라타·삼성전기 등이 고용량 MLCC 증설에 나설 때마다 이 회사의 성막장치 수요가 발생하는 구조 — 즉 MLCC 증설 사이클의 "옆 BOM 노드"로서의 옵션 가치가 있다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔭 미래 인사이트'),
+      e('div',{style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.7'}},
+        '동사는 ',e('b',{style:{color:'#cbd5e1'}},'리튬이온·전고체 배터리 전극 코팅, 연료전지, MLCC 성막'),' 등 "박막 도포가 필요한 모든 첨단 제조"에 노출된 메가트렌드 수혜 후보다. 단 매출이 특정 시기 북미 EV 캐펙스에 크게 휘둘려 변동성이 크다. MLCC·전고체 배터리로 고객 포트폴리오가 다변화될수록 실적 변동성이 완화될 전망.')
+    )
+  );
+}
+
+/* ── Tab 2: 기술적분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📈 핵심 기술 지표'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'지표'),e('th',null,'현재값'),e('th',null,'신호'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'RSI(14)'),e('td',null,'40.96'),e('td',null,e('span',{className:'badge by'},'중립'))),
+            e('tr',null,e('td',null,'25일선 이격'),e('td',null,'-1.68%'),e('td',null,e('span',{className:'badge by'},'중립'))),
+            e('tr',null,e('td',null,'트렌드계 지표'),e('td',null,'상승추세 지속'),e('td',null,e('span',{className:'badge bg'},'누름목 매수존'))),
+            e('tr',null,e('td',null,'연초래 고가'),e('td',null,'¥2,626 (6/2)'),e('td',null,e('span',{className:'badge br'},'저항'))),
+            e('tr',null,e('td',null,'연초래 저가'),e('td',null,'¥1,523 (5/20)'),e('td',null,e('span',{className:'badge bg'},'지지'))),
+            e('tr',null,e('td',null,'미니카부 목표'),e('td',null,'¥1,775'),e('td',null,e('span',{className:'badge bg'},'매수')))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 지지선 & 저항선'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'2차 저항'),e('div',{className:'vl r'},'¥2,626')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 저항'),e('div',{className:'vl y'},'¥1,775')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 지지'),e('div',{className:'vl b'},'¥1,650')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'2차 지지'),e('div',{className:'vl g'},'¥1,523'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 최적 진입·청산'),
+      e('div',{className:'gx'},
+        e('div',{className:'gt'},'매수 진입'),
+        e('div',{className:'gd'},'¥1,500~1,650 분할 매수 (연초래 저점 부근, 누름목 활용)')
+      ),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'손절선'),
+        e('div',{className:'dd'},'¥1,400 (연초래 저점 명확한 이탈 시)')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'목표가'),
+        e('div',{className:'bd'},'1차 ¥1,775 (미니카부 목표) → 2차 ¥2,100 → 3차 ¥2,626 (연초래 고가 재돌파 시)')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'⚠️ 6/2 고점 ¥2,626 후 ¥1,689까지 약 36% 조정 — RSI 41로 과열은 해소됐으나, 거래량이 얇은 스탠다드 소형주라 변동성·슬리피지에 유의.')
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 재무 ── */
+function Tab3() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💰 핵심 재무 지표'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'지표'),e('th',null,'현재값'),e('th',null,'평가'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'PBR'),e('td',null,'0.62~0.71배'),e('td',null,e('span',{className:'badge bg'},'저평가(청산가치 이하)'))),
+            e('tr',null,e('td',null,'PER(TTM)'),e('td',null,'16.25배'),e('td',null,e('span',{className:'badge by'},'적정'))),
+            e('tr',null,e('td',null,'배당수익률'),e('td',null,'4.94~5.23%'),e('td',null,e('span',{className:'badge bg'},'고배당'))),
+            e('tr',null,e('td',null,'자기자본비율'),e('td',null,'68.2%'),e('td',null,e('span',{className:'badge bg'},'매우 견고'))),
+            e('tr',null,e('td',null,'ROE'),e('td',null,'3.38%'),e('td',null,e('span',{className:'badge br'},'낮음'))),
+            e('tr',null,e('td',null,'ROA'),e('td',null,'2.20%'),e('td',null,e('span',{className:'badge by'},'낮음')))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🏦 재무 건전성'),
+      e('div',{className:'gx'},
+        e('div',{className:'gt'},'딥밸류 + 무차입형 견고함'),
+        e('div',{className:'gd'},'자기자본비율 68.2%(62%→68.3%로 개선), PBR 0.6배대로 주가가 순자산 가치를 하회한다. 주주환원 정책은 DOE 3.5% 또는 배당성향 60% 중 높은 쪽 — 2027년도까지 유지 방침. 하방이 두꺼운 전형적 일본 딥밸류·고배당주.')
+      ),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'낮은 자본효율'),
+        e('div',{className:'dd'},'ROE 3.38%·ROA 2.20%로 자본을 적극적으로 굴려 수익을 내는 회사는 아니다. 저PBR이 "싸서 좋은 것"이 아니라 "수익성이 낮아 시장이 낮게 평가하는 것"일 수 있음에 유의.')
+      )
+    )
+  );
+}
+
+/* ── Tab 4: 실적 ── */
+function Tab4() {
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:['FY24/3','FY25/3','FY26/3','FY27/3(E)'],datasets:[
+      {label:'매출(억엔)',data:[null,483,322.85,250],backgroundColor:'#06b6d4',yAxisID:'y'},
+      {label:'순이익(억엔)',data:[null,9.06,13.13,11],type:'line',borderColor:'#10b981',backgroundColor:'#10b981',yAxisID:'y1',tension:0.3}
+    ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{
+      y:{position:'left',ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},
+      y1:{position:'right',ticks:{color:'#10b981'},grid:{display:false}},
+      x:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📊 매출 vs 순이익 추이'),
+      e('canvas',{ref:rr}),
+      e('div',{style:{fontSize:'0.7rem',color:'#64748b',marginTop:'6px'}},'※ FY25/3 매출은 추정 환산치 — 출처 간 편차 가능. FY27/3은 회사 가이던스.')
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 FY2026/3 실적 (2026년 3월 마감)'),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'감수증익 — 매출 급감, 이익은 개선'),
+        e('div',{className:'wd'},'매출 ¥322.85억(-33.2% YoY): 북미 주요 고객의 EV 설비투자 계획 재검토로 대폭 감소. 그러나 순이익 ¥13.13억(+45% YoY): 채산성 높은 안건 비중 확대로 이익률 개선. 수주고는 -28.7% YoY로 향후 매출 둔화를 예고.')
+      ),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'FY2027/3 가이던스 — 추가 감익'),
+        e('div',{className:'dd'},'매출 ¥250억, 영업이익 ¥15억, 경상이익 ¥16억, 순이익 ¥11억. 전기 대비 추가 감익을 회사 스스로 보수적으로 제시 — 실적 모멘텀은 당분간 부재.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔑 주목할 핵심 지표 TOP 4'),
+      e('div',{style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.8'}},
+        '1. ',e('b',{style:{color:'#cbd5e1'}},'수주고 회복 여부'),' — -28.7%에서 반등 전환 시점이 주가 변곡점\n',
+        e('br'),'2. ',e('b',{style:{color:'#cbd5e1'}},'북미 EV 캐펙스 재개'),' — 최대 매출 변동 요인\n',
+        e('br'),'3. ',e('b',{style:{color:'#cbd5e1'}},'MLCC·전고체 성막장치 수주'),' — 신규 성장축 가시화 여부\n',
+        e('br'),'4. ',e('b',{style:{color:'#cbd5e1'}},'배당 유지(DOE 3.5%)'),' — 하방 지지의 핵심')
+    )
+  );
+}
+
+/* ── Tab 5: 비교/멀티배거 진입 ── */
+function Tab5() {
+  var rr = useRef(null); var rc = useRef(null);
+  var LABELS = ['소형주','밸류에이션','성장의질','투자효율','FCFyield','수주연결','재무건전성','추격아님'];
+  var DATA = [1, 1, 0.5, 0.5, 0.5, 0, 1, 1];
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{labels:LABELS,datasets:[{label:'6245.T',data:DATA,backgroundColor:'rgba(6,182,212,0.2)',borderColor:'#06b6d4',pointBackgroundColor:'#06b6d4'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  });
+  var CHK = [
+    {q:'① 아직 충분히 작은 기업인가?',d:'시총 ¥26.67B(~$175M) — $5B 이하',s:'p',st:'✅ 충족'},
+    {q:'② 가격이 미래를 과대반영하지 않았는가?',d:'PBR 0.62~0.71배, PER 16배 — 청산가치 이하',s:'p',st:'✅ 충족'},
+    {q:'③ 매출보다 EBITDA·FCF 개선이 따라오는가?',d:'매출 -33%지만 순이익 +45% 감수증익 — 단 매출 역성장',s:'h',st:'⚠️ 부분'},
+    {q:'④ 자산 증가율보다 EBITDA 증가율이 앞서는가?',d:'이익 개선됐으나 외형 축소 국면 — 판단 보류',s:'h',st:'⚠️ 부분'},
+    {q:'⑤ FCF yield 관점 가격이 합리적인가?',d:'자기자본 68%·현금 풍부 추정, 단 FCF 데이터 미확인',s:'h',st:'⚠️ 부분'},
+    {q:'⑥ 투자가 실제 수요·수주와 연결되는가?',d:'수주고 -28.7% YoY, FY27 추가 감익 가이던스 — 최대 약점',s:'f',st:'❌ 미충족'},
+    {q:'⑦ 고금리 환경에서도 버티는가?',d:'자기자본비율 68.2%, 무차입형 견고 구조',s:'p',st:'✅ 충족'},
+    {q:'⑧ 단기 급등 후 추격매수 구간은 아닌가?',d:'6/2 고점 후 -36% 조정, RSI 41 — 과열 해소',s:'p',st:'✅ 충족'}
+  ];
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 멀티배거 종합 점수 (Anna Yartseva)'),
+      e('div',{style:{textAlign:'center',padding:'10px 0'}},
+        e('div',{style:{fontSize:'2.6rem',fontWeight:700,color:'#06b6d4'}},'5.5 / 8'),
+        e('div',{style:{fontSize:'0.85rem',color:'#f59e0b',fontWeight:600}},'등급: 보통 (상단)'),
+        e('div',{style:{fontSize:'0.72rem',color:'#64748b',marginTop:'4px'}},'발굴 당시 6.5 → 수주 -28.7% 반영해 하향 조정')
+      ),
+      e('canvas',{ref:rr})
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'✅ 8개 체크리스트'),
+      CHK.map(function(c,i){
+        return e('div',{key:i,className:'mb-row'},
+          e('div',{className:'mb-ic'}, c.s==='p'?'✅':c.s==='h'?'⚠️':'❌'),
+          e('div',{className:'mb-lb'}, e('b',null,c.q), e('br'), e('span',{style:{color:'#64748b',fontSize:'0.72rem'}}, c.d)),
+          e('div',{className:'mb-st '+c.s}, c.st)
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📡 관련 종목 (MLCC BOM 밸류체인)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'티커'),e('th',null,'기업'),e('th',null,'BOM 위치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'4078.T'),e('td',null,'Sakai Chemical'),e('td',null,'① BaTiO3 분말')),
+            e('tr',null,e('td',null,'4092.T'),e('td',null,'Nippon Chemical Ind.'),e('td',null,'① 유전체 분말')),
+            e('tr',null,e('td',null,'5331.T'),e('td',null,'Noritake'),e('td',null,'③ 외부전극+⑤ 소성로')),
+            e('tr',null,e('td',null,'320000'),e('td',null,'한울반도체'),e('td',null,'⑦ 검사·마운터')),
+            e('tr',null,e('td',null,'6981.T'),e('td',null,'Murata'),e('td',null,'MLCC 완제품(고객)'))
+          )
+        )
+      ),
+      e('div',{style:{fontSize:'0.72rem',color:'#64748b',marginTop:'8px'}},'동사(6245)는 ④ 그린시트/성막 도포설비 노드에 위치 — MLCC 증설 사이클의 "옆 BOM 노드".')
+    ),
+    e('div', {className:'card'},
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'⚠️ 워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 센티먼트 ── */
+function Tab6() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💬 소셜 & 기관 센티먼트'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'데이터 진실성 고지'),
+        e('div',{className:'dd'},'6245.T는 영어권 X/Reddit 언급이 거의 없는 일본 도쿄 스탠다드 초소형주다. 템플릿이 요구하는 "X 15개 + Reddit 15개" 인기글을 실제로 수집할 수 없어, 가짜 게시물을 생성하지 않고 정성적 신호만 제시한다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'일본 개인투자자 (야후파이낸스 JP·미니카부 등)'),
+        e('div',{className:'bd'},'• 저PBR(0.6배대)·고배당(5%) 가치주로 간헐 언급 🟢\n• 리튬이온·전고체 배터리, MLCC 성막장치 테마주로 분류 🟡\n• 단 북미 EV 의존 매출 변동성·실적 모멘텀 부재에 대한 신중론도 공존 🔴')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'애널리스트·목표주가'),
+        e('div',{className:'bd'},'• 미니카부 AI 예상주가: ¥1,775 【매수】\n• 커버리지가 얇은 소형주로 대형 IB 정식 레이팅은 제한적')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 센티먼트 종합'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'밸류/배당'),e('div',{className:'vl g'},'🟢 긍정')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'실적 모멘텀'),e('div',{className:'vl r'},'🔴 부정')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'테마성'),e('div',{className:'vl y'},'🟡 중립')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'유동성'),e('div',{className:'vl r'},'🔴 낮음'))
+      )
+    )
+  );
+}
+
+/* ── Tab 7: 용어 ── */
+function Tab7() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var TERMS = [
+    {t:'PBR (주가순자산비율)',c:'재무',cat:'g',d:'주가를 1주당 순자산으로 나눈 값. 1배 미만이면 주가가 회사의 장부상 청산가치보다 싸다는 뜻.',n:'6245는 0.6배대 — 순자산보다 싸게 거래되는 딥밸류'},
+    {t:'PER (주가수익비율)',c:'재무',cat:'g',d:'주가를 1주당 순이익으로 나눈 값. 낮을수록 이익 대비 저평가.',n:'6245는 16배로 적정 수준'},
+    {t:'배당수익률',c:'재무',cat:'g',d:'1주당 배당금을 주가로 나눈 비율. 주식을 들고만 있어도 받는 현금 수익률.',n:'6245는 약 5% — 고배당 매력'},
+    {t:'DOE (주주자본배당률)',c:'재무',cat:'g',d:'배당총액을 자기자본으로 나눈 비율. 이익이 줄어도 배당을 안정적으로 유지하려는 기준.',n:'6245는 DOE 3.5%를 배당 하한으로 약속'},
+    {t:'자기자본비율',c:'재무',cat:'g',d:'총자산 중 빚이 아닌 자기 돈의 비율. 높을수록 빚이 적고 재무가 튼튼.',n:'6245는 68% — 거의 무차입의 견고함'},
+    {t:'ROE (자기자본이익률)',c:'재무',cat:'g',d:'자기 돈으로 1년에 얼마를 벌었는지 보여주는 수익성 지표. 높을수록 효율적.',n:'6245는 3.4%로 낮음 — 자본효율이 약점'},
+    {t:'RSI (상대강도지수)',c:'기술적',cat:'b',d:'0~100 값으로 최근 상승/하락 압력을 나타냄. 70 위는 과매수, 30 아래는 과매도.',n:'6245는 41 — 중립, 과열 해소된 상태'},
+    {t:'누름목(押し目)',c:'기술적',cat:'b',d:'상승 추세 중 일시적으로 가격이 눌리는 구간. 저가 매수 기회로 본다.',n:'6245는 25일선 부근 누름목 매수존으로 평가됨'},
+    {t:'감수증익',c:'실적',cat:'o',d:'매출은 줄었지만(減收) 이익은 늘어난(増益) 상태. 채산성 좋은 사업에 집중한 결과일 때가 많다.',n:'6245 FY26/3: 매출 -33% but 순이익 +45%'},
+    {t:'수주고',c:'실적',cat:'o',d:'아직 매출로 잡히지 않은, 받아둔 주문의 총액. 미래 매출의 선행 지표.',n:'6245는 수주 -28.7% — 향후 매출 둔화 예고'},
+    {t:'MLCC 성막장치',c:'시장',cat:'p',d:'적층세라믹콘덴서(MLCC)를 만들 때 세라믹 재료를 얇고 균일하게 바르는 핵심 제조장비.',n:'6245의 성장 타깃 시장 — MLCC 증설의 옆 BOM 노드'},
+    {t:'BOM (자재명세서)',c:'시장',cat:'p',d:'완제품 하나를 만드는 데 필요한 모든 부품·재료·공정의 목록. 어느 부품이 병목인지 찾는 분석 틀.',n:'6245는 MLCC BOM의 ④ 도포설비 노드에 위치'}
+  ];
+  var CATS=['전체','기술적','재무','실적','시장'];
+  var list = fil==='전체'?TERMS:TERMS.filter(function(t){return t.c===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📖 용어 사전'),
+      e('div',{className:'flt'},
+        CATS.map(function(c,i){return e('button',{key:i,className:fil===c?'on':'',onClick:function(){setFil(c);}},c);})
+      ),
+      list.map(function(t,i){
+        return e('div',{key:i,style:{background:'#0d1426',borderRadius:'8px',padding:'11px',marginBottom:'9px'}},
+          e('div',{style:{fontSize:'0.85rem',fontWeight:600,color:'#e2e8f0',marginBottom:'4px'}}, t.t, e('span',{className:'tg '+t.cat}, t.c)),
+          e('div',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.5',marginBottom:'5px'}}, t.d),
+          e('div',{style:{fontSize:'0.74rem',color:'#06b6d4'}}, '→ ', t.n)
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 8: 결론 ── */
+function Tab8() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 종합 의견'),
+      e('div',{className:'gauge'},
+        e('div',null,'강한매도'),
+        e('div',null,'매도'),
+        e('div',null,'중립'),
+        e('div',{className:'on'},'약한매수'),
+        e('div',null,'강한매수')
+      ),
+      e('div',{style:{textAlign:'center',fontSize:'1.1rem',fontWeight:700,color:'#10b981',margin:'8px 0'}},'중립 ~ 약한 매수 (가치·배당 관점)'),
+      e('div',{style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.6'}},
+        '고성장 MLCC 순수주를 기대하면 실망할 수 있으나, ',e('b',{style:{color:'#cbd5e1'}},'하방이 두꺼운 저PBR(0.6배)·고배당(5%) 딥밸류'),'로서 분할 매수·장기 보유 관점에서는 매력적. 실적 모멘텀(수주 -28.7%) 회복 전까지는 적극 추격보다 저점 분할이 합리적.')
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🐂 Bull Case'),
+      e('div',{className:'gx'},e('div',{className:'gd'},
+        '1. PBR 0.6배·자기자본 68%·배당 5%의 전형적 일본 딥밸류 — 두꺼운 하방\n2. MLCC 박막 도포장치 시장점유 확대 시 무라타·삼성전기 증설 사이클 직접 수혜\n3. 6/2 고점 후 -36% 조정으로 RSI 41 — 과열 완전 해소, 누름목 진입 구간')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🐻 Bear Case'),
+      e('div',{className:'dx'},e('div',{className:'dd'},
+        '1. 수주 -28.7%·FY27 추가 감익 가이던스 — 실적 모멘텀 부재\n2. 매출이 북미 EV 캐펙스에 크게 휘둘리는 구조적 변동성\n3. MLCC는 아직 매출 기여 미미한 "옵션"일 뿐\n4. 도쿄 스탠다드 초소형주의 낮은 유동성·외국인 접근성\n5. ROE 3.4%의 낮은 자본효율 — 저PBR이 "수익성 낮음"의 반영일 수 있음')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📋 실행 계획'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'1차 매수'),e('td',null,'¥1,650'),e('td',null,'포트폴리오 3%')),
+            e('tr',null,e('td',null,'2차 매수'),e('td',null,'¥1,500'),e('td',null,'+3%')),
+            e('tr',null,e('td',null,'손절선'),e('td',null,'¥1,400'),e('td',null,'전량 청산')),
+            e('tr',null,e('td',null,'1차 익절'),e('td',null,'¥1,775'),e('td',null,'50% 청산')),
+            e('tr',null,e('td',null,'2차 익절'),e('td',null,'¥2,100~2,626'),e('td',null,'나머지 청산'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'⚠️ 본 분석은 웹 검색 캐시 스니펫에 기반하며 가격·시총이 출처 간 편차가 있을 수 있습니다(환율 USD/JPY≈153 가정). 투자 판단 전 증권사 정식 데이터로 재확인하시기 바랍니다. 투자 책임은 본인에게 있습니다.')
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🏢개요','📈기술적','💰재무','📊실적','🔟멀티배거','💬센티먼트','📖용어','🎯결론'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, 'Hirano Tecseed ヒラノテクシード'),
+      e('div', {className:'sub'}, '6245.T · 도쿄 스탠다드 · MLCC/배터리 코팅장비 | 2026-06-23'),
+      e('div', {className:'px'}, '¥1,689 ', e('small',null,'· 시총 ¥26.67B(~$175M) · PBR 0.6배 · 배당 5%'))
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? e(Tab1,null) :
+      tab===1 ? e(Tab2,null) :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      tab===5 ? e(Tab6,null) :
+      tab===6 ? e(Tab7,null) :
+      e(Tab8,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
