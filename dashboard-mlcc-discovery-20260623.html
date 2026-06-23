@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MLCC 종목발굴 대시보드 2026-06-23 (BOM 병목 기준)</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#163a3d 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #0e5258;}
+.hdr h1{font-size:1.5rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#06b6d4;border-bottom-color:#06b6d4;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #14454a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#06b6d4;}
+.bx{background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#06b6d4;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bb{background:rgba(6,182,212,0.15);color:#06b6d4;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(6,182,212,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#06b6d4;}
+.sc-nm{font-size:0.75rem;color:#64748b;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#10b981;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #1e3a5f;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#06b6d4;color:#001a1f;border-color:#06b6d4;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.0rem;flex-shrink:0;width:24px;text-align:center;}
+.mb-lb{flex:1;font-size:0.78rem;color:#cbd5e1;}
+.mb-st{font-size:0.74rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#06b6d4;color:#001a1f;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① BaTiO3 유전체 분말', fn:'유전율 결정 핵심 소재, 적층 박층화의 기반', sup:'Sakai Chemical(4078.T)·Nippon Chemical Industrial(4092.T)·[비상장:Ferro,Sinocera]', cost:'高(소재원가 30%+)', bn:'재료'},
+  {item:'② Ni 내부전극 페이스트', fn:'적층 전극(BME) 형성', sup:'Sumitomo Metal Mining(5713.T,대형)·[비상장:Shoei Chemical,Namics,Heraeus]', cost:'中', bn:'재료'},
+  {item:'③ 외부전극 페이스트', fn:'외부 단자 접합·전기적 연결', sup:'Noritake(5331.T)·[비상장:Tanaka Holdings,Shoei Chemical]', cost:'中', bn:'재료'},
+  {item:'④ 그린시트 적층·캐스팅 설비', fn:'박층 세라믹시트 성형·적층(2μm급)', sup:'Hirano Tecseed(6245.T)·[비상장:Upper Shell,KMS/PASS]', cost:'中(설비투자)', bn:'생산량'},
+  {item:'⑤ 소성로(고온 소결)', fn:'1200℃+ 고온 소결, 신뢰성 결정', sup:'Noritake(5331.T)·NGK Insulators(5333.T,대형)', cost:'中', bn:'열'},
+  {item:'⑥ 도금설비(Ni/Sn 도금)', fn:'외부전극 도금처리', sup:'확인 안됨(주요업체 비상장·자체개발 추정)', cost:'-', bn:'생산량'},
+  {item:'⑦ 검사·마운터 설비', fn:'정전용량·절연저항 검사, 자동실장', sup:'한울반도체(320000)·Chroma ATE(2360.TW, 검증중)', cost:'中', bn:'수율'},
+  {item:'⑧ 패키징(캐리어테이프)', fn:'출하용 포장·운송', sup:'Sumitomo Bakelite(4203.T,대형다각화)', cost:'低', bn:'생산량'}
+];
+
+var STOCKS = [
+  {t:'320000', nm:'한울반도체', bom:'⑦ 검사·마운터 설비', price:'23,150원', mc:0.13, pos:'중류(검사장비)·수율★★', moat:'보통', pt:'MLCC 검사·제조장비 전문, 무라타와 장비 공동개발. 6/22 3거래일 연속 상한가, 6/22 투자경고종목 지정예고(6/23 1일 유효, 실제 지정전환 여부 확인 안됨). 시총·가격 데이터 출처 간 편차 큼.', mb:5.5, rsi:74, bn:'수율'},
+  {t:'6245.T', nm:'Hirano Tecseed', bom:'④ 그린시트 적층·캐스팅 설비', price:'¥1,689', mc:0.175, pos:'중류(공정설비)·생산량★★★', moat:'보통~높음', pt:'그린시트 성형·적층 전문 설비사. 직원 419명의 초소형 니치 기업으로 시장이 전혀 주목하지 않는 가장 언섹시한 BOM 노드. 발굴종목 중 시총 최소.', mb:6.5, rsi:48, bn:'생산량'},
+  {t:'001820', nm:'삼화콘덴서', bom:'MLCC 완제품(국내 종합 제조)', price:'102,000원(출처편차 大)', mc:1.0, pos:'중류·생산량★', moat:'보통', pt:'국내 유일 종합 MLCC 제조사. AI서버향 고용량 MLCC 매출 +24.2%YoY. 가격 스니펫 간 102,000~162,800원으로 편차 큼.', mb:4, rsi:70, bn:'생산량'},
+  {t:'052710', nm:'아모텍', bom:'MLCC 완제품(신규 진입)', price:'31,900원', mc:0.34, pos:'중류(신규진입)·생산량★★', moat:'낮음~보통', pt:'세라믹칩 신사업으로 MLCC 본격 진출. 매출비중 2026년18%→2027년28% 급성장 전망. RSI(14)=63 매수신호(investing.com).', mb:5.5, rsi:72, bn:'생산량'},
+  {t:'3026.TW', nm:'Holy Stone Enterprise(禾伸堂)', bom:'MLCC 완제품(전장·항공 인증)', price:'NT$902', mc:4.6, pos:'중류·인증★', moat:'높음', pt:'IHHEC 브랜드 MLCC, 전장·항공 인증 보유. 단기 급등으로 대만 "처치주(処置股)" 2차 연장 지정(5/26~6/8) 이력. 가격 데이터 433.5~902 TWD로 편차 매우 큼 — 최신(6/18) 902 TWD 채택.', mb:3.5, rsi:78, bn:'인증'},
+  {t:'6284.TWO', nm:'Inpaq Technology(佳邦科技)', bom:'MLCC 인접 패시브(전장 인증)', price:'NT$106', mc:0.48, pos:'중류(인접)·인증', moat:'보통', pt:'회로보호·안테나 등 MLCC 인접 패시브 부품, 전장 인증 확대 중. (구) "智寶電子"로 혼동되기 쉬우나 별도 종목(2375)이며 본 종목은 佳邦科技/Inpaq.', mb:4, rsi:50, bn:'인증'},
+  {t:'2492.TW', nm:'Walsin Technology(華新科)', bom:'③ 외부전극 인접 + MLCC 완제품', price:'NT$608', mc:8.4, pos:'중류·재료★', moat:'보통', pt:'MLCC 매출비중 46.4%로 급증, 원자재(니켈·BaTiO3) 가격 상승 직접 수혜. 단 5일간 +50.86% 폭등, RSI(6)=92.2로 극단적 과열 — 이미 시총 $5B 기준 초과, 추격매수 위험.', mb:2.5, rsi:88, bn:'재료'},
+  {t:'4078.T', nm:'Sakai Chemical Industry', bom:'① BaTiO3 유전체 분말', price:'¥4,800', mc:0.48, pos:'상류·재료★★', moat:'높음', pt:'고순도 BaTiO3 분말 공급사, 배당 3.02%·PER 30.46의 안정적 소형 소재주. 2차 조사에서 일시 "비상장"으로 오기됐으나 실제 상장사(4078.T) 확인됨.', mb:5.5, rsi:52, bn:'재료'},
+  {t:'4092.T', nm:'Nippon Chemical Industrial', bom:'① BaTiO3 유전체 분말(Nd도핑)', price:'¥5,550', mc:0.32, pos:'상류·재료/열★', moat:'높음', pt:'네오디뮴 도핑 BaTiO3로 유전율 +32% 개선, 고온 안정성 핵심 소재. 시총 데이터 출처 간 편차 큼(¥260억~490억).', mb:5, rsi:55, bn:'재료'},
+  {t:'5331.T', nm:'Noritake', bom:'③ 외부전극 페이스트 + ⑤ 소성로', bom2:true, price:'¥5,500(편차 大)', mc:1.4, pos:'중류·재료+열 이중병목★', moat:'높음', pt:'외부전극 페이스트와 고온 소성로를 동시에 공급하는 이중 병목 기업. 가격(¥4,635~6,390)·시총(¥175.7B~254.9B) 데이터 출처 간 편차 큼 — 중간값 채택.', mb:3, rsi:50, bn:'열'},
+  {t:'VSH', nm:'Vishay Intertechnology', bom:'인접 전력반도체·MLCC 채용 확대(생산량 참고)', price:'$64.27', mc:8.84, pos:'중류 대형참고·생산량', moat:'높음', pt:'MOSFET·저항·커패시터 종합. 1Q26 실적 서프라이즈로 30일간 +75% 폭등, mc $5.05B→$8.84B로 디스커버리 기준 이미 초과 — 비교 참고용.', mb:2, rsi:76, bn:'생산량'},
+  {t:'BELFB', nm:'Bel Fuse', bom:'인접 전력모듈(전기, 옆층)', price:'$293.70', mc:3.5, pos:'하류(인접 전력모듈)·전기', moat:'보통', pt:'AI서버 전력모듈·마그네틱스 공급사. 이미 ATH($302.73, 5/11) 근접까지 급등해 고평가 주의 필요. 시총 데이터 $2.82B~$4.15B 편차.', mb:2, rsi:65, bn:'전기'},
+  {t:'VICR', nm:'Vicor', bom:'인접 전력모듈(전기, 기준점)', price:'$366.81', mc:15.3, pos:'하류·전기·기준점', moat:'높음', pt:'AI서버 전력모듈 선두주. 12개월 +494% 반영된 대형 기준점, 발굴 우선순위 최하위. 목표가 $450(Craig-Hallum).', mb:1, rsi:70, bn:'전기'},
+  {t:'6981.T', nm:'Murata Manufacturing', bom:'MLCC 완제품(생산량, 기준점)', price:'¥12,315', mc:119.8, pos:'중류·생산량·기준점', moat:'매우높음', pt:'글로벌 MLCC 점유율 1위, AI서버향 가격 15~35% 인상. 이미 모두가 아는 초대형 기준점.', mb:1.5, rsi:52, bn:'생산량'}
+];
+
+var BOTTLENECKS = ['전체','생산량','인증','열','전기','수율','재료'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인(BOM 우선) ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 MLCC 제조 BOM(자재명세서) — 8개 라인아이템'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'터미널(L1) = AI서버향 고용량 MLCC 완제품. 이를 만들기 위해 반드시 필요한 부품·소재·제조설비 8개 라인아이템을 분해했다. ⑥ 도금설비는 투자 가능한 상장 공급사를 찾지 못해 "확인 안됨"으로 명시한다.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능'),e('th',null,'공급사'),e('th',null,'원가비중'),e('th',null,'병목유형'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: AI서버 전력공급 폭증 → 고용량 MLCC 공급부족]\n\n  → 상류(①②③ 소재)              → 중류(④⑤⑥⑦ 제조설비·완제품)        → 하류(전력모듈·응용)\n     4078 Sakai Chemical ★재료      6245 Hirano Tecseed ★★★생산량(NEW)    BELFB 전기\n     4092 NCI ★재료/열               320000 한울반도체 ★★수율               VICR 전기·기준점\n     5331 Noritake ★★재료+열(NEW)   001820 삼화콘덴서 생산량\n                                     052710 아모텍 ★★생산량\n                                     3026 Holy Stone ★인증(과열주의)\n                                     2492 Walsin ★재료(과열,기준초과)\n                                     6284 Inpaq 인증\n                                     VSH 생산량(참고,기준초과)\n                                     6981 Murata 생산량·기준점'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'BOM ④ 그린시트 설비 — 가장 언섹시하지만 가장 필수적인 노드'),
+        e('div',{className:'bd'},'MLCC는 ④ 그린시트 적층·캐스팅 설비 없이는 단 1개도 생산될 수 없다. Hirano Tecseed(6245.T)는 직원 419명의 초소형 니치기업으로 시장이 전혀 주목하지 않는다. 무라타·삼성전기가 증설할 때마다 이 회사의 설비를 사야 하는 구조 — "이름부터 시작하지 않고 BOM 항목(④)에서 시작해 발견한" 전형적 사례.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'BOM ①③ 소재 다중화 — Sakai Chemical·Noritake'),
+        e('div',{className:'bd'},'무라타가 AI서버용 고용량 MLCC 가격을 15~35% 인상하면, 비용 일부가 BaTiO3 분말(①, Sakai Chemical·NCI)과 외부전극 페이스트(③, Noritake)로 흘러간다. 이번 BOM 재조사에서 새로 확인된 핵심 소재 공급사다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'BOM ⑦ 검사설비 — 수율 병목, 단 변동성 극심'),
+        e('div',{className:'bd'},'한울반도체(320000)는 ⑦ 검사·마운터 설비로 무라타와 공동개발 관계지만, 6/22 3거래일 연속 상한가 후 투자경고종목 지정 이슈가 있어 단기 변동성이 극심하다. Chroma ATE(2360.TW)는 검증이 더 필요한 신규 후보.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'6245, 001820, 052710, VSH, 6981'),e('td',null,'수요 대비 공급 가능한가? 리드타임은?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'3026, 6284'),e('td',null,'전장·항공 인증에 수년 걸리는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'열')),e('td',null,'5331'),e('td',null,'고온 소결 없이 신뢰성 확보 불가능한가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'전기')),e('td',null,'BELFB, VICR'),e('td',null,'전력모듈 없이 GPU 가동 불가능한가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'수율')),e('td',null,'320000'),e('td',null,'불량률이 공급부족을 심화시키는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'재료')),e('td',null,'2492, 4078, 4092'),e('td',null,'고순도 소재 없이 고용량화 불가능한가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 기존 시스템의 근본 한계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 적층 박층화의 신뢰성 한계'),
+        e('div',{className:'bd'},'BME(니켈전극) 방식은 유전체층을 2μm 이하까지 박층화했으나, 적층수가 늘어날수록 절연저항 불량 리스크가 커진다. AI서버는 일반서버 대비 10~15배(2만~44만개)의 MLCC를 사용해 불량 허용치가 사실상 0에 가깝다 — BOM ④ 적층설비와 ⑦ 검사설비의 정밀도가 동시에 한계에 도달한다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 생산 케파의 물리적 한계'),
+        e('div',{className:'bd'},'고용량(≥10μF)·저ESR 제품 리드타임이 10주→24주로 급증, 무라타 가동률은 95%에 근접했다. BOM ④ 그린시트 설비 신규 증설에 1~2년이 소요되어 단기간 공급 확대가 불가능하다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 원자재 공급 구조적 한계'),
+        e('div',{className:'bd'},'BOM ①③ 고순도 티탄산바륨·니켈/외부전극 페이스트 공급사가 소수에 집중돼 있다. AI서버용 고스펙 소재는 정제·도핑 공정이 까다로워 신규 공급사의 진입이 어렵다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 신모델 우위성 (정량 비교)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'신모델'),e('th',null,'기존 대비 우위'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'실리콘 커패시터(Murata-IPDiA/Empower)'),e('td',null,'4mm×4mm에서 36.8μF 구현, 동일면적 대비 고집적·소형화')),
+            e('tr',null,e('td',null,'Nd도핑 BaTiO3(Sakai/NCI, BOM①)'),e('td',null,'유전율 +32% 개선')),
+            e('tr',null,e('td',null,'외부전극 신소재(Noritake, BOM③)'),e('td',null,'고온 안정성·신뢰성 개선'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'1단계 — AI인프라 투자 폭증 (2023~2024)'),
+        e('div',{className:'bd'},'ChatGPT발 AI서버 투자 급증 → 서버향 MLCC 채용 급증, 일반서버 대비 10~15배 사용량으로 수요 구조 자체가 변화.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2단계 — 빅테크·소재사 전략투자 (2025~2026)'),
+        e('div',{className:'bd'},'무라타 FY26 캐펙스 2,500억엔(서버용 800억엔 별도 배정), 삼성전기 1.5조원 수주 확보, 태양유전 FY27 AI서버향 매출 +80%YoY 가이던스.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'3단계 — 공급부족 구조화·가격인상 도미노 (2026~현재)'),
+        e('div',{className:'bd'},'무라타 AI서버용 MLCC 가격 15~35% 인상(4/1 발효), 삼성전기 최대 10%·태양유전 6~13% 인상 발표. 리드타임 24주, 2027년 중반까지 타이트한 공급 전망. BOM①③ 소재사·BOM④ 설비사로 가격인상 압력이 확산 중.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'글로벌 MLCC 시장(2026)'),e('td',null,'$31.87B')),
+            e('tr',null,e('td',null,'AI서버·전장 세그먼트(2026)'),e('td',null,'$5.12B')),
+            e('tr',null,e('td',null,'AI서버·전장 세그먼트(2034 전망)'),e('td',null,'$16.75B (CAGR 21.2%)')),
+            e('tr',null,e('td',null,'국내 서버용 MLCC 시장(2026)'),e('td',null,'약 1.9~2.0조원')),
+            e('tr',null,e('td',null,'고용량 MLCC 리드타임'),e('td',null,'10주 → 24주')),
+            e('tr',null,e('td',null,'무라타 가동률'),e('td',null,'~95%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 14개 (BOM 기준)'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'⚠️ 일부 종목(4092, 5331, 320000 등)은 시가총액·가격 데이터 출처 간 변동성이 커 추정치로 표기. 2492.TW·VSH는 단기 급등으로 이미 디스커버리 기준($5B) 초과 — 참고용. 환율(TWD/JPY/KRW) 노출 종목 다수, 통화 리스크 별도 확인 필요.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.95rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#06b6d4'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mc = useRef(null);
+  makeChart(mr, mc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#06b6d4'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[1]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<1?1:s.mc<5?0.5:0,
+      s.bn==='재료'||s.bn==='수율'?0.7:0.5,
+      0.5,
+      0.5,
+      s.bn==='생산량'?0.6:0.4,
+      s.bn==='생산량'||s.bn==='인증'?1:0.5,
+      s.mc<1?0.5:1,
+      s.rsi>65?0:s.rsi<35?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:MB_LABELS,
+      datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(6,182,212,0.2)', borderColor:'#06b6d4', pointBackgroundColor:'#06b6d4'}]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){
+          return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t);
+        })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#06b6d4'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('h2',null,'⚠️ 한계 주의사항'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (3~6개월)'),
+        e('div',{className:'bd'},'무라타·삼성전기·태양유전 2Q26 실적 발표(가격인상 효과 반영), 한울반도체 무라타 협력 추가 공시 및 투자경고종목 지정 해소 여부, 아모텍 MLCC 매출비중 가이던스 상향 여부, Hirano Tecseed 신규 수주 공시')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~18개월)'),
+        e('div',{className:'bd'},'BOM①③ 소재사(Sakai Chemical·Noritake) 증설 투자 발표, 신규 그린시트 생산라인 완공(2027년 중반 공급 정상화 전망), VRM향 차세대 실리콘 커패시터 상용화')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'공통 리스크'),
+        e('div',{className:'dd'},'2492.TW·3026.TW·VSH 등 다수 종목이 이미 단기 폭등해 디스커버리 기준 초과 또는 극단적 과열(RSI 80대 후반) 구간 진입 — 추격매수 위험. 320000은 3거래일 연속 상한가 후 투자경고종목 지정 리스크 존재. TWD/JPY/KRW 환율 노출. AI서버 투자 둔화 시 MLCC 수요 급감 리스크.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'핵심(BOM④ 언섹시 설비)'),e('td',null,'6245.T, 320000'),e('td',null,'35%')),
+            e('tr',null,e('td',null,'성장(BOM①③ 소재)'),e('td',null,'4078.T, 4092.T, 5331.T'),e('td',null,'30%')),
+            e('tr',null,e('td',null,'성장(생산량 신규진입)'),e('td',null,'052710, 001820'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'고위험(이미 과열·기준초과)'),e('td',null,'3026.TW, 6284.TWO, BELFB'),e('td',null,'15%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '⚡ MLCC 종목발굴 (BOM 병목 기준)'),
+      e('div', {className:'sub'}, 'AI서버 전력공급 밸류체인 · BOM 8개 라인아이템 분석 | 2026-06-23 | 14개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
