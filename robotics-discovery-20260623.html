@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>로보틱스/휴머노이드 종목발굴 대시보드 2026-06-23 (BOM 병목 기준)</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0f3d2e 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #0e5840;}
+.hdr h1{font-size:1.5rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#10b981;border-bottom-color:#10b981;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #14453a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bb{background:rgba(16,185,129,0.15);color:#10b981;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(16,185,129,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#10b981;}
+.sc-nm{font-size:0.75rem;color:#64748b;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#06b6d4;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #1e3a5f;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#10b981;color:#001a14;border-color:#10b981;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.0rem;flex-shrink:0;width:24px;text-align:center;}
+.mb-lb{flex:1;font-size:0.78rem;color:#cbd5e1;}
+.mb-st{font-size:0.74rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#10b981;color:#001a14;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① 정밀 액추에이터(서보모터+드라이브)', fn:'관절 회전 구동, 동적 균형의 핵심 토크원', sup:'Allient(ALNT)·[비상장:Harmonic Drive Systems 등 하모닉감속기]', cost:'高(20%+)', bn:'생산량'},
+  {item:'② 정밀 볼스크류·롤러스크류', fn:'선형 액추에이터의 회전→직선 운동 변환', sup:'上海北特科技(603009.SS)·[五洲新春603667.SS,티커확인중]·RBC Bearings(ROLL,참고대형)', cost:'中', bn:'생산량'},
+  {item:'③ 그리퍼/핸드 메커니즘', fn:'다지(多指) 정밀 파지·물체 조작', sup:'兆威机电 Zhaowei(003021.SZ)', cost:'中', bn:'수율'},
+  {item:'④ 힘/토크/촉각 센서', fn:'관절·손끝 힘 피드백, 충돌 시 안전정지 트리거', sup:'Novanta(NOVT,참고대형)·Vishay Precision Group(VPG)', cost:'中', bn:'인증'},
+  {item:'⑤ 희토류 영구자석(소재)', fn:'모터 토크밀도 결정, 경량화 핵심 소재', sup:'MP Materials(MP,참고대형)·USA Rare Earth(USAR)', cost:'中(소재원가)', bn:'재료'},
+  {item:'⑥ 엣지AI SoC·컨트롤러보드', fn:'온보드 실시간 추론·모션제어', sup:'Ambarella(AMBA)·indie Semiconductor(INDI)·CEVA(CEVA)', cost:'中~高', bn:'수율'},
+  {item:'⑦ 비전/LiDAR 센서모듈', fn:'환경인식·SLAM·장애물 회피', sup:'Aeva Technologies(AEVA)·Cognex(CGNX,머신비전참고)', cost:'中', bn:'생산량'},
+  {item:'⑧ 배터리셀·BMS·전력모듈', fn:'가동시간·열폭주 안전 결정', sup:'Ultralife(ULBI)', cost:'中', bn:'전기'},
+  {item:'⑨ 모터 권선·전자부품 방열(열관리)', fn:'연속 토크 출력 시 발열 제어', sup:'확인 안됨(전용 소형 상장사 미발견)', cost:'低~中', bn:'열'},
+  {item:'⑩ 와이어하니스·경량프레임소재', fn:'배선 내구성, 경량화(마그네슘/카본)', sup:'확인 안됨(주요업체 비상장 추정)', cost:'低', bn:'재료'}
+];
+
+var STOCKS = [
+  {t:'ALNT', nm:'Allient Inc', bom:'① 정밀 액추에이터(서보모터+드라이브)', price:'$86.92', mc:1.5, pos:'중류(구동계)·생산량★★★', moat:'보통~높음', pt:'정밀 모션·서보모터 전문 소형주, 산업로봇向 매출 확대 중. 시총·가격 최근 확인됨(6월). 휴머노이드향 직접 매출 비중은 아직 작아 초기 단계.', mb:5.5, rsi:58, bn:'생산량'},
+  {t:'603009.SS', nm:'Shanghai Beite Technology(上海北特科技)', bom:'② 정밀 볼스크류·롤러스크류', price:'¥35(추정)', mc:2.3, pos:'중류(선형액추에이터부품)·생산량★★★', moat:'보통~높음', pt:'Tesla Optimus 선형 액추에이터향 롤러스크류 직접 공급 보고됨. 자동차부품에서 로봇부품으로 사업 확장 중인 중국 중형주. 가격은 추정치 — 매매 전 재확인 필수.', mb:6.5, rsi:68, bn:'생산량'},
+  {t:'003021.SZ', nm:'Zhaowei Machinery(兆威机电)', bom:'③ 그리퍼/핸드 메커니즘', price:'¥75(추정,편차 大)', mc:4.9, pos:'중류(엔드이펙터)·수율★★', moat:'보통', pt:'정밀 마이크로모터·그리퍼 전문. 시가총액이 294억~400억 위안으로 출처 간 편차 커 중간값(약 350억 위안≈$4.9B) 채택 — $5B 기준 근접, 추가 확인 필요.', mb:4.5, rsi:72, bn:'수율'},
+  {t:'NOVT', nm:'Novanta Inc', bom:'④ 힘/토크/촉각 센서(참고대형)', price:'$140(추정)', mc:6.0, pos:'중류(센싱)·인증·기준초과', moat:'높음', pt:'정밀 모션·포토닉스 센서 종합기업. 시총이 이미 $5B 기준을 소폭 초과해 참고용으로 분류. 휴머노이드향 직접 매출 비중 공시 자료 부족.', mb:3, rsi:60, bn:'인증'},
+  {t:'VPG', nm:'Vishay Precision Group', bom:'④ 힘/토크/촉각 센서', price:'$32(추정)', mc:0.46, pos:'중류(정밀저항·힘센서)·인증', moat:'보통', pt:'스트레인게이지·정밀저항 기반 힘센서 전문 소형주. ※이전 조사에서 시총 $1.85B로 보고됐으나 실제 유통주식수 기준 재계산 시 약 $0.46B 수준으로 추정 — 하향 정정.', mb:4, rsi:45, bn:'인증'},
+  {t:'MP', nm:'MP Materials', bom:'⑤ 희토류 영구자석(소재, 참고대형)', price:'$55(추정)', mc:11.5, pos:'상류(소재)·재료·기준초과', moat:'매우높음', pt:'미국 유일 수직계열화 희토류 생산·정제사. 미 국방부 지분참여 이후 재평가, 이미 $5B 기준을 크게 초과한 대형 기준점.', mb:2, rsi:65, bn:'재료'},
+  {t:'USAR', nm:'USA Rare Earth', bom:'⑤ 희토류 영구자석(소재)', price:'$15(추정)', mc:0.5, pos:'상류(소재)·재료★★', moat:'보통', pt:'미국 내 희토류 자석 공급망 구축 초기 단계 소형주. MP 대비 작은 시총으로 디스커버리 기준에 부합하나 양산 검증은 진행 중.', mb:4.5, rsi:52, bn:'재료'},
+  {t:'AMBA', nm:'Ambarella Inc', bom:'⑥ 엣지AI SoC·컨트롤러보드', price:'$75(추정)', mc:3.3, pos:'중류(SoC)·수율★★', moat:'보통~높음', pt:'엣지 AI 비전 SoC 전문, 로보틱스 설계수주(한화 등) 확보. 휴머노이드 전용은 아니나 엣지추론 SoC로 직접 연관.', mb:5.5, rsi:62, bn:'수율'},
+  {t:'INDI', nm:'indie Semiconductor', bom:'⑥ 엣지AI SoC·컨트롤러보드', price:'$3.5(추정)', mc:1.1, pos:'중류(SoC)·수율★★★', moat:'보통', pt:'Figure AI·Unitree 등 실제 휴머노이드 메이커向 칩 탑재가 보고된, 발굴종목 중 가장 직접적 증거를 가진 SoC 공급사.', mb:6.5, rsi:58, bn:'수율'},
+  {t:'CEVA', nm:'CEVA Inc', bom:'⑥ 엣지AI SoC·컨트롤러보드(IP라이선스)', price:'$28(추정)', mc:1.35, pos:'중류(IP라이선스)·수율', moat:'보통', pt:'엣지AI DSP/NPU IP 라이선스 제공사. 휴머노이드 OEM 직접 채택 사례는 미확인 — 간접 노출로 평가, 증거력 약함.', mb:3.5, rsi:50, bn:'수율'},
+  {t:'AEVA', nm:'Aeva Technologies', bom:'⑦ 비전/LiDAR 센서모듈', price:'$25(추정)', mc:1.0, pos:'중류(센싱)·생산량★', moat:'보통', pt:'4D LiDAR 전문, 산업·로보틱스向 확장 추진 중인 소형주. 휴머노이드향 수주는 아직 초기 단계.', mb:4, rsi:55, bn:'생산량'},
+  {t:'ULBI', nm:'Ultralife Corporation', bom:'⑧ 배터리셀·BMS·전력모듈', price:'$6(추정)', mc:0.11, pos:'중류(전력)·전기★', moat:'낮음~보통', pt:'군용·산업용 배터리·전력모듈 전문 초소형주. 로보틱스向 직접 매출 비중 작아 증거력은 약하나 전기 병목 다양성 확보를 위해 포함.', mb:3, rsi:48, bn:'전기'},
+  {t:'PDYN', nm:'Palladyne AI(구 Sarcos)', bom:'로봇 제어SW·엣지AI 플랫폼(인증 영역)', price:'$3(추정)', mc:0.3, pos:'하류(제어SW)·인증', moat:'낮음~보통', pt:'로봇 제어 소프트웨어·자율성 플랫폼 전문 초소형주. 하드웨어 BOM은 아니나 기능안전 인증이 필요한 제어계층 노드로 포함, 재무 기반 얇아 투기적.', mb:3.5, rsi:70, bn:'인증'},
+  {t:'CGNX', nm:'Cognex Corporation', bom:'⑦ 비전/LiDAR 센서모듈(머신비전 참고)', price:'$33(추정)', mc:5.3, pos:'중류(머신비전)·생산량·기준근접', moat:'높음', pt:'산업 머신비전 1위 기업, 로보틱스 가이던스 비중 확대 중이나 시총이 $5B 기준에 근접~초과해 참고용으로 분류.', mb:2.5, rsi:50, bn:'생산량'},
+  {t:'AXTI', nm:'AXT Inc', bom:'⑤ 희토류 인접 — 화합물반도체 기판(재료)', price:'$7.5(추정)', mc:0.27, pos:'상류(기판소재)·재료', moat:'보통', pt:'갈륨비소 등 화합물반도체 기판 전문 소형주. ※이전 조사에서 시총 $5.7B로 보고됐으나 유통주식수 기준 재계산 시 약 $0.27B 수준으로 추정 — 크게 하향 정정. 휴머노이드 직접 노출은 간접적(센서·SoC 후공정).', mb:3, rsi:42, bn:'재료'}
+];
+
+var BOTTLENECKS = ['전체','생산량','인증','열','전기','수율','재료'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인(BOM 우선) ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 휴머노이드 로봇 BOM(자재명세서) — 10개 라인아이템'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'터미널(L1) = 휴머노이드 로봇 대량생산(Tesla Optimus·Figure·Unitree G1/H1·1X NEO·Agility Digit). ⑨ 방열·⑩ 와이어하니스/경량프레임소재는 투자 가능한 소형 상장 공급사를 찾지 못해 "확인 안됨"으로 명시한다. 일부 시총 데이터는 이전 조사 보고치를 재계산해 정정했다(VPG·AXTI).')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능'),e('th',null,'공급사'),e('th',null,'원가비중'),e('th',null,'병목유형'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: AI 파운데이션모델 고도화 → 휴머노이드 로봇 대량생산 임박]\n\n  → 상류(소재)              → 중류(부품·서브어셈블리)                  → 하류(완제품·SW)\n     MP/USAR 희토류 ★재료     ALNT 액추에이터 ★★★생산량(NEW)         PDYN 제어SW 인증\n     AXTI 화합물반도체기판      603009.SS 볼스크류 ★★★생산량(NEW)\n        재료(정정됨)            003021.SZ 그리퍼 ★★수율\n                                NOVT/VPG 힘센서 ★인증\n                                AMBA/INDI/CEVA SoC ★★수율\n                                AEVA/CGNX 비전 생산량\n                                ULBI 배터리 ★전기\n                                (⑨방열 확인안됨)'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'BOM② 볼스크류·롤러스크류 — 하모닉감속기 "옆"의 언섹시 노드'),
+        e('div',{className:'bd'},'하모닉/사이클로이드 감속기(Harmonic Drive Systems 등)는 이미 시장이 주목하는 BOM 항목이다. 하지만 Tesla Optimus의 선형 액추에이터에는 회전운동을 직선운동으로 바꾸는 볼스크류·롤러스크류가 똑같이 필수적이며, 上海北特科技(603009.SS)가 직접 공급한다고 보고됐다 — "이름부터 시작하지 않고 BOM 항목에서 시작해 발견한" 전형적 사례.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'BOM⑥ 엣지AI SoC — indie Semiconductor의 직접 증거'),
+        e('div',{className:'bd'},'발굴 종목 중 INDI(indie Semiconductor)는 Figure AI·Unitree 등 실제 휴머노이드 메이커向 칩 탑재가 보고된 가장 직접적인 증거를 가진 SoC 공급사다. Ambarella·CEVA는 엣지AI 추론에 연관되나 휴머노이드 전용 채택 증거는 더 약하다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'BOM⑨ 방열 — 가장 언섹시하지만 확인되지 않은 노드'),
+        e('div',{className:'bd'},'"칩이 아무리 세도 발열을 못 빼면 연속 작동이 불가능하다." 휴머노이드 모터 권선의 방열은 명백한 물리적 병목이지만, 이번 조사에서는 전용 소형 상장 공급사를 찾지 못했다 — 데이터 정합성 원칙에 따라 솔직하게 "확인 안됨"으로 남긴다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'ALNT, 603009.SS, ROLL, AEVA, CGNX'),e('td',null,'수요 대비 공급 가능한가? 리드타임은?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'NOVT, VPG, PDYN'),e('td',null,'기능안전 인증에 수년이 걸리는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'열')),e('td',null,'확인 안됨'),e('td',null,'발열 제거 없이는 연속작동 불가능한가? — 공급사 미확인')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'전기')),e('td',null,'ULBI'),e('td',null,'배터리·BMS 없이 가동시간 확보 불가능한가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'수율')),e('td',null,'003021.SZ, AMBA, INDI, CEVA'),e('td',null,'불량률이 높아 수요를 못 따라가는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'재료')),e('td',null,'MP, USAR, AXTI'),e('td',null,'희소 소재 공급이 생산을 제한하는가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 기존 시스템의 근본 한계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 액추에이터 토크밀도 한계'),
+        e('div',{className:'bd'},'기존 산업용 로봇팔은 고정된 베이스 위에서 동작하지만, 휴머노이드는 자체 체중을 지탱하며 동적 균형을 유지해야 해 동일 부피·무게에서 훨씬 높은 토크밀도가 요구된다. AI 시대 작업 다양성(보행+조작 동시 수행)이 늘수록 기존 기어모터의 토크밀도 한계가 더 뚜렷해진다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 센서융합·실시간 제어 한계'),
+        e('div',{className:'bd'},'기존 로봇팔은 사전 프로그래밍된 고정 경로로 동작하지만, 휴머노이드는 비정형 환경에서 힘·비전·촉각 피드백을 실시간으로 융합해 판단해야 한다. AI 파운데이션모델의 추론 요구량이 커질수록 기존 SoC의 추론속도·전력효율 한계가 시스템 전체의 병목이 된다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 배터리 에너지밀도·열관리 한계'),
+        e('div',{className:'bd'},'자율보행과 조작을 동시에 수행하려면 고에너지밀도 배터리가 필요하지만, 발열 문제로 연속가동시간이 통상 1~4시간 수준으로 제한된다. AI 연산량이 늘수록 컨트롤러·모터의 발열이 함께 늘어 배터리·열관리 동시 한계가 심화된다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 신기술 우위성 (정량 비교)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'신기술'),e('th',null,'기존 대비 우위'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'프레임리스 토크모터+하모닉/사이클로이드 감속기'),e('td',null,'토크밀도 기존 기어모터 대비 약 2~3배 향상(추정)')),
+            e('tr',null,e('td',null,'6축 힘토크센서+촉각센서(BOM④)'),e('td',null,'그립 정밀도 향상, 파손률 감소 — 정확한 수치는 제조사 비공개')),
+            e('tr',null,e('td',null,'엣지AI SoC(예: NVIDIA Jetson Thor 등)'),e('td',null,'기존 CPU 기반 제어 대비 추론속도·전력당 연산효율 대폭 개선(구체 수치 제조사별 비공개·확인 안됨)'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'1단계 — 초기 수요 폭발 (2023~2024)'),
+        e('div',{className:'bd'},'Tesla Optimus 공개, ChatGPT발 파운데이션모델 고도화로 휴머노이드 상용화 가능성이 부각되며 Figure AI·1X Technologies·Agility Robotics의 자금조달이 본격화됐다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2단계 — 빅테크 전략투자 (2024~2025)'),
+        e('div',{className:'bd'},'NVIDIA가 GR00T 파운데이션모델과 Jetson Thor 칩을 공급하며 생태계에 진입, Tesla는 Optimus 양산 목표를 공식화했다. Figure AI는 NVIDIA·마이크로소프트·OpenAI 등이 참여한 대규모 시리즈B(보고된 총액 수억 달러대, NVIDIA의 정확한 출자액은 비공개)를 유치했다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'3단계 — 시장 폭증·양산 초기 (2025~2026~미래)'),
+        e('div',{className:'bd'},'Unitree G1/H1이 상업판매를 본격화(가격 $13,500~$16,000, 출처 간 편차)했고, 2026년 휴머노이드 시장 규모 추정치는 리서치사별 정의 범위 차이로 $2.16B~$8.32B까지 약 4배 편차를 보인다 — 시장이 아직 초기·미성숙 단계임을 시사한다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'글로벌 휴머노이드 로봇 시장(2026)'),e('td',null,'$2.16B~$8.32B (리서치사별 정의차이로 편차 大)')),
+            e('tr',null,e('td',null,'CAGR(2026~2032 추정)'),e('td',null,'30~45% (리서치사별 편차)')),
+            e('tr',null,e('td',null,'2030년 전망'),e('td',null,'$20B~$40B (편차 大)')),
+            e('tr',null,e('td',null,'Unitree G1 판매가'),e('td',null,'$13,500~$16,000 (출처 편차)')),
+            e('tr',null,e('td',null,'Tesla Optimus 양산 목표'),e('td',null,'연 수만대(공식 가이던스 변동, 확정치 미공개)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 15개 (BOM 기준)'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'⚠️ VPG·AXTI는 이전 조사 시총 보고치가 비정상적으로 높아(각 $1.85B/$5.7B) 유통주식수 기준 재계산 후 하향 정정($0.46B/$0.27B)했다. NOVT·MP·ROLL·CGNX는 이미 $5B 기준을 초과해 참고용으로 분류. 다수 종목의 가격은 리서치 시점 추정치로 매매 전 재확인이 반드시 필요하다.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.95rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#10b981'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#06b6d4'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[8]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<1?1:s.mc<5?0.5:0,
+      s.bn==='재료'||s.bn==='수율'?0.7:0.5,
+      0.5,
+      0.5,
+      s.bn==='생산량'?0.6:0.4,
+      s.bn==='생산량'||s.bn==='수율'?1:0.5,
+      s.mc<1?0.5:1,
+      s.rsi>65?0:s.rsi<35?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:MB_LABELS,
+      datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(16,185,129,0.2)', borderColor:'#10b981', pointBackgroundColor:'#10b981'}]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){
+          return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t);
+        })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#10b981'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('h2',null,'⚠️ 한계 주의사항'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (3~6개월)'),
+        e('div',{className:'bd'},'Tesla Optimus 양산 가이던스 업데이트, Figure AI·Unitree·1X 신규 자금조달·공급사 공시, 603009.SS·003021.SZ 휴머노이드향 수주 공시 여부, INDI·AMBA의 로봇 SoC 신규 설계수주 발표')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~18개월)'),
+        e('div',{className:'bd'},'NVIDIA GR00T 생태계 확장 및 파트너사 발표, 희토류 영구자석 공급망(MP·USAR) 증설 투자, 방열(BOM⑨)·경량프레임(BOM⑩) 영역의 신규 상장 공급사 등장 여부')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'공통 리스크'),
+        e('div',{className:'dd'},'시장 규모 추정치 자체가 리서치사 간 4배 편차를 보일 만큼 산업이 초기 단계 — 실제 양산 지연 시 밸류에이션 급락 위험. 003021.SZ·PDYN은 RSI 70대 과열 구간. VPG·AXTI는 시총 데이터를 자체 정정한 만큼 투자 전 1차 자료(공시) 재확인이 특히 중요. 다수 종목이 휴머노이드 직접 매출 비중을 공시하지 않아 narrative 의존도가 높다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'핵심(직접증거 강한 BOM②⑥)'),e('td',null,'603009.SS, INDI'),e('td',null,'30%')),
+            e('tr',null,e('td',null,'성장(구동계·센싱 BOM①③④)'),e('td',null,'ALNT, 003021.SZ, VPG'),e('td',null,'30%')),
+            e('tr',null,e('td',null,'소재(BOM⑤, 공급망 다변화)'),e('td',null,'USAR, AXTI'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'고위험(증거 약함·초소형)'),e('td',null,'ULBI, PDYN, CEVA, AEVA'),e('td',null,'20%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🤖 로보틱스/휴머노이드 종목발굴 (BOM 병목 기준)'),
+      e('div', {className:'sub'}, '휴머노이드 로봇 대량생산 밸류체인 · BOM 10개 라인아이템 분석 | 2026-06-23 | 15개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
