@@ -235,7 +235,8 @@ def generate_yield_condef(triggered_by: str = "scheduler") -> dict:
 
     df = df.copy()
 
-    # code_type 중복 제거 — 동일 code_type 행이 여러 개면 첫 항목만 유지
+    # 대소문자/공백 차이로 같은 값이 다르게 취급되지 않도록 먼저 정규화한 뒤 중복 제거
+    df["code_type"] = df["code_type"].astype(str).str.strip().str.upper()
     df = df.drop_duplicates(subset=["code_type"])
 
     # ── 정렬 우선순위 설정 ────────────────────────────────────────
@@ -340,6 +341,11 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
     if df_raw is None:
         return {"file_type": "RejectMapFile", "filename": filename,
                 "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
+
+    # 대소문자/공백 차이로 같은 값이 다르게 취급되지 않도록 먼저 정규화한 뒤 중복 제거
+    df_raw = df_raw.copy()
+    df_raw["code_type"] = df_raw["code_type"].astype(str).str.strip().str.upper()
+    df_raw["code_id"]   = df_raw["code_id"].astype(str).str.strip().str.upper()
 
     # ── SecondaryScrapCode 동적 행 생성 ───────────────────────────
     # code_id 기준 중복 제거 후 code_id 오름차순 정렬
