@@ -327,10 +327,11 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
     호출될 때마다 DB를 새로 조회해 최신 데이터를 반영한다.
     생성 과정:
       1. primecode.csv 로 code_type → prime_code 매핑 로드
-      2. SecondaryScrapCode: code_id 기준 중복 제거 → <ScrapCode ID=.. Name=..> 생성
-      3. ScrapMaps: code_type 기준 중복 제거 + prime_code 매핑 + 정렬 → <ScrapMap ...> 생성
-      4. 정적 템플릿의 placeholder 두 곳에 삽입
-      5. XML 무결성 검증
+      2. code_type 기준으로 정규화 + 중복 제거 (SecondaryScrapCode, ScrapMaps 공통)
+      3. SecondaryScrapCode: code_id 오름차순 정렬 → <ScrapCode ID=.. Name=..> 생성
+      4. ScrapMaps: prime_code 매핑 + 정렬 → <ScrapMap ...> 생성
+      5. 정적 템플릿의 placeholder 두 곳에 삽입
+      6. XML 무결성 검증
     """
     filename = "RejectMapFile.xml"
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
@@ -342,14 +343,15 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
         return {"file_type": "RejectMapFile", "filename": filename,
                 "status": "failed", "error": "DB 조회 실패 또는 데이터 없음"}
 
-    # 대소문자/공백 차이로 같은 값이 다르게 취급되지 않도록 먼저 정규화한 뒤 중복 제거
+    # 대소문자/공백 차이로 같은 값이 다르게 취급되지 않도록 먼저 정규화한 뒤
+    # code_type 기준으로 중복 제거 (SecondaryScrapCode와 ScrapMaps가 동일한 행 집합을 사용)
     df_raw = df_raw.copy()
     df_raw["code_type"] = df_raw["code_type"].astype(str).str.strip().str.upper()
     df_raw["code_id"]   = df_raw["code_id"].astype(str).str.strip().str.upper()
+    df = df_raw.drop_duplicates(subset=["code_type"]).copy()
 
     # ── SecondaryScrapCode 동적 행 생성 ───────────────────────────
-    # code_id 기준 중복 제거 후 code_id 오름차순 정렬
-    df_secondary = df_raw.drop_duplicates(subset=["code_id"]).sort_values(by=["code_id"])
+    df_secondary = df.sort_values(by=["code_id"])
     secondary_lines = [
         f'\t\t<ScrapCode ID="{_xml_attr(str(row.code_id).upper())}" Name="{_xml_attr(str(row.code_desc).upper())}"/>'
         for row in df_secondary.itertuples(index=False)
@@ -357,8 +359,6 @@ def generate_reject_mapfile(triggered_by: str = "scheduler") -> dict:
     secondary_xml = "\n".join(secondary_lines)
 
     # ── ScrapMaps 동적 행 생성 ────────────────────────────────────
-    # code_type 기준 중복 제거 후 prime_code 매핑 + 정렬
-    df = df_raw.drop_duplicates(subset=["code_type"]).copy()
     df["prime_code"] = df["code_type"].astype(str).str.upper().map(prime_map).fillna(DEFAULT_PRIMECODE)
     df.sort_values(by=["prime_code", "code_id"], inplace=True)
 
