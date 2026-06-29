@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>로보틱스/휴머노이드 종목발굴 대시보드 2026-06-29 (감속기·방열·베어링 보강)</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0f3d2e 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #0e5840;}
+.hdr h1{font-size:1.5rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#10b981;border-bottom-color:#10b981;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #14453a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bb{background:rgba(16,185,129,0.15);color:#10b981;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(16,185,129,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#10b981;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#06b6d4;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #1e3a5f;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#10b981;color:#001a14;border-color:#10b981;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.0rem;flex-shrink:0;width:24px;text-align:center;}
+.mb-lb{flex:1;font-size:0.78rem;color:#cbd5e1;}
+.mb-st{font-size:0.74rem;font-weight:600;flex-shrink:0;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#10b981;color:#001a14;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① 회전 액추에이터(프레임리스 토크모터)', fn:'관절 회전 구동의 토크원', sup:'Allient(ALNT)·Schaeffler(SHA.DE,참고)', cost:'高(20%+)', bn:'생산량'},
+  {item:'② 정밀 감속기(하모닉/RV/유성)', fn:'고속회전→저속고토크·제로백래시 변환, 휴머노이드 관절의 심장', sup:'Leader Drive(688017.SS)·Nabtesco(6268.T)·에스비비테크(389500)·SPG(058610)', cost:'高(15~20%)', bn:'생산량'},
+  {item:'③ 선형 액추에이터(볼/롤러스크류)', fn:'회전→직선 운동 변환', sup:'上海北特科技(603009.SS)·Sanhua(002050.SZ,참고)·Schaeffler(참고)', cost:'中', bn:'생산량'},
+  {item:'④ 그리퍼/핸드 메커니즘', fn:'다지 정밀 파지·물체 조작', sup:'兆威机电 Zhaowei(003021.SZ)', cost:'中', bn:'수율'},
+  {item:'⑤ 정밀 베어링(크로스롤러 등)', fn:'관절 회전 지지·강성 확보', sup:'에스비비테크(389500)·MinebeaMitsumi(6479.T,참고)·Schaeffler(참고)', cost:'中', bn:'생산량'},
+  {item:'⑥ 힘/토크/위치 센서', fn:'관절·손끝 힘 피드백, 자기식 위치·전류 센싱', sup:'Allegro(ALGM,참고)·[비상장:Keli Sensing]·VPG', cost:'中', bn:'인증'},
+  {item:'⑦ 엣지AI SoC·컨트롤러보드', fn:'온보드 실시간 추론·모션제어', sup:'indie Semiconductor(INDI)·Ambarella(AMBA)', cost:'中~高', bn:'수율'},
+  {item:'⑧ 비전/LiDAR 센서모듈', fn:'환경인식·SLAM·장애물 회피', sup:'Aeva(AEVA)', cost:'中', bn:'생산량'},
+  {item:'⑨ 열관리·방열(냉각)', fn:'액추에이터·전력전자·컴퓨트 발열 제거 — 양산의 시스템 병목', sup:'Sanhua(002050.SZ,참고)·MinebeaMitsumi/NMB 팬(6479.T,참고)', cost:'低~中', bn:'열'},
+  {item:'⑩ 희토류 영구자석(소재)', fn:'모터 토크밀도 결정, 경량화 핵심 소재', sup:'USA Rare Earth(USAR)·MP Materials(MP,참고)', cost:'中', bn:'재료'}
+];
+
+var STOCKS = [
+  {t:'389500.KQ', nm:'에스비비테크', bom:'② 정밀 감속기(하모닉) + ⑤ 베어링', price:'(추정·재확인)', mc:0.3, pos:'중류(구동모듈)·생산량★★★', moat:'보통~높음', pt:'국내 하모닉 감속기 국산화 성공 기업. 감속기-베어링 일체형 기술로 휴머노이드 구동모듈 진출 가속. 2026년이 베어링→감속기 양산 변곡점, Q1 별도매출 +50.6% YoY. NH투자 "핵심 구동모듈 기업 전환" 평가. 발굴종목 중 가장 직접적인 감속기 소형주.', mb:6.5, rsi:62, bn:'생산량'},
+  {t:'058610.KQ', nm:'SPG(에스피지)', bom:'② 정밀 감속기(하모닉·RV·유성 풀라인업)', price:'(추정·재확인)', mc:0.37, pos:'중류(감속기)·생산량★★★', moat:'높음', pt:'국내 유일 3대 정밀 감속기(유성·하모닉·RV) 풀라인업 양산. 삼성전자가 투자한 레인보우로보틱스 양팔로봇(RBY1)에 전 종류 공급. 2026 로봇 매출 300억원+ 전망(영업이익 +46% E). "옆으로 보기" — 단일 감속기社보다 풀라인업 희소성.', mb:6, rsi:58, bn:'생산량'},
+  {t:'688017.SS', nm:'Leader Drive(绿的谐波)', bom:'② 정밀 감속기(하모닉/strain-wave)', price:'(추정·재확인)', mc:4.7, pos:'중류(감속기)·생산량/수율★★', moat:'높음', pt:'중국 1위 하모닉(strain-wave) 감속기, Tesla 멕시코 직접 공급사로 보고됨. 휴머노이드 ETF(KOID) 편입 후 +89%. 시총 ~$4.7B로 디스커버리 기준($5B) 근접 — 추격매수 주의.', mb:5.5, rsi:70, bn:'생산량'},
+  {t:'6268.T', nm:'Nabtesco', bom:'② 정밀 감속기(RV 사이클로이드)', price:'(추정·재확인)', mc:3.4, pos:'중류(감속기)·인증★★', moat:'높음', pt:'글로벌 1위 RV 사이클로이드 감속기. 산업로봇 표준 부품으로 진입장벽·인증 해자가 견고. 휴머노이드 고하중 관절에 RV형 채택 확대 시 직접 수혜. 1년 +20%.', mb:5, rsi:55, bn:'인증'},
+  {t:'603009.SS', nm:'Shanghai Beite(上海北特科技)', bom:'③ 선형 액추에이터(볼/롤러스크류)', price:'(추정·재확인)', mc:2.3, pos:'중류(선형부품)·생산량★★★', moat:'보통~높음', pt:'Tesla Optimus 선형 액추에이터향 롤러스크류 직접 공급 보고. 자동차부품→로봇부품 확장 중인 중형주. 가격은 매매 전 재확인 필수.', mb:6, rsi:66, bn:'생산량'},
+  {t:'003021.SZ', nm:'Zhaowei(兆威机电)', bom:'④ 그리퍼/핸드 메커니즘', price:'(추정,편차 大)', mc:4.9, pos:'중류(엔드이펙터)·수율★★', moat:'보통', pt:'정밀 마이크로모터·그리퍼 전문. 다지 핸드 구동모듈 공급. 시총 294억~400억 위안 편차로 중간값 채택 — $5B 기준 근접.', mb:4.5, rsi:72, bn:'수율'},
+  {t:'ALNT', nm:'Allient Inc', bom:'① 회전 액추에이터(서보모터)', price:'$86.92', mc:1.5, pos:'중류(구동계)·생산량★★', moat:'보통~높음', pt:'정밀 모션·서보모터 전문 미국 소형주, 산업로봇向 매출 확대. 휴머노이드 직접 매출 비중은 아직 초기.', mb:5.5, rsi:58, bn:'생산량'},
+  {t:'INDI', nm:'indie Semiconductor', bom:'⑦ 엣지AI SoC·컨트롤러보드', price:'$3.5(추정)', mc:1.1, pos:'중류(SoC)·수율★★★', moat:'보통', pt:'Figure AI·Unitree 등 실제 휴머노이드 메이커向 칩 탑재 보고 — SoC 후보 중 가장 직접적 증거.', mb:6, rsi:58, bn:'수율'},
+  {t:'AEVA', nm:'Aeva Technologies', bom:'⑧ 비전/LiDAR 센서모듈', price:'$25(추정)', mc:1.0, pos:'중류(센싱)·생산량★', moat:'보통', pt:'4D LiDAR 전문, 산업·로보틱스 확장 추진. 휴머노이드향 수주는 초기 단계.', mb:4, rsi:55, bn:'생산량'},
+  {t:'USAR', nm:'USA Rare Earth', bom:'⑩ 희토류 영구자석(소재)', price:'$15(추정)', mc:0.5, pos:'상류(소재)·재료★★', moat:'보통', pt:'미국 내 희토류 자석 공급망 구축 초기 단계 소형주. 모터 토크밀도의 핵심 소재, 공급망 안보 수혜 가능.', mb:4.5, rsi:52, bn:'재료'},
+  {t:'ALGM', nm:'Allegro MicroSystems', bom:'⑥ 힘/위치·전류 센서(참고대형)', price:'$56.82', mc:10.8, pos:'중류(자기센서)·인증·기준초과', moat:'높음', pt:'자기식 위치·전류·모터드라이버 IC 종합. AI데이터센터·로보틱스 산업군 공급. 시총 ~$10.8B로 $5B 기준 초과 — 참고용. Apptronik·Boston Dynamics 등 자동차 인커번트 진영 채택.', mb:3, rsi:50, bn:'인증'},
+  {t:'002050.SZ', nm:'Sanhua Intelligent(三花智控)', bom:'⑨ 열관리·방열 + ③ 선형 액추에이터(참고대형)', bom2:true, price:'¥46.34', mc:26, pos:'중류·열+생산량 이중·기준초과', moat:'높음', pt:'열관리(냉각)와 선형 액추에이터를 동시 공급하는 이중 노드. Tesla Optimus $685M 액추에이터 수주설(양사 공식 부인했으나 H1 25 로봇매출 +320%로 대형수주 정황). 시총 185.5억위안(~$26B)로 대형 기준점.', mb:3, rsi:60, bn:'열'},
+  {t:'6479.T', nm:'MinebeaMitsumi', bom:'⑤ 정밀 베어링 + ⑨ NMB 냉각팬(참고대형)', bom2:true, price:'¥4,739', mc:13, pos:'중류·베어링+열·기준초과', moat:'높음', pt:'초소형 볼베어링 글로벌 강자 + NMB 고성능 DC 냉각팬으로 휴머노이드 방열까지 커버. ATH(¥5,307, 6/25) 근접. 시총 ~$13B 대형 기준점.', mb:2.5, rsi:64, bn:'열'},
+  {t:'SHA.DE', nm:'Schaeffler', bom:'①③⑤ 액추에이터·롤러스크류·베어링 통합(참고대형)', price:'(추정·재확인)', mc:9.4, pos:'중류·통합공급·기준초과', moat:'높음', pt:'베어링·유성롤러스크류·회전액추에이터 통합 인커번트. 2026.5월 영국 Humanoid AI와 100만+ 관절 액추에이터 5년 공급계약(~2031) + 자사 공장 1,000~2,000대 배치. 시총 ~$9.4B 대형 기준점.', mb:3, rsi:68, bn:'생산량'}
+];
+
+var BOTTLENECKS = ['전체','생산량','인증','열','수율','재료'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인(BOM 우선) ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 휴머노이드 로봇 BOM — 10개 라인아이템 (감속기·방열 보강판)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'터미널(L1) = 휴머노이드 로봇 대량생산(Tesla Optimus Gen3 프리몬트 양산·$20~30K 목표가, Figure·Unitree·레인보우 RBY1). 이번 6/29 발굴은 6/23판에서 "확인 안됨"으로 남겼던 ② 감속기 트리오와 ⑨ 방열 노드를 집중 보강했다.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능'),e('th',null,'공급사'),e('th',null,'원가비중'),e('th',null,'병목유형'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: 휴머노이드 양산 임박 — Tesla 프리몬트 라인 전환, $20~30K 목표가]\n\n  → 상류(소재)          → 중류(구동·센싱·방열)                      → 하류(완제품)\n     USAR/MP 희토류 ★재료   ★②감속기 트리오:                          Tesla/Figure/\n                            688017 Leader(하모닉) ★생산량               Unitree/레인보우\n                            6268.T Nabtesco(RV) ★인증                   (대부분 비상장/대형)\n                            389500 에스비비테크 ★★★생산량(NEW·소형)\n                            058610 SPG ★★★생산량(NEW·풀라인업)\n                            603009 볼스크류 ★생산량\n                            389500/6479 베어링 ★\n                            ★⑨방열: 002050 Sanhua / 6479 NMB팬 (NEW·확인됨)\n                            ALGM 자기센서 / INDI SoC / AEVA 비전'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리 (6/23 대비 변화)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 감속기 트리오 — 한국 소형주 신규 발굴 (에스비비테크·SPG)'),
+        e('div',{className:'bd'},'지난 발굴에선 하모닉 감속기를 "이미 유명한 노드"로 넘겼으나, 실제로는 휴머노이드 관절당 다수가 필요한 최대 병목이다. 일본(Nabtesco)·중국(Leader Drive) 독점을 깨는 한국 소형주 에스비비테크(389500, 감속기-베어링 일체형)와 SPG(058610, 3대 풀라인업)가 가장 직접적인 소형 베팅이다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑨ 방열 — 6/23 "확인 안됨"이 이번에 채워짐'),
+        e('div',{className:'bd'},'"양산이 열의 벽(thermal wall)에 부딪혔다"는 보도처럼, 냉각은 부품이 아니라 시스템 병목으로 격상됐다. Sanhua(002050, 열관리+액추에이터)와 MinebeaMitsumi(6479, NMB 냉각팬+베어링)가 방열 노드의 상장 공급사다. 다만 둘 다 대형주라 참고용.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑤ 베어링 — 감속기와 한 몸 (에스비비테크의 이중 해자)'),
+        e('div',{className:'bd'},'정밀 베어링은 감속기와 일체로 설계된다. 에스비비테크는 베어링 본업 위에 감속기를 얹어 "감속기-베어링 일체형 구동모듈"이라는 이중 해자를 구축 — 단일 부품사보다 대체 난이도가 높다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'389500, 058610, 688017, 603009, ALNT, SHA.DE'),e('td',null,'수요 대비 공급·리드타임?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'6268.T, ALGM'),e('td',null,'산업표준 인증에 수년 걸리는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'열')),e('td',null,'002050, 6479.T'),e('td',null,'냉각 없이 연속작동 불가능한가? (NEW 확인)')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'수율')),e('td',null,'003021, INDI'),e('td',null,'불량률이 수요를 못 따라가는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'재료')),e('td',null,'USAR'),e('td',null,'희소 소재가 공급을 제한하는가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 기존 시스템의 근본 한계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 감속기 정밀도·백래시 한계'),
+        e('div',{className:'bd'},'산업로봇은 무겁고 정밀도 여유가 있지만, 휴머노이드는 경량·고토크·제로백래시를 동시에 요구한다. 하모닉 감속기는 제조 난도가 높아 일본·중국 소수 업체가 독점 — 관절당 1개 이상 필요해 양산 시 최대 병목이 된다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 발열·열관리 한계 (Thermal Wall)'),
+        e('div',{className:'bd'},'액추에이터·전력전자·AI컴퓨트가 좁은 인클로저에 밀집돼, 연속 토크 출력 시 발열이 시스템을 멈추게 한다. "양산이 열의 벽에 부딪혔다"는 보도처럼 냉각은 부품이 아닌 시스템 병목으로 격상됐다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 핵심부품 공급망 집중 한계'),
+        e('div',{className:'bd'},'액추에이터·감속기·자석·센서·엣지컴퓨트 수요가 모든 휴머노이드 메이커에 동일하게 반복된다. Tesla는 Sanhua·Leader Drive, 한국 진영은 SPG·에스비비테크로 쏠려, 소수 공급사가 전체 양산 속도를 좌우한다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 신기술 우위성 (정량 비교)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'신기술'),e('th',null,'기존 대비 우위'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'하모닉(strain-wave) 감속기'),e('td',null,'제로백래시·고감속비, 경량 — 휴머노이드 관절 필수')),
+            e('tr',null,e('td',null,'감속기-베어링 일체형 모듈'),e('td',null,'부품 수·조립공수 절감, 대체난이도 상승')),
+            e('tr',null,e('td',null,'능동 액체냉각·고성능 DC팬'),e('td',null,'연속가동시간 확장(구체 수치 제조사 비공개)'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'1단계 — 초기 수요 폭발 (2023~2024)'),
+        e('div',{className:'bd'},'Tesla Optimus 공개·파운데이션모델 고도화로 휴머노이드 상용화 가능성 부각, Figure·1X·Agility 자금조달 본격화.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2단계 — 빅테크 양산 전환·대형 부품계약 (2025~2026)'),
+        e('div',{className:'bd'},'Tesla 프리몬트 Model S/X 라인을 Optimus로 전환, $20~30K 외판 목표. Sanhua $685M 액추에이터 수주설(부인됐으나 로봇매출 +320%), Schaeffler-Humanoid AI 100만+ 관절 액추에이터 5년 계약(5/13).')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'3단계 — 공급망 병목 가시화 (2026~미래)'),
+        e('div',{className:'bd'},'McKinsey·Morgan Stanley·Roland Berger가 잇따라 밸류체인 병목(감속기·자석·센서·냉각)을 지목. 감속기 일본·중국 독점 구도에 한국 소형주(에스비비테크·SPG)가 양산 트랙 진입하며 "K-감속기" 테마 부상.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'글로벌 휴머노이드 시장(2026)'),e('td',null,'$2.16B~$8.32B (리서치사별 편차 大)')),
+            e('tr',null,e('td',null,'휴머노이드 냉각시스템 시장'),e('td',null,'$67.1M(2024) → $623M(2032E)')),
+            e('tr',null,e('td',null,'Tesla Optimus 외판 목표가'),e('td',null,'$20,000~30,000')),
+            e('tr',null,e('td',null,'Sanhua 수주설 규모'),e('td',null,'$685M(로봇 18만대분, 공식 부인·정황만)')),
+            e('tr',null,e('td',null,'Schaeffler-Humanoid AI 계약'),e('td',null,'100만+ 관절 액추에이터(~2031)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 14개 (감속기·방열·베어링 보강)'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'⚠️ ALGM·Sanhua·MinebeaMitsumi·Schaeffler·Leader Drive(근접)는 이미 $5B 기준을 초과/근접해 "참고용"으로 분류. 한국·중국 종목 가격은 리서치 시점 추정으로 "재확인" 표기 — 매매 전 1차 자료 확인 필수. 환율(KRW/CNY/JPY/EUR) 노출 다수.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.9rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#10b981'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#06b6d4'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[0]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<1?1:s.mc<5?0.5:0,
+      s.bn==='재료'||s.bn==='수율'?0.7:0.5,
+      0.5,
+      0.5,
+      s.bn==='생산량'?0.6:0.4,
+      s.bn==='생산량'||s.bn==='수율'?1:0.5,
+      s.mc<1?0.5:1,
+      s.rsi>65?0:s.rsi<35?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:MB_LABELS,
+      datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(16,185,129,0.2)', borderColor:'#10b981', pointBackgroundColor:'#10b981'}]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){
+          return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t);
+        })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#10b981'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (3~6개월)'),
+        e('div',{className:'bd'},'Tesla Optimus Gen3 프리몬트 양산 가이던스·외판 개시, 에스비비테크·SPG 감속기 양산 수주 공시, Leader Drive·Nabtesco 휴머노이드 수주, Sanhua 로봇 매출 공시.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~18개월)'),
+        e('div',{className:'bd'},'한국 "K-감속기" 일본·중국 독점 잠식 진행, 방열(냉각) 시스템 표준화, 희토류 자석 공급망 재편(USAR), 신규 소형 상장 공급사 등장.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'공통 리스크'),
+        e('div',{className:'dd'},'휴머노이드 시장 규모 추정이 리서치사 간 4배 편차 — 양산 지연 시 밸류에이션 급락. Leader Drive·003021·Sanhua·Schaeffler는 RSI 60~70대 과열 또는 시총 기준초과. 한국·중국 종목 가격은 추정치로 매매 전 재확인 필수. Sanhua $685M 수주설은 양사 공식 부인 상태(정황 증거만).')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'핵심(② 감속기 소형주)'),e('td',null,'389500, 058610'),e('td',null,'30%')),
+            e('tr',null,e('td',null,'성장(③⑦ 직접증거)'),e('td',null,'603009.SS, INDI'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'감속기 중형(② 인증해자)'),e('td',null,'6268.T, 688017.SS'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'소재·구동(⑩①)'),e('td',null,'USAR, ALNT'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'고위험·참고(과열/대형)'),e('td',null,'003021, AEVA, ALGM, 002050'),e('td',null,'10%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🤖 로보틱스/휴머노이드 종목발굴 (감속기·방열 보강)'),
+      e('div', {className:'sub'}, '휴머노이드 양산 밸류체인 · BOM 10개 라인아이템 | 2026-06-29 | 14개 발굴종목 (6/23판 보강)')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
