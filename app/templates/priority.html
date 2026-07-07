@@ -5,6 +5,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h4 class="mb-0">YieldConvDef 우선순위 관리</h4>
   <div class="d-flex gap-2">
+    <button class="btn btn-outline-secondary btn-sm" onclick="copyAll()">전체 복사</button>
     <button class="btn btn-outline-secondary btn-sm" onclick="loadPriority()">새로고침</button>
     <button class="btn btn-primary btn-sm" onclick="savePriority()">
       <span>저장</span>
@@ -15,38 +16,35 @@
 
 <div class="alert alert-info py-2">
   <small>
-    항목을 <strong>드래그</strong>하거나 <strong>▲ / ▼</strong> 버튼으로 순서를 바꾸세요.
-    <strong>위에 있을수록 우선순위가 높아</strong> YieldConvDef.xml 에서 먼저 출력됩니다.
-    변경 후 반드시 <strong>저장</strong>을 눌러야 파일 생성에 반영됩니다.
+    <strong>한 줄에 code_type 하나씩</strong> 입력하며, <strong>위에 있을수록 우선순위가 높아</strong>
+    YieldConvDef.xml 에서 먼저 출력됩니다.<br>
+    · Excel/메모장에 붙여넣어 정렬·재배열한 뒤 다시 붙여넣으면 수천 개도 한 번에 처리할 수 있습니다.<br>
+    · 여기에 <strong>적지 않은 code_type</strong>은 기본 순서(접두사 그룹 BGA/3D/BBI/TOPSMI + code_id)로 <strong>맨 뒤에 자동 배치</strong>됩니다. 중요한 것만 위에 적어도 됩니다.<br>
+    · 변경 후 반드시 <strong>저장</strong>을 눌러야 파일 생성에 반영됩니다.
   </small>
 </div>
 
 <div id="bdqError"></div>
 
-<div class="d-flex gap-3 mb-2 small text-muted" id="counts"></div>
+<div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
+  <div class="d-flex gap-3" id="counts"></div>
+  <div>입력 줄 수: <strong id="lineCount">0</strong></div>
+</div>
 
 <div class="card">
-  <div class="card-body p-0">
-    <div id="list" class="list-group list-group-flush"></div>
-    <div id="emptyMsg" class="text-center text-muted py-4 d-none">
-      표시할 code_type이 없습니다.
-    </div>
+  <div class="card-body">
+    <textarea class="form-control font-monospace" id="orderText" rows="24" spellcheck="false"
+      style="white-space: pre; overflow-wrap: normal; overflow-x: auto;"
+      placeholder="code_type을 한 줄에 하나씩, 우선순위 높은 순으로 입력하세요."></textarea>
   </div>
 </div>
 
 <div id="alertArea" class="position-fixed bottom-0 end-0 p-3" style="z-index:1100; min-width:300px"></div>
-
-<style>
-  #list .list-group-item { cursor: move; user-select: none; }
-  #list .list-group-item.dragging { opacity: 0.45; background: #eef4ff; }
-  #list .rank-badge { display:inline-block; min-width: 2.4rem; text-align:right; }
-  #list .drag-handle { color:#adb5bd; cursor:grab; }
-</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  let dragEl = null;
+  const textEl = () => document.getElementById('orderText');
 
   function showAlert(msg, type = 'info') {
     const el = document.createElement('div');
@@ -56,77 +54,23 @@
     setTimeout(() => el.remove(), 4000);
   }
 
-  function rowTemplate(item) {
-    const badges = [];
-    if (!item.saved) badges.push('<span class="badge bg-success ms-2">신규</span>');
-    if (!item.in_bdq) badges.push('<span class="badge bg-secondary ms-2">미조회</span>');
-
-    const div = document.createElement('div');
-    div.className = 'list-group-item d-flex align-items-center';
-    div.setAttribute('draggable', 'true');
-    div.dataset.code = item.code_type;
-    div.innerHTML = `
-      <span class="drag-handle me-2">☰</span>
-      <span class="rank-badge badge bg-primary me-3">0</span>
-      <code class="fw-semibold flex-grow-1">${item.code_type}</code>
-      <span class="me-3">${badges.join('')}</span>
-      <div class="btn-group btn-group-sm">
-        <button class="btn btn-outline-secondary" onclick="moveUp(this)" title="위로">▲</button>
-        <button class="btn btn-outline-secondary" onclick="moveDown(this)" title="아래로">▼</button>
-      </div>`;
-
-    div.addEventListener('dragstart', onDragStart);
-    div.addEventListener('dragend',   onDragEnd);
-    div.addEventListener('dragover',  onDragOver);
-    return div;
+  // 비어있지 않은 줄만 추출(앞뒤 공백 제거)
+  function currentLines() {
+    return textEl().value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
   }
 
-  function onDragStart(e) {
-    dragEl = e.currentTarget;
-    e.dataTransfer.effectAllowed = 'move';
-    dragEl.classList.add('dragging');
-  }
-  function onDragEnd(e) {
-    e.currentTarget.classList.remove('dragging');
-    dragEl = null;
-    renumber();
-  }
-  function onDragOver(e) {
-    e.preventDefault();
-    const target = e.currentTarget;
-    if (!dragEl || target === dragEl) return;
-    const rect = target.getBoundingClientRect();
-    const after = (e.clientY - rect.top) > rect.height / 2;
-    if (after) target.after(dragEl); else target.before(dragEl);
-  }
-
-  function moveUp(btn) {
-    const row = btn.closest('.list-group-item');
-    const prev = row.previousElementSibling;
-    if (prev) { row.parentNode.insertBefore(row, prev); renumber(); }
-  }
-  function moveDown(btn) {
-    const row = btn.closest('.list-group-item');
-    const next = row.nextElementSibling;
-    if (next) { row.parentNode.insertBefore(next, row); renumber(); }
-  }
-
-  function renumber() {
-    document.querySelectorAll('#list .list-group-item').forEach((row, i) => {
-      row.querySelector('.rank-badge').textContent = (i + 1);
-    });
+  function updateLineCount() {
+    document.getElementById('lineCount').textContent = currentLines().length;
   }
 
   function loadPriority() {
     fetch('/api/priority')
       .then(r => r.json())
       .then(d => {
-        const list = document.getElementById('list');
-        list.innerHTML = '';
-        (d.rows || []).forEach(item => list.appendChild(rowTemplate(item)));
-        renumber();
-
-        document.getElementById('emptyMsg').classList.toggle('d-none', (d.rows || []).length > 0);
+        // 저장된 순서 → 신규(맨 뒤) 순으로 병합된 목록을 그대로 텍스트로 펼침
+        const lines = (d.rows || []).map(item => item.code_type);
+        textEl().value = lines.join('\n');
+        updateLineCount();
 
         const c = d.counts || {};
         document.getElementById('counts').innerHTML =
@@ -143,9 +87,25 @@
       .catch(() => showAlert('목록을 불러오지 못했습니다.', 'danger'));
   }
 
+  function copyAll() {
+    const text = textEl().value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => showAlert('전체 목록을 클립보드에 복사했습니다.', 'success'))
+        .catch(() => fallbackCopy());
+    } else {
+      fallbackCopy();
+    }
+  }
+  function fallbackCopy() {
+    textEl().select();
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    showAlert('전체 목록을 클립보드에 복사했습니다.', 'success');
+  }
+
   function savePriority() {
-    const order = Array.from(document.querySelectorAll('#list .list-group-item'))
-                       .map(row => row.dataset.code);
+    const order = currentLines();
     document.getElementById('saveSpinner').classList.add('htmx-request');
     fetch('/api/priority/save', {
       method: 'POST',
@@ -161,6 +121,7 @@
       .finally(() => document.getElementById('saveSpinner').classList.remove('htmx-request'));
   }
 
+  textEl().addEventListener('input', updateLineCount);
   loadPriority();
 </script>
 {% endblock %}
