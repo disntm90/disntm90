@@ -34,7 +34,6 @@ logger = logging.getLogger(__name__)
 # ── 보조 파일 경로 ────────────────────────────────────────────────
 PRIMECODE_CSV  = DATA_DIR / "primecode.csv"            # code_type → prime_code 매핑 테이블
 TEMPLATE_FILE  = DATA_DIR / "static_xml_template.txt"  # RejectMapFile 정적 뼈대
-YIELD_PRIORITY_CSV = DATA_DIR / "yield_priority.csv"   # YieldConvDef 출력 순서(우선순위) 정의
 DEFAULT_PRIMECODE = "1"   # primecode.csv에 없는 code_type에 적용할 기본값
 
 # ── 배포 대상 파일 목록 (단일 소스) ──────────────────────────────
@@ -221,36 +220,26 @@ def _validate_xml(path: Path, *, expected_root: str, min_items: int = 1) -> tupl
 
 def _load_yield_priority() -> dict:
     """
-    yield_priority.csv 를 읽어 {code_type(대문자): 우선순위 index} 딕셔너리를 반환한다.
+    yield_priority 테이블에서 {code_type(대문자): sort_order} 딕셔너리를 반환한다.
 
-    CSV는 'code_type' 컬럼 하나만 있으면 되며, **행 순서가 곧 우선순위**다.
-    (맨 위 행 = 1순위 → XML에서 가장 먼저 출력)
-    파일이 없거나 읽기 실패 시 빈 딕셔너리를 반환하고,
+    sort_order 가 작을수록 우선순위가 높다(XML에서 먼저 출력).
+    이 순서는 대시보드 '우선순위 관리' 화면에서 드래그&드롭으로 편집·저장된다.
+    저장된 값이 없거나 읽기 실패 시 빈 딕셔너리를 반환하고,
     generate_yield_condef 는 기존 접두사 그룹 + code_id 순서로 동작한다.
     """
-    if not YIELD_PRIORITY_CSV.exists():
-        logger.warning(f"yield_priority.csv 없음 → 접두사+code_id 순서 사용: {YIELD_PRIORITY_CSV}")
+    from app.models import YieldPriority
+
+    db = SessionLocal()
+    try:
+        rows = db.query(YieldPriority).order_by(YieldPriority.sort_order).all()
+        mapping = {str(r.code_type).strip().upper(): r.sort_order for r in rows}
+        logger.info(f"yield_priority 로드 완료 – {len(mapping)}건 (DB)")
+        return mapping
+    except Exception as exc:
+        logger.error(f"yield_priority 테이블 로드 실패: {exc}")
         return {}
-
-    # 사내 환경 대응: cp949(EUC-KR)를 먼저 시도한 뒤 UTF-8으로 재시도
-    for encoding in ("cp949", "utf-8"):
-        try:
-            df = pd.read_csv(YIELD_PRIORITY_CSV, dtype=str, encoding=encoding)
-            mapping: dict = {}
-            for code in df["code_type"]:
-                key = str(code).strip().upper()
-                if key and key not in mapping:   # 첫 등장 순서를 우선순위로 유지
-                    mapping[key] = len(mapping)
-            logger.info(f"yield_priority 로드 완료 – {len(mapping)}건 ({encoding})")
-            return mapping
-        except UnicodeDecodeError:
-            continue   # 다음 인코딩 시도
-        except Exception as exc:
-            logger.error(f"yield_priority.csv 파싱 오류: {exc}")
-            return {}
-
-    logger.error("yield_priority.csv 인코딩 감지 실패 (cp949/utf-8 모두 실패)")
-    return {}
+    finally:
+        db.close()
 
 
 def generate_yield_condef(triggered_by: str = "scheduler") -> dict:
@@ -260,8 +249,8 @@ def generate_yield_condef(triggered_by: str = "scheduler") -> dict:
     호출될 때마다 DB를 새로 조회해 최신 데이터를 반영한다.
 
     출력 순서(우선순위):
-      1. yield_priority.csv 에 명시된 code_type → CSV 행 순서대로 (1순위부터)
-      2. CSV에 없는 code_type → 맨 뒤에 접두사 그룹(BGA/3D/BBI/TOPSMI) + code_id 순서로 배치
+      1. yield_priority 테이블에 저장된 code_type → sort_order 오름차순 (대시보드에서 편집)
+      2. 저장되지 않은 code_type → 맨 뒤에 접두사 그룹(BGA/3D/BBI/TOPSMI) + code_id 순서로 배치
          (누락 방지) + 어떤 항목이 미등록인지 로그 경고
     반환: {"file_type", "filename", "status", ("error" or "message")}
     """
@@ -280,9 +269,8 @@ def generate_yield_condef(triggered_by: str = "scheduler") -> dict:
     df = df.drop_duplicates(subset=["code_type"])
 
     # ── 정렬 우선순위 설정 ────────────────────────────────────────
-    # (1) yield_priority.csv 에 정의된 명시적 순서를 최우선으로 사용한다.
-    #     CSV 행 순서 = 우선순위(0부터). 목록에 없는 code_type 은 매우 큰 값(_UNLISTED_RANK)을
-    #     받아 항상 뒤로 밀린다.
+    # (1) yield_priority 테이블에 저장된 명시적 순서(sort_order)를 최우선으로 사용한다.
+    #     저장되지 않은 code_type 은 매우 큰 값(_UNLISTED_RANK)을 받아 항상 뒤로 밀린다.
     priority_map = _load_yield_priority()
     _UNLISTED_RANK = 10 ** 9
     df["priority_rank"] = df["code_type"].map(priority_map).fillna(_UNLISTED_RANK).astype("int64")
@@ -301,12 +289,12 @@ def generate_yield_condef(triggered_by: str = "scheduler") -> dict:
     # priority_rank(명시 순서) → prefix_group → code_id 순으로 정렬
     df.sort_values(by=["priority_rank", "prefix_group", "code_id"], inplace=True)
 
-    # CSV에 없는 code_type 은 로그로 알려 누락된 우선순위를 보완할 수 있게 한다.
+    # 우선순위가 저장되지 않은 code_type 은 로그로 알려 대시보드에서 보완할 수 있게 한다.
     if priority_map:
         unlisted = df.loc[df["priority_rank"] == _UNLISTED_RANK, "code_type"].tolist()
         if unlisted:
             logger.warning(
-                f"yield_priority.csv에 없는 code_type {len(unlisted)}건 → 맨 뒤에 배치됨: {unlisted}"
+                f"우선순위 미지정 code_type {len(unlisted)}건 → 맨 뒤에 배치됨: {unlisted}"
             )
 
     # ── XML 트리 구성 ─────────────────────────────────────────────

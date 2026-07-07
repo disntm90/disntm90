@@ -99,6 +99,24 @@ class GenerateLog(Base):
     triggered_by: Mapped[str] = mapped_column(String(50), default="scheduler")
 
 
+# ── YieldConvDef 출력 우선순위 테이블 ────────────────────────────
+class YieldPriority(Base):
+    """
+    YieldConvDef.xml 의 <Yield> 출력 순서(우선순위)를 저장한다.
+
+    sort_order 가 작을수록 먼저 출력된다(1순위).
+    대시보드 '우선순위 관리' 화면에서 드래그&드롭으로 편집·저장하며,
+    generate_yield_condef() 가 파일 생성 시 이 순서를 읽어 반영한다.
+    저장되지 않은 code_type 은 접두사 그룹 + code_id 순서로 맨 뒤에 배치된다.
+    """
+    __tablename__ = "yield_priority"
+
+    id:         Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    code_type:  Mapped[str] = mapped_column(String(100), unique=True, nullable=False)  # 대문자로 정규화 저장
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, index=True)            # 작을수록 우선(먼저 출력)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
 # ── 시스템 설정 테이블 ────────────────────────────────────────────
 class SystemConfig(Base):
     """

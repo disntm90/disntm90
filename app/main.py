@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.database import init_db
-from app.routers import equipment, deploy, logs, files, bdq
+from app.routers import equipment, deploy, logs, files, bdq, priority
 from app.services.scheduler import start_scheduler, stop_scheduler, get_scheduler_status
 
 # ── 로그 파일 디렉토리 사전 생성 ────────────────────────────────
@@ -75,6 +75,7 @@ app.include_router(deploy.router)          # /api/deploy/*
 app.include_router(logs.router)            # /logs, /api/logs/*
 app.include_router(files.router)           # /api/files/*, /api/test/*
 app.include_router(bdq.router)             # /bdq, /api/bdq/*
+app.include_router(priority.router)        # /priority, /api/priority/*
 
 
 @app.get("/", response_class=HTMLResponse)
