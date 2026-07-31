@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AGI 심층 종목발굴 100→5 대시보드 2026-07-20 (Situational Awareness)</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#2a1a4d 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #4c1d95;}
+.hdr h1{font-size:1.35rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#a78bfa;border-bottom-color:#a78bfa;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:820px;margin:0 auto;}
+.card{background:#111827;border:1px solid #2a1a4d;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.05rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#a78bfa;}
+.bx{background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#a78bfa;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.66rem;font-weight:600;margin:1px;}
+.bb{background:rgba(167,139,250,0.15);color:#a78bfa;}
+.bp{background:rgba(59,130,246,0.15);color:#3b82f6;}
+.bo{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bd2{background:rgba(239,68,68,0.15);color:#ef4444;}
+.bgr{background:rgba(16,185,129,0.15);color:#10b981;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.74rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:6px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(167,139,250,0.04);}
+.uni{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.chip{background:#0d1426;border:1px solid #1e2d4a;border-radius:6px;padding:3px 8px;font-size:0.7rem;color:#cbd5e1;}
+.chip.pass{border-color:#a78bfa;color:#a78bfa;}
+.chip.fin{background:#a78bfa;color:#1a0533;font-weight:700;border-color:#a78bfa;}
+.fin5{background:#0d1426;border:1px solid #4c1d95;border-radius:10px;padding:14px;margin-bottom:12px;}
+.fin5-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.fin5-tk{font-size:1.05rem;font-weight:700;color:#a78bfa;}
+.fin5-rank{width:28px;height:28px;border-radius:50%;background:#a78bfa;color:#1a0533;font-weight:700;font-size:0.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fin5-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.55;margin:6px 0;}
+.fin5-row{display:flex;gap:8px;flex-wrap:wrap;font-size:0.72rem;color:#94a3b8;margin-top:6px;}
+.fin5-row span{background:#111827;border-radius:5px;padding:3px 7px;}
+.step{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.step-n{background:#a78bfa;color:#1a0533;font-weight:700;border-radius:6px;padding:3px 9px;font-size:0.75rem;flex-shrink:0;}
+.step-t{font-size:0.8rem;color:#cbd5e1;}
+.funnel{text-align:center;padding:6px 0;}
+.fbar{margin:5px auto;border-radius:6px;color:#1a0533;font-weight:700;font-size:0.8rem;padding:9px 0;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+/* 1차 유니버스 ~100 (에세이 4축) */
+var UNIVERSE = {
+  '⚡ 전력/원자력 (35)': {
+    cls:'bo',
+    names:['CEG','VST','TLN','NRG','PEG','D','SO','DUK','OKLO','SMR','NNE','LEU','BWXT','ASPI','LTBR','CCJ','UEC','UUUU','DNN','NXE','UROY','GEV','ETN','POWL','HUBB','NVT','PWR','MYRG','GE','033100(제룡전기)','062040(산일전기)','267260(HD현대ELEC)','MPWR','VICR','NVTS']
+  },
+  '🖥️ 컴퓨트/AI반도체 (30)': {
+    cls:'bp',
+    names:['NVDA','AMD','AVGO','TSM','MRVL','ARM','MU','한미(042700)','039030(이오테크닉스)','BESI','ONTO','CAMT','KLAC','ACLS','AEHR','FORM','AMKR','067310(하나마이크론)','4062.T(Ibiden)','COHR','LITE','AAOI','FN','POET','CRDO','ALAB','ANET','MTSI','ENTG','LASR']
+  },
+  '🔒 보안/방산 (25)': {
+    cls:'bd2',
+    names:['CRWD','PANW','ZS','S','NET','FTNT','CYBR','VRNS','RBRK','TENB','RPD','SAIL','RMBS','PLTR','BAH','LDOS','SAIC','CACI','KTOS','AVAV','RCAT','ONDS','MRCY','DRS','NOC']
+  },
+  '🧬 바이오/AI자동화 (10)': {
+    cls:'bgr',
+    names:['RXRX','SDGR','TEM','ABSI','CRSP','DNA','PATH','ISRG','SYM','TER']
+  }
+};
+
+/* 2차 통과 ~20 */
+var PASS2 = ['LEU','POWL','SMR','OKLO','NNE','UEC','033100','062040','GEV(참고)','AEHR','CAMT','한미042700','FN','POET','VRNS','S','RMBS','MRCY','KTOS','RCAT'];
+
+/* 3차 비교 스코어링 (상위 후보) */
+var SCORE = [
+  {t:'LEU', ax:'전력·연료', bom:'HALEU 농축(미국 유일)', mc:6.0, moat:5, hidden:5, valu:4, cat:4, over:4, tot:22},
+  {t:'POWL', ax:'전력·배전', bom:'스위치기어(2028 매진)', mc:2.4, moat:4, hidden:5, valu:4, cat:5, over:4, tot:22},
+  {t:'AEHR', ax:'컴퓨트', bom:'HBM 번인·테스트', mc:1.5, moat:4, hidden:5, valu:4, cat:4, over:5, tot:22},
+  {t:'VRNS', ax:'보안', bom:'가중치 데이터보안(DSPM)', mc:3.0, moat:4, hidden:5, valu:5, cat:4, over:5, tot:23},
+  {t:'KTOS', ax:'방산', bom:'CCA 자율무기(단독공급)', mc:9.0, moat:5, hidden:4, valu:3, cat:5, over:3, tot:20},
+  {t:'033100', ax:'전력·그리드', bom:'대형변압기(리드타임3~4년)', mc:0.7, moat:4, hidden:5, valu:4, cat:3, over:4, tot:20},
+  {t:'CAMT', ax:'컴퓨트', bom:'HBM 검사·계측', mc:8.55, moat:4, hidden:4, valu:3, cat:4, over:3, tot:18},
+  {t:'S', ax:'보안', bom:'AI 엔드포인트(takeout)', mc:5.6, moat:4, hidden:4, valu:4, cat:3, over:5, tot:20},
+  {t:'한미042700', ax:'컴퓨트', bom:'TC본더(HBM 독점)', mc:19, moat:5, hidden:4, valu:2, cat:4, over:4, tot:19},
+  {t:'UEC', ax:'전력·연료', bom:'우라늄 채굴', mc:4.9, moat:3, hidden:3, valu:3, cat:3, over:4, tot:16}
+];
+
+/* 최종 5 */
+var FINAL5 = [
+  {t:'LEU', nm:'Centrus Energy', ax:'⚡ 전력·연료', price:'$331.03', mc:'$6.03B', rsi:48, mb:'6/8',
+   why:'에세이 "The power constraint"의 연료 병목 정중앙. 미국 유일 라이선스 HALEU(고순도 농축우라늄) 생산사로, 모든 차세대 SMR(Oklo·NuScale)이 이 연료 없이는 못 돌린다. "원자로(완제품)보다 연료(병목)를 판다"는 L5 원칙의 교과서 사례.',
+   moat:'대체불가성 최상 — 미국 유일', risk:'시총 $6B로 소형 기준 소폭 초과, 우라늄 가격·정책 의존', cat:'DOE HALEU 추가계약, SMR 상업가동'},
+  {t:'POWL', nm:'Powell Industries', ax:'⚡ 전력·배전', price:'~$201', mc:'$2.4B', rsi:55, mb:'6/8',
+   why:'변압기와 함께 전력 인프라의 최대 병목인 스위치기어가 2028년까지 사실상 매진. "발표 16GW 중 실착공 5GW"의 병목을 직접 공급 — 수주잔고가 곧 미래 실적. 시총 $2.4B 중소형으로 디스커버리 기준 부합, 애널 목표가 +57%.',
+   moat:'배전설비 과점, 리드타임 해자', risk:'산업 캐펙스 사이클 의존', cat:'수주잔고 갱신, 데이터센터 전력설비 발주'},
+  {t:'AEHR', nm:'Aehr Test Systems', ax:'🖥️ 컴퓨트', price:'(재확인)', mc:'~$1.5B', rsi:48, mb:'6/8',
+   why:'HBM이 2026 AI의 결정적 병목인데, HBM 층수(8→12→16) 증가로 번인·테스트 공정이 병목화. 폭등한 광모듈주(AAOI +441%)와 달리 아직 덜 주목된 소형 테스트 노드 — 발굴 5종목 중 시총 최소로 멀티배거 잠재력 최상.',
+   moat:'번인테스트 니치, KGD 필수', risk:'고객집중·실적변동성, 반도체 사이클', cat:'HBM4 테스트 수주, 고객 다변화'},
+  {t:'VRNS', nm:'Varonis Systems', ax:'🔒 보안', price:'$28.00', mc:'$3.0B', rsi:42, mb:'6/8',
+   why:'에세이 "Lock Down the Labs"의 핵심 — "AI 모델 가중치=새로운 crown jewels"(Forbes). 데이터보안 태세관리(DSPM) 니치 1위인데 12개월 -38% 조정으로 저평가 + MS·Palo Alto·CrowdStrike의 유력 M&A 타깃. 하방 방어 + 상방 옵션.',
+   moat:'DSPM 니치 리더, M&A 프리미엄 옵션', risk:'SW 경쟁 심화, M&A 미실현 가능', cat:'사이버 M&A 웨이브, 가중치 보안 규제'},
+  {t:'KTOS', nm:'Kratos Defense', ax:'🚀 방산', price:'(재확인)', mc:'~$9B', rsi:60, mb:'4/8',
+   why:'에세이 "The Free World Must Prevail"의 하드웨어. 제트추진 전술드론 Valkyrie로 협동전투기(CCA) 다수 프로그램 단독공급 — 펜타곤 협동자율 $45억·FY27 드론예산 $53.6B 직접 수혜. 시총 $9B로 기준초과지만 병목(단독공급) 지위는 최상이라 편입.',
+   moat:'CCA 단독공급 지위', risk:'국방예산·시총 부담, RSI 60 다소 상승', cat:'CCA 신규 수주, FY27 예산 집행'}
+];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 방법론 & 퍼널 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 발굴 방법론 — 100 → 20 → 10 → 5 퍼널'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'Aschenbrenner "Situational Awareness"가 지목한 4대 병목축(전력·컴퓨트·보안/방산·과학가속)을 밸류체인 전 구간으로 확장해 후보 ~100개를 수집한 뒤, 정량·정성 3단계 비교로 최종 5종목을 선별했다.')
+      ),
+      e('div',{className:'funnel'},
+        e('div',{className:'fbar',style:{background:'#4c1d95',color:'#e9d5ff',width:'100%'}},'1차 유니버스 · 100종목 (에세이 4축 × BOM 전구간)'),
+        e('div',{style:{color:'#64748b'}},'▼ 2차: 병목 정합성 + 투자가능성 + 미과열'),
+        e('div',{className:'fbar',style:{background:'#6d28d9',width:'80%'}},'2차 통과 · 20종목'),
+        e('div',{style:{color:'#64748b'}},'▼ 3차: 대체불가성 + 멀티배거 + 촉매 스코어링'),
+        e('div',{className:'fbar',style:{background:'#8b5cf6',width:'55%'}},'3차 상위 · 10종목'),
+        e('div',{style:{color:'#64748b'}},'▼ 최종: 에세이 축별 균형 + 리스크/리워드'),
+        e('div',{className:'fbar',style:{background:'#a78bfa',width:'35%'}},'✅ 최종 5종목')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📐 단계별 필터 기준'),
+      e('div',{className:'step'},e('span',{className:'step-n'},'2차'),e('span',{className:'step-t'},'① 에세이 병목 정합성(전력·컴퓨트·보안 직접 연결) ② 투자가능성(비상장·초대형 순수 1차수혜 제외) ③ 미과열(RSI<70, 극단 급등 제외)')),
+      e('div',{className:'step'},e('span',{className:'step-n'},'3차'),e('span',{className:'step-t'},'대체불가성(moat)·숨은병목성·밸류에이션·촉매·미과열 5개 항목 각 5점 스코어링(25점 만점)')),
+      e('div',{className:'step'},e('span',{className:'step-n'},'최종'),e('span',{className:'step-t'},'3차 상위 + 에세이 4축 균형(전력 2·컴퓨트 1·보안 1·방산 1) + 리스크 분산')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚖️ 에세이 축별 최종 배분'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'에세이 축'),e('th',null,'최종종목'),e('th',null,'선정 이유'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'⚡전력·연료'),e('td',null,'LEU'),e('td',null,'"가장 큰 병목"의 연료 독점')),
+            e('tr',null,e('td',null,'⚡전력·배전'),e('td',null,'POWL'),e('td',null,'스위치기어 매진 병목(전력 2배중)')),
+            e('tr',null,e('td',null,'🖥️컴퓨트'),e('td',null,'AEHR'),e('td',null,'HBM 테스트 소형·미과열')),
+            e('tr',null,e('td',null,'🔒보안'),e('td',null,'VRNS'),e('td',null,'가중치 보안·저평가')),
+            e('tr',null,e('td',null,'🚀방산'),e('td',null,'KTOS'),e('td',null,'CCA 단독공급'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 1차 유니버스 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🌐 1차 유니버스 — 100종목 (에세이 4축)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'각 축의 밸류체인 상·중·하류를 망라해 수집. 초대형 순수 1차수혜(NVDA·TSM 등)와 비상장은 유니버스엔 포함하되 2차에서 제외. 보라색 강조 = 2차 통과 후보.')
+      ),
+      Object.keys(UNIVERSE).map(function(k,i){
+        var g = UNIVERSE[k];
+        return e('div',{key:i,style:{marginBottom:'14px'}},
+          e('div',{style:{fontSize:'0.85rem',fontWeight:600,color:'#e2e8f0',marginBottom:'6px'}}, k),
+          e('div',{className:'uni'},
+            g.names.map(function(n,j){
+              var tk = n.split('(')[0].replace('.T','').replace('.KQ','');
+              var isPass = PASS2.some(function(p){return p.indexOf(tk)===0 || tk.indexOf(p.split('(')[0])===0;});
+              return e('span',{key:j, className:'chip'+(isPass?' pass':'')}, n);
+            })
+          )
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 3: 2차 스크리닝 ── */
+function Tab3() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔎 2차 스크리닝 — 100 → 20'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'제외 기준'),
+        e('div',{className:'dd'},'① 초대형 순수 1차수혜(NVDA·TSM·AVGO·CRWD·PANW·PLTR·CEG 등 — 이미 반영·멀티배거 여지 적음) ② 극단 과열(AAOI RSI82·LITE74·COHR70 — 추격위험) ③ 밸류체인 병목성 약함(유틸리티 D·SO·DUK 등)')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2차 통과 20종목'),
+        e('div',{className:'uni',style:{marginTop:'4px'}},
+          PASS2.map(function(n,i){ return e('span',{key:i,className:'chip pass'}, n); })
+        )
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'축'),e('th',null,'통과 종목'),e('th',null,'핵심 병목'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'⚡전력'),e('td',null,'LEU, POWL, SMR, OKLO, NNE, UEC, 033100, 062040, GEV'),e('td',null,'HALEU·스위치기어·SMR·변압기')),
+            e('tr',null,e('td',null,'🖥️컴퓨트'),e('td',null,'AEHR, CAMT, 한미042700, FN, POET'),e('td',null,'HBM 백엔드·테스트·광')),
+            e('tr',null,e('td',null,'🔒보안/방산'),e('td',null,'VRNS, S, RMBS, MRCY, KTOS, RCAT'),e('td',null,'가중치보안·자율무기'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 4: 3차 비교 ── */
+function Tab4() {
+  var rr = useRef(null); var rc = useRef(null);
+  var sorted = SCORE.slice().sort(function(a,b){return b.tot-a.tot;});
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:sorted.map(function(s){return s.t;}),
+      datasets:[
+        {label:'대체불가성',data:sorted.map(function(s){return s.moat;}),backgroundColor:'#a78bfa'},
+        {label:'숨은병목',data:sorted.map(function(s){return s.hidden;}),backgroundColor:'#3b82f6'},
+        {label:'밸류',data:sorted.map(function(s){return s.valu;}),backgroundColor:'#10b981'},
+        {label:'촉매',data:sorted.map(function(s){return s.cat;}),backgroundColor:'#f59e0b'},
+        {label:'미과열',data:sorted.map(function(s){return s.over;}),backgroundColor:'#ec4899'}
+      ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:9}}}},
+      scales:{x:{stacked:true,ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}},y:{stacked:true,max:25,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📊 3차 비교 — 5개 항목 스코어링 (25점 만점)'),
+      e('canvas',{ref:rr})
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🏆 스코어 순위표'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'#'),e('th',null,'종목'),e('th',null,'축'),e('th',null,'시총$B'),e('th',null,'대체불가'),e('th',null,'숨은병목'),e('th',null,'밸류'),e('th',null,'촉매'),e('th',null,'미과열'),e('th',null,'합계'))),
+          e('tbody',null,
+            sorted.map(function(s,i){
+              var isFin = ['LEU','POWL','AEHR','VRNS','KTOS'].indexOf(s.t)>=0;
+              return e('tr',{key:i, style:isFin?{background:'rgba(167,139,250,0.10)'}:{}},
+                e('td',null, (isFin?'✅':'')+(i+1)), e('td',null,s.t), e('td',null,s.ax), e('td',null,s.mc),
+                e('td',null,s.moat), e('td',null,s.hidden), e('td',null,s.valu), e('td',null,s.cat), e('td',null,s.over),
+                e('td',{style:{fontWeight:700,color:'#a78bfa'}},s.tot)
+              );
+            })
+          )
+        )
+      ),
+      e('div',{className:'dx',style:{marginTop:'10px'}},
+        e('div',{className:'dd'},'VRNS(23)가 최고점이나, 최종 5는 총점만이 아니라 "에세이 4축 균형"을 함께 반영. CAMT·한미·S·UEC는 상위권이나 축 중복(컴퓨트·보안 각 1 우선)·시총 부담·과열로 최종 제외.')
+      )
+    )
+  );
+}
+
+/* ── Tab 5: 최종 5 ── */
+function Tab5() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'✅ 최종 5종목 — 에세이 4축 균형'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'"숨은 병목 × 대체불가성 × 멀티배거"를 만족하며 에세이 4대 병목축을 고루 커버. 전력은 에세이가 지목한 최대 병목이라 2종목(연료·배전) 배분.')
+      ),
+      FINAL5.map(function(f,i){
+        return e('div',{key:i, className:'fin5'},
+          e('div',{className:'fin5-h'},
+            e('div',{style:{display:'flex',gap:'10px',alignItems:'center'}},
+              e('div',{className:'fin5-rank'}, i+1),
+              e('div',null,
+                e('div',{className:'fin5-tk'}, f.t+' — '+f.nm),
+                e('div',{style:{fontSize:'0.72rem',color:'#94a3b8'}}, f.ax)
+              )
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.85rem',fontWeight:700,color:'#e2e8f0'}}, f.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, f.mc)
+            )
+          ),
+          e('div',{className:'fin5-pt'}, f.why),
+          e('div',{className:'fin5-row'},
+            e('span',null,'🛡️ '+f.moat),
+            e('span',null,'⚡ 촉매: '+f.cat)
+          ),
+          e('div',{className:'fin5-row'},
+            e('span',{style:{color:'#ef4444'}},'⚠️ '+f.risk),
+            e('span',null,'멀티배거 '+f.mb),
+            e('span',null,'RSI '+f.rsi)
+          )
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var mr = useRef(null); var mc = useRef(null);
+  makeChart(mr, mc, {
+    type:'bar',
+    data:{labels:['LEU','POWL','AEHR','VRNS','KTOS'],
+      datasets:[{label:'시가총액($B)',data:[6.03,2.4,1.5,3.0,9.0],backgroundColor:['#f59e0b','#f59e0b','#3b82f6','#ef4444','#ef4444']}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},x:{ticks:{color:'#94a3b8'},grid:{display:false}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📊 최종 5 시가총액'),
+      e('canvas',{ref:mr}),
+      e('div',{style:{fontSize:'0.74rem',color:'#64748b',marginTop:'6px'}},'앰버=전력, 파랑=컴퓨트, 빨강=보안/방산')
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안 (동일비중 변형)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'종목'),e('th',null,'축'),e('th',null,'비중'),e('th',null,'성격'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'LEU'),e('td',null,'전력·연료'),e('td',null,'25%'),e('td',null,'독점 해자·핵심')),
+            e('tr',null,e('td',null,'POWL'),e('td',null,'전력·배전'),e('td',null,'25%'),e('td',null,'수주가시성·중소형')),
+            e('tr',null,e('td',null,'AEHR'),e('td',null,'컴퓨트'),e('td',null,'20%'),e('td',null,'소형 멀티배거·고변동')),
+            e('tr',null,e('td',null,'VRNS'),e('td',null,'보안'),e('td',null,'20%'),e('td',null,'저평가·M&A 옵션')),
+            e('tr',null,e('td',null,'KTOS'),e('td',null,'방산'),e('td',null,'10%'),e('td',null,'모멘텀·시총부담'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 공통 리스크 & 모니터링'),
+      e('div',{className:'dx'},
+        e('div',{className:'dd'},'① AI 캐펙스 둔화 시 전 축 밸류에이션 동반 하락 ② AEHR·033100·POET류 소형은 고객집중·실적변동·희석 리스크 ③ 일부 가격(AEHR·KTOS·POWL)은 리서치 시점 추정으로 매매 전 1차 자료 재확인 필수 ④ LEU·KTOS는 정책·예산 의존. 모니터링: DOE HALEU 계약, 스위치기어 리드타임, HBM4 발주, 사이버 M&A, FY27 국방예산 집행.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'※ 본 자료는 정보 제공용이며 투자 권유가 아님. 멀티배거 신호는 통계적 참고지표로, 손실 가능성을 배제하지 않는다.')
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🔬방법론','🌐유니버스100','🔎2차스크리닝','📊3차비교','✅최종5','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🎯 AGI 심층 종목발굴 100→5 (Situational Awareness)'),
+      e('div', {className:'sub'}, '에세이 4대 병목축 · 100종목 3단계 퍼널 · 최종 5종목 | 2026-07-20')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? e(Tab1,null) :
+      tab===1 ? e(Tab2,null) :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
