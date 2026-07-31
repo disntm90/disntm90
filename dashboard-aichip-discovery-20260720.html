@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AI반도체 숨은병목 종목발굴 대시보드 2026-07-20 (Situational Awareness 기반)</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0f2547 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #1e3a6e;}
+.hdr h1{font-size:1.4rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#3b82f6;border-bottom-color:#3b82f6;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #14284a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.05rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#3b82f6;}
+.bx{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#3b82f6;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bb{background:rgba(59,130,246,0.15);color:#3b82f6;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(59,130,246,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#3b82f6;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#f59e0b;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #1e3a6e;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#3b82f6;color:#00122e;border-color:#3b82f6;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#3b82f6;color:#00122e;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① HBM 고대역폭메모리 (결정적 병목)', fn:'GPU 옆 적층 메모리, AI 스케일업의 정의적 병목', sup:'[SK Hynix·Micron·Samsung 대형 — 장비/소재로 우회]', cost:'高(3~4배 프리미엄)', bn:'수율'},
+  {item:'② HBM 백엔드 장비 (TC본더/본딩)', fn:'HBM 다이 열압착 적층(8→12→16층)', sup:'한미반도체(042700)·이오테크닉스(039030)·[BESI 참고]', cost:'高', bn:'생산량'},
+  {item:'③ HBM·패키징 검사·계측', fn:'적층 정밀도·불량 검사, 층수↑ 정밀도↑', sup:'Camtek(CAMT)·[Onto·오로스테크놀로지]', cost:'中', bn:'수율'},
+  {item:'④ 번인·테스트', fn:'HBM/로직 신뢰성 검증, KGD(양품다이) 확보', sup:'Aehr(AEHR)·[Advantest 참고]', cost:'中', bn:'수율'},
+  {item:'⑤ 첨단패키징 기판(ABF substrate)', fn:'CoWoS 아래 고다층 기판, 공급 과점', sup:'Ibiden(4062.T)·[AT&S·신코 참고]', cost:'中(소재)', bn:'재료'},
+  {item:'⑥ 광인터커넥트/트랜시버', fn:'랙 간 광통신(800G/1.6T)', sup:'Fabrinet(FN)·Coherent(COHR)·Lumentum(LITE)·AAOI', cost:'中~高', bn:'생산량'},
+  {item:'⑦ 광반도체·CPO/PIC (열 병목)', fn:'스위치ASIC에 광엔진 통합, 온도 민감', sup:'POET(POET)·[GlobalFoundries 참고]', cost:'中', bn:'열'},
+  {item:'⑧ 고속 네트워킹(리타이머/AEC)', fn:'단거리 고속 전기 연결, 신호 무결성', sup:'Credo(CRDO,참고)·Astera Labs(ALAB,참고)', cost:'中', bn:'생산량'}
+];
+
+var STOCKS = [
+  {t:'AEHR', nm:'Aehr Test Systems', bom:'④ 번인·테스트', price:'(추정·재확인)', mc:1.5, pos:'중류(테스트)·수율★★★', moat:'보통~높음', pt:'번인·테스트 장비 소형주. HBM 층수 증가(8→12→16)와 KGD(양품다이) 수요로 테스트 공정이 병목화. 발굴종목 중 시총 최소권($1.5B 추정)으로 멀티배거 잠재력 최상 — 광모듈주 대비 아직 덜 주목된 언섹시 노드. 실적 변동성·고객집중 리스크.', mb:6, rsi:48, bn:'수율'},
+  {t:'CAMT', nm:'Camtek', bom:'③ HBM·패키징 검사·계측', price:'$174.78', mc:8.55, pos:'중류(검사)·수율★★★', moat:'높음', pt:'HBM·첨단패키징 검사·계측 강자. HBM 12층·16층으로 갈수록 검사 정밀도 요구가 급증 — "수율이 곧 공급"인 구조의 직접 수혜. 시총 $8.55B로 $5B 기준 초과(경계)나 광모듈주보다 밸류 부담 덜함.', mb:5, rsi:56, bn:'수율'},
+  {t:'042700.KQ', nm:'한미반도체', bom:'② TC본더 (HBM 스태킹)', price:'~₩214,500', mc:19, pos:'중류(HBM장비)·생산량★★★·기준초과', moat:'매우높음', pt:'HBM 열압착 본더(TC Bonder) 사실상 독점. SK하이닉스 HBM3E·HBM4 양산에 독점 공급 — "GPU 옆 HBM을 쌓는 유일한 손". 시총 ~26조원(~$19B)으로 대형화됐으나 병목 지위는 최상(핵심 병행). 6월 -5.97% 조정.', mb:4.5, rsi:50, bn:'생산량'},
+  {t:'FN', nm:'Fabrinet', bom:'⑥ 광 위탁제조(트랜시버/DCI/CPO)', price:'(추정·재확인)', mc:18, pos:'중류(광제조)·생산량★★·기준초과', moat:'높음', pt:'광모듈 위탁제조(엔비디아·Coherent 등 대신 생산). AAOI·LITE 같은 극과열 없이 광 밸류체인 전반에 노출되는 "곡괭이 파는" 포지션. CPO·DCI 확대 수혜. 시총 대형(~$18B 추정, 참고).', mb:4, rsi:58, bn:'생산량'},
+  {t:'POET', nm:'POET Technologies', bom:'⑦ 광인터포저·CPO/PIC', price:'(추정·재확인)', mc:0.7, pos:'중류(광반도체)·열★★', moat:'보통', pt:'광엔진 인터포저(하이브리드 통합) 마이크로캡. CPO가 2026 양산 진입하나 패키징·열·신뢰성이 병목 — 성공 시 고배율이나 프리레비뉴 투기성 극심. 시총 ~$0.7B 초소형.', mb:4, rsi:52, bn:'열'},
+  {t:'039030.KQ', nm:'이오테크닉스', bom:'② 레이저 HBM 후공정 장비', price:'(추정·재확인)', mc:2.5, pos:'중류(레이저장비)·생산량★★', moat:'보통~높음', pt:'레이저 마킹·그루빙·어닐링 등 HBM/후공정 레이저 장비. HBM 층수·TSV 공정 증가의 국내 소형~중형 수혜주. 한미반도체 대비 덜 주목. 상장구조·가격 재확인 필요.', mb:5, rsi:52, bn:'생산량'},
+  {t:'067310.KQ', nm:'하나마이크론', bom:'② HBM 후공정(OSAT)·패키징', price:'(추정·재확인)', mc:2.0, pos:'중류(OSAT)·생산량★★', moat:'보통', pt:'반도체 후공정(패키징·테스트) OSAT 소형주. HBM·첨단패키징 물량 확대 수혜, 국내 후공정 캐파 병목. 실적 변동성·부채 확인 필요.', mb:4.5, rsi:50, bn:'생산량'},
+  {t:'4062.T', nm:'Ibiden', bom:'⑤ ABF 첨단패키징 기판', price:'(추정·재확인)', mc:10, pos:'상류(기판소재)·재료★★·기준초과', moat:'매우높음', pt:'ABF 기판 글로벌 과점 강자. CoWoS·대형 AI칩 패키지 아래 반드시 필요한 고다층 기판 — 소수 업체가 공급을 좌우하는 재료 병목. 시총 대형(~$10B 추정, 참고).', mb:3.5, rsi:54, bn:'재료'},
+  {t:'ALAB', nm:'Astera Labs', bom:'⑧ 커넥티비티(리타이머/PCIe·CXL)', price:'(추정·재확인)', mc:20, pos:'중류(커넥티비티)·생산량·기준초과', moat:'높음', pt:'AI 서버 내 리타이머·커넥티비티 IC 전문. 클러스터 스케일업의 신호 무결성 병목. 시총 대형화(~$20B 추정, 참고).', mb:3, rsi:60, bn:'생산량'},
+  {t:'CRDO', nm:'Credo Technology', bom:'⑧ AEC 액티브전기케이블 (참고대형)', price:'(대형·참고)', mc:25, pos:'중류(AEC)·생산량·기준초과', moat:'높음', pt:'단거리 고속 AEC(액티브 전기 케이블)로 광 대비 저전력 연결. AI 랙 내 수혜지만 이미 대형화·급등(~$22~43B, 참고).', mb:2.5, rsi:64, bn:'생산량'},
+  {t:'COHR', nm:'Coherent', bom:'⑥ 광트랜시버 (과열 참고)', price:'$363', mc:56, pos:'중류(광)·생산량·과열참고', moat:'높음', pt:'광트랜시버·레이저 종합, 엔비디아 $2B 투자. YTD +97%로 이미 크게 반영 — 추격매수 주의(참고).', mb:2, rsi:70, bn:'생산량'},
+  {t:'LITE', nm:'Lumentum', bom:'⑥ 광·OCS (과열 참고)', price:'$859', mc:60, pos:'중류(광)·생산량·과열참고', moat:'높음', pt:'광부품·광회로스위치(OCS). YTD +166%, $4억+ OCS 백로그. 이미 급등 반영(참고).', mb:1.5, rsi:74, bn:'생산량'},
+  {t:'AAOI', nm:'Applied Optoelectronics', bom:'⑥ 광트랜시버 (극과열 참고)', price:'$174', mc:8, pos:'중류(광)·생산량·극과열참고', moat:'보통', pt:'800G 트랜시버 하이퍼스케일 첫 양산공급. YTD +441% 극단적 급등 — 추격매수 위험 최상(참고).', mb:1, rsi:82, bn:'생산량'}
+];
+
+var BOTTLENECKS = ['전체','생산량','수율','열','재료'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 조 단위 AI 클러스터 BOM — 8개 라인아이템 (엔비디아 제외)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'터미널(L1) = 조 단위 AI GPU 클러스터(트레이닝/추론). 완제품인 GPU(엔비디아)는 "모두가 아는 1차 수혜"라 제외하고, 그 GPU를 실제로 작동시키는 숨은 병목 — HBM 백엔드 장비·검사·테스트·기판·광인터커넥트를 BOM으로 분해했다. Aschenbrenner "Racing to the Trillion-Dollar Cluster"의 컴퓨트 논지를 2차 파생 노드로 확장한 판.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능'),e('th',null,'공급사'),e('th',null,'원가비중'),e('th',null,'병목유형'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: 조 단위 클러스터 → HBM이 "결정적 병목" (에세이 Trillion-Dollar Cluster)]\n\n  → 상류(소재)          → 중류(HBM 백엔드·광 병목)                → 하류(완제품)\n     4062.T Ibiden          ★② 042700 한미 TC본더 ★★★생산량(독점)        엔비디아 GPU\n       ABF기판 ★재료           039030 이오테크닉스 ★생산량                   (제외: 모두 아는 1차)\n                            ★④ AEHR 번인테스트 ★★★수율(소형·저평가)\n                             ③ CAMT 검사 ★★수율\n                             ⑦ POET 광인터포저 ★열(초소형 spec)\n                             ⑥ FN 광위탁제조 (곡괭이)\n                             ⑥ COHR/LITE/AAOI 광 (★과열 주의)'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'②④ HBM 백엔드 — "쌓고·검사·테스트"가 진짜 병목'),
+        e('div',{className:'bd'},'HBM은 2026 AI의 결정적 병목이나 메모리 3사(SK하이닉스·Micron·삼성)는 대형주. 대신 그 HBM을 "쌓는(한미반도체 TC본더 독점)·검사하는(Camtek)·테스트하는(Aehr)" 장비가 순수 병목 노드다. 층수가 8→12→16으로 늘수록 본딩·검사·테스트 공정이 기하급수로 증가.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑥ 광모듈은 이미 과열 — "곡괭이" FN·소형 AEHR로 우회'),
+        e('div',{className:'bd'},'AAOI(+441%)·Lumentum(+166%)·Coherent(+97%)는 이미 폭등해 추격 위험. 대신 이들 대신 만들어주는 위탁제조 Fabrinet(FN, "곡괭이 파는 자")과, 아직 덜 주목된 테스트 소형주 Aehr가 밸류 부담이 덜한 파생 노드다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑤⑦ ABF 기판·CPO — 조용한 재료·열 병목'),
+        e('div',{className:'bd'},'ABF 기판(Ibiden)은 대형 AI칩 패키지 아래 반드시 필요한데 과점 구조. CPO(광 공동패키징)는 2026 양산 진입하나 열민감·신뢰성이 병목 — POET 같은 초소형이 고위험·고배율 베팅.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'042700, 039030, 067310, FN, ALAB, CRDO'),e('td',null,'장비·기판 캐파가 HBM 증산을 못 따라가는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'수율')),e('td',null,'AEHR, CAMT'),e('td',null,'12층+ HBM 수율·검사·테스트가 공급을 제한하는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'열')),e('td',null,'POET'),e('td',null,'CPO 광엔진의 열민감이 상용화 병목인가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'재료')),e('td',null,'4062.T Ibiden'),e('td',null,'ABF 기판 과점이 패키지 공급을 제한하는가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 기존 시스템의 근본 한계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 메모리 대역폭 벽 (Memory Wall)'),
+        e('div',{className:'bd'},'GPU 연산은 폭증하나 일반 DRAM 대역폭이 못 따라가 "메모리 벽"에 부딪힘. AI 학습·추론이 커질수록 HBM 없이는 GPU가 굶는 구조 — HBM이 결정적 병목으로 격상.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② HBM 적층 수율·복잡도 한계'),
+        e('div',{className:'bd'},'HBM3E 12층·HBM4 36GB로 층수가 늘수록 열압착 본딩·TSV·검사·테스트 난도가 급증. 삼성도 엔비디아 12층 퀄 통과에 수율 문제를 겪을 만큼 백엔드가 병목. HBM은 표준 DRAM 대비 3~4배 프리미엄.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 전기 인터커넥트의 대역폭·전력 한계'),
+        e('div',{className:'bd'},'클러스터가 커질수록 구리 전기신호는 대역폭·전력·거리 한계에 부딪힘. 광인터커넥트·CPO로 전환이 불가피하나, 광 패키징·열·신뢰성 생태계가 아직 병목.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 신기술 우위성 (정량 비교)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'신기술'),e('th',null,'기존 대비 우위'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'HBM4 (36GB·12층)'),e('td',null,'표준 DRAM 대비 3~4배 프리미엄, 대역폭 대폭 확대')),
+            e('tr',null,e('td',null,'CPO(광 공동패키징)'),e('td',null,'전기 경로 단축 → 신호무결성·전력효율 개선')),
+            e('tr',null,e('td',null,'AEC(액티브 전기케이블)'),e('td',null,'단거리에서 광 대비 저전력·저비용 연결'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'1단계 — HBM 수요 폭발 (2023~2024)'),
+        e('div',{className:'bd'},'생성형 AI 붐으로 HBM이 GPU의 필수 짝으로 부상, SK하이닉스가 선점.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2단계 — 백엔드·광 병목 심화 (2025~2026)'),
+        e('div',{className:'bd'},'CoWoS 증설(월 12만 웨이퍼 목표)로 앞단은 완화됐으나 HBM 적층·검사·테스트가 병목으로 이동. 광은 CPO 양산 진입, 엔비디아가 Coherent에 $2B 투자.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'3단계 — 수율·재료 병목 구조화 (2026~미래)'),
+        e('div',{className:'bd'},'HBM 16층·HBM4로 갈수록 본딩·검사·테스트·ABF기판이 공급을 좌우. 광모듈주 급등 후 밸류 부담 — 백엔드 장비·테스트·기판으로 관심 확산.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'HBM 프리미엄'),e('td',null,'표준 DRAM 대비 3~4배')),
+            e('tr',null,e('td',null,'CoWoS 월 웨이퍼 캐파'),e('td',null,'→ 12만장(2026 연말 목표)')),
+            e('tr',null,e('td',null,'HBM 적층'),e('td',null,'8층 → 12층 → 16층 진화')),
+            e('tr',null,e('td',null,'광모듈 YTD(2026)'),e('td',null,'AAOI +441%·LITE +166%·COHR +97% (과열)')),
+            e('tr',null,e('td',null,'CPO'),e('td',null,'2026 본격 양산 진입(패키징·열 병목 잔존)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 13개 (숨은 병목 기준)'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'⚠️ 이 분야는 "이미 과열"이 최대 리스크'),
+        e('div',{className:'dd'},'광모듈주(AAOI +441%·LITE +166%·COHR +97%)와 한미반도체(~26조)·CRDO·ALAB는 이미 크게 급등/대형화 — 참고·과열 표기. 순수 소형 발굴은 AEHR·POET·이오테크닉스·하나마이크론. 한국·일부 미국 가격은 "재확인" 표기, 매매 전 1차 자료 확인 필수. 반도체 사이클·고객집중 리스크 큼.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.88rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#3b82f6'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#3b82f6'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교 (과열 확인)'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[0]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<2?1:s.mc<5?0.5:0,
+      s.rsi<55?0.6:0.3,
+      0.5,
+      0.5,
+      s.bn==='수율'?0.6:0.5,
+      s.bn==='생산량'||s.bn==='수율'?1:0.6,
+      s.mc<2?0.5:1,
+      s.rsi>70?0:s.rsi<55?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:MB_LABELS,
+      datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(59,130,246,0.2)', borderColor:'#3b82f6', pointBackgroundColor:'#3b82f6'}]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){
+          return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t);
+        })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#3b82f6'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('div',{className:'dx'},
+        e('div',{className:'dd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 이 분야는 다수 종목이 이미 과열(RSI 70+)이라 "추격아닌가" 항목이 특히 중요. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (3~6개월)'),
+        e('div',{className:'bd'},'HBM4 본격 발주(한미 TC본더·이오테크닉스 수주), Aehr 신규 테스트 수주·고객 다변화, Camtek HBM 검사 매출, 엔비디아 CPO 로드맵, 광모듈주 실적 발표(과열 검증).')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~18개월)'),
+        e('div',{className:'bd'},'HBM 16층 전환, CPO 대량 양산(POET 등 상용화 검증), ABF 기판 증설, 광→백엔드로 밸류에이션 로테이션.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'공통 리스크'),
+        e('div',{className:'dd'},'광모듈주(AAOI RSI 82·LITE 74·COHR 70)·CRDO 등 다수가 극단적 과열 — 추격매수 시 급락 위험. POET·하나마이크론 등 소형은 수익성·희석 리스크 큼. HBM/반도체 사이클 둔화, 특정 고객(엔비디아·SK하이닉스) 집중 의존, CoWoS 완화 시 병목 서사 약화. 한국·일부 가격은 추정치로 재확인 필수.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'핵심(④③ 저평가 백엔드)'),e('td',null,'AEHR, CAMT'),e('td',null,'30%')),
+            e('tr',null,e('td',null,'HBM 장비(② 병목)'),e('td',null,'042700, 039030'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'광 곡괭이·재료(⑥⑤)'),e('td',null,'FN, 4062.T'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'고위험 소형(⑦②)'),e('td',null,'POET, 067310'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'대형·과열 참고(⑧⑥)'),e('td',null,'ALAB, CRDO, COHR, LITE, AAOI'),e('td',null,'10%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🖥️ AI반도체 숨은병목 종목발굴 (Situational Awareness 기반)'),
+      e('div', {className:'sub'}, '엔비디아 아닌 HBM 백엔드·광·기판 병목 · BOM 8개 라인아이템 | 2026-07-20 | 13개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
