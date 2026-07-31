@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AGI 전력병목 종목발굴 대시보드 2026-07-20 (Situational Awareness 기반)</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d2a0f 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #5e420e;}
+.hdr h1{font-size:1.4rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#f59e0b;border-bottom-color:#f59e0b;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #453814;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.05rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#06b6d4;}
+.bx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bb{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(245,158,11,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#f59e0b;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#06b6d4;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #5e420e;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#f59e0b;color:#1a1400;border-color:#f59e0b;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#f59e0b;color:#1a1400;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① 원자로/SMR (신형 발전원)', fn:'AI 클러스터 전용 24/7 무탄소 전력 생성', sup:'NuScale(SMR)·Oklo(OKLO)·Nano Nuclear(NNE)', cost:'高(발전설비)', bn:'인증'},
+  {item:'② 우라늄 채굴·전환 (연료 상류)', fn:'원전 연료 원소재 공급', sup:'Uranium Energy(UEC)·Energy Fuels(UUUU)·[Cameco 참고]', cost:'中(소재)', bn:'재료'},
+  {item:'③ HALEU 농축 (연료 병목)', fn:'차세대 SMR 필수 고순도 농축우라늄(5~20%)', sup:'Centrus(LEU)·BWXT(전환)', cost:'高', bn:'인증'},
+  {item:'④ 대형 전력변압기 (그리드 최대 병목)', fn:'발전전력을 데이터센터로 승압·송전, 리드타임 3~4년', sup:'제룡전기(033100)·산일전기(062040)·HD현대일렉트릭(267260,참고)', cost:'高', bn:'생산량'},
+  {item:'⑤ 스위치기어/배전반', fn:'전력 분배·차단·보호, 2028년까지 사실상 매진', sup:'Powell Industries(POWL)·[Eaton/ABB 참고]', cost:'中', bn:'생산량'},
+  {item:'⑥ 가스터빈 (즉시배치 발전)', fn:'가장 빠르게 GW급 전력 확보, 브리지 전원', sup:'GE Vernova(GEV,참고)·[Siemens Energy 참고]', cost:'高', bn:'생산량'},
+  {item:'⑦ 원전 부품·기자재 (인증)', fn:'원자로 압력용기·핵연료 컴포넌트, 규제 인증 수년', sup:'BWX Technologies(BWXT)', cost:'中~高', bn:'인증'},
+  {item:'⑧ 데이터센터 전력분배·UPS', fn:'클러스터 내부 전력 관리·무정전', sup:'Vertiv(VRT,참고)·[Schneider 참고]', cost:'中', bn:'전기'}
+];
+
+var STOCKS = [
+  {t:'LEU', nm:'Centrus Energy', bom:'③ HALEU 농축 (미국 유일)', price:'$331.03', mc:6.03, pos:'상류(연료병목)·인증★★★', moat:'매우높음', pt:'미국 유일의 라이선스 HALEU(고순도 농축우라늄) 생산사. 모든 차세대 SMR(Oklo·NuScale 등)이 이 연료 없이는 가동 불가 — 에세이가 말한 "전력 병목" 중에서도 연료 독점 노드. DOE HALEU 계약 수주. 시총 $6.03B로 $5B 기준 소폭 초과하나 대체불가성 최상.', mb:6, rsi:48, bn:'인증'},
+  {t:'033100.KQ', nm:'제룡전기', bom:'④ 대형 전력변압기 (북미 수출)', price:'(추정·재확인)', mc:0.7, pos:'중류(그리드병목)·생산량★★★', moat:'보통~높음', pt:'매출 80%+가 북미 수출인 국내 소형 변압기 강자. 변압기 리드타임 3~4년의 최대 병목 직접 수혜 구조. 단 Q1 2026 별도매출 -30.9%·영업이익 -63.4%로 공급 정상화·경쟁·관세 영향에 단기 실적 둔화 — 저점 접근 전 실적 반등 확인 필요.', mb:5.5, rsi:42, bn:'생산량'},
+  {t:'POWL', nm:'Powell Industries', bom:'⑤ 스위치기어/배전반', price:'~$201(추정)', mc:2.4, pos:'중류(배전병목)·생산량★★★', moat:'높음', pt:'데이터센터·산업용 스위치기어 전문. 스위치기어는 2028년까지 사실상 매진 — 주문잔고가 곧 실적. 애널리스트 4인 Buy, 목표가 $316(+57%). 시총 ~$2.4B 중소형으로 디스커버리 기준 부합.', mb:6, rsi:55, bn:'생산량'},
+  {t:'SMR', nm:'NuScale Power', bom:'① 원자로/SMR', price:'(추정·재확인)', mc:8, pos:'중류(발전-신형)·인증★★·기준초과', moat:'높음', pt:'미국에서 유일하게 NRC(원자력규제위) 설계 승인을 받은 SMR 개발사. 인증 해자가 최대 강점이나 상용 매출은 초기. YTD -23%로 조정 — 시총 ~$8B로 기준 초과(참고).', mb:4.5, rsi:44, bn:'인증'},
+  {t:'OKLO', nm:'Oklo Inc', bom:'① 원자로/SMR (Aurora)', price:'(추정·재확인)', mc:9, pos:'중류(발전-신형)·인증·기준초과', moat:'보통~높음', pt:'Sam Altman(OpenAI)이 이사회 의장이었던 마이크로원자로 개발사. Aurora Powerhouse로 데이터센터 24/7 전력 목표. AGI 서사와 직접 연결되나 프리레비뉴 투기성 큼. YTD -15%, 시총 ~$9B(참고).', mb:4, rsi:46, bn:'인증'},
+  {t:'NNE', nm:'Nano Nuclear Energy', bom:'① 마이크로 원자로', price:'(추정·재확인)', mc:1.8, pos:'중류(발전-초소형)·인증★★', moat:'보통', pt:'초소형(마이크로) 원자로 개발 소형주. 발굴종목 중 SMR 순수 플레이 중 시총이 작아 멀티배거 잠재력은 크나, 상용화 전 단계로 투기성·희석 리스크 높음.', mb:4.5, rsi:50, bn:'인증'},
+  {t:'BWXT', nm:'BWX Technologies', bom:'⑦ 원전 부품 + ③ HALEU 전환', bom2:true, price:'(추정·재확인)', mc:12.5, pos:'중류(부품·연료)·인증·기준초과', moat:'매우높음', pt:'원자로 압력용기·해군 원자로·핵연료 컴포넌트 종합. DOE HALEU 전환(deconversion) 6개사에 포함. 규제 인증·해군 계약의 견고한 해자. 시총 ~$12.5B 대형 기준점(참고).', mb:3.5, rsi:52, bn:'인증'},
+  {t:'UEC', nm:'Uranium Energy', bom:'② 우라늄 채굴', price:'$9.44', mc:4.9, pos:'상류(연료 소재)·재료★★', moat:'보통', pt:'미국 기반 우라늄 채굴사. 원전 확대의 연료 상류 수혜, 시총 ~$4.9B로 $5B 기준 근접. 우라늄 가격 사이클에 실적 연동.', mb:4.5, rsi:53, bn:'재료'},
+  {t:'062040.KS', nm:'산일전기', bom:'④ 특수·신재생 변압기', price:'(추정·재확인)', mc:1.5, pos:'중류(변압기)·생산량★★', moat:'보통~높음', pt:'특수·신재생 변압기 국내 강자, 유가증권시장 상장 추진 이력. 미국 데이터센터·재생에너지향 변압기 수출 성장. 상장·유통 구조 재확인 필요.', mb:5, rsi:50, bn:'생산량'},
+  {t:'UUUU', nm:'Energy Fuels', bom:'② 우라늄 + 희토류(소재)', price:'(추정·재확인)', mc:2.0, pos:'상류(연료+희토류)·재료★★', moat:'보통', pt:'미국 우라늄 생산 + 희토류 분리까지 겸하는 소재 소형주. 연료 상류와 소재 안보 두 테마 동시 노출.', mb:4.5, rsi:51, bn:'재료'},
+  {t:'267260.KS', nm:'HD현대일렉트릭', bom:'④ 초고압 변압기 (대장·참고)', price:'~₩263,500', mc:10, pos:'중류(변압기)·생산량·기준초과', moat:'높음', pt:'국내 전력기기 대장주, 미국 앨라배마 변압기 공장 운영. 연초 대비 +220% 급등 반영으로 시총 대형화(~$10B, 참고). 2026 수주목표 $42억.', mb:2.5, rsi:66, bn:'생산량'},
+  {t:'GEV', nm:'GE Vernova', bom:'⑥ 가스터빈 + 그리드 + 핵연료 (대형 참고)', price:'(대형·참고)', mc:150, pos:'중류·통합·기준초과', moat:'매우높음', pt:'가스터빈·그리드 설비·핵연료(GNF, 8% 농축 승인)를 아우르는 통합 대형주. AGI 전력 인프라의 종합 수혜지만 이미 초대형 기준점(~$150B).', mb:1.5, rsi:64, bn:'생산량'},
+  {t:'VRT', nm:'Vertiv Holdings', bom:'⑧ 데이터센터 전력·냉각 (대형 참고)', price:'(대형·참고)', mc:50, pos:'하류(전력분배)·전기·기준초과', moat:'높음', pt:'데이터센터 전력분배·UPS·냉각 종합. 전력 병목의 하류 필수 노드지만 이미 대형(~$50B) 기준점.', mb:1.5, rsi:62, bn:'전기'}
+];
+
+var BOTTLENECKS = ['전체','생산량','인증','재료','전기'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 기가와트 AI 데이터센터 전력공급 BOM — 8개 라인아이템'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'터미널(L1) = 조 단위 AI 클러스터(10GW→100GW)에 전력을 공급하는 것. Aschenbrenner "Situational Awareness"는 "스케일업의 가장 큰 제약은 칩이 아니라 전력"이라 명시한다. 이 BOM은 발전(원자로·가스터빈)→연료(우라늄·HALEU)→송배전(변압기·스위치기어)→데이터센터 전력분배까지 분해했다.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능'),e('th',null,'공급사'),e('th',null,'원가비중'),e('th',null,'병목유형'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: AGI 조 단위 클러스터 → 100GW 전력 수요 (에세이 "The power constraint")]\n\n  → 상류(연료)              → 중류(발전·송배전 병목)                → 하류(DC 전력)\n     UEC/UUUU 우라늄 ★재료     ★③ LEU HALEU농축(미국유일) ★★★인증       VRT 전력분배\n     LEU HALEU농축 ★★★인증      ① SMR/OKLO/NNE 원자로 ★인증\n                                ★④ 033100 제룡/062040 산일 변압기 ★★★생산량\n                                    (리드타임 3~4년 최대병목)\n                                ⑤ POWL 스위치기어 ★★★(2028 매진)\n                                ⑥ GEV 가스터빈 / ⑦ BWXT 원전부품·연료전환'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'④⑤ 변압기·스위치기어 — 가장 언섹시한데 가장 막힌 병목'),
+        e('div',{className:'bd'},'"칩이 아무리 세도 전기 안 들어가면 소용없다." 대형 변압기 리드타임이 3~4년, 스위치기어는 2028년까지 매진. 발표된 16GW 중 실제 착공은 5GW뿐, 파이프라인의 30~50%가 전력·변압기 부족으로 지연·취소 전망. 제룡전기(북미 80% 수출)·Powell(스위치기어)가 이 병목의 직접 공급사다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ HALEU 농축 — 연료 독점 노드 (Centrus)'),
+        e('div',{className:'bd'},'차세대 SMR(Oklo·NuScale)은 HALEU(5~20% 농축우라늄) 없이는 가동 불가. Centrus(LEU)는 미국 유일의 라이선스 HALEU 생산사 — 원자로를 아무리 만들어도 이 연료 없이는 못 돌린다. "원자로(완제품)"보다 "연료(병목)"를 파는 L5 원칙의 전형.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'옆으로 보기 — 원자로(주목) 옆 연료·송배전(덜 주목)'),
+        e('div',{className:'bd'},'시장은 SMR 완제품(OKLO·SMR)에 열광하지만 이미 시총 $8~9B로 반영. 아직 덜 주목된 옆 노드 — HALEU(LEU), 변압기(제룡·산일), 스위치기어(POWL), 원전부품(BWXT)이 실제 병목 공급사다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'033100, 062040, POWL, 267260, GEV'),e('td',null,'리드타임 3~4년, 수요 대비 공급 가능한가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'LEU, SMR, OKLO, NNE, BWXT'),e('td',null,'원자력 규제·연료 인증에 수년 걸리는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'재료')),e('td',null,'UEC, UUUU'),e('td',null,'우라늄 등 연료 소재가 공급을 제한하는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'전기')),e('td',null,'VRT'),e('td',null,'데이터센터 내 전력분배가 병목인가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 에세이 논지 — 기존 전력 시스템의 근본 한계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 미국 전력 생산 정체'),
+        e('div',{className:'bd'},'Aschenbrenner: 지난 수십 년간 미국 전력 생산은 사실상 정체. 반면 AI 클러스터는 2028년경 10GW, 2030년경 100GW를 요구 — 기존 그리드로는 물리적으로 불가능. "전력이 스케일업의 가장 큰 제약(binding constraint)".')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 변압기·송배전 설비 리드타임 폭증'),
+        e('div',{className:'bd'},'대형 변압기 리드타임이 2020~21년 ~1년 → 현재 3~4년. 스위치기어는 2028년까지 매진. 발표 16GW 중 실착공 5GW뿐 — 전력설비 부족으로 데이터센터 30~50% 지연·취소 전망.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 원자력 연료(HALEU) 공급 부재'),
+        e('div',{className:'bd'},'차세대 SMR은 HALEU가 필수이나, 미국은 라이선스 생산사가 Centrus 한 곳뿐. 연료 없이는 원자로가 무용 — 정부(DOE)가 HALEU 공급망 계약을 급히 발주 중.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 신기술 우위성 (정량 비교)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'신기술'),e('th',null,'기존 대비 우위'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'SMR (소형모듈원자로)'),e('td',null,'공장제작·모듈화로 건설기간 단축, 데이터센터 옆 배치(behind-the-meter)')),
+            e('tr',null,e('td',null,'HALEU 연료(5~20% 농축)'),e('td',null,'기존 LEU(<5%) 대비 고밀도·소형로 대응, 연료교체 주기 연장')),
+            e('tr',null,e('td',null,'가스터빈 브리지 전원'),e('td',null,'원전·신재생 대비 최단기간 GW급 확보(즉시 배치)'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'1단계 — AI 전력 수요 각성 (2023~2024)'),
+        e('div',{className:'bd'},'ChatGPT발 AI 붐 + Aschenbrenner "Situational Awareness"(2024.6) 발표로 "전력이 AGI의 진짜 병목"이라는 인식 확산.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2단계 — 빅테크 전력 직접계약·정부 개입 (2024~2026)'),
+        e('div',{className:'bd'},'하이퍼스케일러의 원전 PPA(Microsoft·Amazon·Google의 SMR·기존원전 계약), DOE의 HALEU 6개사 계약, GE Vernova 8% 농축 승인 — 전력 공급망에 자본이 집중.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'3단계 — 설비 병목 가시화 (2026~미래)'),
+        e('div',{className:'bd'},'변압기 3~4년·스위치기어 2028년 매진, 데이터센터 30~50% 지연 전망. 전력설비·연료 공급사가 밸류체인의 실질 병목으로 부상.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'글로벌 데이터센터 전력사용'),e('td',null,'460TWh(2022) → 620~1,050TWh(2026, IEA)')),
+            e('tr',null,e('td',null,'AI 클러스터 전력수요(에세이)'),e('td',null,'~10GW(2028E) → ~100GW(2030E)')),
+            e('tr',null,e('td',null,'대형 변압기 리드타임'),e('td',null,'~1년(2020) → 3~4년(2026)')),
+            e('tr',null,e('td',null,'스위치기어'),e('td',null,'2028년까지 사실상 매진')),
+            e('tr',null,e('td',null,'데이터센터 파이프라인 지연 전망'),e('td',null,'30~50% (전력·설비 부족)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 13개 (전력병목 기준)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'⚠️ LEU($6.03B)·SMR·OKLO·BWXT·267260·GEV·VRT는 이미 $5B 기준을 초과/근접해 참고용으로 분류(단 LEU는 연료 독점성으로 핵심 병행). 한국 변압기주(033100·062040) 및 일부 가격은 리서치 시점 추정으로 "재확인" 표기 — 매매 전 1차 자료 확인 필수. 원자력주는 규제·상용화 리스크로 변동성 극심.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.88rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#f59e0b'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#f59e0b'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#06b6d4'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[0]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<1?1:s.mc<5?0.5:0,
+      s.bn==='재료'||s.bn==='인증'?0.6:0.5,
+      0.5,
+      0.5,
+      s.bn==='생산량'?0.6:0.4,
+      s.bn==='생산량'||s.bn==='인증'?1:0.5,
+      s.mc<1?0.5:1,
+      s.rsi>65?0:s.rsi<35?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:MB_LABELS,
+      datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(245,158,11,0.2)', borderColor:'#f59e0b', pointBackgroundColor:'#f59e0b'}]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){
+          return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t);
+        })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#f59e0b'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (3~6개월)'),
+        e('div',{className:'bd'},'하이퍼스케일러 신규 원전·SMR PPA 발표, DOE HALEU 추가 계약, 제룡전기·산일전기 북미 변압기 수주·실적 반등, Powell 수주잔고 갱신, Centrus HALEU 생산 확대.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~18개월)'),
+        e('div',{className:'bd'},'첫 상업 SMR 착공·연료 로딩, 변압기 증설 캐펙스 사이클, 미국 전력망 대규모 투자법안, 우라늄 가격 사이클 상승.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'공통 리스크'),
+        e('div',{className:'dd'},'원자력주(SMR·OKLO·NNE)는 상용화 전 프리레비뉴 투기성·희석 리스크 극심. 제룡전기는 Q1 실적 둔화(매출 -30.9%) 중 — 병목 서사와 단기 실적의 괴리 주의. 267260·GEV·VRT·BWXT는 이미 급등·대형화(기준초과). AI 캐펙스 둔화 시 전력 수요 전망 하향 위험. 한국주 환율·상장구조 재확인 필수.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'핵심(③⑤ 연료·배전 병목)'),e('td',null,'LEU, POWL'),e('td',null,'30%')),
+            e('tr',null,e('td',null,'그리드(④ 변압기 소형주)'),e('td',null,'033100, 062040'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'발전(① SMR 소형)'),e('td',null,'NNE, SMR'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'연료소재(② 우라늄)'),e('td',null,'UEC, UUUU'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'고위험·참고(대형/투기)'),e('td',null,'OKLO, BWXT, 267260, GEV, VRT'),e('td',null,'15%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '⚡ AGI 전력병목 종목발굴 (Situational Awareness 기반)'),
+      e('div', {className:'sub'}, '"전력이 AGI의 진짜 병목" · BOM 8개 라인아이템 | 2026-07-20 | 13개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
