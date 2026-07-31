@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AGI 보안·방산 종목발굴 대시보드 2026-07-20 (Situational Awareness 기반)</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d0f14 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #5e1620;}
+.hdr h1{font-size:1.4rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#ef4444;border-bottom-color:#ef4444;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #451418;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.05rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#06b6d4;}
+.bx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bb{background:rgba(239,68,68,0.15);color:#ef4444;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(239,68,68,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#ef4444;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#06b6d4;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #5e1620;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#ef4444;color:#1a0002;border-color:#ef4444;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#ef4444;color:#1a0002;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① 기밀 컴퓨팅·하드웨어 보안 IP', fn:'모델 가중치를 TEE(신뢰실행환경)로 하드웨어 격리', sup:'Rambus(RMBS)·[Intel/AMD/NVIDIA 참고]', cost:'中(IP)', bn:'인증'},
+  {item:'② 특권접근·신원관리 (내부자 위협)', fn:'가중치 접근 권한 통제, 머신-머신 인증', sup:'CyberArk(CYBR,참고)·[Okta/SailPoint 참고]', cost:'中', bn:'인증'},
+  {item:'③ 데이터 보안 태세(DSPM)', fn:'학습데이터·가중치 저장·이동 전 구간 보호', sup:'Varonis(VRNS)·Rubrik(RBRK)', cost:'中', bn:'생산량'},
+  {item:'④ AI 엔드포인트·위협탐지', fn:'AI기반 실시간 침입·이상행위 탐지', sup:'SentinelOne(S)·[CrowdStrike 참고]', cost:'中', bn:'수율'},
+  {item:'⑤ 국가안보·정보분석 AI 플랫폼', fn:'전장·정보 데이터 융합, 자율플랫폼 지휘', sup:'Palantir(PLTR,참고)·[Booz Allen 참고]', cost:'高', bn:'인증'},
+  {item:'⑥ 자율무기·협동전투기(CCA)', fn:'유·무인 협동 자율 타격, 로이터링 무기', sup:'Kratos(KTOS)·AeroVironment(AVAV,참고)', cost:'高', bn:'생산량'},
+  {item:'⑦ 소형 전술드론·카운터UAS', fn:'전술 정찰·타격, 대드론 방어', sup:'Red Cat(RCAT)·Ondas(ONDS)', cost:'中', bn:'생산량'},
+  {item:'⑧ 방산 보안 전자·엣지 보안컴퓨트', fn:'전장 엣지에서 안전한 처리·RF·보안모듈', sup:'Mercury Systems(MRCY)', cost:'中~高', bn:'인증'}
+];
+
+var STOCKS = [
+  {t:'VRNS', nm:'Varonis Systems', bom:'③ 데이터 보안 태세(DSPM)', price:'$28.00', mc:3.0, pos:'중류(데이터보안)·생산량★★★', moat:'높음', pt:'데이터 보안 태세관리(DSPM) 니치 1위. "모델 가중치=새로운 crown jewels" 시대의 직접 수혜 — AI 워크로드가 데이터보안을 이사회 안건으로 격상. 12개월 -38% 조정, MS·Palo Alto·CrowdStrike의 유력 M&A 타깃. 시총 ~$3B로 디스커버리 기준 부합.', mb:6, rsi:42, bn:'생산량'},
+  {t:'S', nm:'SentinelOne', bom:'④ AI 엔드포인트·위협탐지', price:'$16.33', mc:5.6, pos:'중류(엔드포인트)·수율★★★', moat:'높음', pt:'AI 자율 엔드포인트 보안. ARR $10.6억(+23%), 첫 non-GAAP 흑자(7% 마진)에도 2021 고점比 -61.6%로 저평가. 가장 유력한 사이버 takeout 후보. PSR 5.64배로 CrowdStrike·Zscaler 대비 크게 할인. 시총 ~$5.6B로 기준 소폭 초과.', mb:6, rsi:44, bn:'수율'},
+  {t:'RMBS', nm:'Rambus', bom:'① 기밀컴퓨팅·하드웨어 보안 IP', price:'(추정·재확인)', mc:6.5, pos:'상류(보안IP)·인증★★', moat:'높음', pt:'메모리 인터페이스 + 하드웨어 보안 IP(암호화·루트오브트러스트). 기밀컴퓨팅(TEE)로 모델 가중치를 하드웨어 격리하는 흐름의 언섹시 코어. 데이터센터 AI 메모리 수혜와 보안 IP 두 테마 동시 노출. 시총 ~$6.5B(추정, 기준초과 참고).', mb:5, rsi:55, bn:'인증'},
+  {t:'MRCY', nm:'Mercury Systems', bom:'⑧ 방산 보안 전자·엣지 보안컴퓨트', price:'$103.55', mc:6.88, pos:'중류(방산전자)·인증★★', moat:'높음', pt:'방산용 보안 처리·RF·신뢰컴퓨팅 모듈. 전장 엣지에서 "안전하게 계산"하는 미들웨어 노드로, 자율무기·정보플랫폼의 하드웨어 신뢰기반. 시총 $6.88B로 기준 소폭 초과하나 저변동 방산 니치.', mb:4.5, rsi:52, bn:'인증'},
+  {t:'RCAT', nm:'Red Cat Holdings', bom:'⑦ 소형 전술드론', price:'~$10(추정)', mc:1.2, pos:'중류(전술드론)·생산량★★', moat:'보통', pt:'미 육군 SRR 정찰드론 등 전술 드론 소형주. FY27 국방예산 드론지배 $53.6B 수혜 기대. 단 최근 한 달 -26% 급락, 수익성 미검증 투기성 큼. 시총 ~$1.2B로 소형.', mb:4.5, rsi:40, bn:'생산량'},
+  {t:'ONDS', nm:'Ondas Holdings', bom:'⑦ 드론·카운터UAS', price:'(추정·재확인)', mc:1.5, pos:'중류(드론/C-UAS)·생산량★★', moat:'보통', pt:'드론·대드론(C-UAS) 시스템 소형주. 매출 급증·수주잔고 확대 중이나 흑자 미달. FY27 C-UAS $20.6억 예산 수혜 기대. 투기성 높음.', mb:4, rsi:48, bn:'생산량'},
+  {t:'KTOS', nm:'Kratos Defense', bom:'⑥ 자율무기·협동전투기(CCA)', price:'(추정·재확인)', mc:9, pos:'중류(자율무기)·생산량★★★', moat:'높음', pt:'제트추진 전술드론 Valkyrie로 협동전투기(CCA) 니치 독점. 다수 CCA 프로그램 단독공급 지위 — 펜타곤 협동자율 $45억 예산 직접 수혜. FY26 가이던스 상향. 시총 ~$9B로 기준초과(참고), 병목 지위는 최상.', mb:4, rsi:60, bn:'생산량'},
+  {t:'CYBR', nm:'CyberArk Software', bom:'② 특권접근·신원관리 (참고대형)', price:'(대형·참고)', mc:20, pos:'중류(신원보안)·인증·기준초과', moat:'매우높음', pt:'특권접근관리(PAM) 글로벌 1위 — "누가 모델 가중치에 접근하는가"를 통제하는 랩 보안의 핵심. 에세이 "Lock Down the Labs"의 정중앙 노드지만 이미 대형(~$20B, 참고).', mb:3, rsi:58, bn:'인증'},
+  {t:'RBRK', nm:'Rubrik', bom:'③ 데이터 복원력·DSPM', price:'(추정·재확인)', mc:12, pos:'중류(데이터복원)·생산량·기준초과', moat:'높음', pt:'사이버 복원력·데이터보안태세 플랫폼. 랜섬웨어·유출 후 최속 복구 + DSPM. 2024 IPO 후 급등, 시총 ~$12B로 기준초과(참고).', mb:3, rsi:56, bn:'생산량'},
+  {t:'AVAV', nm:'AeroVironment', bom:'⑥ 로이터링 무기·드론 (참고대형)', price:'(대형·참고)', mc:11, pos:'중류(무인기)·생산량·기준초과', moat:'높음', pt:'로이터링 무기(Switchblade)·소형 무인기 리더. 무인전 수혜 대형주, 목표가 $318. 이미 대형(~$11B, 참고).', mb:2.5, rsi:60, bn:'생산량'},
+  {t:'PLTR', nm:'Palantir', bom:'⑤ 국가안보 AI 플랫폼 (초대형 참고)', price:'(초대형·참고)', mc:300, pos:'하류(방산SW)·인증·기준초과', moat:'매우높음', pt:'국가안보·정보 AI 플랫폼의 사실상 표준. AIP로 자율 스웜 지휘까지. 에세이 "Free World Must Prevail"의 상징이지만 시총 ~$300B 초대형 기준점.', mb:1.5, rsi:64, bn:'인증'}
+];
+
+var BOTTLENECKS = ['전체','생산량','인증','수율'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 AGI 보안·방산 BOM — 8개 라인아이템'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'터미널(L1) = AGI 시대의 랩 보안(모델 가중치 방어) + 자유진영의 기술·군사 우위 유지. Aschenbrenner "Situational Awareness"는 "Lock Down the Labs"(가중치·알고리즘 비밀이 중국에 유출되는 것이 최대 국가안보 위협)와 "The Free World Must Prevail"을 두 축으로 제시한다. 이 BOM은 가중치 보안(①~④) → 국가안보 SW(⑤) → 자율무기·방산전자(⑥~⑧)로 분해했다.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능'),e('th',null,'공급사'),e('th',null,'원가비중'),e('th',null,'병목유형'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: AGI 랩 보안 + 미·중 AI 패권 경쟁 (에세이 "Lock Down the Labs")]\n\n  → 상류(HW신뢰기반)        → 중류(가중치보안·자율무기 병목)           → 하류(국가안보SW)\n     RMBS 보안IP ★인증          ★③ VRNS DSPM ★★★생산량(저평가)              PLTR 방산SW\n     MRCY 방산보안전자 ★인증      ④ S 엔드포인트 ★★★수율(takeout)             (초대형 참고)\n                                ② CYBR 특권접근(참고·핵심)\n                                ★⑥ KTOS CCA자율무기 ★★★생산량\n                                ⑦ RCAT/ONDS 전술드론 ★생산량\n                                AVAV/RBRK (대형 참고)'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③④ 데이터보안·엔드포인트 — 가중치 시대의 저평가 병목 (VRNS·S)'),
+        e('div',{className:'bd'},'"모델 가중치는 새로운 crown jewels"(Forbes)·RAND의 가중치 보안 플레이북 발표로 데이터보안(DSPM)이 병목화. 그럼에도 Varonis(-38%)·SentinelOne(-61.6%)는 고점 대비 크게 눌려 M&A·저평가 매력이 겹친다 — "완제품(플랫폼)보다 병목(데이터·탐지)을 판다".')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 특권접근 — 랩 보안의 정중앙 (CyberArk)'),
+        e('div',{className:'bd'},'에세이가 강조한 내부자 위협·가중치 유출 방어의 핵심은 "누가 접근하는가"의 통제(PAM). CyberArk가 사실상 표준이나 이미 대형화 — 옆 노드인 하드웨어 신뢰기반(Rambus)·방산 보안전자(Mercury)가 덜 주목된 파생.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑥⑦ 자율무기 — "Free World Must Prevail"의 하드웨어 (KTOS·RCAT)'),
+        e('div',{className:'bd'},'FY27 국방예산 드론지배 $53.6B + 카운터UAS $20.6B. Kratos는 CCA(협동전투기) 단독공급 지위로 병목을 쥐고, Red Cat·Ondas는 소형 전술드론에서 고위험·고배율 노출. 백로그는 늘지만 주가는 눌려 저점 접근 구간.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'※ 소프트웨어·방산 분야 특성상 물리 병목(열·전기·재료)은 적용되지 않으며, 이 분야의 실제 병목은 아래 3종이다(정직 표기).')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'RMBS, MRCY, CYBR, PLTR'),e('td',null,'국방 인증(IL5/ATO)·규제에 수년 걸리는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'VRNS, KTOS, RCAT, ONDS, AVAV, RBRK'),e('td',null,'수주잔고·배포/생산 캐파가 수요를 못 따라가는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'수율')),e('td',null,'S'),e('td',null,'탐지 정확도·오탐률이 제품 경쟁력을 좌우하는가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 에세이 논지 — 기존 보안 체계의 근본 한계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 랩 보안의 국가급 위협 미대응'),
+        e('div',{className:'bd'},'Aschenbrenner: 오늘날 AI 랩은 국가급 공격자(중국 등)로부터 모델 가중치·알고리즘 비밀을 지킬 준비가 안 됐다. 유출은 곧 AGI 우위 상실 — "가장 중요한 국가안보 사안". RAND도 가중치가 최고 자원 공격자를 견디지 못한다고 경고.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 표준 클라우드로는 가중치 격리 불가'),
+        e('div',{className:'bd'},'가중치는 수십억~수조 파라미터의 "증류된 지능". 표준 클라우드에선 운영자가 가중치·중간연산을 추출할 여지가 있어, 기밀컴퓨팅(TEE) 없이는 보호 불가. 하드웨어 신뢰기반이 새 병목.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 내부자·머신-머신 위협 급증'),
+        e('div',{className:'bd'},'2026 위협모델은 내부자 가정을 재작성. 에이전트·MCP 토큰·머신-머신 대화가 새 공격면 — 특권접근·신원관리가 핵심 방어선으로 격상.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 신기술 우위성 (정량 비교)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'신기술'),e('th',null,'기존 대비 우위'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'기밀컴퓨팅(TEE)'),e('td',null,'클라우드 운영자도 가중치 추출 불가 — 공격면 대폭 축소')),
+            e('tr',null,e('td',null,'AI 자율 엔드포인트(SentinelOne)'),e('td',null,'실시간 자율 탐지·대응, AI 공격 속도에 대응')),
+            e('tr',null,e('td',null,'협동전투기 CCA(Kratos Valkyrie)'),e('td',null,'유인기 대비 저비용 대량 자율 타격, 무인전 전환'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'1단계 — 랩 보안 각성 (2024)'),
+        e('div',{className:'bd'},'"Situational Awareness"(2024.6)가 "Lock Down the Labs"를 별도 섹션으로 제기, 가중치 유출을 국가안보 최우선으로 부각.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2단계 — 정부·업계 대응 본격화 (2025~2026)'),
+        e('div',{className:'bd'},'RAND 가중치 보안 플레이북, 기밀컴퓨팅 서밋 "기반 현실화", FY27 국방예산 드론지배 $53.6B·C-UAS $20.6B 편성. Palantir·Kratos 등 계약 확대.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'3단계 — 보안·자율무기 병목 가시화 (2026~미래)'),
+        e('div',{className:'bd'},'가중치=crown jewels 인식 확산으로 DSPM·기밀컴퓨팅 수요 폭증. 무인전 전환으로 CCA·전술드론 백로그 급증 — 공급사가 밸류체인 병목으로 부상.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'글로벌 사이버보안 시장'),e('td',null,'$248B(2026) → $699B(2034), CAGR 13.8%')),
+            e('tr',null,e('td',null,'FY27 국방예산 — 드론지배'),e('td',null,'$53.6B')),
+            e('tr',null,e('td',null,'FY27 국방예산 — 카운터UAS'),e('td',null,'$20.6B')),
+            e('tr',null,e('td',null,'펜타곤 협동자율(CCA) 펀딩'),e('td',null,'$45억(Kratos 직접 수혜)')),
+            e('tr',null,e('td',null,'SentinelOne ARR'),e('td',null,'$10.6억 (+23% YoY)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 11개 (보안·방산 병목 기준)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'⚠️ CYBR·PLTR·AVAV·RBRK·KTOS·RMBS·MRCY·S는 이미 $5B 기준을 초과/근접해 참고 또는 경계 표기. 소형 순수 발굴은 VRNS(~$3B)·RCAT(~$1.2B)·ONDS(~$1.5B). 일부 가격은 리서치 시점 추정으로 "재확인" 표기 — 매매 전 1차 자료 확인 필수. 드론·소형보안주는 변동성·희석 리스크 극심.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.88rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#ef4444'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#ef4444'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#06b6d4'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[0]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<1?1:s.mc<5?0.5:0,
+      s.rsi<50?0.7:0.4,
+      0.5,
+      0.5,
+      s.bn==='생산량'?0.6:0.4,
+      s.bn==='생산량'||s.bn==='인증'?1:0.6,
+      s.mc<3?0.5:1,
+      s.rsi>65?0:s.rsi<45?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:MB_LABELS,
+      datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(239,68,68,0.2)', borderColor:'#ef4444', pointBackgroundColor:'#ef4444'}]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){
+          return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t);
+        })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#ef4444'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (3~6개월)'),
+        e('div',{className:'bd'},'사이버 M&A 웨이브(SentinelOne·Varonis 피인수설), Kratos CCA 신규 수주, Red Cat·Ondas 국방 드론 계약, 기밀컴퓨팅·DSPM 채택 확대, AI 랩 보안 규제·표준 발표.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~18개월)'),
+        e('div',{className:'bd'},'FY27 국방예산 집행($53.6B 드론), 가중치 보안 규제 의무화, TEE 하드웨어 표준화, 자율무기 대량양산 전환.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'공통 리스크'),
+        e('div',{className:'dd'},'RCAT·ONDS 등 소형 드론주는 수익성 미검증·희석·정책 의존 투기성 극심(최근 -26% 급락). 이 분야는 대형주(CYBR·PLTR·AVAV·KTOS) 비중이 커 순수 소형 발굴이 제한적. AI 캐펙스·국방예산 둔화 시 밸류에이션 급락. M&A 기대는 실현 불확실. 일부 가격 추정치는 매매 전 재확인 필수.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'핵심(③④ 저평가 가중치보안)'),e('td',null,'VRNS, S'),e('td',null,'35%')),
+            e('tr',null,e('td',null,'하드웨어 신뢰기반(①⑧)'),e('td',null,'RMBS, MRCY'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'자율무기 병목(⑥)'),e('td',null,'KTOS'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'고위험 소형드론(⑦)'),e('td',null,'RCAT, ONDS'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'대형 참고(②⑤)'),e('td',null,'CYBR, PLTR, AVAV, RBRK'),e('td',null,'15%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🔒 AGI 보안·방산 종목발굴 (Situational Awareness 기반)'),
+      e('div', {className:'sub'}, '"Lock Down the Labs" + "Free World Must Prevail" · BOM 8개 라인아이템 | 2026-07-20 | 11개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
