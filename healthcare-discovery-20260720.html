@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>헬스케어 GLP-1 공급망 종목발굴 대시보드 2026-07-20</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d0f2a 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #831843;}
+.hdr h1{font-size:1.35rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#ec4899;border-bottom-color:#ec4899;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #4a1430;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.bx{background:rgba(236,72,153,0.08);border:1px solid rgba(236,72,153,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#ec4899;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bb{background:rgba(236,72,153,0.15);color:#ec4899;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(236,72,153,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#ec4899;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#f59e0b;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #831843;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#ec4899;color:#2a0417;border-color:#ec4899;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#ec4899;color:#2a0417;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① 펩타이드 API (원료의약품)', fn:'GLP-1 펩타이드 합성·정제(HPLC), 리드타임 18~24개월', sup:'PolyPeptide(PPGN)·Bachem(BANB)·에스티팜(237690)·애니젠(196300)', cost:'高', bn:'생산량'},
+  {item:'② 무균 충전·완제 (Fill-Finish)', fn:'무균 환경 충전·조립, Annex-1 대응', sup:'[Lonza·Catalent 비상장/대형]·Stevanato(STVN)', cost:'高', bn:'인증'},
+  {item:'③ 자동주사기·펜 디바이스', fn:'주 1회/월 1회 자가주사 펜', sup:'Ypsomed(YPSN)·Gerresheimer(GXI)·[SHL 비상장]', cost:'高', bn:'생산량'},
+  {item:'④ 고무마개·플런저·엘라스토머 (핵심병목)', fn:'약물 안정화 코팅 마개, 펜 조립', sup:'West Pharmaceutical(WST,핵심·참고)', cost:'中', bn:'생산량'},
+  {item:'⑤ 유리 바이알·카트리지·시린지', fn:'고품질 붕규산 유리 용기', sup:'Stevanato(STVN)·Gerresheimer(GXI)·[SGD·Nipro]', cost:'中', bn:'생산량'},
+  {item:'⑥ 펩타이드 신약·롱액팅 플랫폼', fn:'차별화 제형(월1회 등) 자체 신약', sup:'펩트론(087010)·한미약품(128940)', cost:'高(R&D)', bn:'인증'},
+  {item:'⑦ 바이오프로세싱 소부장 (Picks&Shovels)', fn:'정제 레진·필터·바이오시약', sup:'Repligen(RGEN)·Bio-Techne(TECH)·Maravai(MRVI)', cost:'中', bn:'생산량'},
+  {item:'⑧ 경구·경피 전달(마이크로니들)', fn:'주사 대체 경구/패치 전달 혁신', sup:'라파스(214260)', cost:'中', bn:'수율'}
+];
+
+var STOCKS = [
+  {t:'087010.KQ', nm:'펩트론', bom:'⑥ 롱액팅 GLP-1 플랫폼', price:'(추정·재확인)', mc:2.0, pos:'중류(신약·CDMO)·인증★★★', moat:'보통~높음', pt:'월 1회 롱액팅 GLP-1 플랫폼(스마트데포) 보유, 일라이 릴리 국내 생산 공급망 구축 기대에 최근 상한가. "완제품 옆" 제형·공급 병목의 국내 대표 소형주 — 발굴 핵심. 릴리 계약 실체·상용화는 검증 단계, 변동성 극심.', mb:6, rsi:62, bn:'인증'},
+  {t:'STVN', nm:'Stevanato Group', bom:'③⑤ 카트리지·바이알·펜', bom2:true, price:'(추정·재확인)', mc:7, pos:'중류(용기·펜)·생산량★★★', moat:'높음', pt:'GLP-1/인크레틴이 매출 21~22%. 바이알 라인을 카트리지로 전환해 단기 부족 대응, Fishers(美)·Latina(伊) 신규 라인 2026말~2027 상업가동. 용기+펜 이중 노출의 순수 공급망 플레이(WST보다 시총 작음).', mb:5.5, rsi:52, bn:'생산량'},
+  {t:'237690.KQ', nm:'에스티팜', bom:'① 펩타이드/올리고 CDMO', price:'(추정·재확인)', mc:2.5, pos:'중류(원료 CDMO)·생산량★★★', moat:'보통~높음', pt:'올리고뉴클레오타이드 CDMO 강자로 펩타이드 원료 CDMO 확장 중. GLP-1 원료 리드타임 18~24개월 병목의 국내 수혜. 동아쏘시오 계열, 상장구조·수주 재확인 필요.', mb:5.5, rsi:50, bn:'생산량'},
+  {t:'WST', nm:'West Pharmaceutical', bom:'④ 고무마개·엘라스토머 (핵심·참고)', price:'$352.29', mc:23.57, pos:'중류(핵심부품)·생산량★★★·기준초과', moat:'매우높음', pt:'주사제 고무마개·코팅 엘라스토머의 사실상 표준. 고부가부품 매출비중 48%, Q1 2026 +21.1%($844.9M). GLP-1·Annex-1 전환 수혜의 "궁극의 곡괭이"지만 시총 $23.57B 대형(핵심 병행·참고).', mb:3.5, rsi:56, bn:'생산량'},
+  {t:'196300.KQ', nm:'애니젠', bom:'① 펩타이드 CDMO (소형)', price:'(추정·재확인)', mc:0.4, pos:'중류(펩타이드 CDMO)·생산량★★', moat:'보통', pt:'펩타이드 합성·CDMO 국내 소형주. GLP-1 원료 수요 확대의 마이크로캡 수혜, 발굴종목 중 시총 최소권으로 멀티배거 잠재력 크나 캐파·재무 검증 필요. 투기성 높음.', mb:5, rsi:54, bn:'생산량'},
+  {t:'YPSN.SW', nm:'Ypsomed', bom:'③ 자동주사기·펜 디바이스', price:'(추정·재확인)', mc:5, pos:'중류(디바이스)·생산량★★★', moat:'높음', pt:'자가주사 펜·오토인젝터 전문 스위스 기업. GLP-1 펜 수요 폭증의 직접 수혜, 디바이스 캐파가 병목. 순수 디바이스 플레이. 시총 중형(~$5B 추정).', mb:5, rsi:55, bn:'생산량'},
+  {t:'RGEN', nm:'Repligen', bom:'⑦ 바이오프로세싱 소부장', price:'(재확인)', mc:7.44, pos:'중류(소부장)·생산량★★', moat:'높음', pt:'정제 레진·필터·크로마토그래피 등 바이오프로세싱 픽앤쇼벨. Q1 2026 +15%(유기 11%) 회복, Maravai 인수 추진. 바이오 생산 전반의 곡괭이. 시총 $7.44B.', mb:4, rsi:54, bn:'생산량'},
+  {t:'PPGN.SW', nm:'PolyPeptide Group', bom:'① 펩타이드 CDMO', price:'(추정·재확인)', mc:2.5, pos:'중류(펩타이드 CDMO)·생산량★★', moat:'높음', pt:'글로벌 펩타이드 전문 CDMO. GLP-1 그린 생산공정 개발(스웨덴 Vinnova 지원). HPLC 정제 캐파 병목 직접 수혜. 시총 중소형(~$2.5B 추정), 실적 변동성.', mb:5, rsi:50, bn:'생산량'},
+  {t:'GXI.DE', nm:'Gerresheimer', bom:'③⑤ 유리·비만펜 (턴어라운드)', bom2:true, price:'(추정·재확인)', mc:2.5, pos:'중류(용기·펜)·생산량', moat:'보통~높음', pt:'유리 용기·비만 펜으로 피봇 중이나 2025 레거시(화장품·경구액) 약세로 가이던스 하향 — 턴어라운드 리스크. 성공 시 저평가 반등, 실패 시 추가 하락 양면성.', mb:3.5, rsi:44, bn:'생산량'},
+  {t:'BANB.SW', nm:'Bachem', bom:'① 펩타이드 CDMO (대장·참고)', price:'(추정·재확인)', mc:5, pos:'상류(펩타이드 CDMO)·생산량·기준경계', moat:'매우높음', pt:'글로벌 펩타이드 CDMO 대장. Vista 사이트 연 1톤 규모 증설 등 대규모 투자. GLP-1 원료 병목의 최상위 수혜지만 이미 대형화(~$5B 경계, 참고).', mb:3.5, rsi:52, bn:'생산량'},
+  {t:'MRVI', nm:'Maravai LifeSciences', bom:'⑦ 뉴클레오타이드·바이오시약', price:'(재확인)', mc:2.2, pos:'중류(시약)·생산량·특수상황', moat:'보통~높음', pt:'mRNA/뉴클레오타이드 원료(TriLink 등) 시약사, 시총 $2.2B. Repligen의 인수 제안 대상 — 특수상황(M&A) 옵션이 하방 완충. 단 GLP-1 직접성은 약하고 바이오 전반 노출.', mb:4, rsi:48, bn:'생산량'},
+  {t:'214260.KQ', nm:'라파스', bom:'⑧ 마이크로니들 경구·경피 전달', price:'(추정·재확인)', mc:0.3, pos:'중류(전달기술)·수율★★', moat:'보통', pt:'용해성 마이크로니들 패치 전달기술 국내 소형주. 주사 대체 경구/패치 GLP-1 제형 혁신 기대. 초소형 시총으로 고배율이나 상용화 전 투기성 극심.', mb:4, rsi:50, bn:'수율'},
+  {t:'128940.KS', nm:'한미약품', bom:'⑥ GLP-1 신약(에페글레나타이드)', price:'(추정·재확인)', mc:7, pos:'하류(자체신약)·인증·참고', moat:'높음', pt:'국내 GLP-1 개발 선두, 에페글레나타이드 국내 임상 3상(2026 상반기 완료 목표). 자체 신약이라 순수 공급망은 아니나 K-비만약 대표. 시총 중형(~$7B 추정, 참고).', mb:3.5, rsi:58, bn:'인증'},
+  {t:'TECH', nm:'Bio-Techne', bom:'⑦ 바이오시약·소부장 (대형 참고)', price:'(추정·재확인)', mc:9, pos:'중류(시약)·생산량·기준초과', moat:'높음', pt:'생명과학 시약·기기·바이오프로세싱 종합. 바이오 생산 전반의 곡괭이지만 GLP-1 직접성은 간접적, 이미 대형(~$9B 추정, 참고).', mb:2.5, rsi:54, bn:'생산량'}
+];
+
+var BOTTLENECKS = ['전체','생산량','인증','수율'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 GLP-1 비만약 공급망 BOM — 8개 라인아이템 (릴리·노보 제외)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'터미널(L1) = GLP-1 비만/당뇨 주사제 대량생산(Wegovy·Zepbound·Ozempic·Mounjaro). 완제품 제약사(릴리 LLY·노보 NVO)는 "모두가 아는 1차 수혜"라 제외하고, 그 약을 실제로 만들고·담고·주사하는 숨은 병목을 BOM으로 분해했다. 업계는 "원료가 아니라 검증된 캐파(qualified capacity)가 병목이며 최소 2년 지속"이라 진단.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능'),e('th',null,'공급사'),e('th',null,'원가비중'),e('th',null,'병목유형'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: 비만약 시장 ~289조원 → 공급 부족 구조화(최소 2년)]\n\n  → 상류(원료·CDMO)          → 중류(용기·디바이스·부품 병목)        → 하류(완제품)\n     PPGN/BANB 펩타이드         ★④ WST 고무마개 ★★★생산량(핵심·참고)      릴리 LLY\n     237690 에스티팜 ★생산량      ★③ YPSN 오토인젝터펜 ★★★생산량         노보 NVO\n     196300 애니젠 ★생산량         ★⑤ STVN 바이알·카트리지 ★★★생산량      (제외: 1차수혜)\n                                ⑥ 087010 펩트론 롱액팅 ★인증(릴리공급망)\n                                ⑦ RGEN/MRVI 바이오소부장\n                                ⑧ 214260 라파스 마이크로니들'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'④⑤ 고무마개·유리용기 — 가장 언섹시한 궁극의 병목'),
+        e('div',{className:'bd'},'"병목은 약물 공식이 아니라 그것을 안정화·전달하는 고기술 포장." GLP-1 수요가 코팅 마개·시린지·카트리지 재고를 신규 라인 검증보다 빨리 소진. West(고무마개)·Stevanato(용기)는 릴리·노보가 아무리 증산해도 반드시 사야 하는 부품 — "이름부터가 아니라 BOM 항목에서 시작해 발견한" 전형.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 펩타이드 CDMO — HPLC 정제 캐파가 병목 (에스티팜·PolyPeptide)'),
+        e('div',{className:'bd'},'역상 HPLC 정제 캐파가 상업 규모의 핵심 병목, 주요 CDMO 리드타임 18~24개월. SK팜테코가 세종 5공장에서 연 수십 톤 펩타이드 원료 상업생산 예정 — 검증된 펩타이드 CDMO가 최고 경쟁우위.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑥ 국내 옆 노드 — 펩트론(릴리 공급망 기대)'),
+        e('div',{className:'bd'},'릴리의 월 1회 GLP-1 국내 생산 공급망 구축 기대에 펩트론이 상한가. 완제품(릴리) 옆에서 제형·공급을 담당하는 국내 소형주 — 다만 계약 실체·상용화 검증이 남아 변동성 극심.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'※ 제약·바이오 공급망 특성상 물리 병목(열·전기·재료)은 적용되지 않으며, 실제 병목은 아래 3종이다(정직 표기).')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'WST, STVN, YPSN, 237690, 196300, PPGN, RGEN'),e('td',null,'검증된 캐파가 수요를 못 따라가는가?(18~24개월)')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'087010, 128940, STVN(무균)'),e('td',null,'무균 GMP·임상 인증에 수년 걸리는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'수율')),e('td',null,'214260'),e('td',null,'정제·전달 수율이 상용화를 좌우하는가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 기존 공급 시스템의 근본 한계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 무균 충전·완제(fill-finish) 캐파 부족'),
+        e('div',{className:'bd'},'주사제는 무균 환경·정밀 장비·오토인젝터 조립이 필요해 신규 라인 검증(밸리데이션)에 수년. GLP-1 폭발 수요가 기존 캐파를 소진 — "원료가 아니라 검증된 캐파가 병목".')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 펩타이드 HPLC 정제 병목'),
+        e('div',{className:'bd'},'GLP-1 펩타이드의 주 정제법인 역상 HPLC 캐파가 상업 규모에서 한계. 주요 펩타이드 CDMO 리드타임 18~24개월로 증설이 수요를 못 따라감.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 고부가 포장부품(마개·유리) 검증 지연'),
+        e('div',{className:'bd'},'코팅 고무마개·시린지·카트리지는 약물접촉 부품이라 신규 공급라인 검증에 오랜 시간. 수요가 재고를 빠르게 소진해 부품이 완제품 증산의 병목으로 격상.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 신기술 우위성 (정량 비교)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'신기술'),e('th',null,'기존 대비 우위'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'롱액팅 GLP-1(월 1회, 펩트론 등)'),e('td',null,'주 1회 대비 투약 편의·순응도 개선')),
+            e('tr',null,e('td',null,'Annex-1 대응 RTU(즉시사용) 부품(West)'),e('td',null,'무균성·규제 강화 대응, 고부가 전환')),
+            e('tr',null,e('td',null,'마이크로니들 경구·경피(라파스)'),e('td',null,'주사 회피, 복약 편의(상용화는 초기)'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'1단계 — 비만약 수요 폭발 (2023~2024)'),
+        e('div',{className:'bd'},'Wegovy·Zepbound 열풍으로 GLP-1이 만성질환 대세로 부상, 완제품 공급 부족.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2단계 — 공급망 병목 이동·증설 러시 (2025~2026)'),
+        e('div',{className:'bd'},'병목이 완제품→부품·원료·디바이스로 이동. West 고부가부품 +20%, Stevanato 라인 전환, 북미 펩타이드 CDMO 투자 5년 내 최고, SK팜테코 세종 5공장.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'3단계 — 캐파 병목 구조화·K-공급망 (2026~미래)'),
+        e('div',{className:'bd'},'검증된 캐파 부족 최소 2년 지속 전망. 릴리 월 1회 GLP-1 국내 생산 공급망(펩트론 등), 국내 펩타이드 CDMO(에스티팜·애니젠) 부상.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'글로벌 비만약 시장'),e('td',null,'약 289조원 (성장 지속)')),
+            e('tr',null,e('td',null,'펩타이드 CDMO 리드타임'),e('td',null,'18~24개월')),
+            e('tr',null,e('td',null,'북미 펩타이드 CDMO CAGR'),e('td',null,'12~16% (~2028)')),
+            e('tr',null,e('td',null,'West 고부가부품 비중'),e('td',null,'매출 48% (Q1 2026 +21.1%)')),
+            e('tr',null,e('td',null,'단일사용 바이오리액터 시장'),e('td',null,'$4.3B(2025) → $10.5B(2035)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 14개 (GLP-1 공급망 병목 기준)'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'⚠️ 주의'),
+        e('div',{className:'dd'},'WST($23.57B)·TECH·BANB(경계)는 이미 대형화로 참고 분류(WST는 부품 독점성으로 핵심 병행). 국내 소형주(펩트론·에스티팜·애니젠·라파스)와 유럽주(YPSN·PPGN·GXI) 가격은 리서치 시점 추정으로 "재확인" 표기 — 매매 전 1차 자료 확인 필수. 임상·계약 기대 선반영 종목은 변동성·희석 리스크 극심.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.88rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#ec4899'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#ec4899'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#a78bfa'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[0]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<1?1:s.mc<5?0.5:0,
+      s.rsi<55?0.6:0.3,
+      0.5,
+      0.5,
+      s.bn==='생산량'?0.6:0.5,
+      s.bn==='생산량'||s.bn==='인증'?1:0.6,
+      s.mc<1?0.5:1,
+      s.rsi>65?0:s.rsi<55?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:MB_LABELS,
+      datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(236,72,153,0.2)', borderColor:'#ec4899', pointBackgroundColor:'#ec4899'}]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){
+          return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t);
+        })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#ec4899'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('div',{className:'dx'},
+        e('div',{className:'dd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (3~6개월)'),
+        e('div',{className:'bd'},'릴리 국내 GLP-1 공급망 계약 실체(펩트론), 에스티팜·애니젠 펩타이드 CDMO 수주, West·Stevanato 실적·수주잔고, 한미 에페글레나타이드 3상 결과.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~18개월)'),
+        e('div',{className:'bd'},'Stevanato Fishers/Latina 신규 라인 가동, SK팜테코 세종 5공장 상업생산, 경구 GLP-1(마이크로니들 등) 임상 진전, Repligen-Maravai 통합 시너지.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'공통 리스크'),
+        e('div',{className:'dd'},'펩트론·라파스·애니젠 등 국내 소형주는 계약·임상 "기대 선반영" 후 실망 시 급락·희석 위험. 캐파 증설이 완료되면(2027+) 병목 서사 약화 가능. 비만약 경쟁 격화·약가 인하·보험 이슈. Gerresheimer는 레거시 부진 턴어라운드 리스크. 유럽·국내 종목 환율·상장구조 재확인 필수. 본 자료는 투자 권유 아님.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'핵심(③⑤ 용기·디바이스 병목)'),e('td',null,'STVN, YPSN'),e('td',null,'30%')),
+            e('tr',null,e('td',null,'원료 CDMO(① 국내 소형)'),e('td',null,'237690, 196300'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'국내 옆노드(⑥ 릴리 기대)'),e('td',null,'087010'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'소부장 곡괭이(⑦)'),e('td',null,'RGEN, PPGN'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'대형 핵심·특수(④⑦)'),e('td',null,'WST, MRVI'),e('td',null,'15%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '💊 헬스케어 GLP-1 공급망 종목발굴'),
+      e('div', {className:'sub'}, '릴리·노보 아닌 원료·용기·디바이스 병목 · BOM 8개 라인아이템 | 2026-07-20 | 14개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
