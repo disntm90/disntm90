@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>광포토닉스·메모리·반도체 신규 종목발굴 대시보드 2026-08-19</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#1e1b4b 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #4338ca;}
+.hdr h1{font-size:1.3rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#818cf8;border-bottom-color:#818cf8;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #1e1b4b;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.bx{background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#818cf8;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bb{background:rgba(129,140,248,0.15);color:#818cf8;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(129,140,248,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#818cf8;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#f59e0b;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #3730a3;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#818cf8;color:#0a0a2e;border-color:#818cf8;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#818cf8;color:#0a0a2e;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① 광통신 시스템·트랜시버', fn:'AI 클라우드 간 대용량 광통신(800G/1.6T)', sup:'Ciena(CIEN)·Semtech(SMTC)·Viavi(VIAV)', cost:'高', bn:'생산량'},
+  {item:'② 파이버레이저·광원', fn:'광통신·제조용 레이저 광원', sup:'IPG Photonics(IPGP)', cost:'中', bn:'수율'},
+  {item:'③ 실리콘포토닉스 파운드리·CPO', fn:'광엔진을 칩에 통합(SCALE CPO MSA)', sup:'GlobalFoundries(GFS)', cost:'高', bn:'수율'},
+  {item:'④ NAND·대용량 스토리지 (공급부족)', fn:'AI 데이터 저장, 2026 메모리 병목 핵심', sup:'SanDisk(SNDK)·Seagate(STX)·Western Digital(WDC)', cost:'高', bn:'생산량'},
+  {item:'⑤ 메모리 컨트롤러', fn:'NAND/SSD 제어 IC', sup:'Phison(8299.TWO)·Silicon Motion(SIMO)', cost:'中', bn:'수율'},
+  {item:'⑥ 메모리 패키지 기판·모듈', fn:'메모리 패키징 기판·모듈·CXL', sup:'심텍(222800)·Netlist(NLST)', cost:'中', bn:'재료'},
+  {item:'⑦ AI 패키징 본딩 장비', fn:'첨단 패키징 본더(TC/하이브리드)', sup:'Kulicke & Soffa(KLIC)', cost:'高', bn:'생산량'},
+  {item:'⑧ 반도체 테스트·계측·소부장', fn:'테스트 핸들러·계측·유체전달', sup:'Cohu(COHU)·Nova(NVMI)·Ichor(ICHR)·Advanced Energy(AEIS)', cost:'中', bn:'수율'}
+];
+
+var STOCKS = [
+  {t:'WDC', nm:'Western Digital', bom:'④ HDD·대용량 스토리지', price:'$540', mc:60, pos:'중류(스토리지)·생산량★★★', moat:'높음', pt:'메모리 슈퍼사이클(2026, 머스크가 병목 지적) 수혜. HDD/스토리지 대장이나 SanDisk 분사 후 Seagate·SanDisk 대비 상대적으로 덜 급등 — 밸류 매력 상대우위. 다만 메모리 사이클 정점 논란 상존.', mb:5, rsi:60, bn:'생산량'},
+  {t:'IPGP', nm:'IPG Photonics', bom:'② 파이버레이저·광원', price:'(재확인)', mc:5, pos:'중류(레이저)·수율★★', moat:'높음', pt:'파이버레이저 글로벌 강자. 포토닉스 랠리에서 +73%로 AAOI(+328%)·Semtech(+324%) 대비 laggard — 광 테마 내 밸류·회복 여지. 산업레이저 경기 민감성 리스크.', mb:5, rsi:52, bn:'수율'},
+  {t:'ICHR', nm:'Ichor Holdings', bom:'⑧ 유체전달 소부장', price:'$83.74', mc:3.2, pos:'중류(소부장)·생산량★★', moat:'보통~높음', pt:'반도체 장비용 가스/유체 전달 서브시스템 소형주. 웨이퍼팹 장비 투자 회복 초기, 최근 분기 +99%나 대형 장비주 대비 저평가 턴어라운드. 시총 $3.2B로 발굴 소형 후보. 고객집중 리스크.', mb:5.5, rsi:58, bn:'생산량'},
+  {t:'222800.KQ', nm:'심텍(Simmtech)', bom:'⑥ 메모리 패키지 기판', price:'(추정·재확인)', mc:3, pos:'중류(패키지기판)·재료★★★', moat:'높음', pt:'메모리·SSD·AP용 패키지 기판(PCB) 국내 강자. 메모리 슈퍼사이클 + 고다층 기판 수요 직접 수혜의 국내 소재 병목주. 이수페타시스(별도 발굴)와 다른 메모리 특화 노드. 상장구조·가격 재확인 필요.', mb:5.5, rsi:56, bn:'재료'},
+  {t:'SIMO', nm:'Silicon Motion', bom:'⑤ NAND 컨트롤러', price:'(재확인)', mc:4, pos:'중류(컨트롤러)·수율★★', moat:'높음', pt:'NAND/SSD 컨트롤러 전문 중소형주. 메모리 물량 확대의 팹리스 수혜, Phison(+392% 과열) 대비 시총 작고 덜 급등. eSSD·엔터프라이즈 확장 관건.', mb:5, rsi:54, bn:'수율'},
+  {t:'GFS', nm:'GlobalFoundries', bom:'③ 실리콘포토닉스 CPO 파운드리', price:'(재확인)', mc:20, pos:'중류(파운드리)·수율★★', moat:'높음', pt:'2026.5월 CPO용 실리콘포토닉스 플랫폼 SCALE(업계 첫 OCI MSA) 출시. CPO 시장 $20B+(2036, CAGR 37%)의 파운드리 병목 노드. 성숙노드 파운드리라 밸류 부담 덜함. CPO 상용화 속도 리스크.', mb:4.5, rsi:55, bn:'수율'},
+  {t:'STX', nm:'Seagate Technology', bom:'④ HDD 대용량 스토리지 (과열주의)', price:'$992', mc:60, pos:'중류(스토리지)·생산량·과열', moat:'높음', pt:'AI 대용량 저장 수혜로 YTD +254% 폭등. HAMR 등 고용량 HDD 리더지만 이미 극단적 급등 — 추격매수 위험 최상. 메모리 사이클 조정 시 낙폭 큼(참고).', mb:2.5, rsi:74, bn:'생산량'},
+  {t:'SNDK', nm:'SanDisk', bom:'④ NAND·eSSD (과열주의)', price:'$1,778', mc:55, pos:'중류(NAND)·생산량·과열', moat:'높음', pt:'WD에서 분사한 NAND 순수 플레이. 머스크가 지적한 메모리 병목 최대 수혜지만 주가 급등으로 과열 구간. 메모리 공급과잉(글럿) 우려 재부각 시 변동성 극심(참고).', mb:3, rsi:72, bn:'생산량'},
+  {t:'CIEN', nm:'Ciena', bom:'① 광통신 시스템 (과열주의)', price:'$498.97', mc:70, pos:'중류(광시스템)·생산량·과열', moat:'높음', pt:'광통신 시스템 리더, FQ1 매출 +33%·클라우드 +76%. YTD +113%로 이미 크게 반영 — 실적은 견조하나 밸류 부담(참고).', mb:3, rsi:70, bn:'생산량'},
+  {t:'SMTC', nm:'Semtech', bom:'① 800G 광·액티브코퍼케이블 (극과열)', price:'$157.56', mc:12, pos:'중류(광/AEC)·생산량·극과열', moat:'높음', pt:'800G 광·액티브코퍼케이블(구글 Ironwood 랙) 수혜, UBS 목표 $225. YTD +324% 극단적 급등 — 추격 위험 최상. 52주 고점 근접(참고).', mb:2.5, rsi:80, bn:'생산량'},
+  {t:'8299.TWO', nm:'Phison Electronics', bom:'⑤ NAND 컨트롤러 (극과열)', price:'TWD 2,020', mc:15, pos:'중류(컨트롤러)·수율·극과열', moat:'높음', pt:'NAND 컨트롤러 대만 강자. 시총 1년 +392% 폭등 — 메모리 슈퍼사이클 최대 수혜지만 극단적 과열. 사이클 반전 시 낙폭 큼(참고).', mb:2, rsi:78, bn:'수율'},
+  {t:'KLIC', nm:'Kulicke & Soffa', bom:'⑦ AI 패키징 본더 (과열)', price:'(재확인)', mc:8, pos:'중류(본딩장비)·생산량·과열', moat:'높음', pt:'첨단 패키징 본더, Advanced Solutions ~$400M 캐파 확장. YTD +170%로 AI 패키징 사이클 반영 — 이미 상당 급등(참고).', mb:3, rsi:68, bn:'생산량'},
+  {t:'COHU', nm:'Cohu', bom:'⑧ 반도체 테스트 핸들러 (과열)', price:'$69.11', mc:3.5, pos:'중류(테스트)·수율·과열', moat:'보통~높음', pt:'반도체 테스트 핸들러·인터페이스. YTD +195%로 회복 반영, 시총은 아직 중소형($3.5B). 후공정 테스트 수요 수혜지만 이미 급등(참고).', mb:3.5, rsi:66, bn:'수율'},
+  {t:'NLST', nm:'Netlist', bom:'⑥ 메모리 모듈·CXL·IP', price:'(재확인)', mc:2, pos:'중류(모듈·IP)·인증·투기', moat:'보통', pt:'메모리 모듈·CXL 및 특허 IP 소송으로 유명한 소형주. 메모리 슈퍼사이클 + IP 로열티 옵션이 있으나 소송 결과 의존·희석·투기성 극심. 고위험 베팅.', mb:3.5, rsi:60, bn:'인증'}
+];
+
+var BOTTLENECKS = ['전체','생산량','수율','재료','인증'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 AI 데이터 이동·저장·제조 BOM — 8개 라인아이템 (전면 신규 리서치)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'⚠️ 이 대시보드는 이전 발굴(AAOI·LITE·COHR·FN·POET·한미반도체·CAMT·AEHR·MU 등)을 전부 리셋하고, 광포토닉스·광모듈·메모리·반도체 4개 영역에서 완전히 새로 리서치한 종목만 담았다. 터미널(L1) = AI 데이터를 "옮기고(광)·저장하고(메모리)·만드는(장비)" 반도체 밸류체인.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능'),e('th',null,'공급사'),e('th',null,'원가비중'),e('th',null,'병목유형'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: AI 데이터 폭증 → 광(이동)·메모리(저장) 동시 병목 (2026.8 메모리 슈퍼사이클)]\n\n  → 데이터 이동(광)          → 데이터 저장(메모리)              → 제조(장비·소재)\n     CIEN 광시스템(과열)        ★④ SNDK/STX NAND·HDD(과열)        ⑦ KLIC 본더(과열)\n     SMTC 800G(극과열)          WDC 스토리지(상대laggard)★         ⑧ COHU 테스트\n     IPGP 레이저(laggard)★       ⑤ SIMO 컨트롤러 / 8299 Phison(극과열)  ICHR 소부장(laggard)★\n     GFS 실포 CPO파운드리★        ⑥ 222800 심텍 기판★재료 / NLST 모듈  NVMI 계측'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리 (과열 vs 상대 laggard)'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'⚠️ 이 분야 최대 특징 — 이미 대부분 폭등'),
+        e('div',{className:'dd'},'Semtech +324%·Seagate +254%·Cohu +195%·KLIC +170%·Ciena +113%·Phison +392%. 메모리·광 슈퍼사이클이 이미 강하게 반영 — 추격매수 위험이 이 분야의 최대 리스크다. RSI 70+ 종목이 다수.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'상대적으로 덜 오른 "옆 노드" 우선'),
+        e('div',{className:'bd'},'같은 병목이라도 덜 반영된 노드가 발굴 가치가 크다: WDC(Seagate·SanDisk 대비 laggard), IPGP(광 테마 내 +73% laggard), ICHR(대형 장비주 대비 저평가 소부장), 심텍(메모리 특화 기판), SIMO(Phison 대비 저평가 컨트롤러).')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 실리콘포토닉스 CPO — 아직 초기 병목 (GFS)'),
+        e('div',{className:'bd'},'광모듈 완제품(플러거블)은 과열이나, 그 다음 세대인 CPO(광 공동패키징)는 이제 양산 초입. GlobalFoundries의 SCALE(첫 OCI MSA 플랫폼)은 CPO 파운드리 병목 — 성숙노드라 밸류 부담이 덜한 파생 베팅.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'WDC, STX, SNDK, CIEN, SMTC, KLIC, ICHR'),e('td',null,'메모리·광 캐파가 수요를 못 따라가는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'수율')),e('td',null,'IPGP, GFS, SIMO, 8299, COHU'),e('td',null,'컨트롤러·CPO·테스트 수율이 병목인가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'재료')),e('td',null,'222800 심텍'),e('td',null,'메모리 패키지 기판이 공급을 제한하는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'NLST'),e('td',null,'IP·특허·CXL 인증이 관건인가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 근본 병목 — 광(이동)과 메모리(저장)의 동시 한계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 구리 인터커넥트의 벽 (광 전환 강제)'),
+        e('div',{className:'bd'},'AI 트래픽 폭증으로 구리 전기신호가 대역폭·전력·거리 한계에 도달. 800G/1.6T 광트랜시버·액티브코퍼·CPO로의 전환이 강제됨 — 광이 통신 인프라를 넘어 AI 필수 인프라로 재평가.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 메모리 슈퍼사이클·병목 (2026)'),
+        e('div',{className:'bd'},'AI 학습·추론이 HBM·DRAM·NAND 수요를 동시에 끌어올려 2026년 메모리 공급부족. 일론 머스크가 메모리 병목을 공개 지적할 정도로 구조적 — HDD/NAND/컨트롤러/기판까지 밸류체인 전반이 타이트.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 첨단 패키징·테스트 캐파 한계'),
+        e('div',{className:'bd'},'고집적 AI칩·메모리 적층으로 본딩·테스트·계측 공정이 병목. Kulicke&Soffa 등이 Advanced Solutions 캐파를 대폭 확장 중.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 신기술 우위성 (정량 비교)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'신기술'),e('th',null,'기존 대비 우위'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'CPO(실리콘포토닉스, GFS SCALE)'),e('td',null,'플러거블 대비 전력·지연·대역폭 개선')),
+            e('tr',null,e('td',null,'HAMR 고용량 HDD(Seagate)'),e('td',null,'용량당 비용↓, AI 콜드데이터 저장 대응')),
+            e('tr',null,e('td',null,'액티브코퍼케이블(Semtech)'),e('td',null,'단거리 광 대비 저비용·저전력 연결'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'1단계 — 광·메모리 AI 수요 각성 (2024~2025)'),
+        e('div',{className:'bd'},'AI 트래픽·데이터 폭증으로 광트랜시버·HBM 수요 급증, 포토닉스 섹터가 시장 최고 수익률.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2단계 — 메모리 슈퍼사이클·CPO 상용화 (2026)'),
+        e('div',{className:'bd'},'메모리 공급부족 심화(머스크 지적), Seagate +254%·Phison +392%. GlobalFoundries SCALE CPO 출시, 광 섹터 랠리.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'3단계 — 과열 vs 확산 (2026~미래)'),
+        e('div',{className:'bd'},'선두주는 이미 과열, 관심이 상대 laggard·소부장·기판으로 확산될지가 관건. 메모리 공급과잉(글럿) 반전 리스크도 병존.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'CPO 시장'),e('td',null,'$20B+(2036), CAGR 37%(2026~36)')),
+            e('tr',null,e('td',null,'메모리 사이클(2026)'),e('td',null,'슈퍼사이클·공급부족(머스크 병목 지적)')),
+            e('tr',null,e('td',null,'Seagate YTD'),e('td',null,'+254%')),
+            e('tr',null,e('td',null,'Semtech 1년'),e('td',null,'+324% (800G·AEC)')),
+            e('tr',null,e('td',null,'Phison 1년'),e('td',null,'+392% (컨트롤러)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 신규 발굴종목 14개 (전면 리셋 후 리서치)'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'⚠️ 과열 경고 — 이 분야 최대 리스크'),
+        e('div',{className:'dd'},'STX·SNDK·SMTC·8299·CIEN·KLIC·COHU는 RSI 66~80으로 이미 폭등 — "과열/참고" 표기. 발굴 우선순위는 상대 laggard(WDC·IPGP·ICHR·심텍·SIMO·GFS)에 둔다. 대만·국내 종목 및 일부 가격은 추정으로 "재확인" 표기. 메모리 사이클 반전 시 동반 급락 위험. 본 자료는 투자 권유 아님.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.85rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:s.rsi>68?'#ef4444':'#818cf8'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#818cf8'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교 (🔴=과열, 발굴 시 주의)'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[2]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<4?1:s.mc<10?0.5:0,
+      s.rsi<58?0.6:0.3,
+      0.5,
+      0.5,
+      s.bn==='재료'?0.6:0.5,
+      s.bn==='생산량'||s.bn==='수율'?1:0.6,
+      s.mc<4?0.5:1,
+      s.rsi>68?0:s.rsi<58?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:MB_LABELS,
+      datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(129,140,248,0.2)', borderColor:'#818cf8', pointBackgroundColor:'#818cf8'}]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){
+          return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t);
+        })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#818cf8'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('div',{className:'dx'},
+        e('div',{className:'dd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 이 분야는 이미 급등한 종목이 많아 "추격아닌가" 항목이 특히 중요. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표 (상대 laggard·소형 우선)'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8 · RSI '+s.rsi)
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (3~6개월)'),
+        e('div',{className:'bd'},'메모리 가격·계약 갱신(WDC·SNDK·심텍), CPO 채택 발표(GFS SCALE), 광 실적(CIEN·IPGP), 장비 수주(ICHR·KLIC), Netlist IP 소송 결과.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~18개월)'),
+        e('div',{className:'bd'},'CPO 대량 양산, HBM4·차세대 NAND 전환, 메모리 사이클 지속성 검증, 관심의 laggard·기판·소부장 확산.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'공통 리스크'),
+        e('div',{className:'dd'},'가장 큰 리스크는 "이미 과열" — 선두주 다수가 YTD 100~390% 급등, RSI 70~80. 메모리는 공급과잉(글럿) 반전 시 급락 이력(과거 SanDisk -11%·Seagate -7% 세션). Netlist는 소송 결과·희석 의존 투기성. 대만·국내주 환율·상장구조 재확인 필수. 본 자료는 투자 권유 아님.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안 (과열 회피형)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'메모리 상대 laggard(④)'),e('td',null,'WDC, SIMO'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'소재·소부장(⑥⑧)'),e('td',null,'222800 심텍, ICHR'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'광 laggard·CPO(②③)'),e('td',null,'IPGP, GFS'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'고위험·과열 소량(⑤⑥)'),e('td',null,'NLST, COHU'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'선두 과열 관망(①④)'),e('td',null,'STX/SNDK/SMTC/CIEN 대기'),e('td',null,'10%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🔦 광포토닉스·메모리·반도체 신규 발굴'),
+      e('div', {className:'sub'}, '전면 리셋 후 신규 리서치 · 광/메모리/장비 BOM 8개 | 2026-08-19 | 14개 신규종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
