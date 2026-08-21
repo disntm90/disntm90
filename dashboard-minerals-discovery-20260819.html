@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>핵심광물·원자재 종목발굴 대시보드 2026-08-19</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d3210 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #854d0e;}
+.hdr h1{font-size:1.35rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#eab308;border-bottom-color:#eab308;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid:#3d3210;border:1px solid #3d3210;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.bx{background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#eab308;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bb{background:rgba(234,179,8,0.15);color:#eab308;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(234,179,8,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#eab308;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#f59e0b;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #854d0e;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#eab308;color:#1a1400;border-color:#eab308;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#eab308;color:#1a1400;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① 안티모니(방산·반도체·난연)', fn:'포탄·야시경·반도체 도판트, 中 60%·美 생산 0', sup:'Perpetua(PPTA)·US Antimony(UAMY)·Military Metals(MILI)', cost:'高(전략)', bn:'재료'},
+  {item:'② 텅스텐(방산·초경공구)', fn:'관통자·공구·항공, 가격 1년 +6배', sup:'Almonty(ALM)·US Antimony(UAMY)', cost:'高', bn:'재료'},
+  {item:'③ 갈륨·게르마늄(GaN·광·태양광)', fn:'GaN MMIC·광섬유·게르마늄 렌즈, 中 통제', sup:'5N Plus(VNP)·[AXT 이전발굴 참고]', cost:'高', bn:'생산량'},
+  {item:'④ 희토류 영구자석(NdPr)', fn:'모터·풍력·로봇·미사일, ex-China 확보전', sup:'Lynas(LYSCF)·[MP·USAR 이전발굴 참고]', cost:'高', bn:'재료'},
+  {item:'⑤ 흑연·음극재(배터리)', fn:'배터리 음극, 中 무역장벽·수요 +130%', sup:'Novonix(NVX)·Westwater(WWR)·[Syrah]', cost:'中', bn:'생산량'},
+  {item:'⑥ 리튬(배터리)', fn:'배터리 핵심, 수요 2040년 +350% 전망', sup:'Albemarle(ALB)·Lithium Americas(LAC)', cost:'高', bn:'생산량'},
+  {item:'⑦ 구리(전력·AI DC·전기화)', fn:'전력망·데이터센터·EV, 미드스트림 병목', sup:'Freeport(FCX)·Ero Copper(ERO)', cost:'高', bn:'생산량'},
+  {item:'⑧ 정제·가공(midstream, 공통병목)', fn:'채굴이 아닌 "정제"가 진짜 병목, 中 40~90% 장악', sup:'5N Plus(VNP)·UAMY(제련)·정부지원 리쇼어링', cost:'-', bn:'인증'}
+];
+
+var STOCKS = [
+  {t:'PPTA', nm:'Perpetua Resources', bom:'① 안티모니(+금)', price:'(재확인)', mc:2.5, pos:'상류(안티모니)·재료★★★', moat:'매우높음', pt:'미국 안티모니 리쇼어링의 상징. 아이다호 Stibnite 광산(금+안티모니 겸산)에 약 $2.9B EXIM 대출 확보. 美 안티모니 생산 0 → 국방·반도체 공급망 핵심. 금 병산으로 현금흐름 방어. 인허가·건설 리스크는 남음.', mb:6, rsi:58, bn:'재료'},
+  {t:'ALM', nm:'Almonty Industries', bom:'② 텅스텐', price:'~$15(재확인)', mc:4, pos:'상류(텅스텐)·재료★★★', moat:'높음', pt:'한국 상동(Sangdong) 텅스텐 광산 재개로 서방 최대 텅스텐 공급 목표. 텅스텐 가격 1년 +6배. 애널 8인 Strong Buy, 목표 $25.28(+67%), $300M 자사주. 방산·공구 초크 광물의 대표 발굴주. 중국 가격 반전 리스크.', mb:6, rsi:60, bn:'재료'},
+  {t:'VNP.TO', nm:'5N Plus', bom:'③⑧ 갈륨·게르마늄·정제', bom2:true, price:'(재확인)', mc:1.5, pos:'중류(정제·특수금속)·생산량★★★', moat:'높음', pt:'갈륨·게르마늄·텔루륨 등 특수금속 정제 전문. 美정부 $18.1M 지원으로 유타 게르마늄 정제 캐파 확대(광학·태양광용). "채굴이 아닌 정제 병목"의 순수 플레이. 발굴종목 중 정제 midstream 대표.', mb:6, rsi:55, bn:'생산량'},
+  {t:'NVX', nm:'Novonix', bom:'⑤ 합성흑연 음극재', price:'(재확인)', mc:1.5, pos:'중류(음극재)·생산량★★★', moat:'보통~높음', pt:'북미 합성흑연 음극재. Project Kathari에 美정부 $754.8M 조건부 지원 — 중국 흑연 무역장벽의 최대 수혜 리쇼어링주. 배터리 음극 국산화 병목. 상업양산·자금조달 리스크 큼.', mb:5.5, rsi:52, bn:'생산량'},
+  {t:'UAMY', nm:'United States Antimony', bom:'①② 안티모니+텅스텐 제련', bom2:true, price:'(재확인)', mc:1, pos:'중류(제련)·생산량★★', moat:'보통~높음', pt:'북미 안티모니 제련 오랜 이력 + 12년만의 북미 텅스텐 생산 추진. $100M 자사주로 +9% 급등 이력. 단 Q2 매출 -25%·연 가이던스 하향($125M→$60~75M) — 실적 변동성 큼. 소형 투기성.', mb:4.5, rsi:56, bn:'생산량'},
+  {t:'LAC', nm:'Lithium Americas', bom:'⑥ 리튬(Thacker Pass)', price:'(재확인)', mc:2, pos:'상류(리튬)·생산량★★', moat:'높음', pt:'미국 최대 리튬 프로젝트 Thacker Pass 개발. 리튬 수요 2040년 +350% 전망의 미국 공급망 핵심. GM 등 전략 파트너. 리튬 가격 사이클 저점·건설 자본 리스크.', mb:5, rsi:50, bn:'생산량'},
+  {t:'LYSCF', nm:'Lynas Rare Earths', bom:'④ 희토류(ex-China 최대)', price:'(재확인)', mc:8, pos:'상류(희토류)·재료★★', moat:'매우높음', pt:'중국 밖 최대 희토류 생산·분리 기업(호주+말레이시아+미국 텍사스 분리시설). NdPr 자석 원료 서방 공급의 사실상 유일 대안. 시총 중형(~$8B), 희토류 가격·중국 정책 변동 노출.', mb:4.5, rsi:56, bn:'재료'},
+  {t:'ERO', nm:'Ero Copper', bom:'⑦ 구리(소형)', price:'(재확인)', mc:2, pos:'상류(구리)·생산량★★', moat:'보통', pt:'브라질 구리 생산 소형주. AI 데이터센터·전력망·전기화의 구리 수요 수혜, 대형(FCX) 대비 시총 작아 레버리지 큼. 구리 가격·단일국가(브라질) 리스크.', mb:5, rsi:54, bn:'생산량'},
+  {t:'MILI.CN', nm:'Military Metals', bom:'① 안티모니(주니어)', price:'(재확인)', mc:0.2, pos:'상류(안티모니)·재료·투기', moat:'낮음~보통', pt:'안티모니·주석 등 전략광물 주니어 탐사기업. 초소형 시총으로 성공 시 고배율이나 프리레비뉴 탐사 단계 투기성 극심. 병목 다양성(안티모니 소형) 확보용.', mb:3.5, rsi:52, bn:'재료'},
+  {t:'WWR', nm:'Westwater Resources', bom:'⑤ 흑연 음극재(소형)', price:'(재확인)', mc:0.3, pos:'중류(음극재)·생산량·투기', moat:'보통', pt:'앨라배마 Kellyton 흑연 음극재 공장 소형주. 중국 흑연 의존 탈피 수혜, Novonix 대비 초소형. 자금·양산 리스크 큼, 고위험 베팅.', mb:4, rsi:50, bn:'생산량'},
+  {t:'ALB', nm:'Albemarle', bom:'⑥ 리튬 대장(참고)', price:'(대형·참고)', mc:15, pos:'상류(리튬)·재료·기준초과', moat:'높음', pt:'글로벌 리튬 1위. 리튬 사이클 반등 시 최대 수혜지만 이미 대형(~$15B). 리튬 가격 저점 통과 여부가 관건(참고).', mb:3, rsi:52, bn:'재료'},
+  {t:'FCX', nm:'Freeport-McMoRan', bom:'⑦ 구리 대장(참고)', price:'(대형·참고)', mc:70, pos:'상류(구리)·생산량·기준초과', moat:'매우높음', pt:'글로벌 구리 대장. AI·전기화 구리 수요의 최선호 대형주지만 이미 초대형(~$70B, 참고).', mb:2.5, rsi:58, bn:'생산량'},
+  {t:'MP', nm:'MP Materials', bom:'④ 희토류 자석(이전발굴·참고)', price:'(참고)', mc:11, pos:'상류(희토류)·재료·중복', moat:'매우높음', pt:'※이전 전력·로보틱스 발굴에서 다룬 종목(참고). 미국 유일 수직계열 희토류. 국방부 지분 참여. 시총 ~$11B 대형.', mb:2.5, rsi:62, bn:'재료'},
+  {t:'UUUU', nm:'Energy Fuels', bom:'④ 희토류+우라늄(이전발굴·참고)', price:'(참고)', mc:2, pos:'상류(희토류/우라늄)·재료·중복', moat:'보통', pt:'※이전 전력·로보틱스 발굴에서 다룬 종목(참고). 우라늄+희토류 분리 겸영 소형주.', mb:4, rsi:53, bn:'재료'}
+];
+
+var BOTTLENECKS = ['전체','재료','생산량','인증'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 핵심광물 공급망 BOM — 8개 라인아이템'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'터미널(L1) = AI·전기화·방산에 필수인 핵심광물의 "서구(비중국) 공급망" 확보. 핵심 통찰: 병목은 채굴이 아니라 "정제·가공"과 특정 초크(choke) 광물이다. 중국이 갈륨·게르마늄·안티모니·텅스텐 수출을 통제하며, DoD 무기체계 78%가 영향권. 이미 다룬 MP·USAR·우라늄은 "참고"로 두고 새 초크광물을 중심에 놓았다.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목(광물)'),e('th',null,'용도·병목'),e('th',null,'공급사'),e('th',null,'전략성'),e('th',null,'병목유형'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.78rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: 中 수출통제 → 서구 핵심광물 리쇼어링 (DoD 78% 영향)]\n\n  → 채굴(상류)              → 정제·가공(midstream 진짜병목)        → 수요(방산·배터리·AI)\n     ★① PPTA 안티모니 ★★★재료      ★⑧ VNP 정제(갈륨·게르마늄) ★★★생산량    무기·미사일\n     ★② ALM 텅스텐 ★★★재료          UAMY 제련(안티모니·텅스텐)★             배터리·EV\n     ④ LYSCF 희토류 ★재료            ⑤ NVX 합성흑연 음극재 ★★★생산량        전력망·AI DC\n     ⑥ LAC 리튬 / ⑦ ERO 구리        (정부지원 리쇼어링이 핵심 촉매)\n     [MP·USAR·UUUU = 이전발굴 참고]'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'①② 안티모니·텅스텐 — "들어본 적 없지만 방산 필수" 초크광물'),
+        e('div',{className:'bd'},'미국은 안티모니를 단 1톤도 캐지 않고, 텅스텐은 12년간 생산 전무. 중국 통제로 텅스텐 +6배, 안티모니 가격 급등. Perpetua(안티모니, $2.9B EXIM)·Almonty(텅스텐, 한국 상동광산)가 서방 공급의 상징 — 가장 언섹시하지만 국가안보 최우선.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑧ 정제(midstream) — 채굴보다 큰 병목 (5N Plus)'),
+        e('div',{className:'bd'},'중국은 원광 생산은 10%뿐이나 정제 캐파를 40~90% 장악. 즉 광산보다 "정제소"가 진짜 병목. 5N Plus(갈륨·게르마늄 정제, 美정부 지원)·UAMY(제련)가 이 midstream 병목의 순수 플레이 — "광산 이름이 아니라 정제 단계에서 시작해 발견".')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑤ 흑연 리쇼어링 — 정부가 돈을 붓는 병목 (Novonix)'),
+        e('div',{className:'bd'},'중국 흑연 무역장벽 + 배터리 음극 수요 +130%. Novonix Project Kathari에 美정부 $754.8M 조건부 지원 — 정책 자금이 직접 투입되는 리쇼어링 병목. 다만 상업양산 검증이 관건.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목 유형'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'재료')),e('td',null,'PPTA, ALM, LYSCF, MILI, MP'),e('td',null,'희소·전략 광물 매장·공급이 제한되는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'VNP, NVX, UAMY, LAC, ERO, WWR, FCX'),e('td',null,'채굴·정제 캐파가 수요를 못 따라가는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'VNP, UAMY (정제·인허가)'),e('td',null,'정제 인증·환경 인허가에 수년 걸리는가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 근본 병목 — "채굴이 아니라 정제·초크광물"'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① 중국의 정제 장악'),
+        e('div',{className:'bd'},'중국은 원광 생산은 ~10%뿐이나 리튬·코발트·구리 등 핵심광물 정제 캐파의 40~90%를 장악. 서방이 광산을 열어도 "정제소"가 없으면 무용 — midstream이 진짜 병목.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 수출통제의 국가안보 충격'),
+        e('div',{className:'bd'},'중국의 갈륨·게르마늄·안티모니·텅스텐·텔루륨 수출통제로 DoD 무기체계 78%(80,000개 부품)가 영향. 유럽 갈륨·중희토류 가격이 중국 내수 대비 5배, 게르마늄 3배. (통제는 2026.11.27까지 한시 유예 상태 — 만료 시 재충격 리스크)')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ 구조적 수요 폭증'),
+        e('div',{className:'bd'},'리튬 수요 2040년 +350%, 흑연 +130%. 희토류는 전기모터·풍력·로봇·방산·AI로 수요 확대. 공급이 정치·인허가로 제약되며 가격·전략가치 동시 상승.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 서구 공급망의 대응 (정량)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'프로젝트/정책'),e('th',null,'내용'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'Perpetua Stibnite'),e('td',null,'약 $2.9B EXIM 대출, 美 안티모니 리쇼어링 기함')),
+            e('tr',null,e('td',null,'Novonix Project Kathari'),e('td',null,'美정부 $754.8M 조건부 지원(합성흑연)')),
+            e('tr',null,e('td',null,'5N Plus 유타 게르마늄'),e('td',null,'美정부 $18.1M, 게르마늄 정제 캐파 확대')),
+            e('tr',null,e('td',null,'Almonty 상동 텅스텐'),e('td',null,'한국 광산 재개, 서방 최대 텅스텐 목표'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'1단계 — 중국 수출통제 충격 (2024~2025)'),
+        e('div',{className:'bd'},'중국이 갈륨·게르마늄·안티모니·텅스텐 수출통제, 가격 급등(텅스텐 +6배). 서방 공급망 위기 자각.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'2단계 — 정부 리쇼어링 자금 투입 (2026)'),
+        e('div',{className:'bd'},'美 핵심광물 행정명령, EXIM·DoE 조건부 지원(PPTA $2.9B, NVX $755M, VNP $18M). 가격 하한제(price floor) 논의.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'3단계 — 통제 유예 만료·재편 (2026말~미래)'),
+        e('div',{className:'bd'},'수출통제 한시 유예(~11/27) 만료 여부가 촉매/리스크. 정제·초크광물 서방 생산 본격화, 가격 하한·장기계약 구조화.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 규모 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'DoD 무기체계 영향'),e('td',null,'78%(부품 8만개) — 5대 광물 통제 시')),
+            e('tr',null,e('td',null,'중국 안티모니 점유'),e('td',null,'세계 60%(美 생산 0)')),
+            e('tr',null,e('td',null,'텅스텐 가격(1년)'),e('td',null,'+6배')),
+            e('tr',null,e('td',null,'갈륨·게르마늄 시장'),e('td',null,'$1.34B(2025), CAGR 9.4%(~2035)')),
+            e('tr',null,e('td',null,'리튬/흑연 수요(2040)'),e('td',null,'+350% / +130%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 14개 (초크광물·정제 병목 우선)'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'⚠️ 주의'),
+        e('div',{className:'dd'},'ALB·FCX·MP·UUUU는 대형/이전발굴 중복으로 참고 분류. 순수 신규 발굴은 PPTA·ALM·VNP·NVX·UAMY·LAC·ERO. 광물주는 프로젝트 인허가·자금조달·상품가격·중국 정책 반전(통제 유예 만료)에 극도로 민감. 주니어(MILI·WWR)는 프리레비뉴 투기성 극심. 가격은 대부분 "재확인" 표기, 매매 전 1차 자료 필수. 투자 권유 아님.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.85rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#eab308'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#eab308'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[0]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<2?1:s.mc<5?0.5:0,
+      s.rsi<58?0.6:0.3,
+      0.5,
+      0.5,
+      0.4,
+      s.bn==='재료'||s.bn==='생산량'?1:0.6,
+      s.mc<2?0.5:1,
+      s.rsi>65?0:s.rsi<58?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{
+      labels:MB_LABELS,
+      datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(234,179,8,0.2)', borderColor:'#eab308', pointBackgroundColor:'#eab308'}]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){
+          return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t);
+        })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#eab308'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('div',{className:'dx'},
+        e('div',{className:'dd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 광물주는 상품가격·정책 의존이 커 변동성이 특히 크다. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (3~6개월)'),
+        e('div',{className:'bd'},'중국 수출통제 유예(11/27) 만료 여부, 美정부 추가 리쇼어링 자금·오프테이크 계약, PPTA/NVX 건설 진척, 텅스텐·안티모니 가격 동향, Almonty 상동광산 가동.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~18개월)'),
+        e('div',{className:'bd'},'가격 하한제(price floor)·장기계약 구조화, 5N Plus 게르마늄·Novonix 흑연 상업생산, 희토류 자석 서방 공급망 완성, 리튬 사이클 반등.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'공통 리스크'),
+        e('div',{className:'dd'},'가장 큰 변수는 중국 정책 반전 — 통제 완화·가격 덤핑 시 서방 프로젝트 경제성 훼손. 광물주는 인허가 지연·자본조달·상품가격 급변에 취약. 주니어(MILI·WWR)·프리레비뉴(PPTA·NVX·LAC)는 희석·건설 리스크 큼. 가격 추정치는 재확인 필수. 본 자료는 투자 권유 아님.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'초크광물 핵심(①②)'),e('td',null,'PPTA, ALM'),e('td',null,'30%')),
+            e('tr',null,e('td',null,'정제 midstream(③⑧⑤)'),e('td',null,'VNP, NVX'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'배터리·구리(⑥⑦)'),e('td',null,'LAC, ERO'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'희토류·제련(④②)'),e('td',null,'LYSCF, UAMY'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'고위험 주니어·대형참고'),e('td',null,'MILI/WWR, FCX/ALB'),e('td',null,'10%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '⛏️ 핵심광물·원자재 종목발굴'),
+      e('div', {className:'sub'}, '채굴 아닌 정제·초크광물 병목 · BOM 8개 라인아이템 | 2026-08-19 | 14개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
