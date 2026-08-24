@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>우주항공 종목발굴 대시보드 2026-08-19</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#2e1065 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #6d28d9;}
+.hdr h1{font-size:1.35rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#a78bfa;border-bottom-color:#a78bfa;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #2e1065;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.bx{background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#a78bfa;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bb{background:rgba(167,139,250,0.15);color:#a78bfa;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(167,139,250,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#a78bfa;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#f59e0b;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #4c1d95;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#a78bfa;color:#1a0533;border-color:#a78bfa;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#a78bfa;color:#1a0533;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① 재사용 발사체(로켓)', fn:'저비용 궤도 진입, 발사 캐던스가 우주경제 병목', sup:'Rocket Lab(RKLB)·Firefly(FLY)·[SpaceX 대형참고]·한화에어로(012450)', cost:'高', bn:'생산량'},
+  {item:'② 위성 제조·버스·부품', fn:'위성 본체·전력·구조·3D프린팅', sup:'Redwire(RDW)·Karman(KRMN)·쎄트렉아이(099320)', cost:'高', bn:'생산량'},
+  {item:'③ 위성 직접연결(D2C)', fn:'일반 스마트폰↔위성 직결(음영지대 해소)', sup:'AST SpaceMobile(ASTS)', cost:'高', bn:'인증'},
+  {item:'④ 지구관측·데이터', fn:'위성 영상·분석 서비스', sup:'Planet Labs(PL)·BlackSky(BKSY)', cost:'中', bn:'생산량'},
+  {item:'⑤ 위성간 광링크(레이저)', fn:'궤도 메시망, 지상국 축소·저지연 (시장 CAGR 20%)', sup:'[Mynaric→Rocket Lab 인수]·RKLB', cost:'中', bn:'수율'},
+  {item:'⑥ 달·심우주 인프라', fn:'달착륙선·심우주 물류(NASA·방산)', sup:'Intuitive Machines(LUNR)', cost:'高', bn:'인증'},
+  {item:'⑦ 우주정거장·궤도 인프라', fn:'차세대 우주정거장·방산 우주', sup:'Voyager(VOYG)', cost:'高', bn:'인증'},
+  {item:'⑧ 지상국·안테나·위성단말', fn:'지상 게이트웨이·평판 안테나·단말', sup:'인텔리안테크(189300)·AP위성(025950)', cost:'中', bn:'생산량'}
+];
+
+var STOCKS = [
+  {t:'RKLB', nm:'Rocket Lab', bom:'①⑤ 재사용 발사체+광링크', bom2:true, price:'(재확인)', mc:20, pos:'중류·터미널(발사)·생산량★★★', moat:'매우높음', pt:'소형 발사 1위 + Neutron(중형) 개발 + Mynaric(레이저 광링크) 인수로 수직계열화. Q1 2026 매출 $200M(+64%), 수주잔고 $2.2B. 발사 캐던스 병목의 서방 대표주. SpaceX 외 가장 검증된 순수 발사주(대형).', mb:5, rsi:62, bn:'생산량'},
+  {t:'ASTS', nm:'AST SpaceMobile', bom:'③ 위성 직접연결(D2C)', price:'(재확인)', mc:15, pos:'중류(위성통신)·인증★★★', moat:'높음', pt:'일반 스마트폰을 위성에 직접 연결(특수단말 불필요)해 전 세계 음영지대 해소 목표. 애널 8 Buy·0 Sell. 성공 시 수십억 모바일 사용자 잠재. 위성 배치·자본·규제(스펙트럼) 리스크 큼, 프리레비뉴 변동성.', mb:5, rsi:60, bn:'인증'},
+  {t:'LUNR', nm:'Intuitive Machines', bom:'⑥ 달·심우주 인프라', price:'(재확인)', mc:3, pos:'중류(달탐사)·인증★★★', moat:'높음', pt:'달착륙선·심우주 인프라. 2026 매출 최대 ~$10억 가이던스, 수주잔고 ~$11억(NASA·방산). 주요 순수주 중 흑자 전환에 가장 근접. 미션 성공률·정부예산 의존.', mb:5.5, rsi:58, bn:'인증'},
+  {t:'FLY', nm:'Firefly Aerospace', bom:'① 발사체(신규 IPO)', price:'(재확인)', mc:4.46, pos:'중류·터미널(발사)·생산량★★★', moat:'높음', pt:'Alpha 발사체 + 달착륙(Blue Ghost) + 중형 개발. Q2 2026 기록적 매출 $117.7M, 수주잔고 $1.5B. 2025 IPO 신규 발사주로 Rocket Lab 대비 초기·소형. 발사 신뢰성·자금 리스크.', mb:5.5, rsi:60, bn:'생산량'},
+  {t:'KRMN', nm:'Karman Holdings', bom:'② 우주·방산 하드웨어(페어링·추진)', price:'$61.78', mc:8.2, pos:'중류(부품)·인증★★', moat:'높음', pt:'페이로드 페어링·추진·구조물 등 미사일·우주 하드웨어. 방산·우주 이중 수요의 "부품 병목" 순수주. 시총 $8.2B로 기준 초과나 실적·수주 견조. 방산예산 의존.', mb:4, rsi:56, bn:'인증'},
+  {t:'VOYG', nm:'Voyager Technologies', bom:'⑦ 우주정거장·방산 우주', price:'$42.98', mc:2.6, pos:'중류(궤도인프라)·인증★★', moat:'높음', pt:'차세대 우주정거장(Starlab)·방산 우주 솔루션. Q2 기록 매출·수주, 2026 가이던스 $275~305M 상향, 수주잔고 $336M. 우주정거장 상업화 초기 베팅. ISS 후속 정책 의존.', mb:5, rsi:54, bn:'인증'},
+  {t:'RDW', nm:'Redwire', bom:'② 위성 부품·3D프린팅', price:'~$13', mc:1, pos:'중류(부품)·생산량★★', moat:'보통~높음', pt:'항법·전력·궤도 3D프린팅 등 위성·우주정거장 컴포넌트. 고점 $25.90(5월)→~$13로 조정, 시총 소형($1B)으로 발굴 매력. 인수·통합·수익성 리스크.', mb:5, rsi:48, bn:'생산량'},
+  {t:'PL', nm:'Planet Labs', bom:'④ 지구관측 데이터', price:'(재확인)', mc:3, pos:'중류(EO데이터)·생산량★★', moat:'높음', pt:'세계 최대급 지구관측 위성군 운용, 매출·수주 성장. 데이터·AI 분석 구독 모델. 국방·정부 수요 수혜, 상업 수익화 속도가 관건.', mb:4.5, rsi:54, bn:'생산량'},
+  {t:'099320.KQ', nm:'쎄트렉아이', bom:'② 위성 제조(국내)', price:'(재확인)', mc:1.5, pos:'중류(위성제조)·생산량★★', moat:'높음', pt:'국내 유일 소형위성 시스템·본체 제조사(지구관측 위성 수출). 국내 우주·방산 수혜, 한화 계열 시너지. 소형 시총으로 발굴 후보. 수주 lumpiness·환율.', mb:5, rsi:52, bn:'생산량'},
+  {t:'189300.KQ', nm:'인텔리안테크', bom:'⑧ 위성통신 안테나·지상국', price:'(재확인)', mc:1, pos:'중류(안테나·지상국)·생산량★★★', moat:'높음', pt:'LEO 위성통신용 평판 안테나·지상 게이트웨이 국내 강자(글로벌 위성사업자 공급). Starlink·OneWeb·Kuiper 등 LEO 확산의 지상 인프라 병목 직접 수혜. 발굴 핵심 소형주.', mb:5.5, rsi:55, bn:'생산량'},
+  {t:'BKSY', nm:'BlackSky', bom:'④ 지구관측(실시간)', price:'(재확인)', mc:0.5, pos:'중류(EO데이터)·생산량★★', moat:'보통', pt:'실시간 지구관측·분석 소형주. 국방·정보 수요, Planet 대비 초소형으로 고배율이나 재무·희석 리스크. 병목 다양성 확보용 소형 베팅.', mb:4, rsi:52, bn:'생산량'},
+  {t:'025950.KQ', nm:'AP위성', bom:'⑧ 위성 단말·부품(소형)', price:'(재확인)', mc:0.3, pos:'중류(단말)·생산량·투기', moat:'보통', pt:'위성 단말기·부품 국내 초소형주. 국내 위성통신·우주 테마 수혜지만 초소형 시총·실적 변동성으로 투기성. 병목 다양성용.', mb:3.5, rsi:54, bn:'생산량'},
+  {t:'012450.KS', nm:'한화에어로스페이스', bom:'① 발사체·엔진(국내 대장·참고)', price:'(대형·참고)', mc:40, pos:'중류·터미널(발사·엔진)·기준초과', moat:'매우높음', pt:'누리호 엔진·발사체 + 방산(K9 등) 국내 대장. 우주+방산 이중 수혜의 초대형주지만 이미 대형화(~$40B 추정, 참고).', mb:2.5, rsi:64, bn:'생산량'},
+  {t:'SPCX', nm:'SpaceX (참고·초대형)', bom:'①③ 발사+Starlink(터미널)', price:'(참고)', mc:1750, pos:'터미널·초대형·참고', moat:'절대적', pt:'2026.6월 나스닥 IPO(약 $1.75조 밸류, 역사상 최대). 발사·Starlink 절대강자로 우주경제의 터미널 그 자체. 초대형·고밸류로 발굴 대상이 아닌 벤치마크(참고).', mb:1, rsi:60, bn:'생산량'}
+];
+
+var BOTTLENECKS = ['전체','생산량','인증','수율'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 우주경제 BOM — 8개 라인아이템'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'터미널(L1) = 위성 대량배치·재사용 발사·우주통신 경제. 완제 절대강자 SpaceX(2026.6 IPO, $1.75조)는 벤치마크로 두고, 발사·위성제조·직접연결·광링크·지상국 등 밸류체인 각 병목의 상장 공급사를 발굴했다. 저비용 발사 캐던스 + LEO 위성 폭증이 메가트렌드.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능·병목'),e('th',null,'공급사'),e('th',null,'원가'),e('th',null,'병목'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.77rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: 저비용 발사 + LEO 위성 폭증 → 우주경제 (SpaceX $1.75조 IPO)]\n\n  → 발사(진입)              → 위성·통신(궤도 병목)                → 데이터·지상\n     ★① RKLB 발사+광링크 ★★★생산량   ★③ ASTS 직접연결 ★★★인증           ④ PL/BKSY EO데이터\n     FLY 발사(신규IPO) ★★★           ⑥ LUNR 달탐사 ★인증               ★⑧ 189300 인텔리안 지상국★★★\n     012450 한화에어로(참고)          ⑦ VOYG 우주정거장 ★인증             099320 쎄트렉아이 위성제조\n     [SPCX 벤치마크]                 ② RDW/KRMN 부품 ★                025950 AP위성'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑧ 지상국·안테나 — 위성 폭증의 "덜 주목된 지상 병목" (인텔리안테크)'),
+        e('div',{className:'bd'},'모두가 발사·위성에 주목하지만, LEO 위성이 늘수록 지상 게이트웨이·평판 안테나 수요가 함께 폭증한다. 인텔리안테크는 Starlink·OneWeb·Kuiper 등 글로벌 위성사업자에 지상 인프라를 공급하는 국내 강자 — "우주가 아니라 지상에서 병목을 판다".')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑤ 위성간 광링크 — 궤도 메시망의 숨은 병목'),
+        e('div',{className:'bd'},'수천 위성이 레이저(광)로 직접 통신하며 지상국을 줄이는 메시망이 표준화(시장 CAGR 20%). Rocket Lab이 Mynaric(레이저 터미널)을 인수해 발사+광링크를 수직계열화 — 광링크가 다음 병목.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'실적 가시성 — LUNR·VOYG·FLY (수주잔고 보유)'),
+        e('div',{className:'bd'},'우주주는 "미래 기대" 의존이 크나, Intuitive Machines(~$11억)·Firefly($1.5B)·Rocket Lab($2.2B)은 대형 수주잔고로 매출 가시성 보유. LUNR은 순수주 중 흑자 전환에 가장 근접.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'RKLB,FLY,RDW,PL,099320,189300,BKSY,025950'),e('td',null,'발사·위성·지상장비 캐파가 수요를 못 따라가는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'ASTS,LUNR,VOYG,KRMN'),e('td',null,'스펙트럼·NASA·방산 인증/계약 해자가 있는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'수율')),e('td',null,'RKLB(광링크)'),e('td',null,'광링크·미션 신뢰성이 병목인가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 근본 병목'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'① 발사 캐던스·비용'),e('div',{className:'bd'},'위성 대량배치의 병목은 저비용·고빈도 발사. 재사용 로켓(SpaceX·Rocket Lab Neutron·Firefly)이 비용을 낮추나 캐던스 확보가 관건.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'② 궤도 통신 병목(광링크·스펙트럼)'),e('div',{className:'bd'},'LEO 위성 폭증으로 위성간 광링크·지상국·스펙트럼이 병목. 직접연결(D2C)은 스펙트럼·규제가 상용화 관건.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'③ 실적 가시성 격차'),e('div',{className:'bd'},'우주주는 프리레비뉴·정부예산 의존이 커 변동성 극심. 대형 수주잔고·흑자 근접(LUNR·RKLB·FLY) 여부가 옥석을 가른다.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'1단계 — 재사용 발사 상용화 (2020~2024)'),e('div',{className:'bd'},'SpaceX 재사용으로 발사비 급락, 상업 우주 개화.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'2단계 — LEO 위성·직접연결 확산 (2025~2026)'),e('div',{className:'bd'},'Starlink·Kuiper 대량배치, AST 직접연결, 광링크 표준화. SpaceX $1.75조 IPO로 섹터 재평가.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'3단계 — 우주경제 확장 (2026~미래)'),e('div',{className:'bd'},'달·심우주(LUNR)·우주정거장(VOYG)·지구관측 데이터 확장. 발사·위성·지상 밸류체인 동반 성장.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장·실적 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'광위성통신 시장'),e('td',null,'$3.18B(2026) → $7.44B(2034), CAGR 11.2%')),
+            e('tr',null,e('td',null,'레이저 위성링크'),e('td',null,'$0.62B(2025) → $1.56B(2030), CAGR 20.4%')),
+            e('tr',null,e('td',null,'Rocket Lab Q1 2026'),e('td',null,'매출 $200M(+64%), 수주 $2.2B')),
+            e('tr',null,e('td',null,'Firefly Q2 2026'),e('td',null,'매출 $117.7M(기록), 수주 $1.5B')),
+            e('tr',null,e('td',null,'SpaceX IPO(2026.6)'),e('td',null,'약 $1.75조 밸류(역사상 최대)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 14개'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'⚠️ 주의'),
+        e('div',{className:'dd'},'SPCX(초대형 벤치마크)·012450 한화에어로·RKLB·ASTS·KRMN는 대형/기준초과로 참고. 순수 소형 발굴은 189300·099320·RDW·025950·BKSY. 우주주는 미션 성공률·정부예산·프리레비뉴·희석 리스크가 극심하고 변동성 크다. 대부분 가격 "재확인" 표기, 국내주 환율·상장구조 확인 필수. 투자 권유 아님.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.85rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#a78bfa'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#a78bfa'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[2]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<1?1:s.mc<5?0.5:0,
+      s.rsi<58?0.6:0.3,0.5,0.5,
+      0.4,
+      s.bn==='인증'||s.bn==='생산량'?1:0.6,
+      s.mc<1?0.5:1,
+      s.rsi>65?0:s.rsi<58?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{labels:MB_LABELS,datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(167,139,250,0.2)', borderColor:'#a78bfa', pointBackgroundColor:'#a78bfa'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){ return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t); })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#a78bfa'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'}, e('div',{className:'dx'}, e('div',{className:'dd'},'워킹페이퍼 기반 통계 신호 — 10배 수익 보장 아님. 우주주는 정부예산·미션 성공에 좌우돼 변동성 특히 큼. 참고 지표로만 활용.')))
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'단기 (3~6개월)'),e('div',{className:'bd'},'Rocket Lab Neutron 발사·수주, Firefly 달착륙·발사, LUNR 달 미션·NASA 계약, ASTS 위성 배치·통신사 계약, 인텔리안테크 LEO 사업자 수주.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'중기 (6~18개월)'),e('div',{className:'bd'},'직접연결(D2C) 상용화, 광링크 메시망 확대, 우주정거장(VOYG) 진척, 국내 우주·방산 예산 확대, SpaceX 상장 후 섹터 재평가.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},e('div',{className:'dt'},'공통 리스크'),e('div',{className:'dd'},'우주주는 미션 실패·발사 지연·정부예산 삭감·프리레비뉴 희석에 극도로 민감. ASTS·RKLB 등은 이미 큰 기대 반영, 소형(RDW·BKSY·AP위성)은 재무·희석 리스크. SpaceX 상장이 자금·인재를 흡수할 가능성. 국내주 환율·상장구조 재확인. 본 자료는 투자 권유 아님.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'실적주 순수(①⑥)'),e('td',null,'FLY, LUNR'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'지상·안테나 병목(⑧)'),e('td',null,'189300 인텔리안, 099320 쎄트렉아이'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'발사·통신 대형(①③)'),e('td',null,'RKLB, ASTS'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'부품·궤도인프라(②⑦)'),e('td',null,'RDW, VOYG'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'고위험 소형·대형참고'),e('td',null,'BKSY/025950, 012450'),e('td',null,'10%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🛰️ 우주항공 종목발굴'),
+      e('div', {className:'sub'}, '발사·위성·직접연결·광링크·지상국 · BOM 8개 라인아이템 | 2026-08-19 | 14개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
