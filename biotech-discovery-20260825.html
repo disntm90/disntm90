@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>바이오테크 종목·ETF 발굴 대시보드 2026-08-25</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#4a044e 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #a21caf;}
+.hdr h1{font-size:1.3rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#e879f9;border-bottom-color:#e879f9;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #4a044e;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.bx{background:rgba(232,121,249,0.08);border:1px solid rgba(232,121,249,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#e879f9;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bb{background:rgba(232,121,249,0.15);color:#e879f9;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(232,121,249,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#e879f9;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#f59e0b;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #86198f;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#e879f9;color:#2a0430;border-color:#e879f9;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#e879f9;color:#2a0430;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+.etf{background:#0d1426;border:1px solid #4a044e;border-radius:10px;padding:12px;margin-bottom:10px;}
+.etf-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.etf-t{font-size:0.9rem;font-weight:700;color:#e879f9;}
+.etf-d{font-size:0.78rem;color:#94a3b8;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var MOD = [
+  {item:'① AI 신약발굴 플랫폼', fn:'물리·AI로 후보물질 설계·항체발굴 (임상 AI약 2027~28 전망)', sup:'Recursion(RXRX)·Schrodinger(SDGR)·AbCellera(ABCL)·Tempus(TEM)', cost:'플랫폼', bn:'플랫폼'},
+  {item:'② 차세대 비만/대사', fn:'경구·근육보존·복합 GLP-1 대안(M&A 최대 타깃)', sup:'Viking(VKTX)·Structure(GPCR)', cost:'임상', bn:'비만'},
+  {item:'③ 유전자편집(CRISPR/염기·프라임)', fn:'유전질환 근본 치료(Casgevy 상용화)', sup:'CRISPR(CRSP)·Intellia(NTLA)·Beam(BEAM)·Arrowhead(ARWR)', cost:'임상', bn:'유전자'},
+  {item:'④ 방사성의약품(라디오파마)', fn:'표적 방사성 진단+치료(theranostics)', sup:'Lantheus(LNTH)', cost:'상업/임상', bn:'방사성'},
+  {item:'⑤ 세포치료·항암', fn:'CAR-T·TCR 등 세포 기반 항암', sup:'Legend(LEGN)·Arcellx(ACLX)', cost:'임상/상업', bn:'세포'},
+  {item:'⑥ ETF (분산·테마 노출)', fn:'개별 임상 리스크 분산, 테마 노출', sup:'XBI·IBB·ARKG·IDNA·GNOM', cost:'-', bn:'ETF'}
+];
+
+var STOCKS = [
+  {t:'VKTX', nm:'Viking Therapeutics', bom:'② 차세대 비만/대사', price:'(재확인)', mc:5, pos:'비만(경구+주사)·비만★★★', moat:'높음', pt:'경구·주사 이중 비만 파이프라인(VK2735)으로 차세대 비만 선두. Pfizer의 Metsera 최대 $10B 인수처럼 비만이 M&A 최대 타깃 — 잠재 피인수 프리미엄. 임상 3상 데이터가 최대 변수, 실패 시 급락. 발굴 핵심.', mb:6, rsi:58, bn:'비만'},
+  {t:'CRSP', nm:'CRISPR Therapeutics', bom:'③ 유전자편집(Casgevy 상용)', price:'(재확인)', mc:5, pos:'유전자편집·유전자★★★', moat:'높음', pt:'세계 첫 CRISPR 승인 치료제 Casgevy(겸상적혈구) 상용화 + 심혈관·당뇨 in vivo 파이프라인. 유전자편집 대장주. 상업화 램프·차세대 파이프라인이 관건. 임상·상업 실행 리스크.', mb:5.5, rsi:56, bn:'유전자'},
+  {t:'LNTH', nm:'Lantheus Holdings', bom:'④ 방사성의약품(theranostics)', price:'(재확인)', mc:7, pos:'방사성진단+치료·방사성★★★', moat:'높음', pt:'전립선암 등 방사성 진단(PYLARIFY)+치료제 확장. 라디오파마는 대형제약 M&A 급증 분야(Lilly·BMS·Novartis 진입). 실제 매출이 나오는 흑자 방사성의약품 순수주 — 임상 바이오 대비 안정적. 방사성동위원소 공급망 의존.', mb:5.5, rsi:54, bn:'방사성'},
+  {t:'RXRX', nm:'Recursion Pharmaceuticals', bom:'① AI 신약발굴 플랫폼', price:'(재확인)', mc:2, pos:'AI 신약(플랫폼)·플랫폼★★★', moat:'보통~높음', pt:'AI·자동화 실험실로 후보물질 대량 스크리닝하는 AI 신약발굴 대표주. 빅파마 파트너십 다수. 임상 AI약 상용화(2027~28 전망)까지 시간 소요·현금소진, 프리레비뉴 변동성 큼. 소형 멀티배거 후보.', mb:5, rsi:52, bn:'플랫폼'},
+  {t:'NTLA', nm:'Intellia Therapeutics', bom:'③ in vivo 유전자편집', price:'(재확인)', mc:2, pos:'유전자편집·유전자★★★', moat:'높음', pt:'체내(in vivo) 1회 투여 유전자편집 선두(ATTR 아밀로이드증·유전성 혈관부종). 소형으로 3상 데이터가 최대 촉매. 성공 시 고배율·실패 시 급락의 전형적 클리니컬 바이오. 현금소진·희석.', mb:5.5, rsi:50, bn:'유전자'},
+  {t:'SDGR', nm:'Schrodinger', bom:'① 물리기반 AI 신약설계', price:'(재확인)', mc:2, pos:'AI 신약설계(SW+파이프라인)·플랫폼★★', moat:'높음', pt:'물리기반 분자 시뮬레이션 SW + 자체 파이프라인의 이중 모델. AI 신약의 "곡괭이"(SW 라이선스)+"금광"(신약) 동시 보유. SW 매출로 완충되나 신약 임상 리스크 상존.', mb:5, rsi:54, bn:'플랫폼'},
+  {t:'ARWR', nm:'Arrowhead Pharma', bom:'③ RNAi 치료제', price:'(재확인)', mc:3, pos:'RNAi·유전자★★', moat:'높음', pt:'RNA간섭(RNAi) 플랫폼으로 심혈관·대사·폐 질환 다수 파이프라인, 빅파마 대형 딜 이력. 유전자편집과 별개의 RNA 모달리티. 파이프라인 다각화가 강점, 임상 변동성.', mb:5, rsi:52, bn:'유전자'},
+  {t:'LEGN', nm:'Legend Biotech', bom:'⑤ CAR-T(Carvykti)', price:'(재확인)', mc:7, pos:'세포치료(다발골수종)·세포★★★', moat:'높음', pt:'다발골수종 CAR-T Carvykti(J&J 협력)가 급성장 상업화. 세포치료 순수주 중 실제 매출·성장이 나오는 대표주. 생산 캐파·경쟁(BCMA)·중국 리스크. 세포치료 축 핵심.', mb:5, rsi:56, bn:'세포'},
+  {t:'ABCL', nm:'AbCellera Biologics', bom:'① AI 항체발굴 플랫폼', price:'(재확인)', mc:1.5, pos:'AI 항체발굴·플랫폼★★', moat:'보통~높음', pt:'AI 기반 항체 발굴 플랫폼으로 다수 제약사와 로열티 계약. 자체 파이프라인으로 전환 중. 소형 시총으로 멀티배거 여지, 현금소진·자체신약 검증 관건. Earendil($787M) 등 AI바이오 자금 유입 테마.', mb:5, rsi:50, bn:'플랫폼'},
+  {t:'GPCR', nm:'Structure Therapeutics', bom:'② 경구 비만(GPCR)', price:'(재확인)', mc:2, pos:'경구 비만·비만★★', moat:'보통~높음', pt:'경구 저분자 GLP-1(GSBR-1290) 개발, 주사 대비 복약 편의. Viking과 함께 차세대 경구 비만 후보. 소형 임상주로 3상 데이터·M&A 프리미엄 잠재. 실패 리스크 큼.', mb:5, rsi:52, bn:'비만'},
+  {t:'ACLX', nm:'Arcellx', bom:'⑤ 세포치료(BCMA)', price:'(재확인)', mc:4, pos:'세포치료(다발골수종)·세포★★', moat:'보통~높음', pt:'차세대 BCMA CAR-T(anito-cel, Gilead/Kite 협력) 개발. Legend 대비 후발이나 데이터 경쟁력. 임상·상업화·경쟁 리스크. 세포치료 다양성 확보.', mb:4.5, rsi:54, bn:'세포'},
+  {t:'TEM', nm:'Tempus AI', bom:'① AI 진단·데이터', price:'(재확인)', mc:10, pos:'AI 정밀의료 데이터·플랫폼·경계', moat:'높음', pt:'AI 기반 정밀의료 진단·유전체 데이터 플랫폼. 신약발굴과 진단을 잇는 데이터 인프라. 시총 ~$10B로 경계, 데이터·AI 프리미엄 반영. 수익화·경쟁 관건.', mb:4, rsi:58, bn:'플랫폼'},
+  {t:'BEAM', nm:'Beam Therapeutics', bom:'③ 염기편집(base editing)', price:'(재확인)', mc:2, pos:'차세대 유전자편집·유전자★★', moat:'높음', pt:'DNA 절단 없이 단일염기를 교정하는 차세대 염기편집 선두. CRISPR 대비 정밀·안전성 잠재. 초기 임상 단계로 데이터·현금소진 리스크 큼. 고위험·고배율 유전자편집 베팅.', mb:4.5, rsi:50, bn:'유전자'}
+];
+
+var ETFS = [
+  {t:'XBI', nm:'SPDR S&P Biotech ETF', d:'동일가중(equal-weight)으로 소형·임상단계 바이오에 고르게 노출 — 고위험·고수익. 개별 임상 리스크 분산에 최적. YTD +17.9%(트레일링 1년 +40.8%). 본 발굴 소형주 테마와 가장 부합.', hi:true},
+  {t:'ARKG', nm:'ARK Genomic Revolution', d:'ARK 액티브 운용, 유전체·유전자편집(CRISPR)·분자진단·줄기세포 33종목 집중. YTD +20%로 성과 선두. 유전자편집 테마 집중 노출(변동성 큼).', hi:true},
+  {t:'IBB', nm:'iShares Biotechnology', d:'나스닥 바이오 벤치마크(시총가중), Amgen·Gilead·Vertex 등 대형주 중심 ~250종목. 방어적·안정적 코어 노출. 소형 폭발력은 XBI보다 낮음.', hi:false},
+  {t:'IDNA', nm:'iShares Genomics Immunology&Healthcare', d:'유전체·면역·헬스케어 혁신 노출. YTD +14.5%. ARKG보다 분산적.', hi:false},
+  {t:'GNOM', nm:'Global X Genomics & Biotechnology', d:'유전체·바이오 저비용 노출. YTD +10%. 유전자편집 테마 분산.', hi:false}
+];
+
+var BOTTLENECKS = ['전체','비만','유전자','방사성','세포','플랫폼'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 모달리티맵 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 바이오테크 모달리티 지도 — 5개 축 + ETF'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'이전 헬스케어 발굴(GLP-1 공급망·디바이스)과 달리, 이번엔 신약·치료제 본체를 5개 모달리티로 분해했다: AI 신약발굴·차세대 비만·유전자편집·방사성의약품·세포치료. 개별 임상은 성패가 이분법적(binary)이라 리스크가 크므로, 분산용 ETF도 함께 제안한다. 특허절벽(2028)發 M&A 파동이 메가 촉매.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'모달리티'),e('th',null,'설명'),e('th',null,'대표 종목/ETF'),e('th',null,'단계'),e('th',null,'축'))),
+          e('tbody',null,
+            MOD.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 논리 — M&A 파동 + AI 신약'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② 차세대 비만 — M&A 최대 타깃 (Viking·Structure)'),
+        e('div',{className:'bd'},'Pfizer가 Metsera를 최대 $10B에 인수(Novo와 경합)하며 비만이 M&A 최대 격전지로. 경구·근육보존 등 차세대 비만 후보(Viking VK2735·Structure GSBR-1290)는 잠재 피인수 프리미엄. GLP-1 완제품(릴리·노보)이 아닌 "다음 세대"를 판다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③④ 유전자편집·방사성의약품 — 근본치료 두 축'),
+        e('div',{className:'bd'},'CRISPR(Casgevy 상용)·염기편집(Beam)·in vivo(Intellia)로 유전질환 근본 치료. 방사성의약품(Lantheus)은 진단+치료(theranostics)로 빅파마 M&A 급증 — Lantheus는 실제 매출 나오는 흑자 방사성주로 임상 바이오 대비 안정적.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'① AI 신약발굴 — "곡괭이+금광" (Schrodinger·Recursion)'),
+        e('div',{className:'bd'},'AI 신약은 SW 라이선스(곡괭이)와 자체 파이프라인(금광)을 겸한다. Schrodinger는 SW 매출로 완충, Recursion·AbCellera는 플랫폼+파트너십. 임상 AI약 상용화는 2027~28 전망으로 아직 초기.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 모달리티 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'축'),e('th',null,'대표 종목'),e('th',null,'특징'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'비만')),e('td',null,'VKTX, GPCR'),e('td',null,'M&A 최대 타깃, 3상 데이터 촉매')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'유전자')),e('td',null,'CRSP, NTLA, BEAM, ARWR'),e('td',null,'근본치료, 상용화 초기')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'방사성')),e('td',null,'LNTH'),e('td',null,'흑자·상업화, 상대적 안정')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'세포')),e('td',null,'LEGN, ACLX'),e('td',null,'CAR-T 상업화·경쟁')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'플랫폼')),e('td',null,'RXRX, SDGR, ABCL, TEM'),e('td',null,'AI 신약, 프리레비뉴'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 배경분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 2026 바이오 메가트렌드'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'① 특허절벽發 M&A 파동'),e('div',{className:'bd'},'2028년 대형 의약품 특허만료를 앞두고 빅파마가 파이프라인을 쓸어담는 중. Pfizer-Metsera($10B), J&J-Intra-Cellular($14.6B), Novartis-Avidity($12B), BioMarin-Amicus($4.8B) 등. 저평가 임상주가 피인수 프리미엄.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'② AI 신약발굴 본격화'),e('div',{className:'bd'},'Earendil $787M 등 AI바이오 대형 자금조달. AI가 설계한 약의 2상이 2027~28 예상 — 플랫폼주는 "기대 선반영 vs 실증 대기" 구간.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'③ 비만·유전자편집·방사성 3대 성장축'),e('div',{className:'bd'},'비만(GLP-1 대안), 유전자편집(근본치료 상용화), 방사성의약품(theranostics)이 자본·M&A를 흡수. 세포치료는 상업화 실행이 관건.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💊 ETF 제안 — 개별 임상 리스크 분산'),
+      e('div',{className:'bx'},e('div',{className:'bd'},'바이오 개별주는 임상 성패가 이분법적(하루 -50%도 흔함). 분산·테마 노출엔 ETF가 유효. 아래 5개 중 소형주 발굴 테마엔 XBI(동일가중)·ARKG(유전체)가 가장 부합.')),
+      ETFS.map(function(f,i){
+        return e('div',{key:i, className:'etf'},
+          e('div',{className:'etf-h'},
+            e('div',{className:'etf-t'}, f.t+(f.hi?' ★':'')),
+            e('div',{style:{fontSize:'0.72rem',color:'#64748b'}}, f.nm)
+          ),
+          e('div',{className:'etf-d'}, f.d)
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장·M&A 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'Pfizer-Metsera(비만)'),e('td',null,'최대 $10B')),
+            e('tr',null,e('td',null,'J&J-Intra-Cellular'),e('td',null,'$14.6B')),
+            e('tr',null,e('td',null,'Novartis-Avidity'),e('td',null,'$12B')),
+            e('tr',null,e('td',null,'XBI ETF (트레일링 1년)'),e('td',null,'+40.8%')),
+            e('tr',null,e('td',null,'ARKG ETF (YTD)'),e('td',null,'+20%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 13개 (5개 모달리티)'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'⚠️ 바이오 특유의 리스크'),
+        e('div',{className:'dd'},'임상 바이오는 3상 데이터·FDA 판정 하나로 하루 ±50%가 흔한 이분법적(binary) 리스크. 프리레비뉴 종목(RXRX·NTLA·BEAM·GPCR·ABCL)은 현금소진·희석 위험 큼. 상대적 안정: 매출 나오는 LNTH·LEGN·CRSP(상업화). 개별주 대신/병행으로 ETF(XBI·ARKG) 분산 권고. 가격 "재확인" 표기. 투자 권유 아님.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.85rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, '모달리티: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#e879f9'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#e879f9'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[0]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','현금런웨이','파이프라인깊이','촉매임박','M&A타깃','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<2?1:s.mc<6?0.5:0,
+      s.rsi<56?0.6:0.4,
+      s.bn==='방사성'||s.bn==='세포'?0.7:0.4,
+      s.bn==='유전자'||s.bn==='플랫폼'?0.8:0.6,
+      s.bn==='비만'||s.bn==='유전자'?0.8:0.5,
+      s.bn==='비만'?1:0.5,
+      s.bn==='방사성'||s.bn==='세포'?0.7:0.4,
+      s.rsi>62?0:s.rsi<56?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{labels:MB_LABELS,datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(232,121,249,0.2)', borderColor:'#e879f9', pointBackgroundColor:'#e879f9'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:9}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 멀티배거(바이오 변형) — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){ return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t); })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#e879f9'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트 (바이오 특화 8축)'), e('canvas',{ref:rr})),
+    e('div', {className:'card'}, e('div',{className:'dx'}, e('div',{className:'dd'},'※ 바이오는 매출·EBITDA가 없는 임상주가 많아 축을 현금런웨이·파이프라인·촉매·M&A타깃으로 변형했다. 10배 수익 보장 아님, 참고용.')))
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'단기 (3~6개월)'),e('div',{className:'bd'},'Viking·Structure 비만 임상 데이터, 유전자편집(CRSP·NTLA·BEAM) 임상 판독, 방사성의약품 M&A, JPM 헬스케어 컨퍼런스(1월) 딜, Lantheus·Legend 실적.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'중기 (6~18개월)'),e('div',{className:'bd'},'특허절벽 M&A 가속, AI 신약 2상 진입, CAR-T 상업화 확대, 방사성의약품 공급망 정비, 금리 인하 시 소형 바이오 리레이팅.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},e('div',{className:'dt'},'공통 리스크'),e('div',{className:'dd'},'임상 실패·FDA 거절 시 하루 -50%+ 이분법 리스크. 프리레비뉴 종목은 현금소진·유상증자 희석. 금리·바이오 심리에 소형주 민감. M&A 기대는 미실현 가능. 개별주 집중 대신 ETF 병행이 리스크 관리에 유효. 가격 재확인 필수. 본 자료는 투자 권유 아님.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안 (종목+ETF 혼합)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목/ETF'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'분산 코어(ETF)'),e('td',null,'XBI, ARKG'),e('td',null,'35%')),
+            e('tr',null,e('td',null,'비만 M&A(②)'),e('td',null,'VKTX, GPCR'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'실적주(④⑤)'),e('td',null,'LNTH, LEGN'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'유전자편집(③)'),e('td',null,'CRSP, NTLA'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'AI 신약 소형(①)'),e('td',null,'RXRX, SDGR, ABCL'),e('td',null,'10%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️모달리티맵','🔬배경+ETF','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🧬 바이오테크 종목·ETF 발굴'),
+      e('div', {className:'sub'}, 'AI신약·비만·유전자편집·방사성·세포치료 5축 + ETF 5종 | 2026-08-25 | 13종목+5ETF')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
