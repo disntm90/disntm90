@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SpaceXAI 관련 종목발굴 대시보드 2026-08-19</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0c4a6e 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #0369a1;}
+.hdr h1{font-size:1.3rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#0ea5e9;border-bottom-color:#0ea5e9;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #0c4a6e;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.bx{background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#0ea5e9;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bb{background:rgba(14,165,233,0.15);color:#0ea5e9;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(14,165,233,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#0ea5e9;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#f59e0b;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #075985;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#0ea5e9;color:#001a26;border-color:#0ea5e9;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#0ea5e9;color:#001a26;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① SpaceX 직접(SPCX)', fn:'발사·Starlink·xAI 통합 터미널 그 자체', sup:'SPCX(2026.6 상장, ~$2.1조)', cost:'-', bn:'직접'},
+  {item:'② 지분 보유 프록시 펀드', fn:'SpaceX·xAI 등 비상장 지분을 담은 상장 펀드', sup:'Destiny Tech100(DXYZ)·XOVR', cost:'-', bn:'프록시'},
+  {item:'③ xAI Colossus 전력(가스터빈)', fn:'멤피스 슈퍼컴에 GW급 전력 공급(오프그리드)', sup:'Solaris Energy Infra(SEI)', cost:'高', bn:'전력'},
+  {item:'④ xAI Colossus 서버·랙', fn:'Colossus GPU 서버 랙 조립(122일 건설)', sup:'Supermicro(SMCI)·Dell(DELL)', cost:'高', bn:'서버'},
+  {item:'⑤ GPU·컴퓨트', fn:'xAI Grok 학습용 GPU', sup:'NVIDIA(NVDA,초대형 참고)', cost:'高', bn:'컴퓨트'},
+  {item:'⑥ 냉각·전력 인프라', fn:'고밀도 GPU 냉각·전력분배', sup:'Vertiv(VRT,참고)', cost:'中', bn:'서버'},
+  {item:'⑦ 우주 하드웨어·발사 생태계', fn:'SpaceX 경쟁·보완 및 우주 공급', sup:'Karman(KRMN)·Rocket Lab(RKLB)', cost:'中', bn:'우주'},
+  {item:'⑧ Musk 생태계 교차', fn:'Grok·Optimus·에너지 등 머스크 제국 연계', sup:'Tesla(TSLA)·Alphabet(GOOGL,초기투자)', cost:'-', bn:'생태계'}
+];
+
+var STOCKS = [
+  {t:'DXYZ', nm:'Destiny Tech100', bom:'② SpaceX+xAI 프록시 펀드', price:'(재확인)', mc:1, pos:'프록시(CEF)·프록시★★★', moat:'보통', pt:'포트폴리오의 14.5%가 SpaceX, 그 외 xAI·Shield AI·Databricks·Anthropic(SPV) 등 최고 비상장 테크를 담은 상장 폐쇄형 펀드. "SpaceX+xAI를 한 종목으로 사는" 가장 직접적 프록시. 단 순자산가치(NAV) 대비 프리미엄이 과도할 때가 많아 괴리 리스크 극심.', mb:5, rsi:62, bn:'프록시'},
+  {t:'SEI', nm:'Solaris Energy Infrastructure', bom:'③ xAI Colossus 전력(가스터빈)', price:'(재확인)', mc:5, pos:'상류(전력)·전력★★★', moat:'높음', pt:'가스터빈 600MW 보유, 이 중 약 400MW를 xAI Colossus에 공급. "칩이 아무리 세도 전기 없으면 무용" — Colossus의 오프그리드 전력을 쥔 언섹시 병목. SpaceXAI 생태계의 가장 직접적·차별화된 발굴주. 계약 의존·전력가격 리스크.', mb:6, rsi:60, bn:'전력'},
+  {t:'SMCI', nm:'Supermicro', bom:'④ Colossus 서버·랙', price:'(재확인)', mc:30, pos:'중류(서버)·서버★★★', moat:'보통~높음', pt:'xAI와 협력해 Colossus를 122일 만에 건설, 랙 절반을 공급. Colossus 2 증설의 직접 수혜. 회계·마진 이슈 이력으로 변동성 큼. SpaceXAI 컴퓨트 인프라의 순수 서버주.', mb:4.5, rsi:60, bn:'서버'},
+  {t:'DELL', nm:'Dell Technologies', bom:'④ Colossus 서버(PowerEdge)', price:'(재확인)', mc:90, pos:'중류(서버)·서버·기준초과', moat:'높음', pt:'PowerEdge XE9680으로 Colossus 1 랙 절반 조립. AI 서버 대장으로 xAI·기업 AI 수혜. 시총 대형(~$90B)이라 SpaceXAI 순수성은 희석(참고).', mb:3.5, rsi:58, bn:'서버'},
+  {t:'SPCX', nm:'SpaceX', bom:'① SpaceX 직접(터미널)', price:'~$135~161(변동)', mc:2100, pos:'터미널·초대형·직접', moat:'절대적', pt:'2026.6.12 나스닥 상장(공모가 $135, 첫날 $161, 이후 $225 터치 후 공모가 하회). xAI 통합("SpaceXAI")으로 발사+Starlink+AI 결합. 밸류 ~$2.1조로 이미 수년 성장 선반영(ARK $3.1조 vs 모닝스타 $780B로 견해 양분). 초대형·고밸류 벤치마크.', mb:2, rsi:52, bn:'직접'},
+  {t:'KRMN', nm:'Karman Holdings', bom:'⑦ 우주·방산 하드웨어', price:'$61.78', mc:8.2, pos:'중류(우주부품)·우주★★', moat:'높음', pt:'페어링·추진·구조물 등 우주·미사일 하드웨어. SpaceX 생태계 확장과 방산 우주 수요의 부품 노출. 시총 $8.2B, 방산예산 의존.', mb:4, rsi:56, bn:'우주'},
+  {t:'RKLB', nm:'Rocket Lab', bom:'⑦ 발사(경쟁·보완)', price:'(재확인)', mc:20, pos:'중류(발사)·우주★★', moat:'매우높음', pt:'SpaceX 외 가장 검증된 발사주(Neutron 중형 개발·광링크). SpaceXAI 독주에 대한 "제2공급자" 프리미엄. 수주 $2.2B. 시총 대형화(~$20B).', mb:4, rsi:62, bn:'우주'},
+  {t:'XOVR', nm:'XOVR(ERShares 우주+SpaceX ETF)', bom:'② SpaceX 노출 ETF', price:'(재확인)', mc:0.5, pos:'프록시(ETF)·프록시★★', moat:'보통', pt:'SpaceX 비상장 지분을 편입한 상장 ETF로, DXYZ 대비 분산형 프록시. SpaceX 노출을 원하나 CEF 프리미엄을 피하려는 대안. 편입 비중·유동성 확인 필요.', mb:4, rsi:56, bn:'프록시'},
+  {t:'VRT', nm:'Vertiv', bom:'⑥ 냉각·전력 인프라(참고)', price:'(대형·참고)', mc:60, pos:'중류(냉각)·서버·기준초과', moat:'매우높음', pt:'고밀도 GPU 데이터센터 냉각·전력의 대장. Colossus급 슈퍼컴의 필수 인프라지만 SpaceXAI 전용은 아니며 이미 초대형(~$60B, 참고).', mb:2.5, rsi:62, bn:'서버'},
+  {t:'NVDA', nm:'NVIDIA', bom:'⑤ GPU·컴퓨트(초대형 참고)', price:'(초대형·참고)', mc:4000, pos:'중류(GPU)·컴퓨트·기준초과', moat:'절대적', pt:'xAI Grok 학습의 GPU 공급. Colossus의 두뇌지만 SpaceXAI 전용 노출이 아닌 AI 전반 대장. 초대형(~$4조, 참고).', mb:1.5, rsi:60, bn:'컴퓨트'},
+  {t:'TSLA', nm:'Tesla', bom:'⑧ Musk 생태계(Grok·Optimus·참고)', price:'(초대형·참고)', mc:1200, pos:'생태계·초대형·참고', moat:'높음', pt:'Grok 차량 통합·Optimus·에너지 등 머스크 제국 교차 노출. SpaceX·xAI와 지분·인력 순환 관계이나 직접 지분은 아님. 초대형(~$1.2조, 참고).', mb:2, rsi:58, bn:'생태계'},
+  {t:'GOOGL', nm:'Alphabet', bom:'⑧ SpaceX 초기 투자자(참고)', price:'(초대형·참고)', mc:2500, pos:'생태계·초대형·참고', moat:'절대적', pt:'과거 SpaceX에 약 $10억 투자 이력(Starlink 초기). GOOGL 매수가 SpaceX 보유와 동일하지 않으며 노출은 미미. 초대형 벤치마크(참고).', mb:1.5, rsi:56, bn:'생태계'}
+];
+
+var BOTTLENECKS = ['전체','직접','프록시','전력','서버','우주','생태계'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 노출지도 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 SpaceXAI 노출 지도 — 8개 경로'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'SpaceX는 2026.6 상장(SPCX)됐고 xAI는 SpaceX에 통합("SpaceXAI")됐다. 따라서 발굴 = SPCX 직접투자 외에 ① 지분을 담은 프록시 펀드, ② xAI Colossus 슈퍼컴 인프라 공급사(전력·서버)를 찾는 것. 특히 "칩보다 전력"이라는 병목이 여기서도 반복된다.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'노출 경로'),e('th',null,'설명'),e('th',null,'종목'),e('th',null,'원가'),e('th',null,'유형'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn))
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ SpaceXAI 생태계 맵'),
+      e('p',{style:{fontSize:'0.77rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[SpaceXAI = SpaceX(발사·Starlink) + xAI(Grok·Colossus) 통합]\n\n  → 직접·프록시            → xAI Colossus 인프라(숨은 병목)        → 우주·생태계\n     SPCX 직접(초대형)         ★③ SEI 전력(가스터빈 400MW) ★★★         KRMN 우주부품\n     ★② DXYZ 프록시펀드 ★★★    ★④ SMCI/DELL 서버(122일 건설)           RKLB 발사(제2공급)\n     XOVR ETF                 ⑤ NVDA GPU(참고) / ⑥ VRT 냉각(참고)      TSLA/GOOGL(참고)'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'③ Solaris Energy — Colossus의 "전력 병목" (최고 발굴)'),
+        e('div',{className:'bd'},'xAI Colossus(멤피스)는 오프그리드로 지어져 가스터빈 전력에 의존한다. Solaris Energy가 600MW 중 약 400MW를 Colossus에 공급 — SpaceXAI 생태계에서 가장 직접적이면서도 "언섹시한" 전력 병목주. 이전 발굴들의 "칩보다 전력" 논리가 여기서도 관통한다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'② DXYZ — SpaceX+xAI를 한 종목으로'),
+        e('div',{className:'bd'},'Destiny Tech100은 SpaceX 14.5% + xAI·Shield AI·Databricks·Anthropic 등 최고 비상장 테크를 담은 유일한 상장 프록시. 단 CEF 특성상 NAV 대비 프리미엄 괴리가 커, 프리미엄이 과열될 때 진입은 위험.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'④ Supermicro/Dell — Colossus 서버 실물'),
+        e('div',{className:'bd'},'Colossus 1의 랙을 Supermicro·Dell이 절반씩 조립(122일 건설). Colossus 2 증설 시 직접 수혜. 단 Dell은 대형·다각화로 순수성이 낮고, Supermicro는 회계 이슈 변동성 존재.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 노출 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'유형'),e('th',null,'대표 종목'),e('th',null,'성격'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'직접')),e('td',null,'SPCX'),e('td',null,'SpaceX 자체(초대형·고밸류)')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'프록시')),e('td',null,'DXYZ, XOVR'),e('td',null,'비상장 지분 편입 상장펀드')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'전력')),e('td',null,'SEI'),e('td',null,'Colossus 오프그리드 전력(핵심)')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'서버')),e('td',null,'SMCI, DELL, VRT'),e('td',null,'Colossus 서버·냉각')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'우주')),e('td',null,'KRMN, RKLB'),e('td',null,'우주 공급·발사 생태계')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생태계')),e('td',null,'TSLA, GOOGL, NVDA'),e('td',null,'머스크 제국·AI 교차(참고)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 배경분석 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 SpaceXAI 구조 이해'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'① SpaceX 상장(SPCX)'),e('div',{className:'bd'},'2026.6.12 나스닥 상장, 공모가 $135·첫날 $161(+19%)·이후 $225 터치 후 공모가 하회. 밸류 ~$2.1조로 역사상 최대 IPO. 발사·Starlink·xAI 결합.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'② xAI 통합(SpaceXAI)'),e('div',{className:'bd'},'머스크가 xAI를 별도 운영하지 않고 SpaceX에 통합한다고 발표. Grok·Colossus가 SpaceX 우산 아래로 — 우주+AI가 한 회사로 결합되는 이례적 구조.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'③ Colossus 슈퍼컴(멤피스)'),e('div',{className:'bd'},'GW급 오프그리드 AI 데이터센터를 122일 만에 건설. 전력(가스터빈)·서버(Supermicro/Dell)·GPU(NVIDIA)가 실물 병목 — 여기가 상장 공급사 발굴의 핵심.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'1단계 — 프록시 열풍 (2025~2026 상반기)'),e('div',{className:'bd'},'SpaceX 상장 기대에 DXYZ·XOVR 등 프록시 급등, NAV 프리미엄 과열.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'2단계 — SPCX 상장·xAI 통합 (2026.6~)'),e('div',{className:'bd'},'역사상 최대 IPO, xAI를 SpaceX에 통합. Colossus 2 증설로 인프라 공급사 부각.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'3단계 — 인프라 병목 확산 (2026~미래)'),e('div',{className:'bd'},'GW급 슈퍼컴 확장으로 전력(SEI)·서버(SMCI/DELL)·냉각(VRT) 수요 지속. 프록시는 SPCX 직상장으로 매력 희석 가능.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 핵심 데이터'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'SpaceX 밸류(2026.6 IPO)'),e('td',null,'~$2.1조(공모 $135→첫날 $161)')),
+            e('tr',null,e('td',null,'밸류 견해차'),e('td',null,'모닝스타 $780B ↔ ARK $3.1조(2030)')),
+            e('tr',null,e('td',null,'DXYZ 내 SpaceX 비중'),e('td',null,'14.5% (+xAI·Shield AI·Databricks 등)')),
+            e('tr',null,e('td',null,'Solaris→xAI 전력'),e('td',null,'약 400MW(보유 600MW 중)')),
+            e('tr',null,e('td',null,'Colossus 1 건설기간'),e('td',null,'122일 (Supermicro·Dell 랙 절반씩)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 12개 (SpaceXAI 노출)'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'⚠️ 주의'),
+        e('div',{className:'dd'},'SPCX(초대형·고밸류)·NVDA·TSLA·GOOGL·DELL·VRT는 초대형/희석 노출로 참고. 순수 발굴은 SEI(전력)·DXYZ(프록시)·SMCI(서버)·XOVR. DXYZ 등 프록시는 NAV 대비 프리미엄 괴리가 극심하고, SPCX는 밸류 논란(양분). SpaceX 상장으로 프록시 매력이 희석될 수 있음. 가격 "재확인" 표기. 투자 권유 아님.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.82rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, '노출 경로: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI '+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#0ea5e9'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#0ea5e9'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(14)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[1]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<2?1:s.mc<10?0.5:0,
+      s.rsi<58?0.6:0.3,0.5,0.5,
+      0.4,
+      s.bn==='전력'||s.bn==='서버'?0.8:0.5,
+      s.mc<2?0.5:1,
+      s.rsi>65?0:s.rsi<58?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{labels:MB_LABELS,datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(14,165,233,0.2)', borderColor:'#0ea5e9', pointBackgroundColor:'#0ea5e9'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){ return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t); })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#0ea5e9'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'}, e('div',{className:'dx'}, e('div',{className:'dd'},'워킹페이퍼 기반 통계 신호 — 10배 수익 보장 아님. 프록시 펀드·초대형주는 멀티배거 프레임과 맞지 않아 점수가 낮게 나옴. 참고 지표로만 활용.')))
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'단기 (3~6개월)'),e('div',{className:'bd'},'Colossus 2 증설 발주(SEI 전력·SMCI/DELL 서버), SPCX 실적·락업 해제, DXYZ NAV·프리미엄 동향, xAI Grok 신모델·매출.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'중기 (6~18개월)'),e('div',{className:'bd'},'SpaceXAI 통합 시너지(위성+AI), Starlink 직접연결 확대, GW급 슈퍼컴 추가 건설, SpaceX 밸류 재평가.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},e('div',{className:'dt'},'공통 리스크'),e('div',{className:'dd'},'DXYZ 등 프록시는 NAV 대비 프리미엄이 급변(과거 급등락)해 진입 타이밍 리스크 극심. SPCX는 밸류 논란(모닝스타 $780B vs ARK $3.1조)으로 양방향 변동. SpaceX 직상장으로 프록시 존재이유 약화 가능. SEI·SMCI는 단일고객(xAI) 집중·계약 의존. 초대형주(NVDA·TSLA·GOOGL·DELL)는 SpaceXAI 순수성 낮음. 투자 권유 아님.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'핵심(③ Colossus 전력)'),e('td',null,'SEI'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'프록시(② 지분 노출)'),e('td',null,'DXYZ, XOVR'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'서버(④ Colossus)'),e('td',null,'SMCI'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'직접(① SPCX 분할매수)'),e('td',null,'SPCX'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'우주·생태계(⑦⑧ 참고)'),e('td',null,'KRMN/RKLB, TSLA'),e('td',null,'20%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️노출지도','🔬배경분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🚀 SpaceXAI 관련 종목발굴'),
+      e('div', {className:'sub'}, 'SPCX 직접·프록시펀드·xAI Colossus 인프라 · 8개 노출경로 | 2026-08-19 | 12개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
