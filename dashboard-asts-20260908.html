@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ASTS(AST SpaceMobile) 종목분석 대시보드 2026-09-08</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#2e1065 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #6d28d9;}
+.hdr h1{font-size:1.5rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.1rem;font-weight:700;color:#a78bfa;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#a78bfa;border-bottom-color:#a78bfa;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #2e1065;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#a78bfa;}
+.bx{background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#a78bfa;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bb{background:rgba(167,139,250,0.15);color:#a78bfa;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(167,139,250,0.04);}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.soc-u{font-size:0.78rem;font-weight:600;color:#cbd5e1;}
+.soc-b{font-size:0.8rem;color:#cbd5e1;line-height:1.5;}
+.soc-m{font-size:0.68rem;color:#64748b;margin-top:6px;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #3b82f6;}
+.term.fin{border-left-color:#22c55e;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;color:#e2e8f0;margin-bottom:4px;}
+.term-b{font-size:0.78rem;color:#94a3b8;line-height:1.5;}
+.term-f{font-size:0.74rem;color:#a78bfa;margin-top:5px;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.0rem;flex-shrink:0;width:24px;text-align:center;}
+.mb-lb{flex:1;font-size:0.78rem;color:#cbd5e1;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.mb-st{font-size:0.74rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.gauge{text-align:center;padding:14px 0;}
+.gauge .lbl{font-size:1.4rem;font-weight:700;color:#a78bfa;}
+.gauge .bar{display:flex;height:30px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.62rem;color:#0a0f1e;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+function makeChart(cRef, chRef, cfg, deps) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, deps||[]);
+}
+
+/* ── Tab 1: 개요 ── */
+function Tab1() {
+  var dr = useRef(null); var dc = useRef(null);
+  makeChart(dr, dc, {
+    type:'bar',
+    data:{labels:['위성 발사(누적)','생산 진행','베타 필요(추정)'],
+      datasets:[{data:[13,42,20],backgroundColor:['#a78bfa','#7c3aed','#f59e0b']}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}},x:{ticks:{color:'#94a3b8'},grid:{display:false}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🏢 기업 개요'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'AST SpaceMobile(ASTS)는 "특수 단말 없이 일반 스마트폰을 위성에 직접 연결(Direct-to-Cell)"하는 위성통신 기업. LEO 위성 BlueBird 군집을 구축해 전 세계 음영지대(셀 사각지대)를 없애는 것이 목표. 통신사(AT&T·Vodafone·Verizon 등)와 제휴, 미 정부 계약 보유. 아직 상업서비스 이전 단계로 마일스톤 주도형 성장주.')
+      ),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'현재가(9/7)'),e('div',{className:'vl b'},'~$62')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'시가총액'),e('div',{className:'vl'},'~$29B')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'현금'),e('div',{className:'vl g'},'~$3.7B')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'수주잔고'),e('div',{className:'vl'},'~$1.3B'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🛰️ 위성 군집 진척 (마일스톤 = 주가 동력)'),
+      e('canvas',{ref:dr}),
+      e('div',{className:'bx',style:{marginTop:'12px'}},
+        e('div',{className:'bd'},'8/5 BlueBird 11·12·13 발사 성공 → 누적 13기. 생산은 42호기까지 진행(예상보다 빠른 램프). 애널리스트 추정상 북미 베타 상업서비스는 약 20기 운용부터 가능 — 발사·베타 개시가 주가 최대 촉매.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🚀 로드맵 & 경쟁'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'Block 2 BlueBird'),
+        e('div',{className:'bd'},'적층형 카본 복합 구조로 다중 톤급 페이로드를 SpaceX 5m 페어링에 압축 탑재. 대형 안테나로 광대역 직접연결 구현. 발사는 SpaceX Falcon 9 활용.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'경쟁 — Starlink Direct-to-Cell'),
+        e('div',{className:'wd'},'SpaceX Starlink도 직접연결을 확대 중 — 최대 경쟁 변수. ASTS는 대형 안테나·광대역·통신사 제휴로 차별화하나, 자본·속도에서 Starlink와 경쟁.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🌐 미래 인사이트'),
+      e('div',{className:'bd',style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.7'}},
+        '성공 시 수십억 모바일 사용자의 음영지대를 없애는 거대 TAM. $3.7B 현금으로 프리레비뉴 우주주 중 자금력은 최상위 — 상업화까지 버틸 런웨이 확보가 강점. 단 상업 매출 본격화·경쟁(Starlink)·추가 자본조달이 관건. 시총 $29B로 이미 성공 시나리오를 상당 부분 선반영.')
+    )
+  );
+}
+
+/* ── Tab 2: 기술적 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📈 기술적 스냅샷'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'현재가'),e('div',{className:'vl b'},'~$62')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'RSI(14)'),e('div',{className:'vl y'},'45 중립')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'8월 고점'),e('div',{className:'vl'},'$71.73(8/13)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'변동성'),e('div',{className:'vl r'},'매우 높음'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 핵심 지표'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'지표'),e('th',null,'값'),e('th',null,'의미'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'RSI(14)'),e('td',null,'45'),e('td',null,'중립(과열·과매도 아님)')),
+            e('tr',null,e('td',null,'단기 추세'),e('td',null,'조정'),e('td',null,'$71.73→$62, 발사 후 되돌림')),
+            e('tr',null,e('td',null,'주간/월간 신호'),e('td',null,'혼조'),e('td',null,'1주 매도·1개월 매수 신호 공존')),
+            e('tr',null,e('td',null,'베타'),e('td',null,'高'),e('td',null,'우주 성장주 특유 고변동'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 지지·저항'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 지지'),e('div',{className:'vl g'},'$55~58')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'2차 지지'),e('div',{className:'vl g'},'$43(애널 최저 PT)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 저항'),e('div',{className:'vl r'},'$71.73(8월 고점)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'상단 목표'),e('div',{className:'vl'},'$95~106(강세 PT)'))
+      ),
+      e('div',{className:'bx',style:{marginTop:'12px'}},
+        e('div',{className:'bd'},'RSI 45로 방향성은 중립 — 다음 발사·베타 소식 등 촉매가 방향을 결정한다. 마일스톤 뉴스에 갭 상승/하락이 잦아, 이벤트 전후 변동성이 크다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 진입·청산'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격'),e('th',null,'조건'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'매수 진입'),e('td',null,'$55~62'),e('td',null,'조정 시 분할, 마일스톤 앞')),
+            e('tr',null,e('td',null,'손절선'),e('td',null,'$50 이탈'),e('td',null,'지지 붕괴 시')),
+            e('tr',null,e('td',null,'1차 목표'),e('td',null,'$72~78'),e('td',null,'전고점·평균 PT')),
+            e('tr',null,e('td',null,'2차 목표'),e('td',null,'$95+'),e('td',null,'베타 개시·강세 PT'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 재무 ── */
+function Tab3() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💰 재무 — 강력한 현금, 프리레비뉴 적자'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'현금성자산'),e('div',{className:'vl g'},'~$3.7B')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'수주잔고'),e('div',{className:'vl'},'~$1.3B')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'Q2 조정 opex'),e('div',{className:'vl r'},'$119.1M')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'전분기 opex'),e('div',{className:'vl'},'$91.2M'))
+      ),
+      e('div',{className:'bx',style:{marginTop:'12px'}},
+        e('div',{className:'bt'},'자금력이 최대 강점'),
+        e('div',{className:'bd'},'6/30 기준 현금 ~$3.7B(전환사채 $1.15B 포함). 프리레비뉴 우주주 중 최상위 런웨이 — 상업화까지 버틸 체력. 단 Q2 조정 opex가 $91.2M→$119.1M로 급증(인력·시설 확장), 위성 대량 제작으로 현금 소진 지속.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📉 손익·매출 램프'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'Q2 2026'),e('th',null,'비고'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'매출'),e('td',null,'$31.5M'),e('td',null,'Q1 대비 2배+')),
+            e('tr',null,e('td',null,'FY 가이던스'),e('td',null,'$150~200M'),e('td',null,'재확인')),
+            e('tr',null,e('td',null,'조정 opex'),e('td',null,'$119.1M'),e('td',null,'인력·시설 확장')),
+            e('tr',null,e('td',null,'수주잔고'),e('td',null,'~$1.3B'),e('td',null,'미 정부 3건 +$100M')),
+            e('tr',null,e('td',null,'상태'),e('td',null,'적자(성장투자)'),e('td',null,'베타 前 단계'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📐 밸류에이션 관점'),
+      e('div',{className:'bd',style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.7'}},
+        '적자·초기 매출이라 PER 무의미. 시총 ~$29B는 상업화 성공(수억 사용자 TAM)을 상당 부분 선반영 — PSR로는 매우 높음(FY매출 $150~200M 기준 100배+). 즉 밸류는 "위성 배치·베타·상업매출"이라는 미래 실행에 전적으로 의존하는 옵션성 성장주. 강력한 현금이 하방을 일부 방어.')
+    )
+  );
+}
+
+/* ── Tab 4: 실적/뉴스 ── */
+function Tab4() {
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:['Q3 25','Q4 25','Q1 26','Q2 26'],
+      datasets:[{label:'매출($M)',data:[10,14,14,31.5],backgroundColor:'#a78bfa'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}},x:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📊 분기 매출 램프'),
+      e('canvas',{ref:rr}),
+      e('div',{className:'bx',style:{marginTop:'10px'}},
+        e('div',{className:'bd'},'Q2 매출 $31.5M로 전분기 2배+. FY $150~200M 가이던스 재확인. ※Q3~Q1 수치는 추세 추정, 매출 대부분 정부·시험용으로 상업 매출 본격화는 베타 이후.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📰 최신 뉴스 (2026년 8~9월)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'BlueBird 11·12·13 발사 성공 (8/5)'),
+        e('div',{className:'bd'},'SpaceX Falcon 9로 3기 궤도 진입, 누적 13기. Block 2 대형 위성. 생산은 42호기까지 진행 — 예상보다 빠른 제작 램프.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'Q2 실적 + 정부 계약 (8월)'),
+        e('div',{className:'bd'},'매출 $31.5M(2배+), 미 정부 신규 3건(+$100M) 확보로 수주잔고 ~$1.3B. 현금 ~$3.7B로 자금력 확충.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'발사 후 조정'),
+        e('div',{className:'wd'},'$71.73(8/13)→$62(9/7)로 되돌림. 마일스톤 달성 후 차익실현·베타까지의 시간 갭. 다음 발사·베타 소식이 방향 결정.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 주목 지표 TOP 5'),
+      e('div',{className:'bx'},e('div',{className:'bd'},'1. 위성 발사 캐던스 — 베타 필요 ~20기까지 속도')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'2. 북미 베타 상업서비스 개시 시점')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'3. 통신사 제휴·가입자 전환')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'4. 현금 소진율 vs $3.7B 런웨이')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'5. Starlink 직접연결 경쟁 동향'))
+    )
+  );
+}
+
+/* ── Tab 5: 센티먼트 ── */
+function Tab5() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💬 소셜 & 기관 센티먼트'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'데이터 정합성 고지'),
+        e('div',{className:'dd'},'웹검색 세션 제약으로 X 15개·Reddit 15개 실제 게시물 원문을 개별 수집하지 못했다. 아래는 애널리스트·뉴스 기반 종합 요약이며 개별 인용이 아님을 명확히 밝힌다.')
+      ),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'애널 컨센서스'),e('div',{className:'vl y'},'Hold(견해 양분)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'평균 목표가'),e('div',{className:'vl g'},'$78.48')),
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🟢🟡🔴 분위기 요약'),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'강세론(Bull)'),e('span',{className:'badge bg'},'🟢 긍정')),
+        e('div',{className:'soc-b'},'"발사 성공·생산 램프 예상 상회, $3.7B 현금으로 상업화까지 버틸 체력. 거대 TAM(수억 음영지대 사용자)." B.Riley 목표 $95로 상향.'),
+        e('div',{className:'soc-m'},'요약 · B.Riley/BusinessWire')
+      ),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'약세론(Bear)'),e('span',{className:'badge br'},'🔴 부정')),
+        e('div',{className:'soc-b'},'"시총 $29B로 성공 선반영, PSR 100배+. Starlink 직접연결 경쟁·상업화 지연·추가 희석 위험. 아직 적자." 최저 PT $43.'),
+        e('div',{className:'soc-m'},'요약 · 애널 견해 양분')
+      ),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'중립론'),e('span',{className:'badge by'},'🟡 중립')),
+        e('div',{className:'soc-b'},'"베타 개시·발사 캐던스 확인 후 판단. 마일스톤 주도라 이벤트 전후 변동성 극심 — 분할 접근." 컨센서스 Hold.'),
+        e('div',{className:'soc-m'},'요약 · S&P Global 13인 Hold')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🏦 애널리스트'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'S&P Global 13인 컨센서스 "Hold", 평균 목표가 $78.48이나 범위가 $43~$106으로 극단적 분산 — 실행·경쟁·흑자 시점에 대한 견해 차가 크다는 뜻. 밸류가 실행에 전적으로 달려 있음을 시사.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 용어 ── */
+function Tab6() {
+  var TERMS = [
+    {c:'ear',cat:'실적',n:'Direct-to-Cell(직접연결)',d:'특수 단말 없이 일반 스마트폰을 위성에 직접 연결하는 기술.',f:'ASTS의 핵심 사업, 음영지대 해소.'},
+    {c:'ear',cat:'실적',n:'BlueBird / Block 2',d:'ASTS의 대형 LEO 위성. Block 2는 더 큰 차세대 버전.',f:'8/5 11·12·13호 발사, 누적 13기.'},
+    {c:'ear',cat:'실적',n:'베타 상업서비스',d:'정식 출시 전 제한적 상용 시험 서비스.',f:'북미 베타는 약 20기 운용부터 가능(추정).'},
+    {c:'ear',cat:'실적',n:'수주잔고(Backlog)',d:'이미 계약됐으나 아직 매출로 인식되지 않은 미래 매출.',f:'ASTS ~$1.3B(정부·통신사).'},
+    {c:'ear',cat:'실적',n:'TAM(총시장규모)',d:'해당 사업이 노릴 수 있는 전체 시장 크기.',f:'수억 음영지대 모바일 사용자.'},
+    {c:'fin',cat:'재무',n:'프리레비뉴',d:'상업 매출이 본격화되기 전, 주로 개발·투자 단계.',f:'ASTS는 베타 前, 적자·투자 국면.'},
+    {c:'fin',cat:'재무',n:'현금 런웨이',d:'보유 현금으로 적자를 버틸 수 있는 기간.',f:'ASTS ~$3.7B로 최상위 런웨이.'},
+    {c:'fin',cat:'재무',n:'전환사채(Convertible)',d:'나중에 주식으로 바꿀 수 있는 채권. 조달 수단이자 희석 요인.',f:'$1.15B 전환사채로 현금 확충.'},
+    {c:'fin',cat:'재무',n:'PSR(주가매출비율)',d:'시가총액 ÷ 매출. 성장 기대가 클수록 높음.',f:'ASTS 100배+ — 성공 선반영.'},
+    {c:'fin',cat:'재무',n:'희석(Dilution)',d:'신주·전환사채로 기존 주주 지분이 줄어드는 것.',f:'추가 조달 시 희석 위험.'},
+    {c:'tec',cat:'기술적',n:'RSI',d:'0~100 과열·침체 지표. 70 위 과매수, 30 아래 과매도.',f:'ASTS 45 — 중립.'},
+    {c:'tec',cat:'기술적',n:'마일스톤 주도주',d:'발사·인증 등 이벤트에 주가가 크게 반응하는 종목.',f:'ASTS는 발사·베타 소식에 갭 변동.'}
+  ];
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var CATS=['전체','기술적','재무','실적'];
+  var list = fil==='전체'?TERMS:TERMS.filter(function(t){return t.cat===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📖 용어 사전'),
+      e('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}},
+        CATS.map(function(c,i){return e('button',{key:i,onClick:function(){setFil(c);},
+          style:{padding:'5px 11px',borderRadius:'9999px',border:'1px solid #1e3a5f',cursor:'pointer',fontSize:'0.72rem',
+            background:fil===c?'#a78bfa':'#0d1426',color:fil===c?'#1a0533':'#94a3b8'}},c);})
+      ),
+      list.map(function(t,i){
+        return e('div',{key:i,className:'term '+t.c},
+          e('div',{className:'term-h'}, t.n+' · '+t.cat),
+          e('div',{className:'term-b'}, t.d),
+          e('div',{className:'term-f'}, '→ '+t.f)
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 7: 멀티배거 ── */
+function Tab7() {
+  var rr = useRef(null); var rc = useRef(null);
+  var ITEMS = [
+    {q:'1. 아직 충분히 작은 기업인가?',d:'시총 ~$29B (이미 대형)',s:'f',v:0},
+    {q:'2. 가격이 미래를 과대반영하지 않았는가?',d:'PSR 100배+, 성공 선반영',s:'f',v:0},
+    {q:'3. 매출보다 EBITDA·FCF 개선이 따라오는가?',d:'적자·현금소진, 흑자 前',s:'f',v:0},
+    {q:'4. 자산 증가율 대비 EBITDA가 뒤처지지 않는가?',d:'위성 자산↑이나 수익 前단계',s:'f',v:0},
+    {q:'5. FCF yield가 합리적인가?',d:'FCF 마이너스(성장투자)',s:'f',v:0},
+    {q:'6. 투자가 실제 수요·수주와 연결되는가?',d:'수주잔고 $1.3B·정부계약·통신사 제휴',s:'p',v:1},
+    {q:'7. 고금리 환경에서 버틸 수 있는가?',d:'현금 $3.7B 최상위 런웨이',s:'p',v:1},
+    {q:'8. 단기 급등 후 추격매수 구간은 아닌가?',d:'RSI 45 중립, 고점 대비 -13% 조정',s:'p',v:1}
+  ];
+  var score = ITEMS.reduce(function(a,b){return a+b.v;},0);
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{labels:['소형주','밸류','성장의질','투자효율','FCF','수주','재무건전','추격아님'],
+      datasets:[{label:'ASTS',data:ITEMS.map(function(i){return i.v;}),
+        backgroundColor:'rgba(167,139,250,0.2)',borderColor:'#a78bfa',pointBackgroundColor:'#a78bfa'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},
+      scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},
+        pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 멀티배거 점수 (Anna Yartseva 8항목)'),
+      e('div', {style:{textAlign:'center',padding:'8px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#f59e0b'}}, score+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, '등급: 보통 — 수주·현금·중립RSI는 강점, 시총·밸류는 약점')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'해석'),
+        e('div',{className:'wd'},'ASTS는 이미 시총 $29B로 "작은 기업" 조건은 미충족이나, 수주잔고·최상위 현금 런웨이·중립 RSI는 긍정. 멀티배거보다는 "실행 성공 시 대형 성장" 유형 — 밸류가 이미 성공을 상당 반영해 추가 멀티플 확장 여지는 제한적.')
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('h2',null,'✅ 8개 체크리스트'),
+      ITEMS.map(function(it,i){
+        return e('div',{key:i,className:'mb-row'},
+          e('div',{className:'mb-ic'}, it.s==='p'?'✅':it.s==='h'?'⚠️':'❌'),
+          e('div',{className:'mb-lb'}, it.q, e('div',{className:'mb-sub'}, it.d)),
+          e('div',{className:'mb-st '+it.s}, it.v+'점')
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 8: 결론 ── */
+function Tab8() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 종합 의견'),
+      e('div',{className:'gauge'},
+        e('div',{className:'bar'},
+          e('div',{className:'seg',style:{background:'#ef4444'}},'강한매도'),
+          e('div',{className:'seg',style:{background:'#f87171'}},'매도'),
+          e('div',{className:'seg',style:{background:'#f59e0b'}},'중립 ●'),
+          e('div',{className:'seg',style:{background:'#34d399'}},'매수'),
+          e('div',{className:'seg',style:{background:'#10b981'}},'강한매수')
+        ),
+        e('div',{className:'lbl'},'중립~매수 (투기적 성장 · 마일스톤 의존)')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'ASTS는 거대 TAM(직접연결)과 최상위 현금($3.7B), 견조한 수주잔고($1.3B)를 갖춘 우주 성장주다. 발사·생산 램프가 순조롭고 RSI 45로 과열은 아니다. 다만 시총 $29B는 성공을 상당 반영했고 Starlink 경쟁·상업화 시점·희석이 리스크. BTC 트레저리(ASST)와 달리 "실체 있는 성장 스토리"이나, 밸류는 실행에 전적으로 의존한다. 분할·이벤트 대응 권고.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🐂 Bull Case'),
+      e('div',{className:'bx'},e('div',{className:'bd'},'1. 발사·생산 램프 예상 상회(13기 발사·42기 생산), 베타(~20기) 근접.')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'2. 현금 $3.7B 최상위 런웨이 + 수주잔고 $1.3B·미 정부 계약.')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'3. 수억 음영지대 사용자라는 거대 TAM, B.Riley $95 등 강세 PT.'))
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🐻 Bear Case'),
+      e('div',{className:'dx'},e('div',{className:'dd'},'1. 시총 $29B·PSR 100배+ — 성공을 이미 상당 선반영.')),
+      e('div',{className:'dx'},e('div',{className:'dd'},'2. Starlink 직접연결 경쟁 + 상업화 지연·인증 리스크.')),
+      e('div',{className:'dx'},e('div',{className:'dd'},'3. 적자·현금소진 지속, 추가 자본조달 시 희석. 애널 최저 PT $43.'))
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📋 실행 계획'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격/조건'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'1차 매수'),e('td',null,'$55~62'),e('td',null,'조정 분할')),
+            e('tr',null,e('td',null,'2차 매수'),e('td',null,'$48~50'),e('td',null,'지지 방어 시')),
+            e('tr',null,e('td',null,'손절선'),e('td',null,'$50 이탈'),e('td',null,'추세 훼손')),
+            e('tr',null,e('td',null,'1차 익절'),e('td',null,'$72~78'),e('td',null,'전고점·평균PT')),
+            e('tr',null,e('td',null,'2차 익절'),e('td',null,'$95+'),e('td',null,'베타 개시'))
+          )
+        )
+      ),
+      e('div',{className:'wx',style:{marginTop:'10px'}},
+        e('div',{className:'wd'},'핵심 모니터링: ①위성 발사 캐던스 ②북미 베타 개시 시점 ③통신사 가입자 전환 ④현금 소진율 ⑤Starlink 경쟁. 마일스톤 주도 고변동주로 이벤트 전후 분할·리스크 관리 필수.')
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🏢개요','📈기술적','💰재무','📊실적·뉴스','💬센티먼트','📖용어','🔟멀티배거','🎯결론'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🛰️ ASTS — AST SpaceMobile'),
+      e('div', {className:'px'}, '~$62 · RSI 45(중립) · 시총 ~$29B'),
+      e('div', {className:'sub'}, '위성 직접연결(D2C) · 현금 $3.7B · 위성 13기 | 2026-09-08 분석')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? e(Tab1,null) :
+      tab===1 ? e(Tab2,null) :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      tab===5 ? e(Tab6,null) :
+      tab===6 ? e(Tab7,null) :
+      e(Tab8,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
