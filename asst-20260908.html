@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ASST(Strive) 종목분석 대시보드 2026-09-08 (갱신)</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d2a0f 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #5e420e;}
+.hdr h1{font-size:1.5rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.1rem;font-weight:700;color:#f59e0b;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#f59e0b;border-bottom-color:#f59e0b;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #453814;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+.bb{background:rgba(6,182,212,0.15);color:#06b6d4;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(245,158,11,0.04);}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.soc-u{font-size:0.78rem;font-weight:600;color:#cbd5e1;}
+.soc-b{font-size:0.8rem;color:#cbd5e1;line-height:1.5;}
+.soc-m{font-size:0.68rem;color:#64748b;margin-top:6px;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #3b82f6;}
+.term.fin{border-left-color:#22c55e;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;color:#e2e8f0;margin-bottom:4px;}
+.term-b{font-size:0.78rem;color:#94a3b8;line-height:1.5;}
+.term-f{font-size:0.74rem;color:#f59e0b;margin-top:5px;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.0rem;flex-shrink:0;width:24px;text-align:center;}
+.mb-lb{flex:1;font-size:0.78rem;color:#cbd5e1;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.mb-st{font-size:0.74rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.gauge{text-align:center;padding:14px 0;}
+.gauge .lbl{font-size:1.4rem;font-weight:700;color:#f59e0b;}
+.gauge .bar{display:flex;height:30px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.62rem;color:#0a0f1e;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+function makeChart(cRef, chRef, cfg, deps) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, deps||[]);
+}
+
+/* ── Tab 1: 개요 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🏢 기업 개요 (9/8 갱신)'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'ASST = Strive, Inc.(구 Asset Entities). Vivek Ramaswamy가 공동창업한 anti-ESG 자산운용사 Strive와 합병 → "상장 자산운용사이면서 비트코인 트레저리". CEO Matt Cole. 본질은 소형 "레버리지 비트코인 대용주"(MSTR 축소판). 8/26 분석 이후 주가가 월 +120% 폭등하며 프리미엄이 크게 확대됐다.')
+      ),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'현재가'),e('div',{className:'vl y'},'~$27+')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'BTC 보유'),e('div',{className:'vl b'},'23,155개')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'BTC 가치'),e('div',{className:'vl'},'~$1.79B')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'mNAV'),e('div',{className:'vl r'},'1.67× (67%P)'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔺 8/26 → 9/8 변화 (핵심)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'지표'),e('th',null,'8/26'),e('th',null,'9/8'),e('th',null,'변화'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'주가'),e('td',null,'~$19.7'),e('td',null,'~$27+'),e('td',{style:{color:'#10b981'}},'+37% (월 +120%)')),
+            e('tr',null,e('td',null,'mNAV'),e('td',null,'1.08×'),e('td',null,'1.67×'),e('td',{style:{color:'#ef4444'}},'프리미엄 급확대 ▲')),
+            e('tr',null,e('td',null,'BTC 보유'),e('td',null,'~21,356'),e('td',null,'23,155'),e('td',{style:{color:'#10b981'}},'+1,800개')),
+            e('tr',null,e('td',null,'RSI'),e('td',null,'79.82'),e('td',null,'83.3'),e('td',{style:{color:'#ef4444'}},'더 과열 ▲'))
+          )
+        )
+      ),
+      e('div',{className:'dx',style:{marginTop:'10px'}},
+        e('div',{className:'dt'},'⚠️ 주가가 BTC보다 훨씬 빨리 뛰었다'),
+        e('div',{className:'dd'},'BTC는 소폭 조정(~$79K)인데 주가는 월 +120% 폭등 → mNAV가 1.08×에서 1.67×로 확대. 즉 "BTC 대비 67% 웃돈"을 주고 사는 셈. 프리미엄 되돌림(mean-reversion) 위험이 8/26보다 훨씬 커졌다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🚀 최신 촉매'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'"Wall-breaking season" (CEO Matt Cole)'),
+        e('div',{className:'bd'},'CEO가 X에 BTC 포트폴리오 트래커와 함께 "Strive의 벽 깨는 시즌" 메시지 → 추가 인수·BTC 매입 임박 기대. BTC 23,155개(~$1.79B)로 확대, 연중 최고가 경신.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🌐 미래 인사이트'),
+      e('div',{className:'bd',style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.7'}},
+        'MSTR형 소형 트레저리. mNAV 1.67× 프리미엄은 "조달→매입 플라이휠"이 잘 돌 땐 정당화되나, BTC 약세나 심리 냉각 시 가장 먼저 무너지는 것이 프리미엄이다. 주가 = BTC × 프리미엄이므로, 지금은 BTC 방향 + 프리미엄 유지 두 가지에 동시 베팅하는 셈.')
+    )
+  );
+}
+
+/* ── Tab 2: 기술적 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📈 기술적 스냅샷'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'🔴 RSI 83.3 — 극단적 과매수 (8/26보다 심화)'),
+        e('div',{className:'dd'},'일간 RSI(14) 83.3으로 이전(79.82)보다 더 깊은 과매수. 월 +120% 폭등 후 감정적 국면. 현재가(~$27)가 애널리스트 평균 목표가($29)에 거의 근접 — 상방 여지가 제한적이라는 신호. 추격매수 위험이 현시점 최대.')
+      ),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'현재가'),e('div',{className:'vl y'},'~$27')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'RSI(14)'),e('div',{className:'vl r'},'83.3 극과열')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'월간'),e('div',{className:'vl g'},'+120%')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'YTD'),e('div',{className:'vl g'},'+78%'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 지지·저항'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'저항(추세선)'),e('div',{className:'vl r'},'$23.95→돌파')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'애널 평균PT'),e('div',{className:'vl y'},'$29 (근접)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 지지'),e('div',{className:'vl g'},'$23~24')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'핵심 지지'),e('div',{className:'vl g'},'mNAV 1.0(BTC가치)'))
+      ),
+      e('div',{className:'wx',style:{marginTop:'12px'}},
+        e('div',{className:'wd'},'이미 $23.95 추세선을 상향 돌파했으나 RSI 83.3·PT 근접으로 단기 되돌림 가능성 높음. 하방은 프리미엄 축소 시 급격 — mNAV 1.67×→1.2×만 돼도 주가 -28%. BTC $77,057(지지) 이탈 시 $62K까지 열림.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 진입·청산 (극과열 유의)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격/조건'),e('th',null,'비고'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'현시점'),e('td',null,'관망(RSI 83.3)'),e('td',null,'추격 금지·PT 근접')),
+            e('tr',null,e('td',null,'매수 존'),e('td',null,'$20~23'),e('td',null,'프리미엄 되돌림 시')),
+            e('tr',null,e('td',null,'손절선'),e('td',null,'mNAV 1.0·BTC $77K 이탈'),e('td',null,'프리미엄 붕괴')),
+            e('tr',null,e('td',null,'익절'),e('td',null,'$30~32'),e('td',null,'강세 PT 상단'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 재무 ── */
+function Tab3() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💰 비트코인 트레저리 현황'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'BTC 보유'),e('div',{className:'vl b'},'23,155개')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'BTC 가치'),e('div',{className:'vl'},'~$1.79B')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'현 BTC가'),e('div',{className:'vl y'},'~$79,108')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'mNAV(희석)'),e('div',{className:'vl r'},'1.67×'))
+      ),
+      e('div',{className:'dx',style:{marginTop:'12px'}},
+        e('div',{className:'dt'},'프리미엄 1.67×의 양면성'),
+        e('div',{className:'dd'},'프리미엄이 클수록 신주 발행 시 "주당 BTC"를 더 싸게 늘릴 수 있어 조달엔 유리(플라이휠 가속). 그러나 투자자 입장에선 BTC 1개 가치를 1.67배 주고 사는 것 — BTC 직접보유·현물 ETF 대비 명백히 비싸다. 프리미엄이 정상화되면 주가가 BTC보다 크게 빠진다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📉 자금조달·희석 구조'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'내용'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'PIPE'),e('td',null,'$750M + 워런트 $750M = 목표 $1.5B')),
+            e('tr',null,e('td',null,'SATA 우선주'),e('td',null,'변동금리 영구우선주 발행')),
+            e('tr',null,e('td',null,'Semler 인수'),e('td',null,'올스톡, +5,000 BTC')),
+            e('tr',null,e('td',null,'추가 인수설'),e('td',null,'"Wall-breaking season"으로 임박 기대'))
+          )
+        )
+      ),
+      e('div',{className:'bx',style:{marginTop:'12px'}},
+        e('div',{className:'bd'},'높은 프리미엄(1.67×)은 신주·우선주 발행으로 BTC를 공격적으로 늘리기 좋은 환경 — 추가 인수·매입이 임박했을 가능성. 단 지속적 발행은 희석을 동반하며, 프리미엄이 꺼지면 이 엔진이 역회전한다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📐 밸류에이션'),
+      e('div',{className:'bd',style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.7'}},
+        '핵심은 mNAV. 8/26의 1.08×(얇은 프리미엄)에서 1.67×로 급확대 — 밸류 매력이 오히려 나빠졌다. 강세론(Seeking Alpha 등)은 "강한 대차대조표·리스크관리가 프리미엄을 정당화"한다지만, 1.67×는 역사적으로 되돌림 압력이 큰 수준. 현재가가 애널 평균 PT($29)에 근접해 상방도 제한적.')
+    )
+  );
+}
+
+/* ── Tab 4: 실적/뉴스 ── */
+function Tab4() {
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'line',
+    data:{labels:['8/1','8/13','8/25','9/1','9/8'],
+      datasets:[
+        {label:'ASST($)',data:[13,17,19.7,24,27],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',tension:0.3,yAxisID:'y'},
+        {label:'mNAV(×)',data:[1.0,1.05,1.08,1.4,1.67],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',tension:0.3,yAxisID:'y1'}
+      ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},
+      scales:{
+        y:{position:'left',ticks:{color:'#f59e0b'},grid:{color:'#1e2d4a'}},
+        y1:{position:'right',min:0.8,max:2,ticks:{color:'#ef4444'},grid:{display:false}},
+        x:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📊 주가 vs mNAV 프리미엄 (8~9월)'),
+      e('canvas',{ref:rr}),
+      e('div',{className:'dx',style:{marginTop:'10px'}},
+        e('div',{className:'dd'},'주가 급등과 함께 mNAV 프리미엄(빨강)이 1.0×→1.67×로 동반 확대 — 상승의 상당 부분이 "BTC 상승"이 아니라 "프리미엄 팽창"에서 나왔음을 보여준다. 프리미엄 팽창은 되돌림 리스크. ※일부 수치 추세 추정.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📰 최신 뉴스 (2026년 9월)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'연중 최고가·월 +120% 랠리'),
+        e('div',{className:'bd'},'ASST가 $27 상회하며 연중 최고. BTC 트레저리 축적 + 애널 낙관에 급등. BTC 23,155개(~$1.79B)로 확대.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'CEO "Wall-breaking season" 시사'),
+        e('div',{className:'bd'},'Matt Cole CEO가 추가 인수·BTC 매입 임박을 시사 — 모멘텀 촉매.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'BTC는 오히려 조정'),
+        e('div',{className:'wd'},'BTC는 $80K 하회(~$79,108), 지지 $77,057. 즉 주가 급등은 BTC보다 프리미엄 팽창 주도 — BTC 조정 지속 시 프리미엄+BTC 이중 하락 위험.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 주목 지표 TOP 5'),
+      e('div',{className:'bx'},e('div',{className:'bd'},'1. mNAV 1.67× — 프리미엄 유지 vs 정상화(되돌림)')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'2. BTC $77,057 지지 — 이탈 시 $62K까지 열림')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'3. RSI 83.3 과열 해소 여부')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'4. "Wall-breaking" 추가 인수 실제 공시')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'5. 주식·SATA 발행(희석) 속도'))
+    )
+  );
+}
+
+/* ── Tab 5: 센티먼트 ── */
+function Tab5() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💬 소셜 & 기관 센티먼트'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'데이터 정합성 고지'),
+        e('div',{className:'dd'},'웹검색 세션 제약으로 X 15개·Reddit 15개 실제 게시물 원문을 개별 수집하지 못했다. 아래는 애널리스트·뉴스 기반 종합 요약이며 개별 인용이 아님을 명확히 밝힌다.')
+      ),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'애널 컨센서스'),e('div',{className:'vl g'},'Strong Buy(3인)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'평균 목표가'),e('div',{className:'vl y'},'$29 ($26~32)'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🟢🟡🔴 분위기 요약'),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'강세론(Bull)'),e('span',{className:'badge bg'},'🟢 긍정')),
+        e('div',{className:'soc-b'},'"강한 대차대조표·리스크관리가 mNAV 프리미엄을 정당화(Seeking Alpha). CEO 추가 인수 시사, BTC 축적 가속." 애널 3인 Strong Buy.'),
+        e('div',{className:'soc-m'},'요약 · Seeking Alpha/Tickeron')
+      ),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'약세론(Bear)'),e('span',{className:'badge br'},'🔴 부정')),
+        e('div',{className:'soc-b'},'"mNAV 1.67×·RSI 83.3 극단 과열, 현재가가 평균 PT 근접. 상승의 대부분이 프리미엄 팽창 — 되돌림 시 BTC보다 크게 하락. 지속 희석."'),
+        e('div',{className:'soc-m'},'요약 · 밸류·기술 지표')
+      ),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'중립론'),e('span',{className:'badge by'},'🟡 중립')),
+        e('div',{className:'soc-b'},'"모멘텀은 강하나 프리미엄·RSI가 극단 — 되돌림 후 진입이 안전. BTC $77K 지지 확인 필수. 소액만."'),
+        e('div',{className:'soc-m'},'요약 · 종합')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🏦 애널리스트'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'3인 컨센서스 Strong Buy, 평균 목표가 $29(범위 $26~32). 다만 현재가(~$27)가 이미 평균 PT에 근접 — 애널 기준으로도 상방 여지는 +7% 수준. 소형·신규 상장이라 커버리지가 3인으로 제한적.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 용어 ── */
+function Tab6() {
+  var TERMS = [
+    {c:'fin',cat:'재무',n:'mNAV',d:'시가총액 ÷ 보유 비트코인 가치. 1보다 크면 프리미엄, 작으면 할인.',f:'ASST 1.67× — BTC에 67% 프리미엄(비쌈).'},
+    {c:'fin',cat:'재무',n:'프리미엄 되돌림',d:'과도하게 붙은 웃돈(프리미엄)이 평균 수준으로 돌아가는 것.',f:'1.67×→1.2×만 돼도 주가 -28%.'},
+    {c:'fin',cat:'재무',n:'비트코인 트레저리',d:'현금 대신 비트코인을 대량 보유하는 전략.',f:'ASST 23,155 BTC(소형 MSTR형).'},
+    {c:'fin',cat:'재무',n:'플라이휠(조달→매입)',d:'프리미엄으로 조달→BTC 매입→주당BTC↑→주가↑ 선순환(약세장엔 역회전).',f:'프리미엄 1.67×로 조달엔 유리, 붕괴 시 역회전.'},
+    {c:'fin',cat:'재무',n:'SATA 우선주',d:'보통주보다 배당을 먼저 받는 변동금리 영구우선주.',f:'BTC 매입 재원 조달 수단(희석).'},
+    {c:'fin',cat:'재무',n:'희석(Dilution)',d:'신주 발행으로 기존 주주 지분·가치가 줄어드는 것.',f:'ASST BTC 축적은 지속 발행 의존.'},
+    {c:'tec',cat:'기술적',n:'RSI',d:'0~100 과열·침체 지표. 70 위 과매수.',f:'ASST 83.3 — 극단적 과매수(경고).'},
+    {c:'tec',cat:'기술적',n:'베타',d:'기초자산 대비 변동성 배율.',f:'ASST는 BTC보다 크게 움직이는 레버리지 대용주.'},
+    {c:'ear',cat:'실적',n:'레버리지 비트코인 대용주',d:'주식으로 비트코인에 레버리지 베팅하는 상장 수단.',f:'ASST 본질 — BTC×프리미엄으로 이중 베팅.'},
+    {c:'etc',cat:'기타',n:'anti-ESG',d:'ESG 투자 흐름에 반대하는 투자 철학.',f:'Strive(Vivek)의 자산운용 정체성.'},
+    {c:'etc',cat:'기타',n:'Wall-breaking season',d:'CEO가 쓴 표현으로, 공격적 확장·인수를 시사.',f:'추가 BTC 매입·인수 임박 기대 촉매.'}
+  ];
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var CATS=['전체','기술적','재무','실적'];
+  var list = fil==='전체'?TERMS:TERMS.filter(function(t){return t.cat===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📖 용어 사전'),
+      e('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}},
+        CATS.map(function(c,i){return e('button',{key:i,onClick:function(){setFil(c);},
+          style:{padding:'5px 11px',borderRadius:'9999px',border:'1px solid #1e3a5f',cursor:'pointer',fontSize:'0.72rem',
+            background:fil===c?'#f59e0b':'#0d1426',color:fil===c?'#1a1400':'#94a3b8'}},c);})
+      ),
+      list.map(function(t,i){
+        return e('div',{key:i,className:'term '+t.c},
+          e('div',{className:'term-h'}, t.n+' · '+t.cat),
+          e('div',{className:'term-b'}, t.d),
+          e('div',{className:'term-f'}, '→ '+t.f)
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 7: 멀티배거 ── */
+function Tab7() {
+  var rr = useRef(null); var rc = useRef(null);
+  var ITEMS = [
+    {q:'1. 아직 충분히 작은 기업인가?',d:'시총 ~$3B (소형)',s:'p',v:1},
+    {q:'2. 가격이 미래를 과대반영하지 않았는가?',d:'mNAV 1.67× 프리미엄·RSI 83.3 극과열·PT 근접',s:'f',v:0},
+    {q:'3. 매출보다 EBITDA·FCF 개선이 따라오는가?',d:'BTC 평가손익 지배, 영업이익 미미',s:'f',v:0},
+    {q:'4. 자산 증가율 대비 EBITDA가 뒤처지지 않는가?',d:'BTC 자산↑이나 수익창출 무관',s:'f',v:0},
+    {q:'5. FCF yield가 합리적인가?',d:'조달·매입 의존',s:'f',v:0},
+    {q:'6. 투자가 실제 수요·수주와 연결되는가?',d:'BTC 매집은 수주와 무관(투자성)',s:'f',v:0},
+    {q:'7. 고금리 환경에서 버틸 수 있는가?',d:'SATA·희석 의존, BTC 변동 노출',s:'h',v:0.5},
+    {q:'8. 단기 급등 후 추격매수 구간은 아닌가?',d:'월 +120%·RSI 83.3 — 명백한 극단 과열',s:'f',v:0}
+  ];
+  var score = ITEMS.reduce(function(a,b){return a+b.v;},0);
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{labels:['소형주','밸류','성장의질','투자효율','FCF','수주','재무건전','추격아님'],
+      datasets:[{label:'ASST',data:ITEMS.map(function(i){return i.v;}),
+        backgroundColor:'rgba(245,158,11,0.2)',borderColor:'#f59e0b',pointBackgroundColor:'#f59e0b'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},
+      scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},
+        pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 멀티배거 점수 (Anna Yartseva 8항목)'),
+      e('div', {style:{textAlign:'center',padding:'8px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#ef4444'}}, score+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, '등급: 낮음 — 소형은 강점이나 프리미엄·과열이 발목(8/26 2점→1.5점)')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'해석 (8/26 대비 악화)'),
+        e('div',{className:'wd'},'멀티배거 8체크리스트는 영업 기업용이라 트레저리엔 구조적으로 낮다. 8/26 대비 프리미엄 확대(1.08→1.67)·RSI 심화(79.8→83.3)로 "밸류"와 "추격아님" 항목이 더 나빠졌다. 소형(1점)은 유지되나 진입 매력은 8/26보다 하락.')
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('h2',null,'✅ 8개 체크리스트'),
+      ITEMS.map(function(it,i){
+        return e('div',{key:i,className:'mb-row'},
+          e('div',{className:'mb-ic'}, it.s==='p'?'✅':it.s==='h'?'⚠️':'❌'),
+          e('div',{className:'mb-lb'}, it.q, e('div',{className:'mb-sub'}, it.d)),
+          e('div',{className:'mb-st '+it.s}, it.v+'점')
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 8: 결론 ── */
+function Tab8() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 종합 의견 (9/8 갱신)'),
+      e('div',{className:'gauge'},
+        e('div',{className:'bar'},
+          e('div',{className:'seg',style:{background:'#ef4444'}},'강한매도'),
+          e('div',{className:'seg',style:{background:'#f87171'}},'매도 ◐'),
+          e('div',{className:'seg',style:{background:'#f59e0b'}},'중립 ●'),
+          e('div',{className:'seg',style:{background:'#34d399'}},'매수'),
+          e('div',{className:'seg',style:{background:'#10b981'}},'강한매수')
+        ),
+        e('div',{className:'lbl'},'중립~약한 매도 (신규진입 부적합·극단 과열)')
+      ),
+      e('div',{className:'dx'},
+        e('div',{className:'dd'},'8/26 "중립"에서 한 단계 더 신중하게 조정. 이유: ①mNAV 1.08×→1.67×로 프리미엄 급팽창(BTC 대비 67% 비쌈) ②RSI 83.3 극단 과열 ③현재가가 애널 평균 PT($29)에 근접 ④상승의 상당분이 BTC가 아닌 프리미엄 팽창 주도. 모멘텀·CEO 인수 시사는 호재이나, 신규 추격매수는 부적합 — 프리미엄 되돌림 시 BTC보다 크게 하락한다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🐂 Bull Case'),
+      e('div',{className:'bx'},e('div',{className:'bd'},'1. "Wall-breaking season" 추가 인수·BTC 매입 임박 기대, 강한 모멘텀.')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'2. 애널 3인 Strong Buy, 강한 대차대조표가 프리미엄 정당화(강세론).')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'3. BTC 재강세 전환 시 소형 레버리지로 추가 급등 여지.'))
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🐻 Bear Case'),
+      e('div',{className:'dx'},e('div',{className:'dd'},'1. mNAV 1.67× 프리미엄 — 되돌림 시 BTC보다 크게 하락(1.2×만 돼도 -28%).')),
+      e('div',{className:'dx'},e('div',{className:'dd'},'2. RSI 83.3 극단 과열 + 현재가가 평균 PT 근접(상방 제한).')),
+      e('div',{className:'dx'},e('div',{className:'dd'},'3. BTC $80K 하회·$77K 지지 시험 + 지속 희석.'))
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📋 실행 계획'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격/조건'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'현시점'),e('td',null,'관망(추격 금지)'),e('td',null,'RSI 83.3·프리미엄 과열')),
+            e('tr',null,e('td',null,'매수 대기'),e('td',null,'$20~23(프리미엄 되돌림)'),e('td',null,'고위험 소액')),
+            e('tr',null,e('td',null,'손절선'),e('td',null,'mNAV 1.0·BTC $77K 이탈'),e('td',null,'전량')),
+            e('tr',null,e('td',null,'익절'),e('td',null,'보유 시 $30~32'),e('td',null,'분할')),
+          )
+        )
+      ),
+      e('div',{className:'wx',style:{marginTop:'10px'}},
+        e('div',{className:'wd'},'핵심 모니터링: ①mNAV 1.67× 유지 vs 정상화 ②BTC $77,057 지지 ③RSI 과열 해소 ④추가 인수 공시 ⑤희석 속도. 소형 트레저리 투기주, 극소액 한도만.')
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🏢개요','📈기술적','💰재무','📊실적·뉴스','💬센티먼트','📖용어','🔟멀티배거','🎯결론'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '⚡ ASST — Strive, Inc. (갱신)'),
+      e('div', {className:'px'}, '~$27+ · RSI 83.3(극과열) · mNAV 1.67×'),
+      e('div', {className:'sub'}, '소형 비트코인 트레저리 · BTC 23,155개 · 월 +120% | 2026-09-08 갱신')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? e(Tab1,null) :
+      tab===1 ? e(Tab2,null) :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      tab===5 ? e(Tab6,null) :
+      tab===6 ? e(Tab7,null) :
+      e(Tab8,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
