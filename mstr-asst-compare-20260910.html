@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MSTR vs ASST 비교분석 대시보드 2026-09-10</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d2a0f 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #5e420e;}
+.hdr h1{font-size:1.4rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#f59e0b;border-bottom-color:#f59e0b;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:820px;margin:0 auto;}
+.card{background:#111827;border:1px solid #453814;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(245,158,11,0.04);}
+.win{color:#10b981;font-weight:700;}
+.lose{color:#ef4444;}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px;}
+.vs .col{background:#0d1426;border-radius:8px;padding:10px;text-align:center;}
+.vs .mstr{border:1px solid rgba(6,182,212,0.4);}
+.vs .asst{border:1px solid rgba(245,158,11,0.4);}
+.vs .tk{font-size:0.95rem;font-weight:700;}
+.vs .tk.m{color:#06b6d4;}.vs .tk.a{color:#f59e0b;}
+.vs .big{font-size:1.2rem;font-weight:800;color:#e2e8f0;margin-top:3px;}
+.vs .lb{font-size:0.65rem;color:#64748b;margin-top:2px;}
+.vs .mid{font-size:0.8rem;color:#64748b;font-weight:700;}
+.gauge{text-align:center;padding:10px 0;}
+.gauge .bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:10px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#0a0f1e;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+function makeChart(cRef, chRef, cfg, deps) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, deps||[]);
+}
+
+function VS(props){
+  return e('div',{className:'vs'},
+    e('div',{className:'col mstr'}, e('div',{className:'tk m'},'MSTR'), e('div',{className:'big'},props.m), e('div',{className:'lb'},props.ml||'')),
+    e('div',{className:'mid'},'vs'),
+    e('div',{className:'col asst'}, e('div',{className:'tk a'},'ASST'), e('div',{className:'big'},props.a), e('div',{className:'lb'},props.al||''))
+  );
+}
+
+/* ── Tab 1: 개요 비교 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'⚖️ 한눈 비교 (2026-09-10 기준)'),
+      e(VS,{m:'$139',ml:'Strategy(원조)',a:'$27',al:'Strive(소형)'}),
+      e(VS,{m:'845,050 BTC',ml:'$66.5B',a:'23,155 BTC',al:'$1.85B'}),
+      e(VS,{m:'mNAV ~1.0×',ml:'저렴/적정',a:'mNAV 1.67×',al:'67% 프리미엄'}),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'둘 다 "주식으로 비트코인에 레버리지 베팅하는 트레저리 기업". 같은 게임이나 성격이 크게 다르다: MSTR은 초대형·저프리미엄·유동성 풍부, ASST는 소형·고프리미엄·고변동.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📋 핵심 지표 비교표'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'MSTR (Strategy)'),e('th',null,'ASST (Strive)'),e('th',null,'우위'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'주가'),e('td',null,'~$139'),e('td',null,'~$27'),e('td',null,'-')),
+            e('tr',null,e('td',null,'BTC 보유'),e('td',null,'845,050개'),e('td',null,'23,155개'),e('td',null,'MSTR(규모)')),
+            e('tr',null,e('td',null,'BTC 가치'),e('td',null,'~$66.5B'),e('td',null,'~$1.85B'),e('td',null,'MSTR')),
+            e('tr',null,e('td',null,'mNAV(프리미엄)'),e('td',{className:'win'},'~1.0~1.07× (쌈)'),e('td',{className:'lose'},'1.67× (비쌈)'),e('td',null,'MSTR')),
+            e('tr',null,e('td',null,'유동성'),e('td',{className:'win'},'매우 높음'),e('td',null,'보통(소형)'),e('td',null,'MSTR')),
+            e('tr',null,e('td',null,'변동성/베타'),e('td',null,'높음'),e('td',{className:'win'},'매우 높음'),e('td',null,'ASST(상방탄력)')),
+            e('tr',null,e('td',null,'모멘텀(최근)'),e('td',null,'견조'),e('td',{className:'win'},'월 +120% 폭등'),e('td',null,'ASST')),
+            e('tr',null,e('td',null,'과열도(RSI)'),e('td',null,'중립'),e('td',{className:'lose'},'83.3 극과열'),e('td',null,'MSTR')),
+            e('tr',null,e('td',null,'애널 목표'),e('td',null,'$175~$350'),e('td',null,'$29(현재가 근접)'),e('td',null,'MSTR(상방)')),
+            e('tr',null,e('td',null,'재무/조달'),e('td',null,'전환사채+우선주'),e('td',null,'PIPE+SATA우선주'),e('td',null,'유사'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 한 줄 요약'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'MSTR — "싸고 큰" 비트코인 레버리지'),
+        e('div',{className:'bd'},'mNAV가 ~1.0×로 BTC 가치에 거의 웃돈 없이 거래 + 압도적 유동성·845K BTC. 전환사채 레버리지로 BTC 대비 ~1.2~1.3배 탄력. 애널 상방 $350(BTC $175K 가정).')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'ASST — "비싸고 뜨거운" 소형 레버리지'),
+        e('div',{className:'wd'},'mNAV 1.67×로 BTC에 67% 웃돈, RSI 83.3 극과열. 소형이라 상방 탄력은 크나 프리미엄 되돌림 위험이 MSTR보다 훨씬 큼. 애널 평균 PT $29는 현재가 바로 위(상방 제한).')
+      )
+    )
+  );
+}
+
+/* ── Tab 2: BTC·mNAV 구조 ── */
+function Tab2() {
+  var mr = useRef(null); var mc = useRef(null);
+  makeChart(mr, mc, {
+    type:'bar',
+    data:{labels:['MSTR','ASST'],datasets:[{label:'mNAV 프리미엄(×)',data:[1.05,1.67],backgroundColor:['#06b6d4','#f59e0b']}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0.8,ticks:{color:'#94a3b8',callback:function(v){return v+'×';}},grid:{color:'#1e2d4a'}},x:{ticks:{color:'#94a3b8'},grid:{display:false}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📊 mNAV 프리미엄 비교 (핵심)'),
+      e('canvas',{ref:mr}),
+      e('div',{className:'wx',style:{marginTop:'10px'}},
+        e('div',{className:'wd'},'mNAV = 시가총액 ÷ 보유 BTC 가치. 낮을수록 "BTC를 싸게 사는 것". MSTR ~1.05×는 BTC에 거의 웃돈 없음, ASST 1.67×는 67% 웃돈. 같은 BTC 1개를 MSTR은 ~$1.05, ASST는 $1.67에 사는 셈 — 진입 밸류는 MSTR이 유리.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔑 왜 mNAV가 핵심인가'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'주가 = BTC가격 × 보유량 ÷ 주식수 × mNAV'),
+        e('div',{className:'bd'},'트레저리주의 주가는 ①BTC 가격 ②mNAV 프리미엄, 두 가지가 곱해져 움직인다. 즉 오르려면 "BTC가 오르거나" "프리미엄이 커지거나" 해야 한다.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'MSTR: 프리미엄 상방 여지 vs ASST: 프리미엄 하방 위험'),
+        e('div',{className:'bd'},'MSTR은 mNAV가 이미 ~1.0로 낮아 프리미엄이 더 빠질 여지가 작다(하방 방어). 반대로 프리미엄이 과거처럼 1.5~1.8×로 확대되면 BTC 없이도 +50% 여지. ASST는 이미 1.67×로 높아 되돌림(예: 1.2×) 시 BTC 없이도 -28% — 프리미엄이 약점.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🏦 애널리스트 프레임'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'기관'),e('th',null,'종목'),e('th',null,'목표가'),e('th',null,'근거'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'Muriel Siebert'),e('td',null,'MSTR'),e('td',null,'$350'),e('td',null,'1× mNAV·BTC $175K·100만 BTC')),
+            e('tr',null,e('td',null,'Alliance Global'),e('td',null,'MSTR'),e('td',null,'$217'),e('td',null,'Buy 개시')),
+            e('tr',null,e('td',null,'Canaccord'),e('td',null,'MSTR'),e('td',null,'$175'),e('td',null,'목표 상향')),
+            e('tr',null,e('td',null,'컨센서스'),e('td',null,'ASST'),e('td',null,'$29 (범위 $26~32)'),e('td',null,'Strong Buy 3인, 현재가 근접'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 시나리오 (언제·얼마나) ── */
+function Tab3() {
+  var sr = useRef(null); var sc = useRef(null);
+  // BTC 시나리오별 조건부 주가 (프리미엄 일정 가정)
+  var btc = [80,100,150,175];
+  var mstrP = [140,178,266,350];       // mNAV~1.0 + 전환사채 레버리지 반영
+  var asstHold = [27,34,51,60];        // mNAV 1.67 유지 가정
+  var asstNorm = [19,24,36,43];        // mNAV 1.2로 정상화 가정
+  makeChart(sr, sc, {
+    type:'line',
+    data:{labels:btc.map(function(b){return '$'+b+'K';}),
+      datasets:[
+        {label:'MSTR (mNAV~1.0)',data:mstrP,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.1)',tension:0.3},
+        {label:'ASST (프리미엄 1.67 유지)',data:asstHold,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',tension:0.3},
+        {label:'ASST (프리미엄 1.2 정상화)',data:asstNorm,borderColor:'#ef4444',borderDash:[5,4],backgroundColor:'transparent',tension:0.3}
+      ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+      scales:{y:{ticks:{color:'#94a3b8',callback:function(v){return '$'+v;}},grid:{color:'#1e2d4a'}},x:{title:{display:true,text:'비트코인 가격',color:'#64748b'},ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 "언제·얼마나 오를까" — 조건부 시나리오'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'⚠️ 예측이 아니라 "조건부 계산"입니다'),
+        e('div',{className:'dd'},'주가 상승 시점·폭은 누구도 확정할 수 없다. 아래는 "BTC가 특정 가격에 도달하고, 프리미엄이 가정대로 유지/변동한다면 주가가 얼마가 되는가"를 역산한 값이다. 시점(언제)은 BTC 사이클에 달려 있어 달력으로 보장 불가.')
+      ),
+      e('canvas',{ref:sr})
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 BTC 가격별 조건부 주가 (현재 BTC ~$79K)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BTC'),e('th',null,'MSTR(mNAV~1.0)'),e('th',null,'ASST(1.67 유지)'),e('th',null,'ASST(1.2 정상화)'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'$80K(현재)'),e('td',null,'~$140'),e('td',null,'~$27'),e('td',{className:'lose'},'~$19 (-30%)')),
+            e('tr',null,e('td',null,'$100K (+25%)'),e('td',null,'~$178 (+27%)'),e('td',null,'~$34 (+27%)'),e('td',null,'~$24 (-11%)')),
+            e('tr',null,e('td',null,'$150K (+90%)'),e('td',null,'~$266 (+91%)'),e('td',null,'~$51 (+90%)'),e('td',null,'~$37 (+37%)')),
+            e('tr',null,e('td',null,'$175K (+122%)'),e('td',{className:'win'},'~$350 (애널)'),e('td',{className:'win'},'~$60 (+122%)'),e('td',null,'~$43 (+59%)'))
+          )
+        )
+      ),
+      e('div',{className:'wx',style:{marginTop:'10px'}},
+        e('div',{className:'wd'},'핵심: 프리미엄이 일정하면 두 종목 모두 BTC와 거의 같은 %로 움직인다(ASST가 소폭 더 탄력). 그러나 ASST는 "프리미엄 1.67→1.2 정상화" 시 BTC가 올라도 상승폭이 크게 깎인다(+122% BTC에도 +59%뿐). MSTR은 프리미엄이 낮아 이 함정이 작다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⏱️ "언제" — 시점 관점 (보장 불가, 조건만)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'단기 (1~3개월)'),
+        e('div',{className:'bd'},'BTC $77K 지지 사수가 전제. ASST는 RSI 83.3 극과열로 단기 되돌림($20~23) 가능성 — 오히려 "하락 후 기회" 구간일 수 있음. MSTR은 중립, BTC 연동.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'중기 (6~12개월)'),
+        e('div',{className:'bd'},'애널 다수가 BTC $175K 도달을 12개월 base-case로 가정(→MSTR $350). 실현 시 위 표의 상단 시나리오. 단 BTC 사이클·금리·ETF 흐름에 전적 의존 — 시점은 BTC가 결정.')
+      ),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'하락 시나리오도 동일 레버리지로 작동'),
+        e('div',{className:'dd'},'BTC가 $60K로 빠지면(-24%) MSTR ~-30%, ASST는 프리미엄까지 꺼지면 -40%+ 가능. 상방 시나리오만큼 하방도 증폭된다.')
+      )
+    )
+  );
+}
+
+/* ── Tab 4: 기술적·모멘텀 ── */
+function Tab4() {
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:['RSI(14)'],datasets:[
+      {label:'MSTR',data:[54],backgroundColor:'#06b6d4'},
+      {label:'ASST',data:[83.3],backgroundColor:'#f59e0b'}
+    ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{y:{min:0,max:100,ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}},x:{ticks:{color:'#94a3b8'},grid:{display:false}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📈 기술적·모멘텀 비교'),
+      e('canvas',{ref:rr}),
+      e('div',{className:'wx',style:{marginTop:'10px'}},
+        e('div',{className:'wd'},'MSTR RSI ~54(중립) — 진입 부담 낮음. ASST RSI 83.3(극과열) — 추격매수 위험, 되돌림 대기 구간. 단기 진입 타이밍은 MSTR이 유리, ASST는 조정 후가 안전.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔑 성격 차이 요약'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'관점'),e('th',null,'MSTR 선택 시'),e('th',null,'ASST 선택 시'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'원하는 것'),e('td',null,'BTC 저프리미엄 레버리지·안정성'),e('td',null,'소형 고탄력·모멘텀 베팅')),
+            e('tr',null,e('td',null,'진입 밸류'),e('td',{className:'win'},'유리(mNAV~1.0)'),e('td',{className:'lose'},'불리(mNAV 1.67)')),
+            e('tr',null,e('td',null,'단기 타이밍'),e('td',{className:'win'},'중립 RSI, 양호'),e('td',{className:'lose'},'극과열, 되돌림 대기')),
+            e('tr',null,e('td',null,'상방 탄력'),e('td',null,'BTC의 ~1.2~1.3배'),e('td',{className:'win'},'프리미엄 유지 시 더 큼')),
+            e('tr',null,e('td',null,'하방 위험'),e('td',null,'BTC 연동'),e('td',{className:'lose'},'BTC+프리미엄 이중 하락')),
+            e('tr',null,e('td',null,'유동성'),e('td',{className:'win'},'매우 높음'),e('td',null,'소형, 변동성 큼'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 5: 결론 ── */
+function Tab5() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 종합 비교 결론'),
+      e('div',{className:'gauge'},
+        e('div',{style:{fontSize:'0.85rem',color:'#94a3b8',marginBottom:'4px'}},'밸류·안정성 관점'),
+        e('div',{className:'bar'},
+          e('div',{className:'seg',style:{background:'#06b6d4',flex:2}},'MSTR 우위'),
+          e('div',{className:'seg',style:{background:'#334155',flex:1}},'비등'),
+          e('div',{className:'seg',style:{background:'#f59e0b',flex:1}},'ASST')
+        ),
+        e('div',{style:{fontSize:'0.85rem',color:'#94a3b8',margin:'10px 0 4px'}},'단기 모멘텀·소형 탄력 관점'),
+        e('div',{className:'bar'},
+          e('div',{className:'seg',style:{background:'#06b6d4',flex:1}},'MSTR'),
+          e('div',{className:'seg',style:{background:'#334155',flex:1}},'비등'),
+          e('div',{className:'seg',style:{background:'#f59e0b',flex:2}},'ASST 우위')
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📌 누구에게 어느 쪽인가'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'MSTR이 나은 경우 (밸류·안정 중시)'),
+        e('div',{className:'bd'},'① BTC 대비 웃돈을 적게 내고 싶다(mNAV~1.0) ② 유동성·안정성 중요 ③ 지금 진입해도 과열 부담 적길 원함(RSI 중립) ④ 애널 상방($175~350)과 검증된 트랙레코드 선호. → "비트코인을 싸게, 크게, 안정적으로 레버리지".')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'ASST가 나은 경우 (고위험 고탄력)'),
+        e('div',{className:'wd'},'① 소형의 폭발적 상방을 노림 ② Vivek·Strive 모멘텀·추가 인수("Wall-breaking") 베팅 ③ 프리미엄 유지/확대를 전제. 단 지금은 RSI 83.3·mNAV 1.67×로 과열 — 반드시 되돌림($20~23) 후 소액 진입이 원칙.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'가장 중요한 전제 — 둘 다 BTC에 달렸다'),
+        e('div',{className:'bd'},'MSTR·ASST 모두 본질은 "레버리지 비트코인". BTC 방향에 대한 확신 없이는 어느 쪽도 권하기 어렵다. BTC 강세 확신 시 → 밸류·안정의 MSTR을 코어로, 고위험 탄력의 ASST를 (되돌림 후) 위성으로 조합하는 방식이 리스크 대비 합리적.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 공통 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dd'},'① BTC 급락 시 두 종목 모두 증폭 하락(하방 레버리지) ② 지속적 주식·우선주 발행 = 희석 ③ ASST는 프리미엄 되돌림 위험 추가 ④ 금리·규제·심리 냉각. 본 자료는 정보 제공용이며 투자 권유·수익 보장이 아니다. "언제·얼마나"는 모두 BTC 가격·프리미엄 가정에 따른 조건부 계산임.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📋 실행 요약'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,''),e('th',null,'MSTR'),e('th',null,'ASST'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'현 진입 적합도'),e('td',{className:'win'},'양호(중립 RSI)'),e('td',{className:'lose'},'부적합(극과열)')),
+            e('tr',null,e('td',null,'매수 희망존'),e('td',null,'현재가~조정 분할'),e('td',null,'$20~23 되돌림')),
+            e('tr',null,e('td',null,'상방(BTC $175K)'),e('td',null,'~$350'),e('td',null,'~$60(프리미엄 유지 시)')),
+            e('tr',null,e('td',null,'핵심 리스크'),e('td',null,'BTC 하락·희석'),e('td',null,'프리미엄 붕괴·BTC 하락')),
+            e('tr',null,e('td',null,'역할 제안'),e('td',null,'코어'),e('td',null,'위성(소액)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['⚖️개요비교','📊BTC·mNAV','🎯시나리오(언제·얼마나)','📈기술적','🏁결론'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '⚔️ MSTR vs ASST 비교분석'),
+      e('div', {className:'sub'}, '비트코인 트레저리 대결 · BTC·mNAV 시나리오 | 2026-09-10')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? e(Tab1,null) :
+      tab===1 ? e(Tab2,null) :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      e(Tab5,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
