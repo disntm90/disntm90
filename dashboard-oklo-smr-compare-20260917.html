@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OKLO vs SMR(NuScale) 비교분석 대시보드 2026-09-17</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d2a0f 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #5e420e;}
+.hdr h1{font-size:1.4rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#f59e0b;border-bottom-color:#f59e0b;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:820px;margin:0 auto;}
+.card{background:#111827;border:1px solid #453814;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(245,158,11,0.04);}
+.win{color:#10b981;font-weight:700;}
+.lose{color:#ef4444;}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px;}
+.vs .col{background:#0d1426;border-radius:8px;padding:10px;text-align:center;}
+.vs .oklo{border:1px solid rgba(16,185,129,0.4);}
+.vs .smr{border:1px solid rgba(6,182,212,0.4);}
+.vs .tk{font-size:0.95rem;font-weight:700;}
+.vs .tk.o{color:#10b981;}.vs .tk.s{color:#06b6d4;}
+.vs .big{font-size:1.2rem;font-weight:800;color:#e2e8f0;margin-top:3px;}
+.vs .lb{font-size:0.65rem;color:#64748b;margin-top:2px;}
+.vs .mid{font-size:0.8rem;color:#64748b;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+function makeChart(cRef, chRef, cfg, deps) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, deps||[]);
+}
+
+function VS(props){
+  return e('div',{className:'vs'},
+    e('div',{className:'col oklo'}, e('div',{className:'tk o'},'OKLO'), e('div',{className:'big'},props.o), e('div',{className:'lb'},props.ol||'')),
+    e('div',{className:'mid'},'vs'),
+    e('div',{className:'col smr'}, e('div',{className:'tk s'},'SMR'), e('div',{className:'big'},props.s), e('div',{className:'lb'},props.sl||''))
+  );
+}
+
+/* ── Tab 1: 개요 비교 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'⚖️ 한눈 비교 (2026-09-17 기준)'),
+      e(VS,{o:'~$36',ol:'Oklo(Aurora)',s:'~$10',sl:'NuScale'}),
+      e(VS,{o:'시총 ~$6.7B',ol:'대형화',s:'시총 ~$3.4B',sl:'소형'}),
+      e(VS,{o:'유동성 $3B',ol:'실탄 풍부',s:'ATM $1B 완료',sl:'조달 의존'}),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'둘 다 상업화 前 SMR(소형모듈원자로) 개발사 — AI 데이터센터 전력 수요 붐의 대표 수혜주이나, 아직 매출이 거의 없는 프리레비뉴·적자·희석 리스크가 큰 고위험 스토리주. 성격 차이가 명확하다.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📋 핵심 지표 비교표'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'OKLO (Oklo)'),e('th',null,'SMR (NuScale)'),e('th',null,'비고'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'주가'),e('td',null,'~$36'),e('td',null,'~$10'),e('td',null,'가격 편차 有(재확인)')),
+            e('tr',null,e('td',null,'시가총액'),e('td',null,'~$6.7B'),e('td',null,'~$3.4B'),e('td',null,'OKLO가 큼')),
+            e('tr',null,e('td',null,'원자로 기술'),e('td',null,'Aurora 고속로(HALEU)'),e('td',null,'경수형 SMR 모듈'),e('td',null,'노형 상이')),
+            e('tr',null,e('td',null,'규제 상태'),e('td',null,'DOE·COLA 경로(NRC 승인 前)'),e('td',{className:'win'},'유일 NRC 설계승인'),e('td',null,'SMR 우위')),
+            e('tr',null,e('td',null,'상업 가동 목표'),e('td',null,'2027 아이다호(첫 상업로)'),e('td',null,'2020년대 후반'),e('td',null,'OKLO 일정 앞섬')),
+            e('tr',null,e('td',null,'현금·유동성'),e('td',{className:'win'},'~$3B'),e('td',null,'ATM $1B 조달'),e('td',null,'OKLO 우위')),
+            e('tr',null,e('td',null,'애널 평균PT'),e('td',{className:'win'},'~$75 (상방 큼)'),e('td',null,'$12.63(Hold, UBS Sell $6)'),e('td',null,'OKLO 낙관')),
+            e('tr',null,e('td',null,'브랜드'),e('td',null,'Sam Altman 연계'),e('td',null,'SMR 원조'),e('td',null,'-')),
+            e('tr',null,e('td',null,'최근 리스크'),e('td',null,'$1B 증자·고객 회의론'),e('td',null,'UBS Sell 강등·변동성 74%'),e('td',null,'양쪽 다')),
+            e('tr',null,e('td',null,'수익성'),e('td',null,'적자(Q2 -$73.6M)'),e('td',null,'적자'),e('td',null,'둘 다 프리레비뉴'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 한 줄 요약'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'OKLO — "실탄·일정·브랜드 앞선 프리미엄 SMR"'),
+        e('div',{className:'bd'},'Aurora 고속로 + $3B 유동성 + Sam Altman 후광 + 2027 상업 가동 목표 + 애널 평균 $75(현재가 대비 큰 상방). 단 NRC 승인 前·고객 파이프라인 회의론·$1B 증자로 밸류가 이미 기대를 크게 반영.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'SMR(NuScale) — "유일 NRC 승인, 그러나 신뢰 흔들"'),
+        e('div',{className:'wd'},'유일하게 NRC 설계 승인을 받은 SMR 강점이나, 2023 대표 프로젝트(CFPP) 취소 트라우마 + UBS Sell 강등($6)·변동성 74%로 시장 신뢰가 약함. 시총·가격이 낮아 밸류 부담은 덜하나 촉매·실행이 불확실.')
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술·사업 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 원자로 기술 비교'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'OKLO Aurora'),e('th',null,'NuScale VOYGR/모듈'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'노형'),e('td',null,'액체금속 고속로(패스트)'),e('td',null,'경수형(PWR) 소형모듈')),
+            e('tr',null,e('td',null,'연료'),e('td',null,'HALEU(고순도 농축)'),e('td',null,'표준 저농축(LEU)')),
+            e('tr',null,e('td',null,'단위 출력'),e('td',null,'1.5MWe/기, ~75MWe/Powerhouse'),e('td',null,'모듈당 ~77MWe급')),
+            e('tr',null,e('td',null,'사업 모델'),e('td',null,'"발전소 소유·전력 판매(PPA)"'),e('td',null,'원자로 기술·모듈 공급')),
+            e('tr',null,e('td',null,'규제'),e('td',null,'DOE 부지+COLA(승인 진행)'),e('td',null,'NRC 설계승인 완료')),
+            e('tr',null,e('td',null,'첫 상업'),e('td',null,'2027 아이다호 목표'),e('td',null,'후속 프로젝트 재구축 중'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🏭 사업 진척'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'OKLO 최근 성과'),
+        e('div',{className:'bd'},'Groves 시설 첫 임계(criticality) 달성, 플래그십 프로젝트 진전, Q2말 유동성 $3B 확보. 데이터센터·국방향 전력 파이프라인 확대 주장. 단 실제 계약 전환·고객 확정이 회의론의 핵심.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'SMR(NuScale) 상황'),
+        e('div',{className:'wd'},'유일 NRC 승인이라는 규제 해자는 강력하나, 2023 UAMPS/CFPP 취소로 상업화 궤도가 끊긴 뒤 재구축 중. $1B ATM으로 상업화 자금 확보. 신규 고객·프로젝트 확정이 재평가 관건.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 공통 메가트렌드 — AI 데이터센터 전력'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'두 종목 모두 "AI 데이터센터 전력 폭증 → 무탄소·상시 전원(SMR)" 테마의 핵심. 하이퍼스케일러의 원전 PPA·SMR 투자 흐름이 최대 촉매. 단 SMR 상업화는 2027~2030+로 시간이 걸려, 현 주가는 "미래 실행"에 베팅하는 옵션성.')
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 재무·밸류 ── */
+function Tab3() {
+  var mr = useRef(null); var mc = useRef(null);
+  makeChart(mr, mc, {
+    type:'bar',
+    data:{labels:['시가총액($B)','유동성/조달($B)','애널 평균PT($)'],
+      datasets:[
+        {label:'OKLO',data:[6.7,3.0,75],backgroundColor:'#10b981'},
+        {label:'SMR',data:[3.4,1.0,12.63],backgroundColor:'#06b6d4'}
+      ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{y:{type:'logarithmic',ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}},x:{ticks:{color:'#94a3b8'},grid:{display:false}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📊 재무·밸류 비교 (로그 스케일)'),
+      e('canvas',{ref:mr}),
+      e('div',{className:'wx',style:{marginTop:'10px'}},
+        e('div',{className:'wd'},'OKLO는 시총·유동성·애널 목표가 모두 SMR보다 크다 — "프리미엄 SMR". 단 프리미엄만큼 기대가 선반영. SMR은 밸류가 낮아 하방은 덜하나 촉매·신뢰가 약함. ※애널 PT는 절대가($75 vs $12.63)라 단순 비교는 주가 수준 차이 포함.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💰 재무 핵심'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'OKLO'),e('th',null,'SMR'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'매출'),e('td',null,'거의 없음(프리레비뉴)'),e('td',null,'거의 없음(프리레비뉴)')),
+            e('tr',null,e('td',null,'분기 손익'),e('td',null,'Q2 -$73.6M'),e('td',null,'적자')),
+            e('tr',null,e('td',null,'유동성/조달'),e('td',{className:'win'},'~$3B 유동성'),e('td',null,'$1B ATM 완료')),
+            e('tr',null,e('td',null,'희석'),e('td',null,'$1B 증자(주가 압박)'),e('td',null,'ATM 발행(희석)')),
+            e('tr',null,e('td',null,'밸류에이션'),e('td',null,'적자→PER 불가, 기대 선반영'),e('td',null,'적자→PER 불가, 낮은 시총'))
+          )
+        )
+      ),
+      e('div',{className:'dx',style:{marginTop:'12px'}},
+        e('div',{className:'dt'},'⚠️ 공통 — 프리레비뉴·희석'),
+        e('div',{className:'dd'},'둘 다 상업 매출이 사실상 없고 적자·현금소진 → 지속적 증자로 희석. 밸류는 "상업로 가동·계약"이라는 미래 실행에 전적 의존. 상업화 지연·규제 차질 시 급락 위험.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🏦 애널리스트'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'종목'),e('th',null,'컨센서스'),e('th',null,'목표가'),e('th',null,'특이'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'OKLO'),e('td',null,'낙관(다수 매수)'),e('td',null,'평균 ~$75, Piper $55(Overweight)'),e('td',null,'현재가 대비 큰 상방')),
+            e('tr',null,e('td',null,'SMR'),e('td',null,'Hold(18인)'),e('td',null,'평균 $12.63(+52%)'),e('td',null,'UBS Sell $6로 강등(견해 분산)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 4: 결론 ── */
+function Tab4() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 종합 비교 결론'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'둘 다 "AI 전력 붐 × SMR 상업화"에 베팅하는 고위험 프리레비뉴 투기주다. 성격이 다르다: OKLO는 실탄·일정·브랜드·애널 낙관이 앞서는 "프리미엄·모멘텀형", SMR은 유일 NRC 승인이라는 해자에도 신뢰·촉매가 약한 "저평가·불신형". 어느 쪽도 펀더멘털(매출·이익)로는 정당화 불가 — 상업화 실행에 대한 믿음의 문제.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📌 누구에게 어느 쪽인가'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'OKLO가 나은 경우 (모멘텀·실행 신뢰)'),
+        e('div',{className:'bd'},'① 상업 일정(2027)·$3B 실탄·Sam Altman 서사에 베팅 ② 애널 상방($75)·데이터센터 파이프라인 기대 ③ 프리미엄을 감수. → "가장 앞서가는 SMR"에 프리미엄 지불.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'SMR이 나은 경우 (저평가·규제해자·반등)'),
+        e('div',{className:'wd'},'① 유일 NRC 승인이라는 규제 해자를 저가에 ② 낮은 시총·주가($10)로 하방 부담 완화 ③ 신규 프로젝트 확정 시 신뢰 회복 반등. 단 UBS Sell($6)처럼 하방 시나리오도 열려 있어 촉매 확인이 필요.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'가장 중요한 전제 — 상업화 실행 리스크'),
+        e('div',{className:'bd'},'SMR 상업 가동은 2027~2030+로 시간이 걸리고 규제·자본·고객 확정 리스크가 크다. 두 종목 모두 "실행이 확인되기 전까지" 뉴스·심리로 급등락하는 투기 구간. 분산·소액·이벤트 대응이 원칙.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 공통 리스크'),
+      e('div',{className:'dx'},
+        e('div',{className:'dd'},'① 프리레비뉴·적자·지속 희석(증자) ② 규제 지연·프로젝트 취소(NuScale 2023 전례) ③ AI 전력 붐 열기 냉각 시 밸류 급락 ④ HALEU(OKLO)·공급망·건설비 상승. 본 자료는 정보 제공용·투자 권유 아님. 가격은 출처 간 편차가 있어 매매 전 재확인 필수.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📋 실행 요약'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,''),e('th',null,'OKLO'),e('th',null,'SMR'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'성격'),e('td',null,'프리미엄·모멘텀'),e('td',null,'저평가·불신')),
+            e('tr',null,e('td',null,'강점'),e('td',null,'실탄·일정·브랜드·애널'),e('td',null,'유일 NRC 승인·낮은 밸류')),
+            e('tr',null,e('td',null,'약점'),e('td',null,'기대 선반영·고객 회의론'),e('td',null,'신뢰 훼손·촉매 부재·UBS Sell')),
+            e('tr',null,e('td',null,'핵심 촉매'),e('td',null,'상업로 착공·대형 PPA'),e('td',null,'신규 프로젝트·고객 확정')),
+            e('tr',null,e('td',null,'포지션 제안'),e('td',null,'모멘텀 코어(소액)'),e('td',null,'저가 반등 위성(소액)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['⚖️개요비교','🔬기술·사업','💰재무·밸류','🏁결론'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '⚛️ OKLO vs SMR(NuScale) 비교분석'),
+      e('div', {className:'sub'}, 'SMR(소형모듈원자로) 대결 · AI 전력 테마 | 2026-09-17')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? e(Tab1,null) :
+      tab===1 ? e(Tab2,null) :
+      tab===2 ? e(Tab3,null) :
+      e(Tab4,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
