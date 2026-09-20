@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OPEN(Opendoor) 종목분석 대시보드 2026-09-20 (갱신)</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0d3a3a 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #0e5e5e;}
+.hdr h1{font-size:1.5rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.1rem;font-weight:700;color:#14b8a6;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#14b8a6;border-bottom-color:#14b8a6;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #0d3a3a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#14b8a6;}
+.bx{background:rgba(20,184,166,0.08);border:1px solid rgba(20,184,166,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#14b8a6;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(20,184,166,0.04);}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.soc-u{font-size:0.78rem;font-weight:600;color:#cbd5e1;}
+.soc-b{font-size:0.8rem;color:#cbd5e1;line-height:1.5;}
+.soc-m{font-size:0.68rem;color:#64748b;margin-top:6px;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #3b82f6;}
+.term.fin{border-left-color:#22c55e;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;color:#e2e8f0;margin-bottom:4px;}
+.term-b{font-size:0.78rem;color:#94a3b8;line-height:1.5;}
+.term-f{font-size:0.74rem;color:#14b8a6;margin-top:5px;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.0rem;flex-shrink:0;width:24px;text-align:center;}
+.mb-lb{flex:1;font-size:0.78rem;color:#cbd5e1;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.mb-st{font-size:0.74rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.gauge{text-align:center;padding:14px 0;}
+.gauge .lbl{font-size:1.4rem;font-weight:700;color:#f59e0b;}
+.gauge .bar{display:flex;height:30px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.62rem;color:#0a0f1e;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+function makeChart(cRef, chRef, cfg, deps) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, deps||[]);
+}
+
+/* ── Tab 1: 개요 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🏢 기업 개요 (9/20 갱신)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'Opendoor(OPEN)는 알고리즘으로 주택을 직접 매입→수선→재판매하는 "iBuyer". 2025년 숏스퀴즈로 유명해진 밈주식 성격도 강함. 9/11 분석 이후 주가는 추가 하락했으나, Q2 운영지표(주택매입 급증·매출 반등)는 오히려 개선 — "운영 개선 vs 금리 역풍"의 줄다리기 국면.')
+      ),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'현재가'),e('div',{className:'vl b'},'~$2.57')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'YTD'),e('div',{className:'vl r'},'-57%')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'주택매입 YoY'),e('div',{className:'vl g'},'+149%')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'공매도'),e('div',{className:'vl y'},'~14%+'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔺 9/11 → 9/20 변화'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'9/11'),e('th',null,'9/20'),e('th',null,'변화'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'주가'),e('td',null,'~$2.85'),e('td',null,'~$2.57'),e('td',{style:{color:'#ef4444'}},'-10% ▼')),
+            e('tr',null,e('td',null,'자본조달'),e('td',null,'$440M 0%'),e('td',null,'+$650M 0% 전환채'),e('td',{style:{color:'#10b981'}},'실탄 확충')),
+            e('tr',null,e('td',null,'자사주'),e('td',null,'5% 축소'),e('td',null,'+$158M 추가매입'),e('td',{style:{color:'#10b981'}},'희석 역행 ▲')),
+            e('tr',null,e('td',null,'흑자 시점'),e('td',null,'2026말 목표'),e('td',null,'6~8주 지연'),e('td',{style:{color:'#ef4444'}},'지연 ▼')),
+            e('tr',null,e('td',null,'금리'),e('td',null,'상승'),e('td',null,'국채금리 3년 최고'),e('td',{style:{color:'#ef4444'}},'역풍 ▲'))
+          )
+        )
+      ),
+      e('div',{className:'wx',style:{marginTop:'10px'}},
+        e('div',{className:'wt'},'핵심 — "운영은 개선, 매크로는 악화"'),
+        e('div',{className:'wd'},'Q2 주택매입 +149% YoY·+77% QoQ, 매출 +23%, 기여마진 2년 최고로 본업은 재가속. 그러나 국채금리 3년 최고로 모기지 부담↑ → 흑자 시점 6~8주 지연, 주가는 계속 하락. 좋은 실적이 나쁜 매크로에 가려진 상황.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🌐 미래 인사이트'),
+      e('div',{className:'bd',style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.7'}},
+        'OPEN은 "금리 인하 + 주택 회복 + 흑자 전환"에 베팅하는 고위험 경기민감·밈주식. 이번 분기 운영 개선은 "회사가 실행은 하고 있다"는 신호이나, 국채금리 3년 최고가 발목. Fed 금리 인하 사이클이 본격화되면 재평가 트리거 가능성 — 반대면 재고·현금 압박.')
+    )
+  );
+}
+
+/* ── Tab 2: 기술적 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📈 기술적 스냅샷'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'현재가'),e('div',{className:'vl b'},'$2.57')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'일중 범위'),e('div',{className:'vl'},'$2.52~2.63')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'YTD'),e('div',{className:'vl r'},'-57%')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'추세'),e('div',{className:'vl r'},'하락'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 지지·저항'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 지지'),e('div',{className:'vl g'},'$2.40')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'2차 지지'),e('div',{className:'vl g'},'$2.20')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 저항'),e('div',{className:'vl r'},'$2.85(9/11대)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'2차 저항'),e('div',{className:'vl r'},'$3.10~3.60'))
+      ),
+      e('div',{className:'wx',style:{marginTop:'12px'}},
+        e('div',{className:'wd'},'9/11 $2.85에서 지지 이탈해 $2.57로 하락 — 하락 추세 지속. $2.40 지지가 다음 방어선. 공매도 높아 금리 인하·실적 서프라이즈 시 숏스퀴즈 반등 가능하나, 추세 반전 전까지는 저가 매수도 위험.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 진입·청산'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격'),e('th',null,'조건'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'매수 진입'),e('td',null,'$2.30~2.45'),e('td',null,'지지·과매도 반등')),
+            e('tr',null,e('td',null,'손절선'),e('td',null,'$2.15'),e('td',null,'2차 지지 이탈')),
+            e('tr',null,e('td',null,'1차 목표'),e('td',null,'$3.10'),e('td',null,'저항 회복')),
+            e('tr',null,e('td',null,'2차 목표'),e('td',null,'$5.00'),e('td',null,'금리 인하+흑자+스퀴즈'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 재무 ── */
+function Tab3() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💰 재무 — 운영 반등 vs 흑자 지연'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'Q2 매출'),e('div',{className:'vl g'},'+23% QoQ')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'주택매입'),e('div',{className:'vl g'},'+149% YoY')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'기여마진'),e('div',{className:'vl g'},'2년 최고')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'흑자 시점'),e('div',{className:'vl y'},'2026말(6~8주 지연)'))
+      ),
+      e('div',{className:'bx',style:{marginTop:'12px'}},
+        e('div',{className:'bt'},'운영 개선은 실제 (긍정)'),
+        e('div',{className:'bd'},'Q2 주택매입 +77% QoQ·+149% YoY로 매입 엔진 재가동, 매출 +23%, 기여마진 2년 최고. AI 도입·모기지 상품 호조로 효율 개선. "회사는 실행 중"이라는 증거.')
+      ),
+      e('div',{className:'dx',style:{marginTop:'6px'}},
+        e('div',{className:'dt'},'⚠️ 그러나 흑자 시점 지연 + 금리 3년 최고'),
+        e('div',{className:'dd'},'CEO가 조정 순이익 손익분기 시점이 6~8주 밀렸다고 인정. 국채금리 3년 최고로 모기지·주택수요 압박 — 매크로가 운영 개선을 상쇄. Offerpad·Zillow 등 동종도 부진.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🛡️ 자본 조달·주주환원'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'액션'),e('th',null,'내용'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'신규 전환사채'),e('td',null,'$650M, 0% 쿠폰(이자부담 無)')),
+            e('tr',null,e('td',null,'동시 자사주'),e('td',null,'$158M 매입(발행·환원 병행)')),
+            e('tr',null,e('td',null,'기존 자사주'),e('td',null,'첫 매입으로 주식 5% 축소')),
+            e('tr',null,e('td',null,'의미'),e('td',null,'0% 이자로 실탄 확보 + 희석 완충'))
+          )
+        )
+      ),
+      e('div',{className:'bx',style:{marginTop:'10px'}},
+        e('div',{className:'bd'},'$650M 0% 전환채 + $158M 자사주 동시 발표는 "이자부담 없이 실탄 확보하면서 주주환원도 병행"하는 균형 전략. 다만 전환채는 향후 전환 시 잠재 희석 요인.')
+      )
+    )
+  );
+}
+
+/* ── Tab 4: 실적/뉴스 ── */
+function Tab4() {
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'line',
+    data:{labels:['6월','7월','8월','9/11','9/20'],
+      datasets:[{label:'OPEN($)',data:[3.6,3.3,3.0,2.85,2.57],borderColor:'#14b8a6',backgroundColor:'rgba(20,184,166,0.1)',tension:0.3}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{y:{ticks:{color:'#94a3b8',callback:function(v){return '$'+v;}},grid:{color:'#1e2d4a'}},x:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📊 주가 추이 (여름~9/20)'),
+      e('canvas',{ref:rr}),
+      e('div',{className:'wx',style:{marginTop:'10px'}},
+        e('div',{className:'wd'},'$3.60s→$2.57 지속 하락, YTD -57%. 운영 개선에도 금리 역풍이 주가를 눌렀다. ※일부 수치 추세 추정.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📰 최신 뉴스 (9월)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'$650M 0% 전환채 + $158M 자사주 (신규)'),
+        e('div',{className:'bd'},'이자부담 없는 대규모 조달과 동시 자사주 매입 발표. 실탄 확보 + 희석 완충 병행.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'Q2 운영 강세'),
+        e('div',{className:'bd'},'주택매입 +77% QoQ·+149% YoY, 매출 +23%, 기여마진 2년 최고. AI·모기지 상품 호조.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'금리 3년 최고 + 흑자 6~8주 지연'),
+        e('div',{className:'wd'},'국채금리 3년 최고로 9/10경 -7% 급락. CEO가 손익분기 시점 6~8주 지연 인정 — 매크로가 운영 개선을 상쇄, 센티먼트 약세.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 주목 지표 TOP 5'),
+      e('div',{className:'bx'},e('div',{className:'bd'},'1. Fed 금리 인하 사이클·국채금리 방향(최대 변수)')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'2. 조정 순이익 흑자 전환(지연된 2026말) 달성 여부')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'3. 주택매입량·기여마진 지속(운영 모멘텀)')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'4. 공매도·숏스퀴즈 트리거')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'5. 전환채 전환·희석 동향'))
+    )
+  );
+}
+
+/* ── Tab 5: 센티먼트 ── */
+function Tab5() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💬 소셜 & 기관 센티먼트'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'데이터 정합성 고지'),
+        e('div',{className:'dd'},'웹검색 세션 제약으로 X 15개·Reddit 15개 실제 게시물 원문을 개별 수집하지 못했다. 아래는 뉴스 기반 종합 요약이며 개별 인용이 아님. OPEN은 밈주식이라 커뮤니티 변동성 큼.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🟢🟡🔴 분위기 요약'),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'강세론(Bull)'),e('span',{className:'badge bg'},'🟢 긍정')),
+        e('div',{className:'soc-b'},'"Q2 운영 폭발적 개선(매입 +149%, 마진 2년최고), 0% 조달+자사주. 금리 인하 시 급반등·숏스퀴즈 잠재." 저점 매수론.'),
+        e('div',{className:'soc-m'},'요약 · 실적·턴어라운드 진영')
+      ),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'약세론(Bear)'),e('span',{className:'badge br'},'🔴 부정')),
+        e('div',{className:'soc-b'},'"국채금리 3년 최고·흑자 6~8주 지연, YTD -57% 추세 하락. 밈 변동성·적자 지속." 금리 역풍 우려.'),
+        e('div',{className:'soc-m'},'요약 · 24/7 Wall St./금리 약세')
+      ),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'중립론'),e('span',{className:'badge by'},'🟡 중립')),
+        e('div',{className:'soc-b'},'"운영은 개선됐으나 금리가 발목 — Fed 인하 확인 전 관망. 저가지만 추세 하락." 리스크/리워드 재평가.'),
+        e('div',{className:'soc-m'},'요약 · 종합')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 용어 ── */
+function Tab6() {
+  var TERMS = [
+    {c:'ear',cat:'실적',n:'iBuyer',d:'알고리즘으로 주택을 직접 매입→수선→재판매하는 사업자.',f:'OPEN의 핵심 모델.'},
+    {c:'ear',cat:'실적',n:'기여마진(Contribution Margin)',d:'매출에서 직접 변동비를 뺀 마진. 단위 수익성 지표.',f:'OPEN Q2 2년 최고 — 운영 개선.'},
+    {c:'ear',cat:'실적',n:'조정 순이익',d:'일회성·비현금 항목을 제외한 순이익.',f:'OPEN 2026말 흑자 목표(6~8주 지연).'},
+    {c:'fin',cat:'재무',n:'0% 쿠폰 전환사채',d:'이자를 물지 않고, 나중에 주식으로 바꿀 수 있는 채권.',f:'OPEN $650M 조달 — 이자부담 無, 잠재 희석.'},
+    {c:'fin',cat:'재무',n:'자사주 매입',d:'회사가 자기 주식을 되사 주식수를 줄이는 것.',f:'OPEN $158M 추가 매입(희석 완충).'},
+    {c:'fin',cat:'재무',n:'경기민감주',d:'경기·금리·주택 사이클에 실적이 크게 출렁이는 종목.',f:'OPEN은 금리에 극도로 민감.'},
+    {c:'fin',cat:'재무',n:'국채금리(Treasury Yield)',d:'미 국채 이자율. 모기지 금리·주택수요의 기준.',f:'3년 최고 — OPEN 본업 역풍.'},
+    {c:'tec',cat:'기술적',n:'YTD',d:'연초 대비 수익률(Year-To-Date).',f:'OPEN -57% — 큰 하락.'},
+    {c:'tec',cat:'기술적',n:'공매도 비율',d:'유통주식 중 공매도된 비율. 높으면 숏스퀴즈 가능.',f:'OPEN ~14%+ — 스퀴즈 잠재.'},
+    {c:'tec',cat:'기술적',n:'숏스퀴즈',d:'급등 시 공매도자가 손절매수에 몰려 더 급등하는 현상.',f:'OPEN 2025 밈 랠리 원동력.'},
+    {c:'etc',cat:'기타',n:'밈주식',d:'펀더멘털보다 커뮤니티·모멘텀으로 급등락하는 종목.',f:'OPEN은 대표적 밈주식.'}
+  ];
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var CATS=['전체','기술적','재무','실적'];
+  var list = fil==='전체'?TERMS:TERMS.filter(function(t){return t.cat===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📖 용어 사전'),
+      e('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}},
+        CATS.map(function(c,i){return e('button',{key:i,onClick:function(){setFil(c);},
+          style:{padding:'5px 11px',borderRadius:'9999px',border:'1px solid #1e3a5f',cursor:'pointer',fontSize:'0.72rem',
+            background:fil===c?'#14b8a6':'#0d1426',color:fil===c?'#04201e':'#94a3b8'}},c);})
+      ),
+      list.map(function(t,i){
+        return e('div',{key:i,className:'term '+t.c},
+          e('div',{className:'term-h'}, t.n+' · '+t.cat),
+          e('div',{className:'term-b'}, t.d),
+          e('div',{className:'term-f'}, '→ '+t.f)
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 7: 멀티배거 ── */
+function Tab7() {
+  var rr = useRef(null); var rc = useRef(null);
+  var ITEMS = [
+    {q:'1. 아직 충분히 작은 기업인가?',d:'시총 소형($2~3B대)',s:'p',v:1},
+    {q:'2. 가격이 미래를 과대반영하지 않았는가?',d:'$2.57, YTD -57%·저밸류',s:'p',v:1},
+    {q:'3. 매출보다 마진 개선이 따라오는가?',d:'Q2 기여마진 2년 최고(개선 시작)',s:'h',v:0.5},
+    {q:'4. 자산 대비 수익이 뒤처지지 않는가?',d:'재고 사업·아직 적자',s:'f',v:0},
+    {q:'5. FCF yield가 합리적인가?',d:'적자·현금소진, 0% 조달 의존',s:'f',v:0},
+    {q:'6. 투자가 실제 수요·주문과 연결되는가?',d:'주택매입 +149% YoY(수요 재가속)',s:'p',v:1},
+    {q:'7. 고금리 환경에서 버틸 수 있는가?',d:'국채금리 3년최고 역풍, 단 0%조달·자사주 방어',s:'h',v:0.5},
+    {q:'8. 단기 급등 후 추격매수 구간은 아닌가?',d:'하락 추세·저점권(추격 아님)',s:'p',v:1}
+  ];
+  var score = ITEMS.reduce(function(a,b){return a+b.v;},0);
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{labels:['소형주','밸류','마진개선','투자효율','FCF','수요','재무건전','추격아님'],
+      datasets:[{label:'OPEN',data:ITEMS.map(function(i){return i.v;}),
+        backgroundColor:'rgba(20,184,166,0.2)',borderColor:'#14b8a6',pointBackgroundColor:'#14b8a6'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},
+      scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},
+        pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 멀티배거 점수 (Anna Yartseva 8항목)'),
+      e('div', {style:{textAlign:'center',padding:'8px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#f59e0b'}}, score+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, '등급: 보통~유망 경계 (9/11 5점→5점, 운영개선으로 수요항목 강화)')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'해석 (9/11 대비)'),
+        e('div',{className:'wd'},'주가 추가 하락으로 밸류·미과열 매력↑, Q2 운영 개선(매입 +149%)으로 "수요" 항목이 강해졌다(❌→✅). 그러나 흑자는 여전히 미달·금리 역풍으로 수익성 항목은 약함. "운영은 되는데 매크로가 관건"인 전형적 경기민감 턴어라운드.')
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('h2',null,'✅ 8개 체크리스트'),
+      ITEMS.map(function(it,i){
+        return e('div',{key:i,className:'mb-row'},
+          e('div',{className:'mb-ic'}, it.s==='p'?'✅':it.s==='h'?'⚠️':'❌'),
+          e('div',{className:'mb-lb'}, it.q, e('div',{className:'mb-sub'}, it.d)),
+          e('div',{className:'mb-st '+it.s}, it.v+'점')
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 8: 결론 ── */
+function Tab8() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 종합 의견 (9/20 갱신)'),
+      e('div',{className:'gauge'},
+        e('div',{className:'bar'},
+          e('div',{className:'seg',style:{background:'#ef4444'}},'강한매도'),
+          e('div',{className:'seg',style:{background:'#f87171'}},'매도'),
+          e('div',{className:'seg',style:{background:'#f59e0b'}},'중립 ●'),
+          e('div',{className:'seg',style:{background:'#34d399'}},'매수'),
+          e('div',{className:'seg',style:{background:'#10b981'}},'강한매수')
+        ),
+        e('div',{className:'lbl'},'중립 (고위험) — 운영 개선 vs 금리 역풍, 금리가 관건')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'9/11 "중립" 유지. 변화: Q2 운영지표가 실제로 개선(매입 +149%·마진 2년최고)됐고 0% 조달+자사주로 재무 방어. 그러나 국채금리 3년 최고로 흑자 시점이 6~8주 밀리며 주가는 -10% 추가 하락. 즉 "회사는 잘하는데 금리가 발목" — 방향은 Fed 금리 인하가 결정한다. 저가 매력은 커졌으나 추세 반전 확인 전엔 소액 투기 한도.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🐂 Bull Case'),
+      e('div',{className:'bx'},e('div',{className:'bd'},'1. Q2 운영 폭발(주택매입 +149% YoY·기여마진 2년최고) — 실행력 입증.')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'2. $650M 0% 조달+$158M 자사주 — 이자부담 없이 실탄+희석 완충.')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'3. Fed 금리 인하 사이클 시 iBuying 급반등 + 공매도 스퀴즈.'))
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🐻 Bear Case'),
+      e('div',{className:'dx'},e('div',{className:'dd'},'1. 국채금리 3년 최고 — 모기지·주택수요 압박, 흑자 6~8주 지연.')),
+      e('div',{className:'dx'},e('div',{className:'dd'},'2. YTD -57% 추세 하락, 아직 적자·현금소진.')),
+      e('div',{className:'dx'},e('div',{className:'dd'},'3. 전환채 잠재 희석·밈 변동성·동종(Zillow·Offerpad) 동반 부진.'))
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📋 실행 계획'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'1차 매수'),e('td',null,'$2.30~2.45'),e('td',null,'고위험 소액')),
+            e('tr',null,e('td',null,'2차 매수'),e('td',null,'$2.10~2.20'),e('td',null,'지지 방어 시')),
+            e('tr',null,e('td',null,'손절선'),e('td',null,'$2.10 이탈'),e('td',null,'전량')),
+            e('tr',null,e('td',null,'1차 익절'),e('td',null,'$3.10'),e('td',null,'50%')),
+            e('tr',null,e('td',null,'2차 익절'),e('td',null,'$5.00'),e('td',null,'금리인하+흑자+스퀴즈'))
+          )
+        )
+      ),
+      e('div',{className:'wx',style:{marginTop:'10px'}},
+        e('div',{className:'wd'},'핵심 모니터링: ①Fed·국채금리 ②흑자 전환(지연된 2026말) ③주택매입·마진 지속 ④공매도 ⑤전환채 희석. 밈·경기민감 투기주로 극소액 한도만.')
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🏢개요','📈기술적','💰재무','📊실적·뉴스','💬센티먼트','📖용어','🔟멀티배거','🎯결론'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🏠 OPEN — Opendoor (갱신)'),
+      e('div', {className:'px'}, '~$2.57 · YTD -57% · 주택매입 +149% YoY'),
+      e('div', {className:'sub'}, 'iBuyer · 운영개선 vs 금리역풍 | 2026-09-20 갱신')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? e(Tab1,null) :
+      tab===1 ? e(Tab2,null) :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      tab===5 ? e(Tab6,null) :
+      tab===6 ? e(Tab7,null) :
+      e(Tab8,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
