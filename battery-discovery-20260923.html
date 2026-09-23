@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>2차전지·ESS 종목발굴 대시보드 2026-09-23</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d2a0f 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #5e420e;}
+.hdr h1{font-size:1.35rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;}
+.tb.on{color:#f59e0b;border-bottom-color:#f59e0b;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #453814;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.bx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#f59e0b;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0;}
+.sc-bom{font-size:0.72rem;color:#06b6d4;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;background:#f59e0b;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #5e420e;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#f59e0b;color:#1a1400;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#f59e0b;color:#1a1400;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props){var a=[tag,props];for(var i=2;i<arguments.length;i++)a.push(arguments[i]);return React.createElement.apply(React,a);};
+var useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
+
+var BOM = [
+  {item:'① LFP 배터리 셀', fn:'ESS 에너지 저장 본체 — 북미 탈중국 현지생산 캐파가 병목', sup:'LG에너지솔루션(373220,참고)·삼성SDI(006400,참고)·[EVE·CATL 중국]', cost:'~40~50%', bn:'생산량', st:'중류'},
+  {item:'② LFP 양극재', fn:'셀 원가의 핵심 소재. 비중국 LFP 양극재 공급원이 희소', sup:'엘앤에프(066970)·포스코퓨처엠(003670)', cost:'~15~20%', bn:'재료', st:'상류'},
+  {item:'③ 음극재(흑연)', fn:'中 흑연 수출통제 → 비중국 음극재 필요', sup:'포스코퓨처엠(003670)·[Novonix 이전발굴 참고]', cost:'~8~10%', bn:'재료', st:'상류'},
+  {item:'④ 분리막·전해질', fn:'안전성·수명 결정, 불량 시 화재', sup:'SKIET(361610)', cost:'~5~8%', bn:'수율', st:'중류'},
+  {item:'⑤ PCS·전력변환', fn:'직류↔교류 변환·계통 연계 — 데이터센터·전력망 접속', sup:'(통합사 내재화 — Fluence·Energy Vault)', cost:'~10~15%', bn:'전기', st:'중류'},
+  {item:'⑥ 열관리(액냉) 모듈', fn:'셀 발열 제어 — 화재·수명의 핵심', sup:'확인 안됨(전용 상장 소형사 미발견)', cost:'~3~5%', bn:'열', st:'중류'},
+  {item:'⑦ 시스템 통합·운영SW', fn:'컨테이너 BESS 설계·입찰최적화·프로젝트 개발', sup:'Fluence(FLNC)·Energy Vault(NRGV)', cost:'~10%', bn:'생산량', st:'하류'},
+  {item:'⑧ 장주기 ESS(비리튬)', fn:'8시간+ 방전, 비발화 — 화재 인허가 유리', sup:'Eos(EOSE,아연)·ESS Tech(GWH,철흐름)', cost:'-', bn:'인증', st:'중류'},
+  {item:'⑨ 차세대 셀(실리콘음극·전고체)', fn:'에너지밀도·안전성 도약, 양산 수율이 관건', sup:'Amprius(AMPX)·QuantumScape(QS)·Solid Power(SLDP)', cost:'-', bn:'수율', st:'중류'}
+];
+
+var STOCKS = [
+  {t:'003670.KS', nm:'포스코퓨처엠', bom:'②③ LFP 양극재 + 음극재', price:'(재확인)', mc:'대형', mcn:12, pos:'상류(소재)·재료★★★', moat:'높음', pt:'국내 배터리 대기업과 6년간 3조원대 ESS용 LFP 양극재 공급 합의, 연말 LFP 양산 돌입. 양극재+음극재(흑연)를 모두 가진 드문 비중국 소재사 — 북미 탈중국 LFP 공급망의 핵심 노드.', mb:4.5, rsi:60, bn:'재료'},
+  {t:'066970.KQ', nm:'엘앤에프', bom:'② LFP 양극재', price:'(재확인)', mc:'중형', mcn:4, pos:'상류(소재)·재료★★★', moat:'보통~높음', pt:'SK온과 약 1,600억원 LFP 양극재 공급계약(~2028). NCM 전문사에서 ESS용 LFP로 전환. 9월 한 달 +80% 이상 급반등 — 추격 주의, 되돌림 대기.', mb:4.5, rsi:72, bn:'재료'},
+  {t:'NRGV', nm:'Energy Vault', bom:'⑦ 시스템 통합 + AI DC 전력', price:'$3.38', mc:'~$0.5B', mcn:0.5, pos:'하류(SI·운영)·전기★★★', moat:'보통', pt:'Crusoe(AI 데이터센터) 계약 용량 65MW→540MW로 1년 새 8배. 2.3GW 포트폴리오 인수, 수주잔고 $1.3B, "직접 소유·전력판매" 모델로 반복매출 전환. 소형·희석 리스크.', mb:5.5, rsi:58, bn:'전기'},
+  {t:'FLNC', nm:'Fluence Energy', bom:'⑦ BESS 통합(역발상)', price:'$7.66', mc:'~$1.4B', mcn:1.4, pos:'하류(SI)·생산량★★', moat:'높음', pt:'세계 최대급 BESS 통합사, 약 50개 시장 AI 입찰 플랫폼. 9월 중순 목표가 연쇄 하향으로 급락. EVE와 206GWh 셀 프레임 계약 — 중국 셀 의존이 FEOC 규제 리스크(역발상 저점 vs 규제 리스크).', mb:5, rsi:35, bn:'생산량'},
+  {t:'AMPX', nm:'Amprius Technologies', bom:'⑨ 실리콘 음극 고밀도 셀', price:'$11.63', mc:'~$1.4B', mcn:1.4, pos:'중류(차세대 셀)·수율★★', moat:'보통~높음', pt:'실리콘 음극으로 고에너지밀도 셀(드론·항공 우선). 1년 약 3배 상승. ESS보다 고밀도 니치지만 차세대 셀 수율 경쟁의 선두 소형주.', mb:4.5, rsi:60, bn:'수율'},
+  {t:'EOSE', nm:'Eos Energy', bom:'⑧ 아연 장주기 ESS', price:'(재확인·출처 수치 이상)', mc:'재확인', mcn:2, pos:'중류(장주기)·인증★★', moat:'보통', pt:'아연 기반 비발화 장주기 배터리. 2026 상반기에 2025년 전체보다 많이 출하($126M). 화재 인허가에 유리. ※출처 주가($139.6)가 과거 수준과 크게 달라 재확인 필요.', mb:4, rsi:55, bn:'인증'},
+  {t:'361610.KS', nm:'SK아이이테크놀로지', bom:'④ 분리막', price:'(재확인)', mc:'재확인', mcn:1.5, pos:'중류(분리막)·수율', moat:'보통~높음', pt:'리튬이온 분리막 전문. 셀 안전성·수명을 좌우하는 소재. 전방(EV) 부진기 이후 ESS 물량 회복이 관건. 가격·시총 재확인 필요.', mb:3.5, rsi:50, bn:'수율'},
+  {t:'QS', nm:'QuantumScape', bom:'⑨ 전고체(세라믹 분리막)', price:'$5.03', mc:'~$3B', mcn:3, pos:'중류(차세대)·수율', moat:'높음', pt:'미국 전고체 선두(세라믹 분리막·리튬금속 음극). Honda 협약 등 이벤트성 급등락, 7월 -14%. 양산 수율이 전부인 프리레비뉴 옵션.', mb:3, rsi:45, bn:'수율'},
+  {t:'SLDP', nm:'Solid Power', bom:'⑨ 전고체 전해질', price:'$2.15', mc:'~$0.4B', mcn:0.4, pos:'중류(차세대)·수율·역발상', moat:'보통', pt:'황화물 전고체 전해질 공급. YTD -48%로 급락한 역발상 초소형. 상용화 지연 리스크 큼.', mb:3.5, rsi:38, bn:'수율'},
+  {t:'GWH', nm:'ESS Tech', bom:'⑧ 철흐름 장주기', price:'(재확인)', mc:'초소형', mcn:0.2, pos:'중류(장주기)·인증·투기', moat:'보통', pt:'철·소금물 기반 철흐름전지 — 가장 저렴·안전한 장주기 화학 후보. 초소형·자금조달 리스크 극심.', mb:3, rsi:48, bn:'인증'},
+  {t:'373220.KS', nm:'LG에너지솔루션', bom:'① LFP 셀 (대형·참고)', price:'(대형·참고)', mc:'초대형', mcn:60, pos:'중류(셀)·생산량·기준초과', moat:'매우높음', pt:'ESS 누적 수주 140GWh, 2026 ESS 매출 3배+ 목표, 북미 ESS 캐파 50GWh+로 확대. 탈중국 북미 ESS 셀의 핵심이지만 초대형(참고). 9월 +12.8%.', mb:2, rsi:60, bn:'생산량'},
+  {t:'006400.KS', nm:'삼성SDI', bom:'① 셀 (대형·과열)', price:'(대형·참고)', mc:'대형', mcn:20, pos:'중류(셀)·생산량·기준초과', moat:'높음', pt:'9월 한 달 +43.8% 급등 — 미국 ESS 기대 반영. 이미 크게 올라 추격 위험(참고).', mb:2, rsi:74, bn:'생산량'}
+];
+
+var BN = ['전체','재료','생산량','전기','인증','수율'];
+
+function mk(cRef,chRef,cfg,deps){useEffect(function(){if(!cRef.current)return;if(chRef.current)chRef.current.destroy();chRef.current=new Chart(cRef.current,cfg);return function(){if(chRef.current){chRef.current.destroy();chRef.current=null;}};},deps||[]);}
+
+function Tab1(){
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'📋 AI 데이터센터·전력망용 BESS BOM — 9개 라인아이템'),
+      e('div',{className:'bx'},e('div',{className:'bd'},'터미널(L1) = 북미 AI 데이터센터·전력망에 들어가는 컨테이너형 배터리 ESS(BESS). 핵심 흐름은 "북미 탈중국 LFP 공급망 재편" — 셀·양극재·음극재를 중국 없이 조달해야 하는 규제(FEOC)가 병목을 만든다. ⑥ 열관리는 전용 상장 소형사를 찾지 못해 "확인 안됨"으로 둔다.')),
+      e('div',{className:'table-wrap'},e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능·병목'),e('th',null,'공급사'),e('th',null,'원가비중(추정)'),e('th',null,'병목'),e('th',null,'단계'))),
+        e('tbody',null,BOM.map(function(b,i){return e('tr',{key:i},e('td',null,b.item),e('td',null,b.fn),e('td',null,b.sup),e('td',null,b.cost),e('td',null,e('span',{className:'badge'},b.bn)),e('td',null,b.st));}))
+      ))
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'🗺️ 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.77rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: AI DC 전력부족 + 전력망 연계 대기 → BESS 폭증 × 북미 탈중국(FEOC)]\n\n  → 상류(소재)                 → 중류(셀·부품)                 → 하류(통합·운영)\n     ★② 003670 포스코퓨처엠       ① LG엔솔·삼성SDI 셀(참고)         ★⑦ NRGV AI DC 540MW\n        LFP양극재+음극재 ★★★재료   ④ SKIET 분리막 수율               ⑦ FLNC 통합(역발상)\n     ★② 066970 엘앤에프 LFP        ⑧ EOSE/GWH 장주기 인증\n                                  ⑨ AMPX/QS/SLDP 차세대 수율\n                                  ⑥ 열관리 — 확인 안됨')
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'셀(주목) 옆 → LFP 양극재·음극재 (옆으로 보기)'),e('div',{className:'bd'},'LG엔솔·삼성SDI 셀은 이미 급등(삼성SDI 9월 +43.8%). 그 셀을 북미에서 만들려면 "중국산이 아닌" LFP 양극재와 흑연 음극재가 필수 — 공급원이 거의 없다. 포스코퓨처엠(양극재+음극재 동시 보유, 6년 3조원 계약)이 이 병목의 정중앙.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'⑦ AI 데이터센터와 직결된 통합사 (Energy Vault)'),e('div',{className:'bd'},'Crusoe 계약 65→540MW. "칩보다 전기" — 데이터센터가 전력망 연결을 수년 기다리는 대신 BESS로 전력을 확보. 소형 통합사가 AI 전력 병목의 직접 수혜.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'⑧ 장주기·비발화 — 인허가 병목 우회'),e('div',{className:'bd'},'리튬 BESS 화재로 인허가가 까다로워지는 지역에서 아연(Eos)·철흐름(ESS Tech)은 비발화로 인허가에 유리 — "인증" 병목을 우회하는 대체 화학.'))
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'병목'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+        e('tbody',null,
+          e('tr',null,e('td',null,e('span',{className:'badge'},'재료')),e('td',null,'003670, 066970'),e('td',null,'비중국 LFP 양극재·흑연이 부족한가?')),
+          e('tr',null,e('td',null,e('span',{className:'badge'},'생산량')),e('td',null,'FLNC, LG엔솔, 삼성SDI'),e('td',null,'북미 현지 셀·통합 캐파가 수요를 못 따라가는가?')),
+          e('tr',null,e('td',null,e('span',{className:'badge'},'전기')),e('td',null,'NRGV'),e('td',null,'데이터센터 전력 확보가 병목인가?')),
+          e('tr',null,e('td',null,e('span',{className:'badge'},'인증')),e('td',null,'EOSE, GWH'),e('td',null,'화재안전 인허가가 진입장벽인가?')),
+          e('tr',null,e('td',null,e('span',{className:'badge'},'수율')),e('td',null,'AMPX, QS, SLDP, SKIET'),e('td',null,'차세대 셀·분리막 양산 수율이 관건인가?')),
+          e('tr',null,e('td',null,e('span',{className:'badge'},'열')),e('td',null,'확인 안됨'),e('td',null,'열관리 전용 상장사 미발견'))
+        )
+      ))
+    )
+  );
+}
+
+function Tab2(){
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'🔬 기존 시스템의 근본 한계'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'① 전력망 연계 대기 — 수년'),e('div',{className:'bd'},'신규 데이터센터·발전소가 전력망에 접속하려면 수년을 기다려야 한다. AI 데이터센터는 그 시간을 기다릴 수 없어 현장 BESS로 전력·피크를 해결하려 한다.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'② 중국 의존 공급망 — 규제 리스크'),e('div',{className:'bd'},'ESS용 LFP 셀·양극재·흑연은 중국이 압도적. 미국 FEOC(해외우려기업) 규제·관세로 중국산을 쓰면 세액공제 불가 — 비중국 공급원이 곧 병목.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'③ 리튬이온 화재·단시간 방전'),e('div',{className:'bd'},'NCM 리튬이온은 화재 위험으로 인허가가 까다롭고, 통상 4시간 방전이 한계. 재생에너지 변동 대응엔 8시간+ 장주기가 필요.'))
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'⚡ 신기술 우위성'),
+      e('div',{className:'table-wrap'},e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'기술'),e('th',null,'기존 대비 우위'))),
+        e('tbody',null,
+          e('tr',null,e('td',null,'LFP 셀'),e('td',null,'NCM 대비 원가↓·수명↑(수천 사이클)·열폭주 위험↓ — ESS 표준')),
+          e('tr',null,e('td',null,'아연·철흐름 장주기'),e('td',null,'비발화, 8시간+ 방전 — 인허가 유리')),
+          e('tr',null,e('td',null,'실리콘 음극·전고체'),e('td',null,'에너지밀도·안전성 도약(양산 수율이 관건)'))
+        )
+      )),
+      e('div',{className:'dx',style:{marginTop:'10px'}},e('div',{className:'dd'},'※ 정량 수치(사이클 수·밀도 %)는 제조사·제품마다 달라 범위로만 표기. 구체 비교는 개별 분석에서 재확인.'))
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'1단계 — 재생에너지 ESS (2022~2024)'),e('div',{className:'bd'},'IRA 세액공제로 태양광·풍력 연계 ESS 수요 급증, 중국 LFP 셀이 시장 장악.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'2단계 — AI 데이터센터 전력 부족 (2025~2026)'),e('div',{className:'bd'},'전력망 접속 대기로 데이터센터가 BESS를 직접 도입. Energy Vault-Crusoe 540MW, LG엔솔 ESS 신규수주 90GWh+ 목표.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'3단계 — 북미 탈중국 공급망 재편 (2026~)'),e('div',{className:'bd'},'LG엔솔 북미 ESS 캐파 50GWh+, 포스코퓨처엠 LFP 양산·3조원 계약, 엘앤에프-SK온 LFP 계약. K-배터리 소재사가 비중국 LFP의 핵심 공급원으로 부상.'))
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'📊 핵심 데이터'),
+      e('div',{className:'table-wrap'},e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+        e('tbody',null,
+          e('tr',null,e('td',null,'LG엔솔 ESS 누적 수주'),e('td',null,'약 140GWh')),
+          e('tr',null,e('td',null,'LG엔솔 북미 ESS 캐파 계획'),e('td',null,'50GWh 이상')),
+          e('tr',null,e('td',null,'포스코퓨처엠 ESS LFP 양극재'),e('td',null,'6년 3조원대 합의')),
+          e('tr',null,e('td',null,'Fluence-EVE 셀 프레임'),e('td',null,'206GWh(2027 확정 16GWh)')),
+          e('tr',null,e('td',null,'Energy Vault 수주잔고'),e('td',null,'$1.3B')),
+          e('tr',null,e('td',null,'글로벌 ESS 시장규모'),e('td',null,'리서치사별 편차 큼 — 재확인'))
+        )
+      ))
+    )
+  );
+}
+
+function Tab3(){
+  var fs=useState('전체'),fil=fs[0],set=fs[1];
+  var list=fil==='전체'?STOCKS:STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div',null,e('div',{className:'card'},
+    e('h2',null,'🔍 발굴종목 12개'),
+    e('div',{className:'dx'},e('div',{className:'dt'},'⚠️ 주의'),e('div',{className:'dd'},'한국 소재·셀주는 9월 급등(엘앤에프 +80%, 삼성SDI +43.8%) — 추격 주의. EOSE 주가는 출처 수치가 이상해 재확인 필요. 차세대 셀(QS·SLDP·GWH)은 프리레비뉴 투기. 한국주 가격은 "재확인" 표기. 투자 권유 아님.')),
+    e('div',{className:'flt'},BN.map(function(b,i){return e('button',{key:i,className:fil===b?'on':'',onClick:function(){set(b);}},b);})),
+    list.map(function(s,i){return e('div',{key:i,className:'sc'},
+      e('div',{className:'sc-h'},e('div',null,e('div',{className:'sc-tk'},s.t+' — '+s.nm),e('div',{className:'sc-pos'},s.pos+' · 대체불가성 '+s.moat)),
+        e('div',{style:{textAlign:'right'}},e('div',{style:{fontSize:'0.85rem',fontWeight:700}},s.price),e('div',{style:{fontSize:'0.7rem',color:'#64748b'}},'시총 '+s.mc))),
+      e('div',{className:'sc-bom'},'BOM 항목: '+s.bom),
+      e('div',{className:'sc-pt'},s.pt),
+      e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b'}},e('span',null,'멀티배거 '+s.mb+'/8'),e('span',null,'RSI ~'+s.rsi)),
+      e('div',{className:'pb'},e('div',{className:'pf',style:{width:(s.mb/8*100)+'%'}}))
+    );})
+  ));
+}
+
+function Tab4(){
+  var a=useRef(null),ac=useRef(null),b=useRef(null),bc=useRef(null),c=useRef(null),cc=useRef(null);
+  var L=STOCKS.map(function(s){return s.t;});
+  mk(a,ac,{type:'bar',data:{labels:L,datasets:[{data:STOCKS.map(function(s){return s.mcn;}),backgroundColor:'#f59e0b'}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b'}},y:{ticks:{color:'#94a3b8'}}}}});
+  mk(b,bc,{type:'bar',data:{labels:L,datasets:[{data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#10b981'}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'}},y:{ticks:{color:'#94a3b8'}}}}});
+  mk(c,cc,{type:'bar',data:{labels:L,datasets:[{data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<38?'#10b981':'#f59e0b';})}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'}},y:{ticks:{color:'#94a3b8'}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📊 시가총액(추정, $B, 로그)'),e('canvas',{ref:a})),
+    e('div',{className:'card'},e('h2',null,'🔟 멀티배거 점수'),e('canvas',{ref:b})),
+    e('div',{className:'card'},e('h2',null,'📈 RSI(추정)'),e('canvas',{ref:c})));
+}
+
+function Tab5(){
+  var ss=useState(STOCKS[2]),sel=ss[0],set=ss[1];
+  var r=useRef(null),rc=useRef(null);
+  function g(s){return [s.mcn<2?1:s.mcn<5?0.5:0, s.rsi<55?0.7:0.3, 0.5, 0.5, 0.4, s.bn==='재료'||s.bn==='전기'?1:0.6, s.mcn<2?0.5:1, s.rsi>65?0:s.rsi<50?1:0.5];}
+  mk(r,rc,{type:'radar',data:{labels:['소형주','밸류','EBITDA개선','자산효율','FCF','파이프라인','재무건전','추격아님'],datasets:[{label:sel.t,data:g(sel),backgroundColor:'rgba(245,158,11,0.2)',borderColor:'#f59e0b'}]},options:{scales:{r:{min:0,max:1,ticks:{display:false},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8'}}}}},[sel]);
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🔟 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},STOCKS.map(function(s,i){return e('button',{key:i,className:sel.t===s.t?'on':'',onClick:function(){set(s);}},s.t);})),
+      e('div',{style:{textAlign:'center',fontSize:'2.4rem',fontWeight:700,color:'#f59e0b'}},sel.mb+'/8')),
+    e('div',{className:'card'},e('canvas',{ref:r})),
+    e('div',{className:'card'},e('div',{className:'dx'},e('div',{className:'dd'},'워킹페이퍼 기반 통계 신호 — 10배 수익 보장 아님. 참고 지표로만 활용.'))));
+}
+
+function Tab6(){
+  var R=STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🎯 우선순위'),R.map(function(s,i){return e('div',{key:i,className:'rk'},e('div',{className:'rk-n'},i+1),e('div',null,e('div',{className:'rk-t'},s.t+' — '+s.nm),e('div',{className:'rk-d'},s.bom+' · '+s.mb+'/8')));})),
+    e('div',{className:'card'},e('h2',null,'⚡ 촉매'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'단기'),e('div',{className:'bd'},'LG엔솔 북미 ESS 신규수주, 포스코퓨처엠 LFP 양산 개시(연말), Energy Vault 추가 AI DC 계약, FEOC 세부 규정, Fluence 실적(10~11월).')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'중기'),e('div',{className:'bd'},'북미 현지 LFP 셀·소재 공장 가동, 장주기 ESS 인허가 확대, 차세대 셀 양산 수율 검증.'))),
+    e('div',{className:'card'},e('h2',null,'🔴 리스크'),e('div',{className:'dx'},e('div',{className:'dd'},'① 한국 2차전지주 9월 급등 후 되돌림 위험 ② 중국 LFP 가격 덤핑·규제 완화 시 비중국 프리미엄 소멸 ③ 소형 통합사·차세대 셀의 희석·자금조달 ④ 금리 상승(연준 인상 확률) 시 성장주 압박. 투자 권유 아님.'))),
+    e('div',{className:'card'},e('h2',null,'💼 포트폴리오 제안'),e('div',{className:'table-wrap'},e('table',null,
+      e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+      e('tbody',null,
+        e('tr',null,e('td',null,'소재 병목(②③)'),e('td',null,'포스코퓨처엠, 엘앤에프(되돌림 후)'),e('td',null,'30%')),
+        e('tr',null,e('td',null,'AI DC 통합(⑦)'),e('td',null,'NRGV, FLNC(역발상)'),e('td',null,'30%')),
+        e('tr',null,e('td',null,'장주기·인증(⑧)'),e('td',null,'EOSE(재확인 후)'),e('td',null,'15%')),
+        e('tr',null,e('td',null,'차세대 셀(⑨)'),e('td',null,'AMPX'),e('td',null,'15%')),
+        e('tr',null,e('td',null,'셀 대형 참고(①)'),e('td',null,'LG엔솔'),e('td',null,'10%'))
+      )))))
+  );
+}
+
+function App(){
+  var sa=useState(0),tab=sa[0],set=sa[1];
+  var T=['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div',null,
+    e('div',{className:'hdr'},e('a',{href:'https://disntm90.github.io/disntm90/',className:'back'},'← 목록으로'),e('h1',null,'🔋 2차전지·ESS 종목발굴'),e('div',{className:'sub'},'AI DC·전력망 BESS · 북미 탈중국 LFP · BOM 9개 | 2026-09-23 | 12개 발굴종목')),
+    e('div',{className:'tabs'},T.map(function(n,i){return e('button',{key:i,className:'tb'+(tab===i?' on':''),onClick:function(){set(i);}},n);})),
+    e('div',{className:'cnt'},tab===0?e(Tab1,null):tab===1?e(Tab2,null):tab===2?e(Tab3,null):tab===3?e(Tab4,null):tab===4?e(Tab5,null):e(Tab6,null)));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
