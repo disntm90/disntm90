@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>원자재·금속·에너지 종목발굴 대시보드 2026-09-23</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d2a0f 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #5e420e;}
+.hdr h1{font-size:1.35rem;font-weight:700;color:#fff;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#f59e0b;border-bottom-color:#f59e0b;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #453814;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.05rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#06b6d4;}
+.bx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bb{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(245,158,11,0.04);}
+.sc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:13px;margin-bottom:12px;}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sc-tk{font-size:0.95rem;font-weight:700;color:#f59e0b;}
+.sc-pos{font-size:0.7rem;color:#94a3b8;margin:2px 0 2px;}
+.sc-bom{font-size:0.72rem;color:#06b6d4;margin:0 0 8px;font-weight:600;}
+.sc-pt{font-size:0.8rem;color:#cbd5e1;line-height:1.5;margin-bottom:8px;}
+.pb{height:5px;background:#1e2d4a;border-radius:3px;overflow:hidden;margin-top:5px;}
+.pf{height:100%;border-radius:3px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.flt button{padding:5px 11px;border-radius:9999px;border:1px solid #5e420e;background:#0d1426;color:#94a3b8;font-size:0.72rem;cursor:pointer;}
+.flt button.on{background:#f59e0b;color:#1a1400;border-color:#f59e0b;}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d4a;}
+.rk:last-child{border-bottom:none;}
+.rk-n{width:26px;height:26px;border-radius:50%;background:#f59e0b;color:#1a1400;font-weight:700;font-size:0.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rk-t{font-size:0.85rem;font-weight:600;color:#e2e8f0;}
+.rk-d{font-size:0.74rem;color:#64748b;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+var BOM = [
+  {item:'① 은(Silver) 광산', fn:'태양광 페이스트·전자·AI 서버 접점 + 안전자산. 6년 연속 공급적자', sup:'First Majestic(AG)·Hecla(HL,참고)·Coeur(CDE)', cost:'$75.5/oz', bn:'재료', stage:'상류'},
+  {item:'② 구리(Copper) 광산', fn:'전력망·데이터센터·EV 배선. Grasberg·Kamoa 교란, 2030 8.2Mt 갭', sup:'Taseko/Trekor(TGB)·Ivanhoe(IVN)·Capstone(CS)·Hudbay(HBM)', cost:'$6.5~6.9/lb(사상최고권)', bn:'재료', stage:'상류'},
+  {item:'③ 신규 광산 인허가·램프업', fn:'신규 광산 리드타임 15~20년, 인허가·가동 지연이 공급 병목', sup:'Taseko(Florence 동광)·Coeur(Rainy River 램프업)', cost:'-', bn:'인증', stage:'상류'},
+  {item:'④ 알루미늄 제련', fn:'전력 집약 공정(톤당 ~14MWh) — 전력비·전력확보가 병목, 미국 제련캐파 부족', sup:'Century Aluminum(CENX)·Alcoa(AA,참고)', cost:'$3,266/t', bn:'전기', stage:'중류'},
+  {item:'⑤ 천연가스 생산', fn:'AI 데이터센터 가스발전 + LNG 수출 원료', sup:'EQT(참고,MS Top Pick)', cost:'-', bn:'생산량', stage:'상류'},
+  {item:'⑥ LNG 액화·수출 설비', fn:'액화 트레인 캐파가 수출 병목(건설 4~5년)', sup:'NextDecade(NEXT)·Venture Global(VG)·Cheniere(LNG,참고)', cost:'-', bn:'생산량', stage:'중류'},
+  {item:'⑦ 원유', fn:'브렌트 $105+ — 인플레·금리 경로의 핵심 변수', sup:'(대형 E&P 참고 — 금리 리스크 변수로 활용)', cost:'$105+/bbl', bn:'생산량', stage:'상류'},
+  {item:'⑧ 광산 운영 수율(가동률)', fn:'교란·지연 시 생산 차질 — 가격엔 호재, 해당 광산주엔 악재', sup:'Ivanhoe(Kamoa 교란)·Coeur(캐나다 광산 지연)', cost:'-', bn:'수율', stage:'상류'}
+];
+
+var STOCKS = [
+  {t:'TGB', nm:'Taseko Mines(→Trekor Metals)', bom:'②③ 구리 + Florence 신규 동광', price:'(재확인)', mc:2.7, pos:'상류(구리)·재료+인증★★★', moat:'보통~높음', pt:'구리 순수 소형주(시총 ~$2.7B, CAD 3.69B). 애리조나 Florence 동광(인허가 완료형 신규 공급) 램프업이 촉매. 1년 +256%로 이미 크게 올랐고 9월 초 급락 세션 — 되돌림 후 접근. 2026.6 사명 Trekor Metals로 변경.', mb:5.5, rsi:45, bn:'재료'},
+  {t:'NEXT', nm:'NextDecade', bom:'⑥ LNG 액화·수출(Rio Grande)', price:'(재확인)', mc:3, pos:'중류(LNG 설비)·생산량★★★', moat:'높음', pt:'텍사스 Rio Grande LNG 건설(벡텔 EPC). 액화 트레인 캐파가 수출 병목 — VG(+124%)·Cheniere 대비 덜 반영된 옆 노드. 카타르가 미국산 다년 LNG 물색 등 수요 우호. 건설·자금 리스크 있음.', mb:5.5, rsi:48, bn:'생산량'},
+  {t:'AG', nm:'First Majestic Silver', bom:'① 은 광산(순수)', price:'(재확인)', mc:9, pos:'상류(은)·재료★★★', moat:'보통~높음', pt:'멕시코 4개 지하광산 은 순수 플레이, Q1 은 350만oz. 은 6년 연속 공급적자(46.3Moz) + 태양광·AI 전자 산업수요 직접 수혜. 이익 추정치 상향 중. 은 가격 고변동·멕시코 리스크.', mb:5, rsi:58, bn:'재료'},
+  {t:'IVN', nm:'Ivanhoe Mines', bom:'②⑧ 구리(Kamoa-Kakula)', price:'CA$12.01', mc:14, pos:'상류(구리)·수율·역발상', moat:'매우높음', pt:'세계 최고 품위 Kamoa-Kakula 구리광. 교란으로 52주 고점(CA$20.34) 대비 -41% — 구리가 사상최고인데 주가는 눌린 "역발상" 노드. 정상화 시 레버리지 큼. 시총 $14B로 기준 초과(참고 겸 역발상).', mb:4.5, rsi:42, bn:'수율'},
+  {t:'CENX', nm:'Century Aluminum', bom:'④ 알루미늄 제련(미국)', price:'~$63', mc:5.9, pos:'중류(제련)·전기★★', moat:'보통~높음', pt:'미국 1차 알루미늄 제련 대표. 제련은 전력 집약 — 전력 확보가 곧 경쟁력이자 병목. 미국 관세 보호 수혜. 시총 ~$5.9B로 기준 경계. 전력비 급등 시 마진 압박.', mb:4.5, rsi:55, bn:'전기'},
+  {t:'CDE', nm:'Coeur Mining', bom:'①③⑧ 은·금 + 램프업', price:'$16.07', mc:10.3, pos:'상류(은/금)·수율·기준초과', moat:'보통~높음', pt:'Q2 기록 실적, 배당·자사주 개시·대규모 FCF. 다만 인수한 캐나다 Rainy River·New Afton 램프업 지연(수율 병목). 시총 $10.3B로 기준 초과(참고).', mb:4, rsi:52, bn:'수율'},
+  {t:'CS', nm:'Capstone Copper', bom:'② 구리 중형', price:'CA$14.37', mc:8, pos:'상류(구리)·재료', moat:'보통~높음', pt:'미주 구리 중형 생산자. 컨센서스 목표 CA$18(+25%). 구리 공급갭 수혜, Mantoverde 등 증산. 시총 ~$8B(참고).', mb:4, rsi:55, bn:'재료'},
+  {t:'HBM', nm:'Hudbay Minerals', bom:'② 구리·금 (과열 주의)', price:'(재확인)', mc:11.2, pos:'상류(구리/금)·재료·기준초과', moat:'보통~높음', pt:'구리·금 복합 생산. 시총 1년 +240%로 이미 급등 — 추격 주의. 구리 사이클 대표 중대형(참고).', mb:3, rsi:62, bn:'재료'},
+  {t:'VG', nm:'Venture Global', bom:'⑥ LNG 수출 (과열)', price:'$13.01', mc:31, pos:'중류(LNG)·생산량·기준초과', moat:'높음', pt:'YTD +124%, 2026 EBITDA 가이던스 $87~91억 상향, 캐파 91% 계약. 펀더멘털은 강하나 이미 크게 반영(참고).', mb:2.5, rsi:66, bn:'생산량'},
+  {t:'HL', nm:'Hecla Mining', bom:'① 미국 최대 은 (참고)', price:'$18.86', mc:12.7, pos:'상류(은)·재료·기준초과', moat:'높음', pt:'미국 최대 은 생산자, 부채 축소·FCF 중심·Keno Hill 상업화 추진. 은 사이클 대표주지만 시총 $12.7B(참고).', mb:3, rsi:56, bn:'재료'},
+  {t:'AA', nm:'Alcoa', bom:'④ 알루미늄 대형 (참고)', price:'$44.43', mc:11.5, pos:'중류(알루미늄)·전기·기준초과', moat:'높음', pt:'글로벌 알루미늄·알루미나 대형. 알루미늄 사이클 참고 기준점.', mb:2.5, rsi:50, bn:'전기'},
+  {t:'EQT', nm:'EQT Corp', bom:'⑤ 천연가스 생산 (참고)', price:'(대형·참고)', mc:35, pos:'상류(가스)·생산량·기준초과', moat:'매우높음', pt:'미국 최대 천연가스 생산자, 모건스탠리 Top Pick(데이터센터 전력·LNG 수요). 단 Zacks는 이익추정 하향으로 Sell — 견해 분산. 초대형(참고).', mb:2, rsi:48, bn:'생산량'},
+  {t:'LNG', nm:'Cheniere Energy', bom:'⑥ LNG 수출 대장 (참고)', price:'$269.85', mc:60, pos:'중류(LNG)·생산량·기준초과', moat:'절대적', pt:'미국 최대 LNG 수출사, Corpus Christi 3단계 실질 완공. 1년 +16.6%로 안정적. 초대형 벤치마크(참고).', mb:1.5, rsi:50, bn:'생산량'}
+];
+
+var BOTTLENECKS = ['전체','재료','생산량','전기','인증','수율'];
+
+function makeChart(cRef, chRef, cfg) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, []);
+}
+
+/* ── Tab 1: 밸류체인 ── */
+function Tab1() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📋 원자재 공급망 BOM — 8개 라인아이템'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'터미널(L1) = AI 데이터센터·전력망·전기화·재무장이 동시에 끌어올리는 "원자재 실물 수요". 8/21 핵심광물 발굴(안티모니·텅스텐·희토류 등 초크광물)과 달리, 이번엔 대량 거래되는 귀금속(은)·비철(구리·알루미늄)·에너지(가스·LNG·원유)의 공급 병목을 분해했다.')
+      ),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'BOM 항목'),e('th',null,'기능·병목'),e('th',null,'공급사'),e('th',null,'현재 가격'),e('th',null,'병목'),e('th',null,'단계'))),
+          e('tbody',null,
+            BOM.map(function(b,i){
+              return e('tr',{key:i},
+                e('td',null,b.item), e('td',null,b.fn), e('td',null,b.sup), e('td',null,b.cost),
+                e('td',null,e('span',{className:'badge bb'},b.bn)), e('td',null,b.stage)
+              );
+            })
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🗺️ 탑다운 밸류체인 맵'),
+      e('p',{style:{fontSize:'0.77rem',color:'#94a3b8',lineHeight:'1.8',whiteSpace:'pre-wrap',fontFamily:'monospace'}},
+'[메가트렌드: AI 전력 + 전력망 + 전기화 + 재무장 → 원자재 동시 수요 폭증 × 10년 과소투자]\n\n  → 상류(채굴·생산)             → 중류(제련·액화)                  → 하류(수요처)\n     ★① AG 은(적자6년) ★★★재료     ★④ CENX 알루미늄 제련 ★★전기       데이터센터·전력망\n     ★② TGB 구리 소형 ★★★재료     ★⑥ NEXT LNG 액화 ★★★생산량         태양광·EV\n     IVN 구리(교란·역발상)★수율      VG/LNG LNG(과열·참고)             재무장·안전자산\n     CS/HBM 구리 중대형              AA 알루미늄(참고)\n     ⑤ EQT 가스(참고)'
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💡 핵심 파생 논리'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'금(주목) 옆 → 은·구리 (옆으로 보기)'),
+        e('div',{className:'bd'},'금($4,713)은 모두가 아는 안전자산. 옆의 은은 6년 연속 공급적자 + 태양광·AI 전자 "산업수요"가 붙은 이중 병목, 구리는 AI 데이터센터·전력망의 배선 그 자체이면서 Grasberg·Kamoa 교란으로 60만t이 증발했다. 병목은 "재료(공급 부족)" 그 자체.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'④ 알루미늄 제련 — 원자재 속의 "전력 병목"'),
+        e('div',{className:'bd'},'알루미늄 제련은 톤당 ~14MWh의 전력을 먹는 산업. 즉 "칩보다 전기" 논리가 원자재에서도 반복 — 값싼 전력을 확보한 제련소가 곧 병목 노드. 미국 1차 알루미늄 캐파는 소수(Century·Alcoa)에 집중.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'⑥ LNG 액화 — 가스가 아니라 "수출 설비"가 병목'),
+        e('div',{className:'bd'},'미국 가스는 넘치지만 수출은 액화 트레인 캐파가 제한. 건설에 4~5년 — VG(+124%)·Cheniere는 이미 반영, 건설 중인 NextDecade(Rio Grande)가 덜 반영된 옆 노드.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 병목 유형 다양성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'병목'),e('th',null,'대표 종목'),e('th',null,'확인 질문'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'재료')),e('td',null,'AG, TGB, CS, HBM, HL'),e('td',null,'공급 적자·교란으로 광물이 부족한가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'생산량')),e('td',null,'NEXT, VG, EQT, LNG'),e('td',null,'액화·생산 캐파가 수요를 못 따라가는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'전기')),e('td',null,'CENX, AA'),e('td',null,'전력 확보가 제련의 병목인가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'인증')),e('td',null,'TGB(Florence)'),e('td',null,'신규 광산 인허가에 수년 걸리는가?')),
+            e('tr',null,e('td',null,e('span',{className:'badge bb'},'수율')),e('td',null,'IVN, CDE'),e('td',null,'광산 교란·램프업 지연이 생산을 막는가?'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술분석(공급·수요 구조) ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔬 기존 공급 구조의 근본 한계'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'① 10년 과소투자 + 광산 리드타임 15~20년'),e('div',{className:'bd'},'2010년대 원자재 불황기 탐사·개발 투자가 급감. 신규 광산은 발견→생산까지 15~20년 — AI·전기화 수요가 갑자기 늘어도 공급은 즉시 못 따라온다.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'② 대형 광산 교란 집중'),e('div',{className:'bd'},'Grasberg·Kamoa-Kakula 교란으로 2026 구리 생산 약 60만t 증발. 공급이 소수 초대형 광산에 집중돼 한 곳의 사고가 시장 전체를 흔든다.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'③ 에너지 집약 공정의 전력 한계'),e('div',{className:'bd'},'알루미늄 제련·광석 처리·LNG 액화 모두 막대한 전력·설비 필요. AI 데이터센터와 전력을 두고 경쟁하게 되며 병목이 심화.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 수요측 구조 변화 (정량)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'수요 동력'),e('th',null,'영향'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'AI 데이터센터·전력망'),e('td',null,'구리 배선·변압기, 가스발전 수요 급증')),
+            e('tr',null,e('td',null,'태양광·전자'),e('td',null,'은 산업수요 — 6년 연속 적자(46.3Moz, 2026)')),
+            e('tr',null,e('td',null,'LNG 수출'),e('td',null,'카타르도 미국산 다년 물량 물색, 액화캐파 병목')),
+            e('tr',null,e('td',null,'안전자산·중앙은행'),e('td',null,'금 $4,713, 금광지수 8월 +33%'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📅 결정적 흐름 3단계'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'1단계 — 과소투자 누적 (2013~2022)'),e('div',{className:'bd'},'원자재 불황으로 광산·에너지 설비 투자 급감. 공급 여력이 조용히 소진.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'2단계 — AI·전기화 수요 충격 (2023~2025)'),e('div',{className:'bd'},'AI 데이터센터·전력망·재무장 수요가 동시 폭증, 빅테크의 가스발전 계약·LNG 장기계약 급증. 은·구리 적자 전환.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'3단계 — 슈퍼사이클 & 금리 변수 (2026~)'),e('div',{className:'bd'},'금 $4,713·은 $75·구리 사상최고·원유 $105+. 그러나 원유 급등→인플레→연준 금리인상 확률 70%로 9월 금속주 급락 — 사이클과 금리가 충돌하는 변곡 국면.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 시장 데이터 (2026.9)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'수치'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'금'),e('td',null,'$4,713/oz (9/20)')),
+            e('tr',null,e('td',null,'은'),e('td',null,'$75.5/oz, 2026 적자 46.3Moz(6년 연속)')),
+            e('tr',null,e('td',null,'구리'),e('td',null,'사상최고 $6.89/lb → $6.52 조정, 2030 공급갭 8.2Mt(골드만)')),
+            e('tr',null,e('td',null,'알루미늄'),e('td',null,'$3,266/t')),
+            e('tr',null,e('td',null,'원유'),e('td',null,'$105+/bbl')),
+            e('tr',null,e('td',null,'금광지수(8월)'),e('td',null,'+33% (1994년 이후 최고 8월)'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 발굴종목 ── */
+function Tab3() {
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var list = fil==='전체' ? STOCKS : STOCKS.filter(function(s){return s.bn===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔍 발굴종목 13개'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'⚠️ 정직한 한계'),
+        e('div',{className:'dd'},'원자재 랠리로 대부분 광산·에너지주가 이미 $5B를 넘었다(HBM 1년 +240%, TGB +256%, VG +124%). 순수 소형 발굴은 TGB·NEXT 정도. 또한 9월 연준 금리인상 확률 70%로 금속주가 급락 중 — 사이클 정점 논란이 있으니 분할·되돌림 접근 필수. 일부 가격 "재확인" 표기. 투자 권유 아님.')
+      ),
+      e('div',{className:'flt'},
+        BOTTLENECKS.map(function(b,i){
+          return e('button',{key:i, className:fil===b?'on':'', onClick:function(){setFil(b);}}, b);
+        })
+      ),
+      list.map(function(s,i){
+        return e('div',{key:i, className:'sc'},
+          e('div',{className:'sc-h'},
+            e('div',null,
+              e('div',{className:'sc-tk'}, s.t+' — '+s.nm),
+              e('div',{className:'sc-pos'}, s.pos+' · 대체불가성 '+s.moat)
+            ),
+            e('div',{style:{textAlign:'right'}},
+              e('div',{style:{fontSize:'0.85rem',fontWeight:700,color:'#e2e8f0'}}, s.price),
+              e('div',{style:{fontSize:'0.7rem',color:'#64748b'}}, '시총 $'+s.mc+'B')
+            )
+          ),
+          e('div',{className:'sc-bom'}, 'BOM 항목: '+s.bom),
+          e('div',{className:'sc-pt'}, s.pt),
+          e('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'4px'}},
+            e('span',null,'멀티배거 '+s.mb+'/8'),
+            e('span',null,'RSI ~'+s.rsi)
+          ),
+          e('div',{className:'pb'}, e('div',{className:'pf', style:{width:(s.mb/8*100)+'%', background:'#f59e0b'}}))
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 4: 비교차트 ── */
+function Tab4() {
+  var mr = useRef(null); var mcc = useRef(null);
+  makeChart(mr, mcc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'시가총액($B)',data:STOCKS.map(function(s){return s.mc;}),backgroundColor:'#f59e0b'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{type:'logarithmic',ticks:{color:'#64748b',callback:function(v){return '$'+v+'B';}},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var br = useRef(null); var bc = useRef(null);
+  makeChart(br, bc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'멀티배거 점수(/8)',data:STOCKS.map(function(s){return s.mb;}),backgroundColor:'#10b981'}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:8,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:STOCKS.map(function(s){return s.t;}),datasets:[{label:'RSI(추정)',data:STOCKS.map(function(s){return s.rsi;}),backgroundColor:STOCKS.map(function(s){return s.rsi>65?'#ef4444':s.rsi<35?'#10b981':'#f59e0b';})}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:'#64748b'},grid:{color:'#1e2d4a'}},y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'}, e('h2',null,'📊 시가총액 비교 (로그 스케일)'), e('canvas',{ref:mr})),
+    e('div', {className:'card'}, e('h2',null,'🔟 멀티배거 점수 비교'), e('canvas',{ref:br})),
+    e('div', {className:'card'}, e('h2',null,'📈 RSI 비교 (추정치)'), e('canvas',{ref:rr}))
+  );
+}
+
+/* ── Tab 5: 멀티배거 ── */
+function Tab5() {
+  var ss = useState(STOCKS[0]); var sel = ss[0]; var setSel = ss[1];
+  var rr = useRef(null); var rc = useRef(null);
+  var MB_LABELS = ['소형주','밸류에이션','EBITDA개선','자산효율','FCFyield','파이프라인','재무건전성','추격아닌가'];
+  function genData(s){
+    return [
+      s.mc<5?1:s.mc<15?0.5:0,
+      s.rsi<55?0.6:0.3,
+      0.7,
+      0.5,
+      s.bn==='재료'||s.bn==='수율'?0.7:0.5,
+      s.bn==='생산량'||s.bn==='재료'?1:0.6,
+      s.mc<5?0.5:1,
+      s.rsi>62?0:s.rsi<50?1:0.5
+    ];
+  }
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{labels:MB_LABELS,datasets:[{label:sel.t, data:genData(sel), backgroundColor:'rgba(245,158,11,0.2)', borderColor:'#f59e0b', pointBackgroundColor:'#f59e0b'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  }, [sel]);
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 Anna Yartseva 멀티배거 — 종목 선택'),
+      e('div',{className:'flt'},
+        STOCKS.map(function(s,i){ return e('button',{key:i, className:sel.t===s.t?'on':'', onClick:function(){setSel(s);}}, s.t); })
+      ),
+      e('div', {style:{textAlign:'center',padding:'10px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#f59e0b'}}, sel.mb+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, sel.t+' — '+sel.nm)
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'}, e('div',{className:'dx'}, e('div',{className:'dd'},'워킹페이퍼 기반 통계 신호 — 10배 수익 보장 아님. 원자재주는 상품가격 사이클에 이익이 좌우돼 "사이클 정점에서 PER이 가장 낮아 보이는" 함정이 있다. 참고 지표로만 활용.')))
+  );
+}
+
+/* ── Tab 6: 전략 ── */
+function Tab6() {
+  var ranked = STOCKS.slice().sort(function(a,b){return b.mb-a.mb;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 우선순위 순위표'),
+      ranked.map(function(s,i){
+        return e('div',{key:i, className:'rk'},
+          e('div',{className:'rk-n'}, i+1),
+          e('div',{style:{flex:1}},
+            e('div',{className:'rk-t'}, s.t+' — '+s.nm),
+            e('div',{className:'rk-d'}, s.bom+' · 멀티배거 '+s.mb+'/8')
+          )
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 핵심 촉매'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'단기 (1~3개월)'),e('div',{className:'bd'},'연준 금리 결정(인상 확률 70% — 최대 변수), 원유 $105 지속 여부, Kamoa-Kakula·Grasberg 정상화 뉴스, 은 산업수요 데이터, LNG 장기계약(카타르 등).')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'중기 (6~18개월)'),e('div',{className:'bd'},'Taseko Florence 동광 램프업, NextDecade Rio Grande 트레인 가동, 미국 알루미늄 관세·전력 확보, 구리 공급갭 확대(2030 8.2Mt).')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔴 리스크'),
+      e('div',{className:'dx'},e('div',{className:'dt'},'공통 리스크'),e('div',{className:'dd'},'① 연준 금리인상(확률 70%) 시 금속·원자재 동반 급락 — 이미 9월 매도세 시작 ② 광산주는 이미 1년 +200%대 급등 종목 다수(사이클 정점 논란, 구리 "지속불가 랠리" 경고) ③ 원유 급락 시 에너지주 하락 ④ 광산 사고·인허가·국가(멕시코·DRC) 리스크. 본 자료는 투자 권유 아님.')),
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'💼 포트폴리오 제안 (분할·되돌림 전제)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'종목'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'구리 소형·역발상(②⑧)'),e('td',null,'TGB, IVN'),e('td',null,'25%')),
+            e('tr',null,e('td',null,'은 순수(①)'),e('td',null,'AG'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'LNG 설비 옆노드(⑥)'),e('td',null,'NEXT'),e('td',null,'20%')),
+            e('tr',null,e('td',null,'전력병목 제련(④)'),e('td',null,'CENX'),e('td',null,'15%')),
+            e('tr',null,e('td',null,'중대형 안정(①②⑥)'),e('td',null,'CDE, CS, LNG'),e('td',null,'20%'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🗺️밸류체인','🔬기술분석','🔍발굴종목','📊비교차트','🔟멀티배거','🎯전략'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '🪙 원자재·금속·에너지 종목발굴'),
+      e('div', {className:'sub'}, '은·구리·알루미늄·가스·LNG 공급병목 · BOM 8개 | 2026-09-23 | 13개 발굴종목')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? Tab1() :
+      tab===1 ? Tab2() :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      e(Tab6,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
