@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SLNH 종목분석 대시보드 2026-09-23 (갱신)</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0f3d2e 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #0e5840;}
+.hdr h1{font-size:1.5rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.1rem;font-weight:700;color:#10b981;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tb.on{color:#10b981;border-bottom-color:#10b981;}
+.tb:hover{color:#94a3b8;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #14453a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;color:#e2e8f0;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;}
+.mc .vl{font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:3px;}
+.vl.g{color:#10b981;}.vl.r{color:#ef4444;}.vl.y{color:#f59e0b;}.vl.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bx .bd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.wx .wd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.dx .dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}
+.br{background:rgba(239,68,68,0.15);color:#ef4444;}
+.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+tr:hover td{background:rgba(16,185,129,0.04);}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.soc-u{font-size:0.78rem;font-weight:600;color:#cbd5e1;}
+.soc-b{font-size:0.8rem;color:#cbd5e1;line-height:1.5;}
+.soc-m{font-size:0.68rem;color:#64748b;margin-top:6px;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #3b82f6;}
+.term.fin{border-left-color:#22c55e;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;color:#e2e8f0;margin-bottom:4px;}
+.term-b{font-size:0.78rem;color:#94a3b8;line-height:1.5;}
+.term-f{font-size:0.74rem;color:#10b981;margin-top:5px;}
+.mb-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;}
+.mb-row:last-child{border-bottom:none;}
+.mb-ic{font-size:1.0rem;flex-shrink:0;width:24px;text-align:center;}
+.mb-lb{flex:1;font-size:0.78rem;color:#cbd5e1;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.mb-st{font-size:0.74rem;font-weight:600;flex-shrink:0;}
+.mb-st.p{color:#10b981;}.mb-st.h{color:#f59e0b;}.mb-st.f{color:#ef4444;}
+.gauge{text-align:center;padding:14px 0;}
+.gauge .lbl{font-size:1.35rem;font-weight:700;color:#34d399;}
+.gauge .bar{display:flex;height:30px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.62rem;color:#0a0f1e;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props) {
+  var args = [tag, props];
+  for (var i = 2; i < arguments.length; i++) args.push(arguments[i]);
+  return React.createElement.apply(React, args);
+};
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+
+function makeChart(cRef, chRef, cfg, deps) {
+  useEffect(function() {
+    if (!cRef.current) return;
+    if (chRef.current) chRef.current.destroy();
+    chRef.current = new Chart(cRef.current, cfg);
+    return function() { if (chRef.current) { chRef.current.destroy(); chRef.current = null; } };
+  }, deps||[]);
+}
+
+/* ── Tab 1: 개요 ── */
+function Tab1() {
+  var dr = useRef(null); var dc = useRef(null);
+  makeChart(dr, dc, {
+    type:'doughnut',
+    data:{labels:['데이터 호스팅·AI/HPC','암호화폐 채굴·기타'],
+      datasets:[{data:[72,28],backgroundColor:['#10b981','#f59e0b'],borderColor:'#0a0f1e',borderWidth:2}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🏢 기업 개요 (9/23 갱신)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'Soluna Holdings(SLNH)는 재생에너지 잉여전력을 컴퓨팅(암호화폐 채굴 + AI/HPC 호스팅)으로 전환하는 그린 데이터센터 기업. 7/20 분석 이후 Q2 실적이 크게 개선(매출 +145% YoY, 프로젝트별 첫 흑자 마진)되고 파이프라인이 6.3GW로 확대되며 AI 피벗이 실체화되는 국면.')
+      ),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'현재가(9/22)'),e('div',{className:'vl g'},'$1.28')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'시가총액'),e('div',{className:'vl b'},'~$1.45억')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'파이프라인'),e('div',{className:'vl g'},'6.3 GW')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'현금(순)'),e('div',{className:'vl g'},'$113.4M'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🔺 6/29 → 7/20 → 9/23 변화 (개선 추세)'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'지표'),e('th',null,'6/29'),e('th',null,'7/20'),e('th',null,'9/23'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'주가'),e('td',null,'$1.46'),e('td',null,'$1.13'),e('td',{style:{color:'#10b981'}},'$1.28 ▲')),
+            e('tr',null,e('td',null,'분기매출'),e('td',null,'Q1 $9.4M'),e('td',null,'-'),e('td',{style:{color:'#10b981'}},'Q2 $15.1M(+145%YoY)')),
+            e('tr',null,e('td',null,'adj EBITDA'),e('td',null,'-$2.1M'),e('td',null,'-'),e('td',{style:{color:'#10b981'}},'-$1.6M(25%↑)')),
+            e('tr',null,e('td',null,'파이프라인'),e('td',null,'4.3GW'),e('td',null,'4.3GW'),e('td',{style:{color:'#10b981'}},'6.3GW ▲')),
+            e('tr',null,e('td',null,'애널'),e('td',null,'-'),e('td',null,'-'),e('td',{style:{color:'#10b981'}},'Rosenblatt Buy 개시'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 매출 구성 & 프로젝트'),
+      e('canvas',{ref:dr}),
+      e('div',{className:'bx',style:{marginTop:'12px'}},
+        e('div',{className:'bt'},'프로젝트별 첫 흑자 마진 (전환점)'),
+        e('div',{className:'bd'},'Kati 1이 48MW 도달 + 첫 양(+)의 매출총이익, Dorothy 1A는 분기 최대 매출 + 28% 매출총이익. Dorothy 수직계열화 완성(Briscoe 풍력+지분 인수), Kati 2 AI JV(Metrobloks, 최대 350MW), ERCOT 기저부하 100MW 조건부 확보.')
+      )
+    )
+  );
+}
+
+/* ── Tab 2: 기술적 ── */
+function Tab2() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📈 기술적 스냅샷'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'현재가'),e('div',{className:'vl g'},'$1.28')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'RSI(14)'),e('div',{className:'vl y'},'44.5 중립')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'7/20 대비'),e('div',{className:'vl g'},'+13%')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'52주 저점'),e('div',{className:'vl'},'$0.415'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📊 핵심 지표'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'지표'),e('th',null,'값'),e('th',null,'의미'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'RSI(14)'),e('td',null,'44.5'),e('td',null,'중립 — 과열·과매도 아님')),
+            e('tr',null,e('td',null,'추세'),e('td',null,'저점 반등'),e('td',null,'$1.13(7월)→$1.28, 바닥 다지기')),
+            e('tr',null,e('td',null,'변동성'),e('td',null,'높음'),e('td',null,'저유동성 마이크로캡')),
+            e('tr',null,e('td',null,'촉매 민감도'),e('td',null,'큼'),e('td',null,'HPC 계약·실적에 갭 반응'))
+          )
+        )
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 지지·저항'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 지지'),e('div',{className:'vl g'},'$1.10~1.15')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'2차 지지'),e('div',{className:'vl g'},'$1.00(컴플)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 저항'),e('div',{className:'vl r'},'$1.45(6월대)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'2차 저항'),e('div',{className:'vl r'},'$1.85'))
+      ),
+      e('div',{className:'wx',style:{marginTop:'12px'}},
+        e('div',{className:'wd'},'7월 저점($1.13)에서 반등해 $1.28. RSI 44.5로 방향성 중립 — 실적 개선이 확인되며 바닥을 다지는 국면. $1.45(6월 분석가) 돌파 시 상방 탄력, $1.10 이탈 시 $1.00 컴플라인 재시험.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'⚡ 진입·청산'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격'),e('th',null,'조건'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'매수 진입'),e('td',null,'$1.15~1.30'),e('td',null,'지지 확인·실적 모멘텀')),
+            e('tr',null,e('td',null,'손절선'),e('td',null,'$1.00 이탈'),e('td',null,'컴플라이언스 리스크')),
+            e('tr',null,e('td',null,'1차 목표'),e('td',null,'$1.85'),e('td',null,'저항 회복')),
+            e('tr',null,e('td',null,'2차 목표'),e('td',null,'$3.00~5.00'),e('td',null,'HPC 계약·흑자·애널 PT'))
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ── Tab 3: 재무 ── */
+function Tab3() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💰 재무 — 매출 급증·손실 축소·현금 견조'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'Q2 매출'),e('div',{className:'vl g'},'$15.1M')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'YoY'),e('div',{className:'vl g'},'+145%')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'순손실'),e('div',{className:'vl r'},'-$22.6M')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'adj EBITDA'),e('div',{className:'vl y'},'-$1.6M(25%↑)'))
+      ),
+      e('div',{className:'bx',style:{marginTop:'12px'}},
+        e('div',{className:'bt'},'개선 궤도 (긍정)'),
+        e('div',{className:'bd'},'Q2 매출 $15.1M(+60% QoQ·+145% YoY), 매출총이익 흑자($0.8M) 전환, adj EBITDA 손실 -$1.6M로 Q1 대비 25% 축소. Kati 1·Dorothy 1A 프로젝트별 흑자 마진 달성 — "성장의 질"이 따라오기 시작.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🛡️ 재무 건전성'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'항목'),e('th',null,'값'),e('th',null,'비고'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'무제한 현금'),e('td',null,'$113.4M'),e('td',null,'견조한 런웨이')),
+            e('tr',null,e('td',null,'총부채'),e('td',null,'$33.1M'),e('td',null,'낮음 — 부채부담 적음')),
+            e('tr',null,e('td',null,'ATM 조달(후속)'),e('td',null,'+$23.6M'),e('td',null,'희석 지속(주의)')),
+            e('tr',null,e('td',null,'순손실'),e('td',null,'-$22.6M'),e('td',null,'여전히 큼(성장투자)'))
+          )
+        )
+      ),
+      e('div',{className:'wx',style:{marginTop:'12px'}},
+        e('div',{className:'wt'},'⚠️ 희석은 여전한 약점'),
+        e('div',{className:'wd'},'현금 $113.4M·저부채로 재무는 튼튼해졌으나, ATM으로 +$23.6M을 추가 발행 — 성장 자금을 주식 발행으로 조달하는 희석 구조는 지속. 다만 순손실 대부분이 성장투자·비현금 성격.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📐 밸류에이션'),
+      e('div',{className:'bd',style:{fontSize:'0.82rem',color:'#94a3b8',lineHeight:'1.7'}},
+        '적자라 PER 무의미. 시총 ~$1.45억으로 마이크로캡 — HPC 잠재 연매출 $200M 전망 대비 매우 낮은 시총(성공 시 리레이팅 여지). 단 실행·희석 리스크 반영. 애널 목표가 $5(현재가 대비 큰 상방)이나 마이크로캡 특성상 신뢰도 감안 필요.')
+    )
+  );
+}
+
+/* ── Tab 4: 실적/뉴스 ── */
+function Tab4() {
+  var rr = useRef(null); var rc = useRef(null);
+  makeChart(rr, rc, {
+    type:'bar',
+    data:{labels:['Q3 25','Q4 25','Q1 26','Q2 26'],
+      datasets:[{label:'매출($M)',data:[7.5,9.2,9.4,15.1],backgroundColor:'#10b981'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{y:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}},x:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📊 분기 매출 (Q2 급가속)'),
+      e('canvas',{ref:rr}),
+      e('div',{className:'bx',style:{marginTop:'10px'}},
+        e('div',{className:'bd'},'Q2 $15.1M로 이전 대비 급증(+60% QoQ). 비트코인 호스팅 + AI/HPC 확장이 견인. ※Q3~Q1 일부 추세 추정.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📰 최신 뉴스 (2026년 9월)'),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'Rosenblatt Buy 개시 + ERCOT 기저부하 확보'),
+        e('div',{className:'bd'},'Rosenblatt Securities가 SLNH에 Buy 개시. Dorothy 100MW ERCOT 기저부하 조건부 확보로 전력 확보 우위. 파이프라인 6.3GW로 확대.')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'Q2 프로젝트별 흑자 마진'),
+        e('div',{className:'bd'},'Kati 1(48MW) 첫 양의 매출총이익, Dorothy 1A 분기 최대 매출·28% 마진. HPC 연 $200M 매출 잠재 언급.')
+      ),
+      e('div',{className:'wx'},
+        e('div',{className:'wt'},'여전한 순손실·희석'),
+        e('div',{className:'wd'},'순손실 -$22.6M, ATM 발행 지속. 흑자(순이익)까지는 시간 필요 — 개선 추세이나 완결형은 아님.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🎯 주목 지표 TOP 5'),
+      e('div',{className:'bx'},e('div',{className:'bd'},'1. AI/HPC 계약 전환(Kati 2 350MW JV·$200M 잠재)')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'2. adj EBITDA 흑자 전환 시점(손실 축소 지속)')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'3. 프로젝트별 마진 확대(Dorothy 1A 28%→?)')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'4. 6.3GW 파이프라인 실현·ERCOT 전력 확보')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'5. ATM 희석 속도 vs 현금 $113.4M')),
+    )
+  );
+}
+
+/* ── Tab 5: 센티먼트 ── */
+function Tab5() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'💬 소셜 & 기관 센티먼트'),
+      e('div',{className:'dx'},
+        e('div',{className:'dt'},'데이터 정합성 고지'),
+        e('div',{className:'dd'},'웹검색 세션 제약으로 X 15개·Reddit 15개 실제 게시물 원문을 개별 수집하지 못했다. 아래는 애널리스트·뉴스 기반 종합 요약이며 개별 인용이 아님.')
+      ),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'신규 애널'),e('div',{className:'vl g'},'Rosenblatt Buy')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'목표가'),e('div',{className:'vl g'},'$5'))
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🟢🟡🔴 분위기 요약'),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'강세론(Bull)'),e('span',{className:'badge bg'},'🟢 긍정')),
+        e('div',{className:'soc-b'},'"매출 +145% YoY·프로젝트별 흑자 마진·6.3GW 파이프라인·ERCOT 전력 확보. Rosenblatt Buy, HPC $200M 잠재. 시총 $1.45억으로 리레이팅 여지 큼."'),
+        e('div',{className:'soc-m'},'요약 · Rosenblatt/실적')
+      ),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'약세론(Bear)'),e('span',{className:'badge br'},'🔴 부정')),
+        e('div',{className:'soc-b'},'"순손실 -$22.6M 지속, ATM 희석. 마이크로캡·저유동성 변동성. 흑자(순이익)까지 시간, 암호화폐·전력가격 노출."'),
+        e('div',{className:'soc-m'},'요약 · 재무·희석 우려')
+      ),
+      e('div',{className:'soc'},
+        e('div',{className:'soc-h'},e('div',{className:'soc-u'},'중립론'),e('span',{className:'badge by'},'🟡 중립')),
+        e('div',{className:'soc-b'},'"개선 추세는 뚜렷하나 순이익 흑자·HPC 계약 확정 전 관망. RSI 44.5 중립." 개선 확인 중.'),
+        e('div',{className:'soc-m'},'요약 · 종합')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🏦 애널리스트'),
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'Rosenblatt Securities Buy 개시(신규 커버리지), 목표가 $5로 현재가($1.28) 대비 큰 상방. 커버리지가 이제 시작 단계라 신뢰도는 제한적이나, 기관 관심 유입은 긍정 신호.')
+      )
+    )
+  );
+}
+
+/* ── Tab 6: 용어 ── */
+function Tab6() {
+  var TERMS = [
+    {c:'ear',cat:'실적',n:'AI/HPC 호스팅',d:'고객 AI 학습·추론 서버를 대신 운영해 주는 사업. 데이터센터 임대.',f:'SLNH 성장 축 — Kati 2 350MW JV.'},
+    {c:'ear',cat:'실적',n:'매출총이익(Gross Profit)',d:'매출에서 직접원가를 뺀 이익. 사업의 기초 수익성.',f:'SLNH Q2 흑자 전환, Dorothy 1A 28%.'},
+    {c:'ear',cat:'실적',n:'ERCOT 기저부하',d:'텍사스 전력망(ERCOT)에서 안정적으로 확보하는 상시 전력.',f:'SLNH Dorothy 100MW 조건부 확보.'},
+    {c:'ear',cat:'실적',n:'파이프라인(GW)',d:'개발 중인 데이터센터 전력용량 총합.',f:'SLNH 4.3GW→6.3GW 확대.'},
+    {c:'fin',cat:'재무',n:'조정 EBITDA',d:'이자·세금·상각·일회성 제외 영업 수익성 지표.',f:'SLNH -$1.6M(Q1비 25% 개선).'},
+    {c:'fin',cat:'재무',n:'ATM 발행',d:'시장가로 주식을 조금씩 발행해 자금 조달. 희석 요인.',f:'SLNH +$23.6M 조달(희석).'},
+    {c:'fin',cat:'재무',n:'희석(Dilution)',d:'신주 발행으로 기존 주주 지분·가치가 줄어드는 것.',f:'SLNH 성장자금 조달의 약점.'},
+    {c:'fin',cat:'재무',n:'런웨이',d:'보유 현금으로 적자를 버틸 수 있는 기간.',f:'SLNH 현금 $113.4M·저부채로 견조.'},
+    {c:'fin',cat:'재무',n:'마이크로캡',d:'시가총액이 매우 작은 소형주(수억 달러 이하).',f:'SLNH ~$1.45억 — 변동성 큼·리레이팅 여지.'},
+    {c:'tec',cat:'기술적',n:'RSI',d:'0~100 과열·침체 지표. 70 위 과매수, 30 아래 과매도.',f:'SLNH 44.5 — 중립.'},
+    {c:'tec',cat:'기술적',n:'나스닥 컴플라이언스',d:'상장 유지 최소 종가($1.00 등) 요건.',f:'SLNH $1.00이 마지노선.'},
+    {c:'etc',cat:'기타',n:'그린 데이터센터',d:'재생에너지 잉여전력을 컴퓨팅에 쓰는 데이터센터.',f:'SLNH의 정체성.'}
+  ];
+  var fs = useState('전체'); var fil = fs[0]; var setFil = fs[1];
+  var CATS=['전체','기술적','재무','실적'];
+  var list = fil==='전체'?TERMS:TERMS.filter(function(t){return t.cat===fil;});
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'📖 용어 사전'),
+      e('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}},
+        CATS.map(function(c,i){return e('button',{key:i,onClick:function(){setFil(c);},
+          style:{padding:'5px 11px',borderRadius:'9999px',border:'1px solid #1e3a5f',cursor:'pointer',fontSize:'0.72rem',
+            background:fil===c?'#10b981':'#0d1426',color:fil===c?'#001a14':'#94a3b8'}},c);})
+      ),
+      list.map(function(t,i){
+        return e('div',{key:i,className:'term '+t.c},
+          e('div',{className:'term-h'}, t.n+' · '+t.cat),
+          e('div',{className:'term-b'}, t.d),
+          e('div',{className:'term-f'}, '→ '+t.f)
+        );
+      })
+    )
+  );
+}
+
+/* ── Tab 7: 멀티배거 ── */
+function Tab7() {
+  var rr = useRef(null); var rc = useRef(null);
+  var ITEMS = [
+    {q:'1. 아직 충분히 작은 기업인가?',d:'시총 ~$1.45억 (마이크로캡)',s:'p',v:1},
+    {q:'2. 가격이 미래를 과대반영하지 않았는가?',d:'HPC $200M 잠재 대비 시총 매우 낮음',s:'p',v:1},
+    {q:'3. 매출보다 EBITDA·마진 개선이 따라오는가?',d:'매출총이익 흑자 전환·EBITDA 손실 25% 축소',s:'p',v:1},
+    {q:'4. 자산 증가율 대비 수익이 뒤처지지 않는가?',d:'프로젝트별 흑자 마진 시작(개선 중)',s:'h',v:0.5},
+    {q:'5. FCF yield가 합리적인가?',d:'순손실·성장투자로 FCF 마이너스',s:'f',v:0},
+    {q:'6. 투자가 실제 수요·수주와 연결되는가?',d:'Kati 2 350MW JV·ERCOT·6.3GW 파이프라인',s:'p',v:1},
+    {q:'7. 고금리 환경에서 버틸 수 있는가?',d:'현금 $113.4M·저부채($33.1M) 견조',s:'p',v:1},
+    {q:'8. 단기 급등 후 추격매수 구간은 아닌가?',d:'RSI 44.5·저점 반등 초기(추격 아님)',s:'p',v:1}
+  ];
+  var score = ITEMS.reduce(function(a,b){return a+b.v;},0);
+  makeChart(rr, rc, {
+    type:'radar',
+    data:{labels:['소형주','밸류','마진개선','투자효율','FCF','수주','재무건전','추격아님'],
+      datasets:[{label:'SLNH',data:ITEMS.map(function(i){return i.v;}),
+        backgroundColor:'rgba(16,185,129,0.2)',borderColor:'#10b981',pointBackgroundColor:'#10b981'}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},
+      scales:{r:{min:0,max:1,ticks:{color:'#64748b',stepSize:0.5,backdropColor:'transparent'},grid:{color:'#1e2d4a'},
+        pointLabels:{color:'#94a3b8',font:{size:10}},angleLines:{color:'#1e2d4a'}}}}
+  });
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🔟 멀티배거 점수 (Anna Yartseva 8항목)'),
+      e('div', {style:{textAlign:'center',padding:'8px 0'}},
+        e('div', {style:{fontSize:'2.4rem',fontWeight:700,color:'#10b981'}}, score+'/8'),
+        e('div', {style:{fontSize:'0.8rem',color:'#94a3b8'}}, '등급: 유망 (6/29 4점→7/20 5.5점→9/23 6.5점, 개선 지속)')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bt'},'해석 (분석마다 상승)'),
+        e('div',{className:'bd'},'매출 +145%·매출총이익 흑자·EBITDA 손실 축소로 "마진 개선" 항목이 ✅로 전환, 현금 $113.4M·저부채로 "재무건전성" ✅, 6.3GW·JV로 "수주" ✅. 순이익 흑자(FCF)만 아직 미달. 소형·저밸류·미과열·수주가시성이 결합돼 멀티배거 조건이 6.5/8로 개선.')
+      )
+    ),
+    e('div', {className:'card'}, e('h2',null,'📡 레이더 차트'), e('canvas',{ref:rr})),
+    e('div', {className:'card'},
+      e('h2',null,'✅ 8개 체크리스트'),
+      ITEMS.map(function(it,i){
+        return e('div',{key:i,className:'mb-row'},
+          e('div',{className:'mb-ic'}, it.s==='p'?'✅':it.s==='h'?'⚠️':'❌'),
+          e('div',{className:'mb-lb'}, it.q, e('div',{className:'mb-sub'}, it.d)),
+          e('div',{className:'mb-st '+it.s}, it.v+'점')
+        );
+      })
+    ),
+    e('div', {className:'card'},
+      e('div',{className:'wx'},
+        e('div',{className:'wd'},'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 참고 지표로만 활용.')
+      )
+    )
+  );
+}
+
+/* ── Tab 8: 결론 ── */
+function Tab8() {
+  return e('div', null,
+    e('div', {className:'card'},
+      e('h2',null,'🎯 종합 의견 (9/23 갱신)'),
+      e('div',{className:'gauge'},
+        e('div',{className:'bar'},
+          e('div',{className:'seg',style:{background:'#ef4444'}},'강한매도'),
+          e('div',{className:'seg',style:{background:'#f87171'}},'매도'),
+          e('div',{className:'seg',style:{background:'#f59e0b'}},'중립'),
+          e('div',{className:'seg',style:{background:'#34d399'}},'매수 ●'),
+          e('div',{className:'seg',style:{background:'#10b981'}},'강한매수')
+        ),
+        e('div',{className:'lbl'},'중립~매수 (투기적 성장, 개선 추세 확인)')
+      ),
+      e('div',{className:'bx'},
+        e('div',{className:'bd'},'6/29·7/20 "중립"에서 한 단계 상향. 근거: Q2 매출 +145% YoY, 프로젝트별 흑자 마진 전환, adj EBITDA 손실 25% 축소, 파이프라인 6.3GW, 현금 $113.4M·저부채, Rosenblatt Buy 개시 — AI/HPC 피벗이 실체화되며 개선 추세가 뚜렷. 다만 순손실·ATM 희석은 여전한 리스크로, "완결된 흑자"가 아닌 "개선 중" 상태의 투기적 성장주. 마이크로캡 변동성 감안 소액 접근.')
+      )
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🐂 Bull Case'),
+      e('div',{className:'bx'},e('div',{className:'bd'},'1. 매출 +145% YoY·프로젝트별 흑자 마진 — "성장의 질" 개선 시작.')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'2. 6.3GW 파이프라인·Kati 2 350MW JV·ERCOT 전력 확보 — HPC $200M 잠재.')),
+      e('div',{className:'bx'},e('div',{className:'bd'},'3. 현금 $113.4M·저부채 + 시총 $1.45억 — 리레이팅 여지·Rosenblatt Buy.'))
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'🐻 Bear Case'),
+      e('div',{className:'dx'},e('div',{className:'dd'},'1. 순손실 -$22.6M 지속, 순이익 흑자까지 시간 필요.')),
+      e('div',{className:'dx'},e('div',{className:'dd'},'2. ATM 발행 희석 지속, 마이크로캡 저유동성 변동성.')),
+      e('div',{className:'dx'},e('div',{className:'dd'},'3. 암호화폐·전력가격·HPC 계약 확정 리스크.'))
+    ),
+    e('div', {className:'card'},
+      e('h2',null,'📋 실행 계획'),
+      e('div',{className:'table-wrap'},
+        e('table',null,
+          e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격'),e('th',null,'비중'))),
+          e('tbody',null,
+            e('tr',null,e('td',null,'1차 매수'),e('td',null,'$1.15~1.30'),e('td',null,'개선 확인·소액')),
+            e('tr',null,e('td',null,'2차 매수'),e('td',null,'$1.00~1.10'),e('td',null,'지지 방어 시')),
+            e('tr',null,e('td',null,'손절선'),e('td',null,'$1.00 이탈'),e('td',null,'컴플 리스크')),
+            e('tr',null,e('td',null,'1차 익절'),e('td',null,'$1.85'),e('td',null,'50%')),
+            e('tr',null,e('td',null,'2차 익절'),e('td',null,'$3~5'),e('td',null,'HPC 계약·흑자·PT'))
+          )
+        )
+      ),
+      e('div',{className:'wx',style:{marginTop:'10px'}},
+        e('div',{className:'wd'},'핵심 모니터링: ①AI/HPC 계약 전환 ②adj EBITDA/순이익 흑자 진척 ③ATM 희석 속도 ④ERCOT·6.3GW 실현. 개선 추세이나 마이크로캡 투기주로 소액 한도 권고.')
+      )
+    )
+  );
+}
+
+/* ── App ── */
+function App() {
+  var sa = useState(0); var tab = sa[0]; var setTab = sa[1];
+  var TABS = ['🏢개요','📈기술적','💰재무','📊실적·뉴스','💬센티먼트','📖용어','🔟멀티배거','🎯결론'];
+  return e('div', null,
+    e('div', {className:'hdr'},
+      e('a', {href:'https://disntm90.github.io/disntm90/', className:'back'}, '← 목록으로'),
+      e('h1', null, '⚡ SLNH — Soluna Holdings (갱신)'),
+      e('div', {className:'px'}, '$1.28 · RSI 44.5 · 매출 +145% YoY'),
+      e('div', {className:'sub'}, '그린 데이터센터·AI/HPC 피벗 실체화 · 파이프라인 6.3GW | 2026-09-23 갱신')
+    ),
+    e('div', {className:'tabs'},
+      TABS.map(function(n,i){
+        return e('button', {key:i, className:'tb'+(tab===i?' on':''), onClick:function(){setTab(i);}}, n);
+      })
+    ),
+    e('div', {className:'cnt'},
+      tab===0 ? e(Tab1,null) :
+      tab===1 ? e(Tab2,null) :
+      tab===2 ? e(Tab3,null) :
+      tab===3 ? e(Tab4,null) :
+      tab===4 ? e(Tab5,null) :
+      tab===5 ? e(Tab6,null) :
+      tab===6 ? e(Tab7,null) :
+      e(Tab8,null)
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
