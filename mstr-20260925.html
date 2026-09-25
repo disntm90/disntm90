@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MSTR 종목분석·기간별 목표가 대시보드 2026-09-25</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d2a0f 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #5e420e;}
+.hdr h1{font-size:1.45rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.05rem;font-weight:700;color:#f59e0b;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;}
+.tb.on{color:#f59e0b;border-bottom-color:#f59e0b;}
+.cnt{padding:14px;max-width:780px;margin:0 auto;}
+.card{background:#111827;border:1px solid #453814;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;}
+.mc .vl{font-size:1.05rem;font-weight:700;margin-top:3px;}
+.g{color:#10b981;}.r{color:#ef4444;}.y{color:#f59e0b;}.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bd,.wd,.dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}.br{background:rgba(239,68,68,0.15);color:#ef4444;}.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #111827;color:#cbd5e1;}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;font-weight:600;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #22c55e;}
+.term.tec{border-left-color:#3b82f6;}.term.ear{border-left-color:#f97316;}
+.term-h{font-size:0.82rem;font-weight:600;margin-bottom:4px;}
+.term-f{font-size:0.74rem;color:#f59e0b;margin-top:5px;}
+.mb-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;font-size:0.78rem;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.hz{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:12px;}
+.hz-t{font-size:0.9rem;font-weight:700;color:#f59e0b;margin-bottom:8px;}
+.hz-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+.hz-c{border-radius:8px;padding:8px 4px;}
+.hz-c .l{font-size:0.66rem;color:#94a3b8;}
+.hz-c .p{font-size:1.1rem;font-weight:800;margin-top:2px;}
+.hz-c .s{font-size:0.62rem;color:#64748b;margin-top:2px;}
+.hz-ev{margin-top:8px;font-size:0.78rem;color:#cbd5e1;text-align:center;}
+.gauge .bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#0a0f1e;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props){var a=[tag,props];for(var i=2;i<arguments.length;i++)a.push(arguments[i]);return React.createElement.apply(React,a);};
+var useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
+function mk(cRef,chRef,cfg,deps){useEffect(function(){if(!cRef.current)return;if(chRef.current)chRef.current.destroy();chRef.current=new Chart(cRef.current,cfg);return function(){if(chRef.current){chRef.current.destroy();chRef.current=null;}};},deps||[]);}
+
+/* 기준값: 현재가 $157.86 = BTC ~$84.5K × mNAV 1.16 → 계수 k = 157.86/(84.5×1.16) ≈ 1.6105 */
+var K = 157.86/(84.5*1.16);
+function px(btc,mnav){return Math.round(K*btc*mnav);}
+
+var HZ = [
+  {h:'1개월 (~2026년 10월 말)', w:'기술적·단기 — BTC·연준 반응 구간',
+   bear:{btc:76,m:1.05}, base:{btc:86,m:1.16}, bull:{btc:95,m:1.25}},
+  {h:'3개월 (~2026년 12월 말)', w:'연말 — CLARITY 법안·연준 경로·BTC 사이클',
+   bear:{btc:72,m:1.00}, base:{btc:90,m:1.15}, bull:{btc:105,m:1.30}},
+  {h:'12개월 (~2027년 9월)', w:'중기 — 애널리스트 12개월 목표 구간',
+   bear:{btc:65,m:0.95}, base:{btc:105,m:1.20}, bull:{btc:150,m:1.35}},
+  {h:'장기 (~2030년)', w:'장기 — BTC 사이클 2회 가정',
+   bear:{btc:70,m:0.90}, base:{btc:200,m:1.20}, bull:{btc:350,m:1.40}}
+];
+var PW = {bear:0.25, base:0.5, bull:0.25};
+
+/* ── Tab1 개요 ── */
+function Tab1(){
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'🏢 기업 개요'),
+      e('div',{className:'wx'},e('div',{className:'wd'},'Strategy(구 MicroStrategy, MSTR)는 전 세계 최대의 비트코인 보유 상장사. 주식·전환사채·우선주로 자금을 모아 BTC를 매입하는 "비트코인 트레저리" 기업으로, 주가는 사실상 "BTC 가격 × 프리미엄(mNAV)"으로 결정된다. 레거시 소프트웨어 사업은 가치 비중이 미미하다.')),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'현재가(9/25)'),e('div',{className:'vl y'},'$157.86')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'일중 범위'),e('div',{className:'vl'},'$157.42~165.09')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'BTC 보유'),e('div',{className:'vl b'},'~846,000개')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'mNAV'),e('div',{className:'vl y'},'1.16×'))
+      )
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'📈 최근 흐름 (7/20 → 9/10 → 9/25)'),
+      e('div',{className:'table-wrap'},e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'지표'),e('th',null,'7/20'),e('th',null,'9/10'),e('th',null,'9/25'))),
+        e('tbody',null,
+          e('tr',null,e('td',null,'주가'),e('td',null,'~$100'),e('td',null,'~$139'),e('td',{className:'g'},'$157.86')),
+          e('tr',null,e('td',null,'mNAV'),e('td',null,'~1.11×'),e('td',null,'~1.0~1.07×'),e('td',null,'1.16×')),
+          e('tr',null,e('td',null,'BTC 보유'),e('td',null,'843,775'),e('td',null,'845,050'),e('td',null,'~846,000')),
+          e('tr',null,e('td',null,'BTC 가격'),e('td',null,'~$63K'),e('td',null,'~$79K'),e('td',null,'~$84K(추정)'))
+        )
+      )),
+      e('div',{className:'bx',style:{marginTop:'10px'}},e('div',{className:'bd'},'7월 저점($100) 대비 +58%. BTC 회복과 함께 mNAV가 1.0 근처에서 1.16×로 소폭 확대 — 프리미엄은 1년 범위(0.95~1.43×)의 중하단으로 아직 과열은 아니다.'))
+    )
+  );
+}
+
+/* ── Tab2 기술적 ── */
+function Tab2(){
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'📈 지지·저항'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 지지'),e('div',{className:'vl g'},'$139 (9/9 수준)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'2차 지지'),e('div',{className:'vl g'},'$120')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'1차 저항'),e('div',{className:'vl r'},'$165 (9/25 고점)')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'2차 저항'),e('div',{className:'vl r'},'$180~200'))
+      ),
+      e('div',{className:'wx',style:{marginTop:'10px'}},e('div',{className:'wd'},'9/25 장중 $165.09 고점 후 $157.86 마감 — 윗꼬리(매물 부담). BTC 지지 $75K·$72K, 저항 $80K·$82.3K. 정확한 RSI 수치는 이번 검색에서 확인하지 못함(재확인 필요).'))
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'⚡ 진입·청산 가이드'),
+      e('div',{className:'table-wrap'},e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'가격'),e('th',null,'조건'))),
+        e('tbody',null,
+          e('tr',null,e('td',null,'1차 매수'),e('td',null,'$140~150'),e('td',null,'9월 초 돌파 구간 되돌림')),
+          e('tr',null,e('td',null,'2차 매수'),e('td',null,'$120~130'),e('td',null,'BTC $72~75K 지지 확인')),
+          e('tr',null,e('td',null,'손절선'),e('td',null,'$115 이탈'),e('td',null,'BTC $70K 붕괴 + mNAV 1.0↓')),
+          e('tr',null,e('td',null,'1차 익절'),e('td',null,'$180~185'),e('td',null,'3개월 기준 시나리오')),
+          e('tr',null,e('td',null,'2차 익절'),e('td',null,'$230+'),e('td',null,'12개월 기준·BTC $105K'))
+        )
+      ))
+    )
+  );
+}
+
+/* ── Tab3 재무 ── */
+function Tab3(){
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'💰 BTC 트레저리 & 밸류'),
+      e('div',{className:'mg'},
+        e('div',{className:'mc'},e('div',{className:'lb'},'BTC 보유가치'),e('div',{className:'vl b'},'~$71.5B')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'평균 매입단가'),e('div',{className:'vl'},'~$75.4K')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'평가손익'),e('div',{className:'vl g'},'평가이익 전환')),
+        e('div',{className:'mc'},e('div',{className:'lb'},'mNAV 1년 범위'),e('div',{className:'vl'},'0.95~1.43×'))
+      ),
+      e('div',{className:'bx',style:{marginTop:'10px'}},e('div',{className:'bd'},'BTC가 평균 매입단가(~$75K)를 웃돌며 보유분이 평가이익으로 전환. 7월에는 BTC가 매입단가를 밑돌아 mNAV가 1.0 아래로 빠지고 BTC 일부 매도까지 했던 것과 대조적.'))
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'⚠️ 자본구조 리스크'),
+      e('div',{className:'dx'},e('div',{className:'dd'},'① 전환사채·영구우선주(STRC 등) 배당·이자 부담 ② 주식 추가 발행에 따른 희석 — 장기 목표가 계산에는 희석을 반영하지 않았으므로 실제 주당 가치는 더 낮을 수 있다 ③ BTC 급락 시 mNAV 1.0 이하 재진입·BTC 매도 가능성(7월 선례).'))
+    )
+  );
+}
+
+/* ── Tab4 뉴스 ── */
+function Tab4(){
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'📰 최근 뉴스·매크로 (2026년 9월)'),
+      e('div',{className:'dx'},e('div',{className:'dt'},'연준, 3년 만에 금리 인상 (9/16)'),e('div',{className:'dd'},'유가 $105·물가 부담에 연준이 인상 단행. 위험자산·BTC에 역풍. 추가 인상 여부가 4분기 최대 변수.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'CLARITY 법안 (가상자산 시장구조법)'),e('div',{className:'bd'},'상원 진전 시 BTC 상승 촉매로 거론. 통과·지연 여부에 따라 단기 방향이 갈릴 수 있음.')),
+      e('div',{className:'bx'},e('div',{className:'bt'},'MSTR 반등 지속'),e('div',{className:'bd'},'9/9 $139 → 9/25 $157.86. BTC 회복과 mNAV 1.16× 소폭 확대.'))
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'🎯 핵심 모니터링'),
+      e('div',{className:'wx'},e('div',{className:'wd'},'① 연준 추가 인상 여부 ② CLARITY 법안 ③ BTC $75K 지지 ④ mNAV 1.0~1.43× 범위 내 위치 ⑤ 신규 증자·우선주 발행 규모'))
+    )
+  );
+}
+
+/* ── Tab5 센티먼트 ── */
+function Tab5(){
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'💬 센티먼트'),
+      e('div',{className:'dx'},e('div',{className:'dt'},'데이터 정합성 고지'),e('div',{className:'dd'},'X·Reddit 실제 게시물 30개 원문은 이번 세션에서 개별 수집하지 못했다. 아래는 애널리스트·뉴스 기반 요약이며 개별 인용이 아니다.')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'강세론',e('span',{className:'badge bg'},'🟢')),e('div',{className:'bd'},'BTC가 매입단가 위로 회복, mNAV는 아직 1년 범위 중하단. 애널 14명 평균 목표 $321·"Strong Buy". 장기 BTC 상승 시 레버리지 수혜.')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'약세론',e('span',{className:'badge br'},'🔴')),e('div',{className:'bd'},'연준 금리 인상 전환 — 유동성 역풍. 지속적 희석과 우선주 배당 부담. BTC 하락 시 프리미엄까지 동반 하락.')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'중립론',e('span',{className:'badge by'},'🟡')),e('div',{className:'bd'},'"결국 BTC 방향 베팅" — 연준·CLARITY 결과 확인 후 분할 접근.'))
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'🏦 애널리스트'),
+      e('div',{className:'table-wrap'},e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'구분'),e('th',null,'값'))),
+        e('tbody',null,
+          e('tr',null,e('td',null,'컨센서스'),e('td',null,'Strong Buy (14명)')),
+          e('tr',null,e('td',null,'평균 목표가'),e('td',null,'$321 (현재가 대비 +103%)')),
+          e('tr',null,e('td',null,'2026년 예상 범위'),e('td',null,'$176~228')),
+          e('tr',null,e('td',null,'2030년 강세 전망'),e('td',null,'~$774'))
+        )
+      ))
+    )
+  );
+}
+
+/* ── Tab6 기간별 목표가 ── */
+function Horizon(props){
+  var z=props.z;
+  var b=px(z.bear.btc,z.bear.m), m=px(z.base.btc,z.base.m), u=px(z.bull.btc,z.bull.m);
+  var ev=Math.round(b*PW.bear+m*PW.base+u*PW.bull);
+  function pct(v){var p=Math.round((v/157.86-1)*100);return (p>=0?'+':'')+p+'%';}
+  return e('div',{className:'hz'},
+    e('div',{className:'hz-t'},z.h),
+    e('div',{style:{fontSize:'0.72rem',color:'#64748b',marginBottom:'8px'}},z.w),
+    e('div',{className:'hz-row'},
+      e('div',{className:'hz-c',style:{background:'rgba(239,68,68,0.1)'}},e('div',{className:'l'},'약세(25%)'),e('div',{className:'p r'},'$'+b),e('div',{className:'s'},pct(b)+' · BTC $'+z.bear.btc+'K · '+z.bear.m+'×')),
+      e('div',{className:'hz-c',style:{background:'rgba(245,158,11,0.1)'}},e('div',{className:'l'},'기준(50%)'),e('div',{className:'p y'},'$'+m),e('div',{className:'s'},pct(m)+' · BTC $'+z.base.btc+'K · '+z.base.m+'×')),
+      e('div',{className:'hz-c',style:{background:'rgba(16,185,129,0.1)'}},e('div',{className:'l'},'강세(25%)'),e('div',{className:'p g'},'$'+u),e('div',{className:'s'},pct(u)+' · BTC $'+z.bull.btc+'K · '+z.bull.m+'×'))
+    ),
+    e('div',{className:'hz-ev'},'확률가중 기대가격: ',e('b',{className:'y'},'$'+ev),' ('+pct(ev)+')')
+  );
+}
+function Tab6(){
+  var cr=useRef(null),cc=useRef(null);
+  var labels=['현재','1개월','3개월','12개월','2030'];
+  function series(k){return [157.86].concat(HZ.map(function(z){return px(z[k].btc,z[k].m);}));}
+  mk(cr,cc,{type:'line',data:{labels:labels,datasets:[
+    {label:'강세',data:series('bull'),borderColor:'#10b981',tension:0.3},
+    {label:'기준',data:series('base'),borderColor:'#f59e0b',tension:0.3},
+    {label:'약세',data:series('bear'),borderColor:'#ef4444',tension:0.3}]},
+    options:{plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{y:{type:'logarithmic',ticks:{color:'#94a3b8',callback:function(v){return '$'+v;}},grid:{color:'#1e2d4a'}},x:{ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}});
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'🎯 기간별 목표가격 — 시나리오'),
+      e('div',{className:'dx'},e('div',{className:'dt'},'⚠️ 예측이 아닌 조건부 계산입니다'),e('div',{className:'dd'},'목표가 = 현재 주가 × (가정 BTC ÷ 현재 BTC) × (가정 mNAV ÷ 현재 mNAV). 현재 기준: 주가 $157.86, BTC ~$84.5K, mNAV 1.16×. 확률(25/50/25)은 분석자의 주관적 가정이며, 주식 희석·부채·우선주 배당은 반영하지 않았다(특히 장기일수록 실제보다 높게 나올 수 있음).')),
+      e('canvas',{ref:cr})
+    ),
+    HZ.map(function(z,i){return e(Horizon,{key:i,z:z});}),
+    e('div',{className:'card'},
+      e('h2',null,'🏦 애널리스트 목표와 비교'),
+      e('div',{className:'table-wrap'},e('table',null,
+        e('thead',null,e('tr',null,e('th',null,'기간'),e('th',null,'본 시나리오(기준)'),e('th',null,'애널리스트'))),
+        e('tbody',null,
+          e('tr',null,e('td',null,'2026년 말'),e('td',null,'$'+px(90,1.15)),e('td',null,'$176~228 (예상 범위)')),
+          e('tr',null,e('td',null,'12개월'),e('td',null,'$'+px(105,1.2)),e('td',null,'$321 (14명 평균)')),
+          e('tr',null,e('td',null,'2030년'),e('td',null,'$'+px(200,1.2)+' (강세 $'+px(350,1.4)+')'),e('td',null,'~$774'))
+        )
+      )),
+      e('div',{className:'wx',style:{marginTop:'10px'}},e('div',{className:'wd'},'애널리스트 평균($321)은 본 12개월 기준($'+px(105,1.2)+')보다 높다 — 애널 다수가 BTC $150K 이상과 프리미엄 재확대를 가정하기 때문. 본 기준 시나리오는 연준 인상 국면을 반영해 보수적으로 잡았다.'))
+    )
+  );
+}
+
+/* ── Tab7 용어 ── */
+function Tab7(){
+  var T=[
+    {c:'fin',n:'mNAV',d:'시가총액 ÷ 보유 BTC 가치. 1보다 크면 BTC에 웃돈을 주고 사는 것.',f:'MSTR 1.16× — 1년 범위 중하단.'},
+    {c:'fin',n:'비트코인 트레저리',d:'회사 자산을 비트코인으로 대량 보유하는 전략.',f:'MSTR은 세계 최대(~84.6만 개).'},
+    {c:'fin',n:'평균 매입단가',d:'보유 BTC를 평균 얼마에 샀는지.',f:'~$75.4K — 현재 BTC가 위라 평가이익.'},
+    {c:'fin',n:'희석',d:'신주 발행으로 기존 주주의 1주 가치가 줄어드는 것.',f:'장기 목표가엔 미반영 — 실제는 더 낮을 수 있음.'},
+    {c:'fin',n:'영구우선주(STRC)',d:'만기 없이 배당을 우선 받는 주식. 회사엔 고정 비용.',f:'BTC 약세 때 부담 요인.'},
+    {c:'tec',n:'지지·저항',d:'매수세가 받치는 가격대와 매도세가 누르는 가격대.',f:'지지 $139·$120, 저항 $165·$180.'},
+    {c:'ear',n:'시나리오 분석',d:'약세·기준·강세 가정별로 결과를 계산해 범위로 보는 방법.',f:'기간별 목표가 탭의 계산 방식.'},
+    {c:'ear',n:'확률가중 기대가격',d:'각 시나리오 가격 × 확률을 더한 값.',f:'주관적 확률이라 참고용.'},
+    {c:'ear',n:'금리 인상',d:'중앙은행이 기준금리를 올리는 것. 위험자산에 보통 악재.',f:'9/16 연준 3년 만의 인상.'},
+    {c:'ear',n:'CLARITY 법안',d:'미국 가상자산 시장구조를 정하는 법안.',f:'통과 시 BTC 촉매 가능.'}
+  ];
+  return e('div',null,e('div',{className:'card'},e('h2',null,'📖 용어'),T.map(function(t,i){return e('div',{key:i,className:'term '+t.c},e('div',{className:'term-h'},t.n),e('div',{className:'bd'},t.d),e('div',{className:'term-f'},'→ '+t.f));})));
+}
+
+/* ── Tab8 멀티배거 ── */
+function Tab8(){
+  var I=[
+    {q:'1. 충분히 작은가?',d:'시총 수백억 달러 — 초대형',v:0},
+    {q:'2. 과대반영 아닌가?',d:'mNAV 1.16× — 1년 범위 중하단',v:0.5},
+    {q:'3. 매출보다 이익 개선?',d:'BTC 평가손익 중심 — 영업이익 무의미',v:0},
+    {q:'4. 자산 대비 이익효율?',d:'자산 증가 = BTC 매입, 현금창출과 무관',v:0},
+    {q:'5. FCF yield 합리?',d:'FCF 개념 부적합(자금조달→매입)',v:0},
+    {q:'6. 수요·주문 연결?',d:'트레저리 모델 — 수주 개념 없음',v:0},
+    {q:'7. 고금리 견딤?',d:'연준 인상 국면·우선주 배당 부담',v:0.5},
+    {q:'8. 추격 구간 아닌가?',d:'7월比 +58%, 단 과열 지표는 제한적',v:0.5}
+  ];
+  var s=I.reduce(function(a,b){return a+b.v;},0);
+  return e('div',null,e('div',{className:'card'},
+    e('h2',null,'🔟 멀티배거 체크 (Anna Yartseva 8항목)'),
+    e('div',{style:{textAlign:'center',fontSize:'2.2rem',fontWeight:700,color:'#ef4444'}},s+'/8'),
+    e('div',{className:'wx'},e('div',{className:'wd'},'이 체크리스트는 매출·이익으로 성장하는 "영업 기업"용이라 BTC 트레저리인 MSTR에는 구조적으로 낮게 나온다. MSTR의 상승 여력은 BTC 가격과 mNAV로 판단해야 하며, 기간별 목표가 탭이 그 역할을 한다.')),
+    I.map(function(it,i){return e('div',{key:i,className:'mb-row'},e('div',null,it.v===1?'✅':it.v===0.5?'⚠️':'❌'),e('div',{style:{flex:1}},it.q,e('div',{className:'mb-sub'},it.d)),e('div',null,it.v+'점'));})
+  ));
+}
+
+/* ── Tab9 결론 ── */
+function Tab9(){
+  var m3=px(90,1.15), m12=px(105,1.2);
+  return e('div',null,
+    e('div',{className:'card'},
+      e('h2',null,'🎯 종합 의견'),
+      e('div',{className:'gauge'},e('div',{className:'bar'},
+        e('div',{className:'seg',style:{background:'#ef4444'}},'강한매도'),
+        e('div',{className:'seg',style:{background:'#f87171'}},'매도'),
+        e('div',{className:'seg',style:{background:'#f59e0b'}},'중립'),
+        e('div',{className:'seg',style:{background:'#34d399'}},'매수 ●'),
+        e('div',{className:'seg',style:{background:'#10b981'}},'강한매수'))),
+      e('div',{style:{textAlign:'center',fontSize:'1.2rem',fontWeight:700,color:'#34d399'}},'중립~매수 (분할 접근)'),
+      e('div',{className:'bx',style:{marginTop:'10px'}},e('div',{className:'bd'},'7/20 "중립(고위험)"에서 한 단계 상향. BTC가 매입단가 위로 회복하고 mNAV가 과열 없이 1.16×에 머문다. 다만 연준이 인상으로 돌아선 만큼 추격보다 $140~150 되돌림 분할이 합리적. 기준 시나리오 기준 3개월 $'+m3+', 12개월 $'+m12+'.'))
+    ),
+    e('div',{className:'card'},
+      e('h2',null,'🐂 / 🐻'),
+      e('div',{className:'bx'},e('div',{className:'bt'},'Bull'),e('div',{className:'bd'},'BTC 평가이익 전환 · mNAV 여유(최대 1.43× 경험) · CLARITY 법안 · 애널 평균 $321.')),
+      e('div',{className:'dx'},e('div',{className:'dt'},'Bear'),e('div',{className:'dd'},'연준 금리 인상 · 지속 희석·우선주 부담 · BTC $70K 하회 시 mNAV 동반 하락(7월 선례).'))
+    )
+  );
+}
+
+function App(){
+  var sa=useState(5),tab=sa[0],set=sa[1];
+  var T=['🏢개요','📈기술적','💰재무','📰뉴스','💬센티먼트','🎯기간별목표가','📖용어','🔟멀티배거','🏁결론'];
+  var P=[Tab1,Tab2,Tab3,Tab4,Tab5,Tab6,Tab7,Tab8,Tab9];
+  return e('div',null,
+    e('div',{className:'hdr'},e('a',{href:'https://disntm90.github.io/disntm90/',className:'back'},'← 목록으로'),
+      e('h1',null,'₿ MSTR — Strategy'),e('div',{className:'px'},'$157.86 · mNAV 1.16× · BTC ~84.6만 개'),
+      e('div',{className:'sub'},'비트코인 트레저리 · 기간별 목표가 시나리오 | 2026-09-25')),
+    e('div',{className:'tabs'},T.map(function(n,i){return e('button',{key:i,className:'tb'+(tab===i?' on':''),onClick:function(){set(i);}},n);})),
+    e('div',{className:'cnt'},e(P[tab],null)));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
