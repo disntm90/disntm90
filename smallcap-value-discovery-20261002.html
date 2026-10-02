@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>저평가 소형주 발굴: AI 밸류체인 속 소외된 진짜 밸류 (2026-10-02)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d1117;--card:#161b22;--card2:#1c2330;--border:#30363d;--txt:#e6edf3;--mut:#8b949e;--acc:#58a6ff;--grn:#3fb950;--red:#f85149;--amb:#d29922;--pur:#bc8cff}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;line-height:1.65;font-size:15px}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px 60px}
+header.hero{padding:34px 0 20px;border-bottom:1px solid var(--border)}
+.kicker{display:inline-block;font-size:12px;color:#0d1117;background:var(--amb);padding:3px 10px;border-radius:20px;font-weight:700;margin-bottom:12px}
+h1{font-size:24px;line-height:1.4;margin-bottom:10px}
+.sub{color:var(--mut);font-size:14px}
+.meta{color:var(--mut);font-size:12.5px;margin-top:8px}
+.theme{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--amb);border-radius:8px;padding:16px;margin:20px 0;font-size:14px}
+.theme b{color:var(--amb)}
+.stocktabs{display:flex;gap:8px;margin:22px 0;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:5}
+.stocktab{flex:1;padding:12px 6px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:14px;font-weight:700;cursor:pointer;text-align:center}
+.stocktab small{display:block;font-weight:400;color:var(--mut);font-size:11px;margin-top:2px}
+.stocktab.on{border-color:var(--acc);background:#1a2740}
+.panel{display:none}.panel.on{display:block;animation:fd .25s}
+@keyframes fd{from{opacity:0}to{opacity:1}}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:6px 0 14px;padding-bottom:4px;position:sticky;top:64px;background:var(--bg);z-index:4}
+.tab{white-space:nowrap;padding:8px 13px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:13px;cursor:pointer}
+.tab.on{background:var(--acc);color:#0d1117;font-weight:700;border-color:var(--acc)}
+.sect{display:none}.sect.on{display:block;animation:fd .25s}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}
+.card h3{font-size:16px;margin-bottom:10px;color:var(--acc)}
+.card h4{font-size:14px;margin:12px 0 6px;color:var(--pur)}
+ul{padding-left:20px;margin:6px 0}
+li{margin-bottom:6px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+th,td{padding:8px 6px;border-bottom:1px solid var(--border);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:600;font-size:12.5px}
+.kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--border);font-size:14px}
+.kv:last-child{border:none}
+.kv span:first-child{color:var(--mut)}
+.kv b{font-weight:700}
+.pos{color:var(--grn)}.neg{color:var(--red)}.neu{color:var(--amb)}
+.verdict{border-radius:10px;padding:16px;margin:14px 0;font-size:14.5px;border:1px solid}
+.v-buy{background:rgba(63,185,80,.08);border-color:var(--grn)}
+.v-hold{background:rgba(210,153,34,.08);border-color:var(--amb)}
+.score{font-size:30px;font-weight:800}
+.bar{height:10px;background:#21262d;border-radius:6px;margin:8px 0;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px}
+canvas.chart{max-height:260px;width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.note{font-size:12.5px;color:var(--mut);margin-top:10px}
+.tag{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:12px;margin:2px 4px 2px 0}
+.tg{background:#1a2740;color:var(--acc);border:1px solid var(--acc)}
+.tr{background:rgba(248,81,73,.12);color:var(--red);border:1px solid var(--red)}
+.tn{background:rgba(210,153,34,.12);color:var(--amb);border:1px solid var(--amb)}
+.tgr{background:rgba(63,185,80,.12);color:var(--grn);border:1px solid var(--grn)}
+footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--border);color:var(--mut);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+<span class="kicker">🔍 종목발굴 · 저평가 소형주</span>
+<h1>AI 밸류체인 속 소외된 진짜 밸류<br><span style="font-size:17px;color:var(--mut)">Photronics(PLAB) · CTS(CTS Corp)</span></h1>
+<p class="sub">2026년 반도체 소형주는 대부분 재평가됐습니다. FORM(PER 90배)·COHU(YTD +202%)·ACMR(PER 35배)·KLIC(PER 43배)는 이미 비싸고, DIOD·POWI·BELFB·BHE도 50~110배. 스크리닝 끝에 남은 두 종목은 <b>시총 $2B 미만 + 흑자 + 한 자릿수~20배 초반 PER</b>의 진짜 소형 밸류입니다.</p>
+<p class="meta">작성일 2026-10-02 · 주가 기준 2026-10-01/02 종가 · Finnhub/MarketBeat/StockTitan/GlobeNewswire 기반</p>
+</header>
+
+<div class="theme">
+<b>💡 발굴 테제:</b> 시장은 AI 수혜 소형주를 이미 재평가했지만, 두 종목은 각자의 "오해" 때문에 소외됐습니다. PLAB은 5월 어닝 쇼크+집단소송 오버행으로, CTS는 "자동차 부품주"라는 낡은 라벨로. 둘 다 <b>어닝 서프라이즈 + 가이던스 상향</b>을 내고도 주가는 제자리 — 괴리가 기회입니다.
+</div>
+
+<div class="stocktabs">
+<button class="stocktab on" onclick="switchStock('plab')">PLAB <span class="pos">매수(신중)</span><small>Photronics · $30.83 · 60/100</small></button>
+<button class="stocktab" onclick="switchStock('cts')">CTS <span class="pos">매수(신중)</span><small>CTS Corp · $59.27 · 60/100</small></button>
+<button class="stocktab" onclick="switchStock('radar')">📡 레이더<small>SGH · COHU</small></button>
+</div>
+
+<!-- ============ PLAB ============ -->
+<div class="panel on" id="p-plab">
+<div class="tabs" id="tabs-plab"></div>
+<div id="c-plab"></div>
+</div>
+
+<!-- ============ CTS ============ -->
+<div class="panel" id="p-cts">
+<div class="tabs" id="tabs-cts"></div>
+<div id="c-cts"></div>
+</div>
+
+<!-- ============ RADAR ============ -->
+<div class="panel" id="p-radar">
+<div class="card">
+<h3>📡 레이더 종목 (심층 분석 전, 관찰 목록)</h3>
+<table>
+<tr><th>종목</th><th>주가</th><th>시총</th><th>상태</th><th>의견</th></tr>
+<tr><td><b>SGH</b><br><span style="color:var(--mut);font-size:12px">SMART Global</span></td><td>$17.31</td><td>$1.1B</td><td>메모리/HPC 턴어라운드, GAAP 적자 지속</td><td><span class="neu">중립(관찰) 45</span></td></tr>
+<tr><td><b>COHU</b><br><span style="color:var(--mut);font-size:12px">Cohu</span></td><td>$70.34</td><td>$3.1B</td><td>매출 +38% YoY 회복, AI 데이터센터 테스트 수주. YTD +202%로 모멘텀 과열</td><td><span class="neu">중립(관심) 50</span></td></tr>
+</table>
+<p class="note">SGH는 흑자 전환 확인 전까지 대기. COHU는 눌림목($55~60, 50일선 부근) 오면 재평가. 둘 다 이번 발굴의 "저평가" 기준(흑자+낮은 PER)에는 미달이라 레이더로 분류.</p>
+</div>
+<div class="card">
+<h3>❌ 스크리닝 탈락 기록</h3>
+<ul>
+<li><b>FORM</b> $148 · 시총 $10.5B · PER 90배 — 소형주 아님 + 고밸류</li>
+<li><b>ACMR</b> $83.6 · 시총 $5.2B · PER 35배 — 기준 초과</li>
+<li><b>KLIC</b> $96 · 시총 $4.9B · PER 43배 — YTD +110% 이미 반영</li>
+<li><b>DIOD</b> $97.5 · PER 52배 / <b>POWI</b> $51.5 · PER 114배 / <b>BELFB</b> $252 · PER 60배 / <b>BHE</b> $84.6 · PER 57배 — 전부 고밸류</li>
+<li><b>VSH</b> — 이익 붕괴로 PER 170배 / <b>LFUS</b> $435 · 시총 $10.8B — 규모 초과</li>
+<li><b>TTMI</b> $126 · 시총 $13.4B / <b>SANM</b> $222 · 시총 $12B — 대형주</li>
+</ul>
+</div>
+</div>
+
+<!-- ============ 멀티배거 ============ -->
+<div class="card" style="margin-top:22px">
+<h3>🚀 멀티배거 체크리스트 (8항목)</h3>
+<div id="mb"></div>
+</div>
+
+<footer>
+<p>본 자료는 정보 제공 목적이며 투자 권유가 아닙니다. 소형주는 유동성·변동성 리스크가 크니 분할 접근을 권장합니다. 주가는 2026-10-01/02 종가 기준.</p>
+<p style="margin-top:6px">🔍 종목발굴 시리즈 · <a href="https://disntm90.github.io/disntm90/" style="color:var(--acc)">대시보드 허브</a></p>
+</footer>
+</div>
+
+<script>
+const TABS=[["overview","1. 기업개요"],["tech","2. 기술적분석"],["fund","3. 기본적분석"],["earn","4. 실적분석"],["senti","5. 센티먼트"],["peers","6. 관련종목"],["verdict","7. 종합의견"]];
+const DATA={
+plab:{
+ name:"Photronics (PLAB)",price:30.83,mcap:"$1.82B",pe:"11.0x",fwdpe:"14.8x",pb:"1.11x",margin:"19.1%",roe:"7.45%",
+ labels:["Q4 FY25","Q1 FY26","Q2 FY26","Q3 FY26"],
+ rev:[216,225.07,210,216.05],eps:[0.60,0.61,0.42,0.50],gm:[null,35.0,null,33.2],
+ pos:{lo:20.05,cur:30.83,hi:56.00,ma50:30.18,ma200:35.99},
+ mb:[1,1,0.5,0.5,1,0.5,1,1],
+ verdict:"매수(신중)",score:60,vcls:"v-buy",
+ overview:`<h3>🏢 기업개요</h3>
+<ul>
+<li><b>포토마스크(Photomask)</b> 전문 제조 — 반도체·디스플레이 회로 패턴의 원판. 칩 1종당 수십 장의 마스크가 필요하고, 노드가 미세화될수록 마스크 단가 급등.</li>
+<li>Merchant(외판) 시장 <b>글로벌 3위, 점유율 ~18%</b> — Toppan·DNP와 과점. 캡티브(파운드리 내재화) 제외 시 merchant 시장은 big 3 과점.</li>
+<li>매출 구조: <b>IC(반도체용) 72% / FPD(디스플레이용) 28%</b> (FY2025, $849.3M). Q3 FY26도 동일.</li>
+<li><b>하이엔드 IC(28nm 이하·EUV 포함)가 IC 매출의 44%로 역대 최고</b> — 노드 마이그레이션이 단가 상승 동력. EUV 마스크 장당 $500k~$1M.</li>
+<li>주요 고객: TSMC·삼성·인텔 등 파운드리 및 디스플레이 업체 (구체 비중 미공개).</li>
+<li>미국 생산: 2025년 8월 아이다호 Boise에 최초 merchant multi-beam mask writer 배치 — 3nm/2nm 대응, CHIPS Act 연계 리쇼어링.</li>
+<li><span class="tag tr">리스크</span> 중국 익스포저 ~27% (IC 15% + FPD 12%) — 수출규제·디커플링 리스크.</li>
+</ul>`,
+ tech:`<h3>📈 기술적 분석</h3>
+<canvas class="chart" id="pos-plab"></canvas>
+<ul>
+<li>52주 레인지 <b>$20.05 ~ $56.00</b> — 현재가는 레인지 <b>70%</b> 위치, 고점 대비 <b>-45%</b>, 저점 대비 +54%.</li>
+<li>50일선 $30.18 <b>위</b> (+2%), 200일선 $35.99 <b>아래</b> (-14%) — 데드크로스 구간에서 50일선 회복 시도 중.</li>
+<li>5월 Q2 쇼크 때 하루 -36.4% 폭락 후 바닥 다지기 → 8월 저점 반등, RSI 57(중립 강세), 단기 Stochastic 과매수권.</li>
+<li>저항: 200일선 $36 / 전고 $56. 지지: 50일선 $30 / $25.</li>
+<li>베타 1.40 — 시장 대비 변동성 큼.</li>
+</ul>`,
+ fund:`<h3>💰 기본적 분석</h3>
+<div class="kv"><span>시가총액</span><b>$1.82B</b></div>
+<div class="kv"><span>PER (TTM)</span><b class="pos">11.0x</b></div>
+<div class="kv"><span>Forward PER</span><b>14.8x</b></div>
+<div class="kv"><span>PBR</span><b class="pos">1.11x</b></div>
+<div class="kv"><span>순마진 (TTM)</span><b class="pos">19.05%</b></div>
+<div class="kv"><span>ROE</span><b>7.45%</b></div>
+<div class="kv"><span>현금성 자산</span><b class="pos">$672.8M (시총의 37%)</b></div>
+<div class="kv"><span>부채</span><b class="pos">$3.9M — 사실상 무차입</b></div>
+<div class="kv"><span>배당</span><b>없음</b></div>
+<ul style="margin-top:10px">
+<li>PER 11배·PBR 1.1배 — 반도체 섹터에서 찾기 힘든 절대 저평가.</li>
+<li>시총의 37%가 현금 + 무차입 — 하방 방어막이 두꺼움.</li>
+<li>2026년 9월 자사주 프로그램 종료: <b>발행주식의 20%+ (1,265만주, $166M) 소각</b> 완료 — 주주환원 실행력 입증, 신규 프로그램 발표 시 촉매.</li>
+</ul>`,
+ earn:`<h3>📊 실적 분석</h3>
+<canvas class="chart" id="earn-plab"></canvas>
+<table><tr><th>분기</th><th>매출</th><th>non-GAAP EPS</th><th>비고</th></tr>
+<tr><td>Q4 FY25</td><td>$216M</td><td>$0.60</td><td class="pos">컨센 +33% 비트</td></tr>
+<tr><td>Q1 FY26</td><td>$225.07M</td><td>$0.61</td><td>GM 35.0%, 하이엔드 역대 최고</td></tr>
+<tr><td>Q2 FY26</td><td>~$210M</td><td>$0.42</td><td class="neg">컨센 -21% 미스, IC -11% QoQ</td></tr>
+<tr><td>Q3 FY26</td><td>$216.05M</td><td>$0.50</td><td class="pos">컨센 +25% 비트, 하이엔드 44%</td></tr></table>
+<ul>
+<li>최근 4분기 중 <b>3번 서프라이즈</b> — 미스는 Q2 한 번.</li>
+<li>Q3: 매출 +2.7% YoY(컨센 +3.5% 상회), 총마진 33.2%(전분기 31.3%→개선), 영업마진 21.1%.</li>
+<li>Q4 가이던스: 매출 $207~227M, non-GAAP EPS $0.40~0.56 — 컨센서스 중간값 수준, 무난.</li>
+<li>Q2 쇼크 원인(design release 지연·메모리 공급제약)이 Q3에 회복세 — 경영진 "일시적" 주장에 힘 실림.</li>
+</ul>`,
+ senti:`<h3>💬 센티먼트</h3>
+<ul>
+<li>애널리스트: <b>Moderate Buy</b> (Strong Buy 1·Buy 3·Hold 2, Sell 0) — 평균 목표주가 <b>$49.33, 현 주가 대비 +60%</b>.</li>
+<li>"실적은 맞추는데 주가는 안 오른다"는 괴리 — <b>증권 집단소송 오버행</b> 때문 (class period 2025-12-10~2026-05-27, lead plaintiff 마감 9/4).</li>
+<li>공매도 비율 7.6~8.1% — 소송 불확실성에 베팅한 숏이 쌓여 있음 → 소송 해소 시 숏커버 랠리 가능.</li>
+<li><span class="tag tr">주의</span> 9월 임원 매도: SVP 9,500주($289k), Director 27,500주 — 규모는 일상적이나 센티먼트에 부정적.</li>
+<li>기관 보유율 88.38%.</li>
+</ul>`,
+ peers:`<h3>🔗 관련 종목</h3>
+<table><tr><th>종목</th><th>주가</th><th>시총</th><th>PER</th><th>비고</th></tr>
+<tr><td><b>CTS</b></td><td>$59.27</td><td>$1.69B</td><td>25x</td><td>이번 발굴 2번 타자 — 센서/부품</td></tr>
+<tr><td><b>FORM</b></td><td>$148.44</td><td>$10.5B</td><td>90x</td><td>프로브카드 — 이미 재평가 완료</td></tr>
+<tr><td><b>COHU</b></td><td>$70.34</td><td>$3.1B</td><td>적자</td><td>테스트 핸들러 — 모멘텀 과열</td></tr>
+<tr><td><b>DNP/급등</b></td><td>-</td><td>-</td><td>-</td><td>일본 포토마스크 (Toppan·DNP) — 비상장/일본상장</td></tr></table>
+<p class="note">미국 상장 순수 포토마스크 업체는 PLAB이 유일 — 비교군이 없어 저평가가 방치되기 쉬운 구조.</p>`,
+ verdictHtml:`<div class="verdict v-buy"><b>✅ 매수(신중) — 강도 <span class="score">60</span>/100</b><br><br>
+<b>근거:</b> ① PER 11x·PBR 1.1x 절대 저평가 + ② 시총의 37% 현금·무차입 재무구조 + ③ 하이엔드 IC 믹스 44% 역대 최고 + ④ 애널리스트 목표가 +60% 업사이드 + ⑤ Q2 쇼크 원인이 Q3에 회복.<br><br>
+<b>신중인 이유:</b> 집단소송 오버행(진행 중) + 중국 27% 익스포저 + 200일선 하회. 소송 추이와 12월 Q4 실적이 확인 포인트.<br><br>
+<b>전략:</b> $28~31 구간 분할 매수, 200일선($36) 돌파 안착 시 추가. 손절 $25 이탈 시 재검토.</div>`
+},
+cts:{
+ name:"CTS (CTS Corp)",price:59.27,mcap:"$1.69B",pe:"25.1x",fwdpe:"22.3x",pb:"~2.9x",margin:"12.4%",roe:"13.48%",
+ labels:["Q2 25","Q3 25","Q4 25","Q1 26","Q2 26"],
+ rev:[135.3,143,137.3,139.2,144.8],eps:[0.57,0.60,0.62,0.62,0.74],gm:[37.0,38.9,39.1,39.5,41.5],
+ pos:{lo:36.03,cur:59.27,hi:69.55,ma50:59.88,ma200:58.76},
+ mb:[1,0,0.5,0.5,0.5,1,1,1],
+ verdict:"매수(신중)",score:60,vcls:"v-buy",
+ overview:`<h3>🏢 기업개요</h3>
+<ul>
+<li><b>1896년 설립, 130년 업력</b>의 전자부품 제조사 (Chicago Telephone Supply → CTS). 슬로건 "Sense, Connect and Move".</li>
+<li>사업: 센서(압력·온도·위치·전류)·액추에이터(피에조)·전자부품(쿼츠 크리스탈/오실레이터 등 주파수 제어)·스위치.</li>
+<li>전방 믹스 전환 중: <b>비자동차(diversified) 59%</b> — 의료·산업·항공우주/방산이 +15% YoY. 운송(자동차) 41%는 -2% YoY.</li>
+<li>설계-반영(design-in) 사이클 12~36개월 — 일단 채택되면 이탈이 적은 <b>스티키한 매출</b> 구조.</li>
+<li>Q2 북미 대형 OEM과 <b>$100M 센서 계약</b> 체결 — 단일 계약 기준 기록적 규모.</li>
+<li>경영진: 2026년 7월 COO 출신 Pratik Trivedi CEO 승진.</li>
+<li><span class="tag tn">오해</span> 시장은 여전히 "자동차 부품주"로 보지만, 성장의 질은 비자동차에서 나옴.</li>
+</ul>`,
+ tech:`<h3>📈 기술적 분석</h3>
+<canvas class="chart" id="pos-cts"></canvas>
+<ul>
+<li>52주 레인지 <b>$36.03 ~ $69.55</b> — 현재가는 레인지 <b>69%</b> 위치, 고점 대비 <b>-14.8%</b>.</li>
+<li>50일선 $59.88 <b>살짝 아래</b>, 200일선 $58.76 <b>위</b> — 단기 조정, 장기 추세는 유지.</li>
+<li>6/25 고점 $69.55 → 8/24 $55.92까지 -19.6% 조정 후 반등 (Zacks "Buy the Bottom" 해머 패턴).</li>
+<li>7/28 실적일 <b>+7.3% 급등</b> — 연중 최대 일간 상승, 실적 모멘텀 확인.</li>
+<li>YTD +39.5%, 1년 +51.1% — 이미 오른 구간이라 추격보다 눌림목 접근.</li>
+<li>다음 이벤트: <b>10/27 Q3 실적</b> (Zacks 컨센서스 EPS $0.66, +10% YoY).</li>
+</ul>`,
+ fund:`<h3>💰 기본적 분석</h3>
+<div class="kv"><span>시가총액</span><b>$1.69B</b></div>
+<div class="kv"><span>PER (TTM)</span><b>25.1x</b></div>
+<div class="kv"><span>Forward PER (FY26E)</span><b class="pos">22.3x</b></div>
+<div class="kv"><span>PEG</span><b>1.40</b></div>
+<div class="kv"><span>PBR</span><b>~2.9x</b></div>
+<div class="kv"><span>EV/EBITDA</span><b>~12x</b></div>
+<div class="kv"><span>순마진 (Q2)</span><b class="pos">12.37%</b></div>
+<div class="kv"><span>ROE</span><b class="pos">13.48%</b></div>
+<div class="kv"><span>부채비율 (D/E)</span><b class="pos">0.10 — 사실상 무차입</b></div>
+<div class="kv"><span>배당수익률</span><b>0.3% (분기 $0.04)</b></div>
+<ul style="margin-top:10px">
+<li>PLAB만큼 극단적 저평가는 아니지만, <b>실적이 PER을 따라잡는 중</b> — Forward 22x로 한 단계 낮아짐.</li>
+<li>PEG 1.4 — 두 자릿수 EPS 성장(2027E +10~11%) 기업으로 무난~매력적.</li>
+<li>D/E 0.10, 유동비율 2.61 — 재무 안정성 우수. 자사주 매입 지속 (발행주식의 1.6% 소각).</li>
+<li>비교: 대형 센서/커넥터주 Amphenol PER 42x·Littelfuse forward 27x 대비 할인.</li>
+</ul>`,
+ earn:`<h3>📊 실적 분석</h3>
+<canvas class="chart" id="earn-cts"></canvas>
+<table><tr><th>분기</th><th>매출</th><th>조정 EPS</th><th>조정 GM</th></tr>
+<tr><td>Q2 25</td><td>$135.3M</td><td>$0.57</td><td>~37%</td></tr>
+<tr><td>Q3 25</td><td>$143.0M</td><td>$0.60</td><td>38.9%</td></tr>
+<tr><td>Q4 25</td><td>$137.3M</td><td>$0.62</td><td>39.1%</td></tr>
+<tr><td>Q1 26</td><td>$139.2M</td><td>$0.62</td><td>39.5%</td></tr>
+<tr><td>Q2 26</td><td>$144.8M</td><td class="pos">$0.74</td><td class="pos">41.5%</td></tr></table>
+<ul>
+<li><b>연속 5개 분기 매출·마진 동반 개선</b> — 조정 EPS는 Q1·Q2 연속 19~21% 컨센서스 비트.</li>
+<li>Q2: 매출 +7.0% YoY, 조정 EBITDA 마진 25.4% (+240bp), 영업마진 18.5%.</li>
+<li><b>FY2026 가이던스 2연속 상향</b>: 매출 $565~585M, 조정 EPS <b>$2.55~2.70</b> (기존 $2.35~2.45).</li>
+<li>의료 매출 +45% YoY, Q2 신규 수주 $163M, 누적 booked business $11억.</li>
+<li>촉매: 8/26 전류센싱 유통 확대(데이터센터 전력관리 직접 수혜), 9/30 첫 디지털 온도센서 플랫폼 출시.</li>
+</ul>`,
+ senti:`<h3>💬 센티먼트</h3>
+<ul>
+<li>애널리스트: <b>Moderate Buy</b>, 컨센서스 목표주가 <b>$73.50 (+24%)</b>.</li>
+<li><b>신규 커버리지 2건</b>: 9/2 Lake Street Buy(TP $67), 9/10 Barrington Outperform(<b>TP $80</b>) — 소형주에 커버리지가 붙기 시작했다는 것 자체가 신호.</li>
+<li>Zacks "Buy the Bottom" (8/21) — 해머 패턴 + 추정치 상향.</li>
+<li>기관 보유율 <b>96.87%</b>, 9월 BofA 149,504주($9.75M) 신규 매수.</li>
+<li><span class="tag tn">주의</span> 커버 애널리스트 4명에 불과 — Sidoti가 9월 Q3/Q4 추정치를 소폭 하향한 바 있어 컨센서스 하향 리스크 상존.</li>
+</ul>`,
+ peers:`<h3>🔗 관련 종목</h3>
+<table><tr><th>종목</th><th>주가</th><th>시총</th><th>PER</th><th>비고</th></tr>
+<tr><td><b>PLAB</b></td><td>$30.83</td><td>$1.82B</td><td>11x</td><td>이번 발굴 1번 타자 — 포토마스크</td></tr>
+<tr><td><b>LFUS</b></td><td>$435.55</td><td>$10.8B</td><td>fwd 27x</td><td>Littelfuse — 대형 회로보호, Zacks 비교군</td></tr>
+<tr><td><b>APH</b></td><td>-</td><td>$207B</td><td>42x</td><td>Amphenol — 대형 커넥터, CTS의 대형 peer</td></tr>
+<tr><td><b>TEL</b></td><td>-</td><td>-</td><td>-</td><td>TE Connectivity — 대형 센서/커넥터 peer</td></tr></table>
+<p class="note">대형 peer 대비 밸류에이션 할인 + 소형주 소외가 CTS의 기회 요인.</p>`,
+ verdictHtml:`<div class="verdict v-buy"><b>✅ 매수(신중) — 강도 <span class="score">60</span>/100</b><br><br>
+<b>근거:</b> ① 분기 연속 20%대 EPS 서프라이즈 + 가이던스 2연속 상향의 실행력, ② 비자동차 59%·의료 +45%의 질적 전환, ③ D/E 0.10 재무 안정성, ④ 신규 커버리지 2건 + 컨센서스 TP +24%, ⑤ PEG 1.4·Forward 22x로 과열 아닌 밸류에이션.<br><br>
+<b>신중인 이유:</b> YTD +40%로 상당 부분 선반영, 50일선 아래 — 추세 추종 관점에선 $60 안착 확인이 안전. 자동차 41% 익스포저 + 10/27 실적 전 변동성.<br><br>
+<b>전략:</b> $57~59 구간 1차 분할 매수, 10/27 Q3 실적 확인 후 추가. 200일선($58.5) 이탈 시 재검토.</div>`
+}};
+const MB_LABELS=["① 아직 충분히 작은 기업인가?","② 오너 경영 / 이해일치","③ 높은 성장 여지","④ 반복 가능한 매출 구조","⑤ 높은 마진","⑥ 정직한 경영진","⑦ 자본 효율적 운영","⑧ 현금 창출 능력"];
+function switchStock(s){
+ document.querySelectorAll(".stocktab").forEach(b=>b.classList.remove("on"));
+ event.currentTarget.classList.add("on");
+ ["plab","cts","radar"].forEach(k=>document.getElementById("p-"+k).classList.toggle("on",k===s));
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function switchTab(t,s){
+ const box=document.getElementById("c-"+t);
+ box.querySelectorAll(".tab").forEach(b=>b.classList.remove("on"));
+ event.currentTarget.classList.add("on");
+ box.querySelectorAll(".sect").forEach(x=>x.classList.remove("on"));
+ document.getElementById("s-"+t+"-"+s).classList.add("on");
+ drawFor(t,s);
+}
+function renderPanel(t){
+ const d=DATA[t];
+ let th="",ch="";
+ TABS.forEach(x=>{
+  th+='<button class="tab'+(x[0]==="overview"?" on":"")+'" onclick="switchTab(\''+t+'\',\''+x[0]+'\')">'+x[1]+"</button>";
+  const body=x[0]==="verdict"?d.verdictHtml:d[x[0]];
+  ch+='<div class="sect'+(x[0]==="overview"?" on":"")+'" id="s-'+t+"-"+x[0]+'"><div class="card">'+body+"</div></div>";
+ });
+ document.getElementById("tabs-"+t).innerHTML=th;
+ document.getElementById("c-"+t).innerHTML=ch;
+}
+function renderMB(){
+ const names={plab:"PLAB",cts:"CTS"};
+ let h="";
+ Object.keys(names).forEach(k=>{
+  const d=DATA[k],tot=d.mb.reduce((a,b)=>a+b,0);
+  h+='<h4 style="margin:14px 0 6px">'+names[k]+' — <span class="'+(tot>=6?"pos":tot>=4?"neu":"neg")+'">'+tot.toFixed(1)+'/8 '+(tot>=6?"상단":"보통")+"</span></h4>";
+  d.mb.forEach((v,i)=>{
+   const c=v>=1?"var(--grn)":v>=0.5?"var(--amb)":"var(--red)";
+   h+='<div style="font-size:13px;margin-bottom:6px">'+MB_LABELS[i]+'</div><div class="bar"><i style="width:'+(v*100)+"%;background:"+c+'"></i></div>';
+  });
+ });
+ h+='<p class="note">둘 다 시총 $2B 미만의 진짜 소형주(① 충족). PLAB은 소송 오버행으로 ⑥ 감점, CTS는 전문경영인 체제로 ② 감점. 멀티배거 확률은 "보통~보통 상단" — 소형 밸류의 복리+리레이팅을 노리는 포지션.</p>';
+ document.getElementById("mb").innerHTML=h;
+}
+function drawPos(id,p){
+ const el=document.getElementById(id);if(!el)return;
+ Object.values(Chart.instances||{}).forEach(c=>{if(c.canvas&&c.canvas.id===id)c.destroy();});
+ const pct=Math.round((p.cur-p.lo)/(p.hi-p.lo)*100);
+ new Chart(el,{type:"bar",
+  data:{labels:["52주 위치"],datasets:[
+   {label:"저점 $"+p.lo.toFixed(2),data:[p.lo],backgroundColor:"#30363d"},
+   {label:"현재 $"+p.cur.toFixed(2)+" ("+pct+"%)",data:[p.cur-p.lo],backgroundColor:"#58a6ff"},
+   {label:"고점 $"+p.hi.toFixed(2),data:[p.hi-p.cur],backgroundColor:"#21262d"}]},
+  options:{indexAxis:"y",responsive:true,plugins:{legend:{labels:{color:"#e6edf3",boxWidth:12,font:{size:11}}}},
+   scales:{x:{stacked:true,ticks:{color:"#8b949e"}},y:{stacked:true,ticks:{color:"#8b949e"}}}}});
+ const n=document.createElement("p");n.className="note";
+ n.innerHTML="50일선 $"+p.ma50.toFixed(2)+" / 200일선 $"+p.ma200.toFixed(2);
+ el.parentNode.insertBefore(n,el.nextSibling);
+}
+function drawEarn(id,d){
+ const el=document.getElementById(id);if(!el)return;
+ Object.values(Chart.instances||{}).forEach(c=>{if(c.canvas&&c.canvas.id===id)c.destroy();});
+ const gmData=d.gm.map(v=>v===null?null:v);
+ new Chart(el,{type:"bar",
+  data:{labels:d.labels,datasets:[
+   {type:"line",label:"총마진 %",data:gmData,yAxisID:"y1",borderColor:"#bc8cff",backgroundColor:"#bc8cff",tension:.3,spanGaps:true},
+   {label:"매출 ($M)",data:d.rev,yAxisID:"y",backgroundColor:"rgba(88,166,255,.55)"},
+   {label:"EPS ($)",data:d.eps,yAxisID:"y1",backgroundColor:"rgba(63,185,80,.55)"}]},
+  options:{responsive:true,plugins:{legend:{labels:{color:"#e6edf3",boxWidth:12,font:{size:11}}}},
+   scales:{y:{ticks:{color:"#8b949e"}},y1:{position:"right",ticks:{color:"#8b949e"},grid:{drawOnChartArea:false}}}}});
+}
+function drawFor(t,s){
+ const d=DATA[t];
+ if(s==="tech")drawPos("pos-"+t,d.pos);
+ if(s==="earn")drawEarn("earn-"+t,d);
+}
+renderPanel("plab");renderPanel("cts");renderMB();
+drawFor("plab","overview");
+</script>
+</body>
+</html>
