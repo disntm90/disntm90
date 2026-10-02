@@ -101,12 +101,12 @@ function Card({title, children, cls}) {
 function Tag({type, children}) {
   return <span className={"tag tag-" + type}>{children}</span>;
 }
-function Chart({type, data, options, tall}) {
+function CChart({type, data, options, tall}) {
   const ref = useRef(null);
   const inst = useRef(null);
   useEffect(() => {
     if (inst.current) inst.current.destroy();
-    inst.current = new Chart(ref.current, { type, data, options });
+    inst.current = new window.Chart(ref.current, { type, data, options });
     return () => { if (inst.current) inst.current.destroy(); };
   }, []);
   return <div className={"chart-box" + (tall ? " tall" : "")}><canvas ref={ref}></canvas></div>;
@@ -127,7 +127,7 @@ function OverviewTab() {
         <KV k="비즈니스 모델" v="맞춤형 주문제작(Engineered-to-order) 전력 제어실·스위치기어 설계·제조·시공" />
       </Card>
       <Card title="매출 믹스 (FY2025)">
-        <Chart type="doughnut" data={{
+        <CChart type="doughnut" data={{
           labels: ['Oil & Gas 37%', 'Electric Utility 25%', 'Commercial·기타산업 16%', 'Petrochemical 14%', 'Light Rail 4%', '기타 4%'],
           datasets: [{ data: [37, 25, 16, 14, 4, 4],
             backgroundColor: ['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7','#64748b'], borderWidth: 0 }]
@@ -503,7 +503,7 @@ function MultiTab() {
           <div className="big">5.0<span style={{fontSize:20,color:'#94a3b8'}}>/8</span></div>
           <div className="lbl">등급: 보통 (6.5~8 유망 / 4~6 보통 / 4 미만 낮음)</div>
         </div>
-        <Chart type="radar" tall data={{
+        <CChart type="radar" tall data={{
           labels: ['규모','밸류','성장질','투자효율','FCF수익률','수주','금리체력','추격여부'],
           datasets: [{ label: 'POWL', data: [0, 0, 1, 0.5, 0.5, 1, 1, 1],
             backgroundColor: 'rgba(59,130,246,.25)', borderColor: '#3b82f6', pointBackgroundColor: '#3b82f6' }]
