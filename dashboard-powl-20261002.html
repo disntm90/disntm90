@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POWL 종목 분석 대시보드 — 2026-10-02</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0f1e; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+  .app { max-width: 600px; margin: 0 auto; padding-bottom: 60px; }
+  .header { padding: 20px 16px 12px; border-bottom: 1px solid #1e293b; }
+  .header h1 { font-size: 22px; font-weight: 800; }
+  .header .sub { color: #94a3b8; font-size: 12px; margin-top: 4px; }
+  .price-row { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; }
+  .price { font-size: 32px; font-weight: 800; }
+  .chg-pos { color: #4ade80; font-weight: 700; }
+  .chg-neg { color: #f87171; font-weight: 700; }
+  .verdict-banner { margin: 12px 16px 0; padding: 14px; border-radius: 12px; background: #1e293b; border-left: 4px solid #4ade80; }
+  .verdict-banner .v-title { font-size: 13px; color: #94a3b8; }
+  .verdict-banner .v-main { font-size: 20px; font-weight: 800; margin: 4px 0; }
+  .verdict-banner .v-desc { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+  .tabbar { display: flex; overflow-x: auto; gap: 8px; padding: 12px 16px; position: sticky; top: 0; background: #0a0f1e; z-index: 10; border-bottom: 1px solid #1e293b; scrollbar-width: none; }
+  .tabbar::-webkit-scrollbar { display: none; }
+  .tab { white-space: nowrap; padding: 8px 14px; border-radius: 20px; border: 1px solid #334155; background: #0f172a; color: #cbd5e1; font-size: 13px; cursor: pointer; }
+  .tab.active { background: #3b82f6; border-color: #3b82f6; color: #fff; font-weight: 700; }
+  .section { padding: 16px; }
+  .card { background: #111c33; border: 1px solid #1e293b; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; color: #f1f5f9; }
+  .card h4 { font-size: 13px; font-weight: 700; margin: 12px 0 6px; color: #93c5fd; }
+  .card p, .card li { font-size: 13px; line-height: 1.6; color: #cbd5e1; }
+  .card ul { padding-left: 18px; }
+  .kv { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #1e293b; font-size: 13px; gap: 8px; }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: #94a3b8; flex-shrink: 0; }
+  .kv .v { font-weight: 600; text-align: right; }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.tbl th { background: #1e293b; padding: 8px 6px; text-align: left; color: #94a3b8; font-weight: 600; }
+  table.tbl td { padding: 8px 6px; border-bottom: 1px solid #1e293b; vertical-align: top; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+  .tag-pos { background: rgba(34,197,94,.15); color: #4ade80; }
+  .tag-neg { background: rgba(248,113,113,.15); color: #f87171; }
+  .tag-neu { background: rgba(251,191,36,.15); color: #fbbf24; }
+  .tag-info { background: rgba(59,130,246,.15); color: #93c5fd; }
+  .tag-tech { background: rgba(59,130,246,.15); color: #60a5fa; }
+  .tag-fin { background: rgba(34,197,94,.15); color: #4ade80; }
+  .tag-mkt { background: rgba(249,115,22,.15); color: #fb923c; }
+  .tag-etc { background: rgba(168,85,247,.15); color: #c084fc; }
+  .senti-card { background: #111c33; border: 1px solid #1e293b; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .senti-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
+  .senti-head .who { font-size: 12px; color: #94a3b8; }
+  .senti-body { font-size: 13px; line-height: 1.6; color: #e2e8f0; }
+  .senti-foot { font-size: 11px; color: #64748b; margin-top: 6px; }
+  .stat-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .stat-box { flex: 1; background: #111c33; border: 1px solid #1e293b; border-radius: 10px; padding: 10px; text-align: center; }
+  .stat-box .n { font-size: 20px; font-weight: 800; }
+  .stat-box .l { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  .check-card { border-left: 4px solid #334155; }
+  .check-ok { border-left-color: #22c55e; }
+  .check-warn { border-left-color: #fbbf24; }
+  .check-no { border-left-color: #f87171; }
+  .score-hero { text-align: center; padding: 18px; }
+  .score-hero .big { font-size: 44px; font-weight: 800; color: #fbbf24; }
+  .score-hero .lbl { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+  .caveat { background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.3); border-radius: 12px; padding: 14px; font-size: 12px; line-height: 1.6; color: #fca5a5; margin-bottom: 12px; }
+  .filterbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .chart-box { position: relative; height: 260px; margin: 8px 0; }
+  .chart-box.tall { height: 320px; }
+  .note { font-size: 11px; color: #64748b; line-height: 1.5; margin-top: 8px; }
+  .bull li::marker { color: #4ade80; }
+  .bear li::marker { color: #f87171; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const TABS = [
+  { id: 'overview', label: '개요' },
+  { id: 'tech', label: '기술적분석' },
+  { id: 'earnings', label: '실적' },
+  { id: 'fin', label: '재무' },
+  { id: 'compare', label: '비교' },
+  { id: 'x', label: '🐦 X' },
+  { id: 'reddit', label: '💬 Reddit' },
+  { id: 'social', label: '📱 소셜' },
+  { id: 'terms', label: '📖 용어' },
+  { id: 'multi', label: '🔟 멀티배거' },
+];
+
+function KV({k, v}) {
+  return <div className="kv"><span className="k">{k}</span><span className="v">{v}</span></div>;
+}
+function Card({title, children, cls}) {
+  return <div className={"card" + (cls ? " " + cls : "")}>{title && <h3>{title}</h3>}{children}</div>;
+}
+function Tag({type, children}) {
+  return <span className={"tag tag-" + type}>{children}</span>;
+}
+function Chart({type, data, options, tall}) {
+  const ref = useRef(null);
+  const inst = useRef(null);
+  useEffect(() => {
+    if (inst.current) inst.current.destroy();
+    inst.current = new Chart(ref.current, { type, data, options });
+    return () => { if (inst.current) inst.current.destroy(); };
+  }, []);
+  return <div className={"chart-box" + (tall ? " tall" : "")}><canvas ref={ref}></canvas></div>;
+}
+const darkTicks = { color: '#94a3b8', font: { size: 10 } };
+
+function OverviewTab() {
+  return (
+    <div className="section">
+      <Card title="🏢 기업 개요">
+        <KV k="기업명" v="Powell Industries (POWL)" />
+        <KV k="설립" v="1947년 (William E. Powell)" />
+        <KV k="본사" v="Houston, Texas" />
+        <KV k="CEO" v="Brett Alan Cope" />
+        <KV k="직원 수" v="3,143명" />
+        <KV k="상장" v="NASDAQ (S&P 600)" />
+        <KV k="섹터" v="Producer Manufacturing / Electrical Products" />
+        <KV k="비즈니스 모델" v="맞춤형 주문제작(Engineered-to-order) 전력 제어실·스위치기어 설계·제조·시공" />
+      </Card>
+      <Card title="매출 믹스 (FY2025)">
+        <Chart type="doughnut" data={{
+          labels: ['Oil & Gas 37%', 'Electric Utility 25%', 'Commercial·기타산업 16%', 'Petrochemical 14%', 'Light Rail 4%', '기타 4%'],
+          datasets: [{ data: [37, 25, 16, 14, 4, 4],
+            backgroundColor: ['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7','#64748b'], borderWidth: 0 }]
+        }} options={{ plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 12 } } }, cutout: '55%' }} />
+        <p className="note">백로그 기준으로는 비산업(Utility+Commercial) 비중이 48%까지 확대 — 사업 믹스가 AI 전력 쪽으로 이동 중</p>
+      </Card>
+      <Card title="🛡️ 경쟁우위 (Moat)">
+        <ul>
+          <li>78년 축적된 맞춤형 전력제어 엔지니어링 노하우</li>
+          <li>미주 유틸리티·LNG 대형 EPC와의 장기 공급 관계</li>
+          <li>백로그 → 반복수주로 이어지는 사이클</li>
+          <li>무차입 재무구조로 대형 프로젝트 선행투자 가능</li>
+        </ul>
+      </Card>
+      <Card title="🗺️ 로드맵">
+        <h4>1년</h4>
+        <ul><li>Jacintoport 증설(33.5만 sqft) FY26 종료 시 완공</li><li>백로그 $2.4B 중 54%($1.3B)를 12개월 내 매출 전환</li></ul>
+        <h4>3년</h4>
+        <ul><li>그린필드 $70–100M 투자 검토, Remsdaq SCADA 자동화 확대</li><li>데이터센터 수주 파이프라인 확대</li></ul>
+        <h4>5년</h4>
+        <ul><li>Utility+Commercial 비중 50%대로 확대 방향</li></ul>
+      </Card>
+      <Card title="📊 종합 의견">
+        <div className="stat-row">
+          <div className="stat-box"><div className="n" style={{color:'#4ade80'}}>매수</div><div className="l">투자의견</div></div>
+          <div className="stat-box"><div className="n">65<span style={{fontSize:14,color:'#94a3b8'}}>/100</span></div><div className="l">확신도</div></div>
+          <div className="stat-box"><div className="n" style={{color:'#fbbf24'}}>5.0<span style={{fontSize:14,color:'#94a3b8'}}>/8</span></div><div className="l">멀티배거 (보통)</div></div>
+        </div>
+        <p>$2.4B 역대 백로그(book-to-bill 3.0x) + 무차입·순현금 $631M + ROE 28%의 펀더멘털은 최상급. 다만 PER 36.5x·EV/EBITDA 26.7x는 기대 선반영, 데드크로스 + 3분기 연속 컨센서스 미달은 경고등 → "강한매수"가 아닌 "매수".</p>
+        <h4>🐂 Bull Case</h4>
+        <ul className="bull">
+          <li>백로그 54%의 12개월 매출 전환 → FY27 EPS $6.87(+28.2%) 가시성</li>
+          <li>데이터센터 메가 오더 파이프라인 확대·수주 믹스 개선</li>
+          <li>Jacintoport 증설 + 블랙록 9.9% 신규 지분</li>
+        </ul>
+        <h4>🐻 Bear Case</h4>
+        <ul className="bear">
+          <li>고밸류에이션(PEG 2.46, P/B 9.2x) — 실적 미스 시 −15% 급락 전례</li>
+          <li>기술적 하락추세 미해소 + 공매도 6.75%</li>
+          <li>Petrochemical −49% 침체 · 내부자 매도 지속</li>
+        </ul>
+        <h4>🎯 액션 플랜</h4>
+        <table className="tbl">
+          <tr><th>구분</th><th>가격</th><th>비중</th></tr>
+          <tr><td>1차 매수</td><td>$180–190</td><td>포트폴리오 2–3%</td></tr>
+          <tr><td>2차 매수</td><td>$167–172</td><td>추가 2%</td></tr>
+          <tr><td>손절선</td><td>$160</td><td>전량 청산</td></tr>
+          <tr><td>1차 익절</td><td>$215–220</td><td>30–40% 실현</td></tr>
+          <tr><td>2차 익절</td><td>$260–280</td><td>30% 실현, 잔량은 $328 트레일링</td></tr>
+        </table>
+        <h4>👀 모니터링</h4>
+        <ul><li>11/17 Q4 실적 (EPS 컨센서스 ≈$1.56)</li><li>분기 백로그·book-to-bill 추이</li><li>신규 데이터센터 메가 오더</li><li>Jacintoport 증설 램프업</li></ul>
+      </Card>
+    </div>
+  );
+}
+
+function TechTab() {
+  return (
+    <div className="section">
+      <Card title="📈 핵심 기술 지표">
+        <table className="tbl">
+          <tr><th>지표</th><th>현재값</th><th>신호</th></tr>
+          <tr><td>RSI (14)</td><td>51.8</td><td><Tag type="neu">중립 상단</Tag></td></tr>
+          <tr><td>MACD</td><td>−2.04 / 시그널 −4.62</td><td><Tag type="pos">모멘텀 반전 중 (히스토그램 +2.58)</Tag></td></tr>
+          <tr><td>50일 이동평균</td><td>$194.92 (현주가 −2.2%)</td><td><Tag type="neg">하회</Tag></td></tr>
+          <tr><td>200일 이동평균</td><td>$207.22 (현주가 −8.0%)</td><td><Tag type="neg">하회 · 9/18 데드크로스</Tag></td></tr>
+          <tr><td>볼린저밴드 (20,2)</td><td>상단 $196.03 / 중간 $181.53 / 하단 $167.02</td><td><Tag type="neu">밴드 상단부 (74%)</Tag></td></tr>
+          <tr><td>거래량</td><td>60일 평균 648K vs 최근 302K (0.47x)</td><td><Tag type="neu">관망세</Tag></td></tr>
+        </table>
+      </Card>
+      <Card title="🕯️ 하이킨아시 (Heikin-Ashi)">
+        <KV k="일봉" v="20개봉 중 13개 양봉 — 바닥 다지기" />
+        <KV k="주봉" v="20개봉 중 8개 양봉 — 약세 잔존" />
+        <p className="note">하이킨아시: 평균값으로 계산한 캔들로 추세를 매끄럽게 보여줌. 연속 양봉 = 상승 추세.</p>
+      </Card>
+      <Card title="🧱 지지선 & 저항선">
+        <KV k="1차 지지선" v="$167–172" />
+        <KV k="2차 지지선" v="$92.59 (52주 저점)" />
+        <KV k="1차 저항선" v="$196–210" />
+        <KV k="2차 저항선" v="$230–245" />
+        <KV k="3차 저항선" v="$328.00 (52주 고점)" />
+      </Card>
+      <Card title="🔍 차트 패턴">
+        <p>고점($328) → 저점 하락 후 <b>바닥 다지기</b> 구간. <b>역헤드앤숄더</b> 우측 어깨 형성 시도 중. $196–210 저항 돌파 여부가 추세 전환의 분기점.</p>
+      </Card>
+      <Card title="🎯 진입·청산 포인트">
+        <KV k="매수 진입" v="$180–190 (1차) / $167–172 (2차)" />
+        <KV k="손절선" v="$160" />
+        <KV k="1차 목표가" v="$215–220" />
+        <KV k="2차 목표가" v="$260–280" />
+      </Card>
+    </div>
+  );
+}
+
+function EarningsTab() {
+  return (
+    <div className="section">
+      <Card title="📊 실적 서프라이즈 히스토리">
+        <table className="tbl">
+          <tr><th>분기</th><th>EPS 서프라이즈</th><th>주가 반응</th></tr>
+          <tr><td>Q4 FY25</td><td><Tag type="pos">+12.2% Beat</Tag></td><td><Tag type="neg">−16.7% 급락</Tag> (차익실현)</td></tr>
+          <tr><td>Q1 FY26</td><td><Tag type="pos">+18% Beat</Tag></td><td><Tag type="pos">+7%</Tag></td></tr>
+          <tr><td>Q2 FY26</td><td><Tag type="neg">−6.9% Miss</Tag></td><td><Tag type="pos">+9.2%</Tag></td></tr>
+          <tr><td>Q3 FY26</td><td><Tag type="neg">−4.7% Miss</Tag></td><td><Tag type="neg">−3.8% → 이후 −18.6%</Tag></td></tr>
+        </table>
+        <p className="note">Beat해도 빠지고 Miss해도 오르는 등 실적 당일 반응이 일관되지 않음 — 기대치가 이미 주가에 반영된 상태.</p>
+      </Card>
+      <Card title="🔮 다음 실적 컨센서스">
+        <KV k="발표일" v="2026-11-17 (장후, FY26 Q4)" />
+        <KV k="EPS 컨센서스" v="≈ $1.56" />
+        <KV k="매출 컨센서스" v="≈ $370M" />
+        <KV k="FY27 EPS 컨센서스" v="$6.87 (+28.2%)" />
+      </Card>
+      <Card title="🎯 주목할 핵심 지표 TOP 5">
+        <ul>
+          <li><b>백로그</b> — $2.4B 유지 여부 (사상 최대)</li>
+          <li><b>Book-to-bill</b> — Q3 3.0x 수준 유지 여부</li>
+          <li><b>데이터센터 수주 믹스</b> — 메가 오더 추가 여부</li>
+          <li><b>총마진</b> — 30.6% 유지 여부</li>
+          <li><b>Petrochemical</b> — −49% 침체에서 회복 신호</li>
+        </ul>
+      </Card>
+      <Card title="📢 경영진 가이던스">
+        <p>"신규 수주 $9.34억, book-to-bill 3.0x… 백로그 $2.4B는 Powell 역사상 최고" — CEO Brett Alan Cope</p>
+        <p>"백로그의 54%가 12개월 내 매출로 전환, 수주잔고는 FY2028 깊숙이" — CFO</p>
+      </Card>
+      <Card title="♟️ 실적 전후 트레이딩 전략">
+        <h4>실적 발표 전</h4>
+        <p>추격매수 금지, $180–190 분할 진입으로 관망.</p>
+        <h4>발표 후 시나리오</h4>
+        <table className="tbl">
+          <tr><th>시나리오</th><th>대응</th></tr>
+          <tr><td>갭업 +5% 이상</td><td>목표1($215–220)에서 30–40% 익절</td></tr>
+          <tr><td>보합 (−2%~+2%)</td><td>홀딩, 핵심 지표 재확인</td></tr>
+          <tr><td>갭다운 −5% 이상</td><td>$167–172 지지 확인 후 대응, $160 하회 시 손절</td></tr>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+function FinTab() {
+  return (
+    <div className="section">
+      <Card title="💰 핵심 재무 지표">
+        <table className="tbl">
+          <tr><th>지표</th><th>POWL</th><th>업종 평균</th><th>평가</th></tr>
+          <tr><td>PER (TTM)</td><td>36.5x</td><td>~25.2x</td><td><Tag type="neg">프리미엄</Tag></td></tr>
+          <tr><td>Forward PER</td><td>29.5x</td><td>—</td><td>FY27 EPS +28% 시 정상화</td></tr>
+          <tr><td>PBR</td><td>9.18x</td><td>~3x대</td><td>ROE 28%로 정당화 시도</td></tr>
+          <tr><td>PSR</td><td>6.00x (Fwd 5.05x)</td><td>—</td><td><Tag type="neg">매출 대비 비쌈</Tag></td></tr>
+          <tr><td>EV/EBITDA</td><td>26.7x</td><td>—</td><td><Tag type="neg">고평가 구간</Tag></td></tr>
+          <tr><td>ROE</td><td>28.25%</td><td>—</td><td><Tag type="pos">최상위 (ROIC 121.5%)</Tag></td></tr>
+          <tr><td>부채비율 (D/E)</td><td>0.00</td><td>—</td><td><Tag type="pos">무차입 (부채 $2.52M)</Tag></td></tr>
+          <tr><td>유동비율</td><td>1.97x</td><td>—</td><td><Tag type="pos">건전</Tag></td></tr>
+        </table>
+      </Card>
+      <Card title="💵 현금흐름 & 재무 건전성">
+        <KV k="FCF (TTM)" v="$244M (마진 21.1%)" />
+        <KV k="FCF 추이" v="$96.7M → $154.8M → $244M (매출 성장 상회)" />
+        <KV k="FCF 수익률" v="3.51%" />
+        <KV k="순현금" v="$631M (시총의 ~9%)" />
+        <KV k="배당" v="분기 $0.09 (수익률 0.19%, 3년 연속 인상)" />
+        <KV k="자사주 매입" v="없음" />
+      </Card>
+      <Card title="📉 분기 매출·EPS 추이">
+        <table className="tbl">
+          <tr><th>분기</th><th>매출</th><th>EPS</th><th>YoY</th></tr>
+          <tr><td>Q2 FY25</td><td>$278.6M</td><td>$1.27</td><td>+9.2%</td></tr>
+          <tr><td>Q3 FY26</td><td>$311.7M</td><td>$1.42</td><td>+8.9%</td></tr>
+        </table>
+        <p className="note">프로젝트성 수주 특성상 분기 변동성 존재. 연간 추세로 판단 필요.</p>
+      </Card>
+    </div>
+  );
+}
+
+function CompareTab() {
+  const rows = [
+    ['POWL', '$190.60', '$6.8B', '36.5 / 29.5', '+8.9%', '−41.9%', '51.8', '백로그 $2.4B·무차입 — 이번 발굴 1순위'],
+    ['MOD', '$189.21', '$9.7B', '67.5 / 24.7', '+28.0%', '−41.5%', '49.0', '액체냉각 순수 수혜, 컨센 목표가 +69%'],
+    ['AZZ', '$135.41', '$4.1B', '21.5 / 18.7', '+6.3%', '−16.5%', '43.1', '최저 밸류·디레버리징, 10/13 실적 촉매'],
+    ['MYRG', '$297.92', '$4.6B', '28.3 / 22.9', '+20.2%', '−40.8%', '51.2', '송배전 병목 순수 수혜, 순현금'],
+    ['PLPC', '$407.03', '$2.0B', '47.4 / 28.5', '+25.4%', '−19.3%', '49.9', '송전망 소형주, 어닝 서프라이즈 +86%'],
+    ['GNRC', '$207.91', '$12.3B', '47.7 / 21.3', '+10.3%', '−29.9%', '59.0', 'Amazon DC 딜 후 재평가'],
+    ['NVT', '$165.77', '$26.1B', '43.6 / 24.7', '+52.8%', '−10.2%', '52.9', '백로그 4배, DC 비중 44% 목표'],
+    ['TLN', '$323.09', '$15.5B', 'n/a / 10.8', '+18.6%', '−28.4%', '58.0', 'fwd P/E 최저, 4GW+ PPA 파이프라인'],
+    ['HUBB', '$466.98', '$24.2B', '26.8 / 23.0', '+15.3%', '−17.4%', '47.9', '유틸리티 capex 핵심 수혜, 안정적'],
+    ['VRT', '$246.12', '$94.4B', '55.8 / 36.7', '+24.1%', '−35.2%', '43.7', '$15B+ 백로그, 하이퍼스케일러 직수혜'],
+  ];
+  return (
+    <div className="section">
+      <Card title="🔎 AI-HPC 인프라/전력 후보 10선">
+        <p className="note" style={{marginBottom:8}}>멀티배거 잠재력 × 펀더멘털 × 기술적 셋업 기준 랭킹 (2026-10-01 종가)</p>
+        <div style={{overflowX:'auto'}}>
+        <table className="tbl">
+          <tr><th>#</th><th>티커</th><th>현재가</th><th>시총</th><th>PER</th><th>매출YoY</th><th>고점대비</th><th>한 줄 테제</th></tr>
+          {rows.map((r, i) => (
+            <tr key={i} style={i===0 ? {background:'rgba(59,130,246,.08)'} : {}}>
+              <td>{i+1}</td><td><b>{r[0]}</b></td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td><td>{r[4]}</td><td>{r[5]}</td><td>{r[7]}</td>
+            </tr>
+          ))}
+        </table>
+        </div>
+      </Card>
+      <Card title="🥈 러너업">
+        <h4>MOD (Modine) — 매수 (확신도 중)</h4>
+        <p>액체냉각 순수 수혜주. fwd P/E 24.7, 매출 +28%, 고점 −41.5% 조정. 리스크: 마진 압축(24.2%→20.8%), 내부자 매도 지속.</p>
+        <h4>AZZ — 매수 (확신도 중)</h4>
+        <p>후보 중 최저 밸류에이션(fwd 18.7x). 특수변압기+코팅 이중 수혜, 디레버리징($880M→$481M)+배당 인상, 10/13 실적 촉매. 리스크: +6.3% 온건 성장, 코팅 경기순환성.</p>
+      </Card>
+      <Card title="🔗 관련 종목 (섹터 레이더)">
+        <KV k="VRT" v="DC 전력·냉각 풀스택 — 직접 비교 대상" />
+        <KV k="NVT" v="전기 인클로저·열관리" />
+        <KV k="ETN" v="스위치기어 1위 대형 경쟁자" />
+        <KV k="HUBB" v="그리드 현대화 수혜" />
+        <KV k="MYRG" v="송배전 EPC — 유틸리티 CAPEX 공유" />
+        <KV k="MOD" v="DC 냉각 — 전력/열 테마 쌍두마차" />
+      </Card>
+    </div>
+  );
+}
+
+const SOCIAL = [
+  { p: 'Instagram', who: '@stocksharks · 팔로워 140만명', meta: '좋아요 280 · 2026-07-14', s: 'neu', t: 'AI 데이터센터용 스위치기어 사업 구조와 18억달러 수주잔고를 설명하면서도, 실적 미스와 내부자 매도를 리스크로 함께 지적하고 "수년간의 활주로냐 정점이냐"고 질문하는 균형 잡힌 영상.' },
+  { p: 'Instagram', who: '@stockbuster_ · 팔로워 6.5만명', meta: '좋아요 130 · 2026-09-03', s: 'pos', t: '무부채 재무구조의 저평가주 2선 중 하나로 POWL을 꼽으며, AI 전력 병목 수혜와 24억달러 수주잔고가 향후 12~18개월 실적을 끌어올릴 것이라고 주장.' },
+  { p: 'Instagram', who: '@real_bruno_souza · 팔로워 44만명', meta: '좋아요 30 · 2026-09-12', s: 'pos', t: '"변압기·변전소가 국가방위 우선순위"라는 정치 밈과 함께 POWL·Hammond·Eaton 3종목을 "당장 폭등할 주식"으로 홍보하는 자극적 영상 (광고성 짙음).' },
+  { p: 'Instagram', who: '@iamolivermore · 팔로워 3,800명', meta: '좋아요 10 · 2026-07-18', s: 'pos', t: 'AI 수혜는 칩이 아니라 전력·냉각이라며 POWL(4억달러 계약, 수주잔고 18억달러)을 3대 산업 인프라 수혜주 중 첫 번째로 소개.' },
+  { p: 'Instagram', who: '@kilcullensmikle', meta: '좋아요 16 · 2026-08-24', s: 'pos', t: '16세 개인투자자가 "내 최고의 투자"라며 POWL을 소개. 내재가치 대비 저평가로 매수해 약 3배 수익(고점 기준 4배)을 냈다고 주장.' },
+  { p: 'Instagram', who: '@metatradingclub · 팔로워 1.2만명', meta: '좋아요 4 · 2026-07-10', s: 'pos', t: '"AI 전력 병목" 테마 캐러셀에서 POWL을 대표 종목으로 제시. 12개월 약 3배 상승, 32개 추천 중 승률 65.6%를 내세움.' },
+  { p: 'Instagram', who: '@_aktien_kerle_ · 팔로워 36명', meta: '2026-09-04', s: 'pos', t: '독일어 계정. 5년 차트(2,000%+ 상승)와 함께 수주 +158%, 수주잔고 24억달러, 북투빌 3.0x를 근거로 35%+ 상승 여력을 제시.' },
+  { p: 'Instagram', who: '@peace_fulinvestor · 팔로워 220명', meta: '2026-08-06', s: 'pos', t: 'Q3 FY2026 실적 인포그래픽 공유. 매출 3.12억달러(+9%), 수주 9.34억달러(+158%, 분기 최대), 수주잔고 24억달러(사상 최대)를 강조.' },
+  { p: 'Instagram', who: '@claracompass', meta: '2026-08-04', s: 'neu', t: 'SEC 공시 기반 Q3 실적 교육용 캐러셀. 신규 수주 9.34억달러, 북투빌 3.0x, 4억달러 이상 데이터센터 수주 등 팩트 전달에 집중하고 투자의견은 제시하지 않음.' },
+  { p: 'Instagram', who: '@moneyhunter_kr · 팔로워 37만명', meta: '좋아요 91 · 댓글 120 · 2026-07-26', s: 'pos', t: '한국어 채널 "경제사냥꾼". POWL을 미국 전력기기주 중 1년 수익률 1위(약 +200%)로 소개하며 AI 데이터센터 전력 수요를 상승 이유로 듦. 다만 PER 45배 고평가 경고도 함께 언급.' },
+  { p: 'Instagram', who: '@thedevinwills · 팔로워 16만명', meta: '좋아요 6 · 2026-08-17', s: 'neu', t: '전력 인프라가 데이터센터 증설의 병목이라고 주장하며 POWL을 핵심 수혜주로 분석. 다만 1년 +190% 상승, 포워드 PER 35배의 밸류에이션 부담도 명시.' },
+  { p: 'Instagram', who: '@kyungjaemachine_ · 팔로워 1,800명', meta: '2026-09-14', s: 'neu', t: '한국어 채널. 고점 대비 -44% 하락의 원인이 수요가 아닌 생산 병목(수주가 공장 능력을 초과)이라고 분석. 2분기 연속 실적 미스와 빅테크 AI 투자 둔화 가능성을 리스크로 지적.' },
+  { p: 'Threads', who: '@stocksharks · 팔로워 22만명', meta: '좋아요 1 · 2026-07-14', s: 'neu', t: '인스타그램 영상과 동일 콘텐츠의 스레드 버전. 맞춤형 스위치기어의 높은 진입장벽과 수주잔고 18억달러를 설명하고, 실적 미스·내부자 매도를 베어 케이스로 병기.' },
+  { p: 'Threads', who: '@rj.rickyrocks · 팔로워 220명', meta: '댓글 1 · 2026-08-06', s: 'pos', t: 'Q3 실적 인포그래픽 공유. "STRONG EXECUTION. RECORD ORDERS"라는 제목으로 매출·수주·수주잔고 사상 최대 기록을 강조.' },
+  { p: 'Facebook', who: 'Stock Sharks 페이지 · 팔로워 21만명', meta: '좋아요 120 · 2026-07-14', s: 'neu', t: '인스타그램 영상과 동일 콘텐츠의 페이스북 버전. 사업 구조 설명과 함께 실적 미스·내부자 매도 리스크 병기.' },
+  { p: 'Facebook', who: 'Stockbuster Markets · 팔로워 1.4만명', meta: '좋아요 41 · 2026-09-03', s: 'pos', t: '"무부채 저평가주 2선" 영상의 페이스북 버전. POWL의 24억달러 수주잔고를 향후 실적 동력으로 제시.' },
+  { p: 'Facebook', who: 'CNBC Fast Money 클립 · 팔로워 27만명', meta: '좋아요 210 · 댓글 13 · 2026-07-16', s: 'neu', t: '"데이터센터 트레이드의 다음은?" 세그먼트. 전력 인프라 병목을 지적하며 POWL·CCJ·FIX·BE를 관련주로 언급하는 분석적 톤.' },
+  { p: 'Facebook', who: 'AI Verse · 팔로워 120명', meta: '좋아요 4 · 2026-09-06', s: 'pos', t: '"AI 인프라 붐을 이끄는 4개 기업" 인포그래픽에서 POWL을 전력 분배 담당 주자로 소개.' },
+  { p: 'Facebook', who: '투자 그룹 게시글', meta: '좋아요 1 · 댓글 3 · 2026-09-23', s: 'pos', t: 'Q3 실적 강세 분석. 신규 수주 +158%(9.34억달러), 북투빌 3.0x, 수주잔고 24억달러(+69%), 현금 6.34억달러를 근거로 매수 매력 주장.' },
+  { p: 'Facebook', who: 'Alexander Xu · 팔로워 1,900명', meta: '2026-08-03', s: 'neu', t: '실적 발표일 주가 스크린샷 공유. 장중 +5.29% 후 시간외 -15.75% 급락을 코멘트 없이 전달하는 정보성 게시글.' },
+  { p: 'Facebook', who: 'Bruno Souza · 팔로워 4.3만명', meta: '좋아요 220 · 댓글 27 · 2026-09-12', s: 'pos', t: '트럼프 밈 영상과 함께 POWL·Hammond·Eaton을 "폭발할 주식"으로 홍보. 조회수 대비 참여도가 높은 편이나 광고성 성격.' },
+  { p: 'Facebook', who: 'Ricky Jassal 인포그래픽 · 팔로워 690명', meta: '2026-08-06', s: 'pos', t: 'Q3 실적 인포그래픽. 분기 최대 수주 9.34억달러, 사상 최대 수주잔고 24억달러, 데이터센터 4억달러+ 메가 수주를 "수요 강세"의 증거로 제시.' },
+  { p: 'Facebook', who: 'Peaceful Investor · 팔로워 77명', meta: '2026-07-10', s: 'pos', t: '북투빌 1.4x, 수주잔고 FY2021 대비 +323%를 보여주는 차트와 함께 "AI 인프라 확장에 베팅하며 포지션 진입했다"고 밝힘.' },
+  { p: 'Facebook', who: 'Alexander Xu · 팔로워 1,900명', meta: '2026-08-31', s: 'pos', t: '"UNUSUAL OPTION TRADE ALERT" — 2027년 2월 만기 행사가 210달러 콜에 480만달러 프리미엄 블록 매수 포착을 "스마트머니의 강한 확신"으로 해석.' },
+  { p: 'Facebook', who: 'AI Verse · 팔로워 120명', meta: '좋아요 3 · 2026-09-06', s: 'pos', t: '동일 인포그래픽의 그룹 재배포본. "다음 AI 병목은 GPU가 아닌 전력 인프라"라는 메시지.' },
+  { p: 'Facebook', who: 'Stockbuster Markets', meta: '좋아요 1 · 2026-09-12', s: 'pos', t: '"무부채 저평가주" 콘텐츠 재배포본.' },
+];
+const sentiTag = { pos: ['pos', '🟢 긍정'], neu: ['neu', '🟡 중립'], neg: ['neg', '🔴 부정'] };
+
+function XTab() {
+  return (
+    <div className="section">
+      <Card title="🐦 X (트위터) 센티먼트">
+        <div className="stat-row">
+          <div className="stat-box"><div className="n">0</div><div className="l">검증된 포스트</div></div>
+        </div>
+        <p>X는 비로그인 상태에서 개별 트윗 크롤링이 불가능해 이번 분석에서는 검증된 포스트를 수집하지 못했습니다. 인스타그램·스레드·페이스북에서 검증된 26건은 📱 소셜 탭에서 확인하세요.</p>
+        <p className="note">수집 기준일: 2026-10-02 · 대상 기간: 2026-07-01 이후</p>
+      </Card>
+    </div>
+  );
+}
+
+function RedditTab() {
+  return (
+    <div className="section">
+      <Card title="💬 Reddit 센티먼트 (AltIndex 집계)">
+        <div className="stat-row">
+          <div className="stat-box"><div className="n">0건</div><div className="l">일일 언급량</div></div>
+          <div className="stat-box"><div className="n" style={{color:'#f87171'}}>41<span style={{fontSize:14,color:'#94a3b8'}}>/100</span></div><div className="l">센티먼트 (Bearish)</div></div>
+          <div className="stat-box"><div className="n">최하위</div><div className="l">업계 내 언급량</div></div>
+        </div>
+        <p>reddit.com 도메인 정책상 직접 열람이 차단되어 개별 포스트는 검증하지 못했습니다. AltIndex(2026-10-01 기준) 집계에 따르면 Reddit에서의 POWL 언급은 거의 없고, 센티먼트는 부정적(41/100)입니다. 다만 언급량 자체가 0에 가까워 통계적 의미는 제한적입니다.</p>
+        <p className="note">수집 기준일: 2026-10-02</p>
+      </Card>
+    </div>
+  );
+}
+
+function SocialTab() {
+  const pos = SOCIAL.filter(x => x.s === 'pos').length;
+  const neu = SOCIAL.filter(x => x.s === 'neu').length;
+  const neg = SOCIAL.filter(x => x.s === 'neg').length;
+  return (
+    <div className="section">
+      <Card title="📱 소셜 센티먼트 요약">
+        <div className="stat-row">
+          <div className="stat-box"><div className="n" style={{color:'#4ade80'}}>🟢 {pos}</div><div className="l">긍정</div></div>
+          <div className="stat-box"><div className="n" style={{color:'#fbbf24'}}>🟡 {neu}</div><div className="l">중립</div></div>
+          <div className="stat-box"><div className="n" style={{color:'#f87171'}}>🔴 {neg}</div><div className="l">부정</div></div>
+        </div>
+        <p>Instagram 12 + Threads 2 + Facebook 12 = 검증된 실제 포스트 26건. 강세론의 근거는 "신규 수주 +158%, 수주잔고 $2.4B(사상 최대), 북투빌 3.0x"라는 Q3 FY2026 수치의 반복 인용. 균형 잡힌 시각의 글들은 ① 2분기 연속 어닝 미스 ② 생산 병목(수주가 공장 캐파 초과)을 공통 리스크로 지적. 한국어 채널(@moneyhunter_kr, @kyungjaemachine_)도 다루며, 한국 채널이 영미권 인플루언서보다 상대적으로 냉정한 편.</p>
+      </Card>
+      {SOCIAL.map((x, i) => (
+        <div className="senti-card" key={i}>
+          <div className="senti-head">
+            <span className="who">{x.p} · {x.who}</span>
+            <Tag type={sentiTag[x.s][0]}>{sentiTag[x.s][1]}</Tag>
+          </div>
+          <div className="senti-body">{x.t}</div>
+          <div className="senti-foot">{x.meta}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const TERMS = [
+  { n: 'RSI (상대강도지수)', c: 'tech', d: '0~100 사이 값으로 주가의 과열 정도를 재는 지표. 70을 넘으면 과매수(너무 올라서 조정 가능), 30 아래면 과매도(너무 내려서 반등 가능)로 본다.', m: 'POWL의 RSI 51.8은 과열도 침체도 아닌 중립 상단 — 추격매수 부담이 적은 위치다.' },
+  { n: 'MACD', c: 'tech', d: '단기·장기 이동평균의 차이로 추세 전환을 포착하는 지표. MACD선이 시그널선을 위로 뚫으면 매수 신호(골든크로스), 아래로 뚫으면 매도 신호(데드크로스)다.', m: 'MACD −2.04 vs 시그널 −4.62, 히스토그램 +2.58로 모멘텀이 반전되는 중이다.' },
+  { n: '볼린저밴드', c: 'tech', d: '이동평균선 ± 표준편차 2배로 그린 밴드. 밴드 상단에 닿으면 과매수, 하단에 닿으면 과매도 신호로 본다.', m: 'POWL은 밴드 상단부(74%)에 위치 — 단기 저항($196)에 가까운 자리다.' },
+  { n: '하이킨아시', c: 'tech', d: '평균값으로 계산한 캔들로, 일반 캔들보다 추세를 매끄럽게 보여준다. 연속 양봉이면 상승 추세, 연속 음봉이면 하락 추세다.', m: '일봉은 20개 중 13개 양봉으로 바닥 다지기, 주봉은 아직 약세가 남아 있다.' },
+  { n: '데드크로스', c: 'tech', d: '단기 이동평균선(50일)이 장기 이동평균선(200일)을 아래로 뚫고 내려가는 현상. 하락 추세 진입 신호로 본다.', m: 'POWL은 9/18 데드크로스 발생 — 기술적 하락추세가 완전히 해소되지 않았다.' },
+  { n: 'PER (주가수익비율)', c: 'fin', d: '주가를 주당순이익(EPS)으로 나눈 값. 낮을수록 이익 대비 주가가 싸다는 뜻. 반드시 같은 업종끼리 비교해야 한다.', m: 'POWL의 PER 36.5x는 업종 평균(~25x)보다 높아 프리미엄 구간이다.' },
+  { n: 'Forward PER (선행 PER)', c: 'fin', d: '내년 예상 이익 기준 PER. 현재 PER보다 낮으면 이익 성장이 기대된다는 뜻이다.', m: '29.5x로 TTM보다 낮아 FY27 EPS +28% 성장이 반영되어 있다.' },
+  { n: 'PBR (주가순자산비율)', c: 'fin', d: '주가를 주당 순자산으로 나눈 값. 1이면 자산 가치와 주가가 같다는 뜻이다.', m: '9.18x로 높지만 ROE 28%를 감안하면 정당화 시도가 가능하다.' },
+  { n: 'PSR (주가매출비율)', c: 'fin', d: '주가를 주당 매출로 나눈 값. 적자 기업이나 성장주 평가에 쓴다.', m: '6.0x로 매출 대비 비싼 편 — 기대가 선반영되어 있다.' },
+  { n: 'EV/EBITDA', c: 'fin', d: '기업가치(시총+순부채)를 상각 전 영업이익으로 나눈 값. 인수합병 평가에 자주 쓰이며 낮을수록 저평가다.', m: '26.7x로 고평가 구간 — 실적이 받쳐주지 못하면 조정 리스크가 있다.' },
+  { n: 'ROE (자기자본이익률)', c: 'fin', d: '자기자본 대비 순이익 비율. 주주 돈으로 얼마나 효율적으로 벌었는지 보여준다.', m: '28.25%로 최상위권 — POWL 펀더멘털의 핵심 강점이다.' },
+  { n: 'FCF (잉여현금흐름)', c: 'fin', d: '영업현금흐름에서 설비투자를 뺀 실제 현금 창출 능력. 배당·자사주·투자의 재원이다.', m: 'TTM $244M(마진 21.1%)으로 FY24 $96.7M에서 2.5배 성장 — 성장의 질이 좋다.' },
+  { n: '북투빌 (Book-to-bill)', c: 'mkt', d: '신규 수주 ÷ 매출. 1을 넘으면 들어오는 일이 나가는 일보다 많다는 뜻으로, 향후 매출 성장의 선행지표다.', m: 'Q3 3.0x는 들어온 일이 매출의 3배 — 백로그 $2.4B의 원천이다.' },
+  { n: '백로그 (수주잔고)', c: 'mkt', d: '아직 매출로 인식되지 않은 수주 잔액. 제조업의 미래 매출 가시성을 보여준다.', m: '$2.4B로 사상 최대(+69% YoY), 이 중 54%가 12개월 내 매출 전환 예정.' },
+  { n: '공매도 비율', c: 'mkt', d: '빌려서 판 주식 비중. 높으면 하락에 베팅하는 세력이 많다는 뜻이지만, 반대로 급등 시 숏스퀴즈 연료가 되기도 한다.', m: '6.75%로 다소 높은 편 — 기술적 반등 시 숏커버 매수 유입 가능.' },
+];
+const termTag = { tech: ['tech', '기술적'], fin: ['fin', '재무'], mkt: ['mkt', '실적/시장'], etc: ['etc', '기타'] };
+
+function TermsTab() {
+  const [f, setF] = useState('all');
+  const list = TERMS.filter(t => f === 'all' || t.c === f);
+  return (
+    <div className="section">
+      <div className="filterbar">
+        {[['all','전체'],['tech','기술적'],['fin','재무'],['mkt','실적/시장']].map(([v,l]) => (
+          <button key={v} className={"tab" + (f===v ? " active" : "")} onClick={() => setF(v)}>{l}</button>
+        ))}
+      </div>
+      {list.map((t, i) => (
+        <div className="senti-card" key={i}>
+          <div className="senti-head">
+            <b style={{fontSize:13}}>{t.n}</b>
+            <Tag type={termTag[t.c][0]}>{termTag[t.c][1]}</Tag>
+          </div>
+          <div className="senti-body">{t.d}</div>
+          <div className="senti-foot" style={{color:'#93c5fd'}}>→ {t.m}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const CHECKS = [
+  { q: '1. 아직 충분히 작은 기업인가?', v: '❌ 미충족', cls: 'check-no', e: '시총 $6.8B — 기준($5B 이하)을 초과' },
+  { q: '2. 현재 가격이 미래를 과대반영하지 않았는가?', v: '❌ 미충족', cls: 'check-no', e: 'P/S 6.0x, P/E 36.5x, EV/EBITDA 26.7x — 기대 선반영 구간' },
+  { q: '3. 매출보다 EBITDA·FCF 개선이 따라오는가?', v: '✅ 충족', cls: 'check-ok', e: 'FCF $96.7M→$154.8M→$244M, FCF 마진 21.1%로 매출 성장 상회' },
+  { q: '4. 자산 증가율보다 EBITDA 증가율이 뒤처지지 않는가?', v: '⚠️ 부분충족', cls: 'check-warn', e: '경량 자산 구조에 EBITDA 마진 20.4%로 확대 중 (정량 비교는 미확인)' },
+  { q: '5. FCF yield 관점에서 가격이 합리적인가?', v: '⚠️ 부분충족', cls: 'check-warn', e: 'FCF 수익률 3.51% — 무난하지만 저평가 수준은 아님' },
+  { q: '6. 투자가 실제 수요·주문과 연결되는가?', v: '✅ 충족', cls: 'check-ok', e: '백로그 $2.4B(+69% YoY), book-to-bill 3.0x, $400M+ DC 메가 오더' },
+  { q: '7. 고금리 환경에서도 버틸 수 있는가?', v: '✅ 충족', cls: 'check-ok', e: 'D/E 0.00 무차입, 순현금 $631M, 이자비용 0' },
+  { q: '8. 단기 급등 후 추격매수 구간은 아닌가?', v: '✅ 충족', cls: 'check-ok', e: 'RSI 51.8 중립, 52주 고점 대비 −41.9% 조정 구간' },
+];
+
+function MultiTab() {
+  return (
+    <div className="section">
+      <Card title="🔟 멀티배거 종합 점수">
+        <div className="score-hero">
+          <div className="big">5.0<span style={{fontSize:20,color:'#94a3b8'}}>/8</span></div>
+          <div className="lbl">등급: 보통 (6.5~8 유망 / 4~6 보통 / 4 미만 낮음)</div>
+        </div>
+        <Chart type="radar" tall data={{
+          labels: ['규모','밸류','성장질','투자효율','FCF수익률','수주','금리체력','추격여부'],
+          datasets: [{ label: 'POWL', data: [0, 0, 1, 0.5, 0.5, 1, 1, 1],
+            backgroundColor: 'rgba(59,130,246,.25)', borderColor: '#3b82f6', pointBackgroundColor: '#3b82f6' }]
+        }} options={{ scales: { r: { min: 0, max: 1, ticks: { stepSize: 0.5, color: '#64748b', font: { size: 9 } }, grid: { color: '#1e293b' }, angleLines: { color: '#1e293b' }, pointLabels: { color: '#cbd5e1', font: { size: 10 } } } }, plugins: { legend: { display: false } } }} />
+      </Card>
+      <div className="caveat">⚠️ 워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.</div>
+      {CHECKS.map((c, i) => (
+        <Card key={i} title={c.q} cls={"check-card " + c.cls}>
+          <p><b>{c.v}</b></p>
+          <p className="note">{c.e}</p>
+        </Card>
+      ))}
+      <p className="note">기반: Anna Yartseva 연구 (CAFE Working Paper 33) — 2009~2024년 NYSE·NASDAQ 10배 이상 상승 기업 464개 공통 신호 분석</p>
+    </div>
+  );
+}
+
+function App() {
+  const [tab, setTab] = useState('overview');
+  return (
+    <div className="app">
+      <div className="header">
+        <h1>POWL — Powell Industries</h1>
+        <div className="sub">AI-HPC 인프라/전력 테마 발굴 1순위 · NASDAQ · 2026-10-02 분석 (가격은 10-01 종가 기준)</div>
+        <div className="price-row">
+          <span className="price">$190.60</span>
+          <span className="chg-pos">+3.32%</span>
+        </div>
+      </div>
+      <div className="verdict-banner">
+        <div className="v-title">종합 의견</div>
+        <div className="v-main">매수 (BUY) · 확신도 65/100</div>
+        <div className="v-desc">역대 최대 백로그 $2.4B + 무차입·순현금 $631M + ROE 28%. 단, 밸류에이션 선반영과 데드크로스는 경계 — 강한매수가 아닌 매수.</div>
+      </div>
+      <div className="tabbar">
+        {TABS.map(t => (
+          <button key={t.id} className={"tab" + (tab === t.id ? " active" : "")} onClick={() => setTab(t.id)}>{t.label}</button>
+        ))}
+      </div>
+      {tab === 'overview' && <OverviewTab />}
+      {tab === 'tech' && <TechTab />}
+      {tab === 'earnings' && <EarningsTab />}
+      {tab === 'fin' && <FinTab />}
+      {tab === 'compare' && <CompareTab />}
+      {tab === 'x' && <XTab />}
+      {tab === 'reddit' && <RedditTab />}
+      {tab === 'social' && <SocialTab />}
+      {tab === 'terms' && <TermsTab />}
+      {tab === 'multi' && <MultiTab />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
