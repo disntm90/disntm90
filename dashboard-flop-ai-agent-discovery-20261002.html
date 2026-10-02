@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 에이전트 결제망 테마 종목 발굴 — COIN · NBIS (2026-10-02)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0f1e;--card:#111a2e;--card2:#0d1526;--line:#1e2a45;--txt:#e6ecf5;--mut:#8b98ad;--acc:#3b82f6;--grn:#22c55e;--red:#ef4444;--amb:#f59e0b;--pur:#a855f7}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;font-size:14px;line-height:1.65}
+.wrap{max-width:600px;margin:0 auto;padding:14px 12px 60px}
+header{text-align:center;padding:18px 8px 10px}
+header h1{font-size:19px;letter-spacing:-.5px}
+header .sub{color:var(--mut);font-size:12px;margin-top:6px}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;margin:2px}
+.b-g{background:rgba(34,197,94,.15);color:var(--grn);border:1px solid rgba(34,197,94,.4)}
+.b-r{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.4)}
+.b-y{background:rgba(245,158,11,.15);color:var(--amb);border:1px solid rgba(245,158,11,.4)}
+.b-b{background:rgba(59,130,246,.15);color:#7aa7ff;border:1px solid rgba(59,130,246,.4)}
+.b-p{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.4)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0}
+.card h3{font-size:15px;margin-bottom:8px}
+.card h4{font-size:13.5px;margin:12px 0 6px;color:#cdd8ea}
+.mut{color:var(--mut);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:11.5px;white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ticktabs{display:flex;gap:8px;margin:12px 0;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+.ticktabs button{flex:1;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:15px;font-weight:800;cursor:pointer}
+.ticktabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.tabbar{display:flex;gap:6px;overflow-x:auto;padding:6px 2px;margin:4px 0 2px;scrollbar-width:none}
+.tabbar::-webkit-scrollbar{display:none}
+.tabbar button{flex:0 0 auto;padding:8px 12px;border-radius:20px;border:1px solid var(--line);background:var(--card2);color:var(--mut);font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.tabbar button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tsec{display:none}.tsec.on{display:block}
+.chartbox{position:relative;height:230px;margin:10px 0}
+.chartbox.tall{height:260px}
+.opcard{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px;margin:8px 0}
+.opcard .who{font-size:12px;color:var(--mut);margin-bottom:5px}
+.opcard .txt{font-size:13px}
+.opcard .meta{font-size:11px;color:var(--mut);margin-top:6px}
+ul.tight{padding-left:18px;margin:6px 0}
+ul.tight li{margin:5px 0;font-size:13px}
+.stance{display:flex;align-items:center;gap:10px;margin:8px 0}
+.stance .bar{flex:1;height:10px;border-radius:6px;background:linear-gradient(90deg,var(--red),var(--amb) 35%,#6b7280 50%,var(--grn) 65%,#16a34a);position:relative}
+.stance .pin{position:absolute;top:-5px;width:4px;height:20px;background:#fff;border-radius:2px;transform:translateX(-50%)}
+.gfilter{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.gfilter button{padding:6px 11px;border-radius:16px;border:1px solid var(--line);background:var(--card2);color:var(--mut);font-size:12px;cursor:pointer}
+.gfilter button.on{background:var(--pur);color:#fff;border-color:var(--pur)}
+.gcard{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px;margin:8px 0;border-left:4px solid var(--acc)}
+.gcard .gname{font-weight:800;font-size:13.5px}
+.gcard .gdesc{font-size:12.5px;color:#cdd8ea;margin:5px 0}
+.gcard .guse{font-size:12px;color:var(--mut)}
+.warn{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.45);border-radius:10px;padding:11px;margin:10px 0;font-size:12.5px}
+.note{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.35);border-radius:10px;padding:11px;margin:10px 0;font-size:12.5px}
+footer{color:var(--mut);font-size:11px;text-align:center;padding:20px 10px;line-height:1.8}
+.kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.kv span:first-child{color:var(--mut)}
+.score{font-size:34px;font-weight:900;text-align:center;margin:6px 0}
+.grade{text-align:center;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>🤖 AI 에이전트 결제망 테마 종목 발굴</h1>
+<div class="sub">Arthur Hayes KBW 2026 기조연설 기반 · 기준일 2026-10-02 · 가격 기준 2026-10-01 종가</div>
+</header>
+
+<div class="card">
+<h3>📰 기사 테제 요약</h3>
+<ul class="tight">
+<li>AI 에이전트 경제가 커지면 에이전트 간 <b>결제 네트워크가 비트코인보다 큰 시장</b>으로 성장 가능</li>
+<li>에이전트에게 필요한 건 컴퓨팅 연산(FLOP)과 <b>직접 연결되는 화폐</b> — 법정화폐도 비트코인도 아님</li>
+<li>해법: <b>Proof of Useful Inference</b> — GPU 보유자가 AI 추론을 수행·검증받고 보상받는 구조</li>
+<li>Hayes가 개발 중인 결제망 <b>FLOP</b>: 10월 말 에어드롭 자격 산정 시작, 약 90일 테스트넷</li>
+<li>FLOP 자체는 비상장 → 상장 프록시로 <b>결제 레일 축(COIN)</b>과 <b>컴퓨팅 공급 축(NBIS)</b> 발굴</li>
+</ul>
+<div class="mut">원문: digitalasset.works (KBW 2026, 9/30 서울 워커힐)</div>
+</div>
+
+<div class="card">
+<h3>🏆 발굴 결론 (순위)</h3>
+<table>
+<tr><th>#</th><th>티커</th><th>테마 축</th><th>의견</th><th class="num">점수</th></tr>
+<tr><td>1</td><td><b>NBIS</b></td><td>컴퓨팅 공급</td><td><span class="badge b-g">매수</span></td><td class="num">60/100</td></tr>
+<tr><td>2</td><td><b>COIN</b></td><td>결제 레일</td><td><span class="badge b-g">매수(신중)</span></td><td class="num">55/100</td></tr>
+<tr><td>3</td><td><b>IREN</b></td><td>컴퓨팅 공급</td><td><span class="badge b-y">매수(관심)</span></td><td class="num">55/100</td></tr>
+<tr><td>4</td><td><b>CRCL</b></td><td>결제(간접)</td><td><span class="badge b-y">중립</span></td><td class="num">45/100</td></tr>
+<tr><td>5</td><td><b>CRWV</b></td><td>컴퓨팅 공급</td><td><span class="badge b-y">중립</span></td><td class="num">50/100</td></tr>
+<tr><td>6</td><td><b>XYZ</b></td><td>결제(주변)</td><td><span class="badge b-y">중립</span></td><td class="num">50/100</td></tr>
+</table>
+<div class="mut">점수 = 종합 판단 가중치 (펀더멘털 35% · 기술적 20% · 모멘텀/촉매 25% · 리스크 20%)</div>
+</div>
+
+<div class="ticktabs">
+<button id="tabbtn-coin" class="on" onclick="showTicker('coin')">COIN<br><span style="font-size:11px;font-weight:400">Coinbase</span></button>
+<button id="tabbtn-nbis" onclick="showTicker('nbis')">NBIS<br><span style="font-size:11px;font-weight:400">Nebius</span></button>
+</div>
+
+<div id="panel-coin"></div>
+<div id="panel-nbis" style="display:none"></div>
+
+<div class="card">
+<h3>📡 섹터 레이더 — 목표주가 대비 상승여력</h3>
+<div class="chartbox"><canvas id="upsideChart"></canvas></div>
+<div class="mut">집계원·시점 상이 (MarketBeat/TipRanks/ChartMill 등) — 참고용. CRCL $130.41, IREN $77.97, CRWV $138.78, XYZ $105, COIN $222.47, NBIS $241.80 기준.</div>
+</div>
+
+<div class="card">
+<h3>⚠️ 면책</h3>
+<div class="mut">본 자료는 정보 제공 목적의 리서치이며 투자 권유가 아닙니다. 수치는 2026-10-01~02 기준 웹 리서치 집계로, 오류 가능성이 있습니다. 실제 매매 전 최신 공시·실적을 확인하세요. 멀티배거 점수는 학술 워킹페이퍼 기반 통계 신호로, 10배 수익을 보장하지 않습니다.</div>
+</div>
+
+<footer>종목 발굴 대시보드 · Arthur Hayes KBW 2026 테마<br>생성 2026-10-02</footer>
+</div>
+<script>
+Chart.defaults.color="#8b98ad";Chart.defaults.borderColor="rgba(30,42,69,.6)";Chart.defaults.font.family="-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
+
+const MB_LABELS=["규모","밸류에이션","성장의 질","투자 효율","FCF 가격","수요 연결","재무 체력","과열 여부"];
+const MB_Q=[
+"1. 아직 충분히 작은 기업인가? (시총 $5B 이하 ✅ / $5~20B ⚠️ / $20B+ ❌)",
+"2. 현재 가격이 미래를 과대반영하지 않았는가? (P/S, P/E, FCF/P 등 밸류에이션)",
+"3. 매출보다 EBITDA·FCF 개선이 따라오는가? (성장의 질)",
+"4. 자산 증가율보다 EBITDA 증가율이 뒤처지지 않는가? (투자 효율)",
+"5. FCF yield 관점에서 가격이 합리적인가? (FCF/시총 비율)",
+"6. 투자가 실제 수요·주문과 연결되는가? (백로그, 수주잔고, 계약 파이프라인)",
+"7. 고금리 환경에서도 버틸 수 있는가? (부채비율, 이자보상배율, 현금포지션)",
+"8. 단기 급등 후 추격매수 구간은 아닌가? (RSI, 52주 대비 현재가 위치)"];
+
+const PICKS={
+coin:{
+ ticker:"COIN",name:"Coinbase Global",price:"$189.29",asof:"2026-10-01 종가",
+ profile:[["설립","2012년 (Brian Armstrong·Fred Ehrsam 공동창업)"],["본사","Remote-first (등기상 뉴욕)"],["CEO","Brian Armstrong"],["직원 수","약 4,251명"],["상장/섹터","NASDAQ · 핀테크/디지털자산 인프라"],["사업모델","미국 최대 규제형 크립토 거래소 + 온체인 금융 인프라 (Base L2 · USDC 결제 · 커스터디 · x402 에이전트 결제망)"]],
+ moat:"미국 규제 라이선스(거래소·청산), Base L2 네트워크 효과, USDC 유통망(Circle 제휴), 기관 커스터디 점유율",
+ roadmap:"'Everything Exchange' — 토큰화 주식 24/5 거래, 예측시장, CFTC 청산기관(9/28 승인) 기반 파생상품, x402 에이전트 상거래 표준화",
+ megatrend:"AI 에이전트 경제의 결제 레일, 스테이블코인 제도화(GENIUS Act), 실물자산 토큰화(RWA)",
+ tech:[["현재가","$189.29 (10/1 종가, +1.54%)"],["52주 고/저","$402.16 / $139.11"],["고점 대비","-52.9%"],["50일 이동평균","$172.31 → 현주가 +9.8% 상회"],["200일 이동평균","$175.94 → 현주가 +7.6% 상회"],["3개월 추세","+30.4% (저점권 V자 반등 중)"],["RSI(14)","미확인"],["5일 / 1개월 / YTD","-5.9% / +0.6% / -16.3%"]],
+ techNote:"52주 저점($139) 대비 +36% 회복, 50일·200일선 동반 상회 — 단기 회복 랠리 국면. 다만 52주 고점 대비 절반 수준으로 장기 하락추세 탈출 확인은 아직.",
+ entry:[["1차 매수","$180 ~ $190 (50일선 부근 눌림, 분할)"],["손절선","$165 (200일선 하회 시 전량)"],["1차 목표가","$206 (TipRanks 평균)"],["2차 목표가","$222 (MarketBeat 평균)"]],
+ fund:[["시가총액","$49.94B"],["PER (TTM)","음수 (GAAP 순손실)"],["Forward PER","산출 불가 (FY2026 EPS 컨센서스 -$0.48)"],["PBR","3.9x"],["PSR","8.2x"],["EV/EBITDA","60.4x"],["ROE","약 +3.1% (TTM, 집계원별 상이)"],["부채비율","0.45"],["현금보유","약 $9.06B"],["유동비율","2.42x"]],
+ fundNote:"전통 멀티플로는 고평가·적자 구간. 밸류에이션은 '규제+토큰화+x402' 옵션 가치에 대한 베팅. 순매출의 48%가 구독·서비스로 다각화 진행 중.",
+ revLabels:["Q1'25","Q2'25","Q3'25","Q4'25","Q1'26","Q2'26"],
+ rev:[2.03,1.50,1.87,1.78,1.41,1.22],eps:[1.94,0.12,1.44,0.66,-1.49,-1.36],
+ revSurp:[-8.6,-10.7,5.7,-4.3,-5.6,-5.6],epsSurp:[-11,-87,38,-20,-2583,-109],
+ earnNote:"최근 6분기 중 5분기 컨센서스 미스. GAAP EPS는 암호자산 평가손익으로 변동성 극심 (Q2'25 +$5.14 → Q4'25 -$2.49).",
+ nextEarn:[["발표일","2026-10-29 (목)"],["EPS 컨센서스","-$0.34"],["매출 컨센서스","$11.7억"],["회사 가이던스","Q3 구독·서비스 $500~580M"]],
+ kpi:["① 구독·서비스 매출 — 다각화(48%) 증명의 핵심","② 거래량·거래수수료 — 사이클 민감도 직결","③ USDC 유통량·스테이블코인 수익 — 금리·제도화 수혜","④ Base 시퀀서 수수료 — 온체인 경제 성장 대리변수","⑤ 토큰화 주식 거래량 — SEC 면제(9/17) 이후 신규 성장축"],
+ segLabels:["거래수수료 51.9%","USDC 수익 25.3%","스테이킹 7.2%","이자·금융 5.7%","기타 9.8%"],seg:[51.9,25.3,7.2,5.7,9.8],
+ ratings:[["MarketBeat","19 / 12 / 3","Hold","$222.47"],["TipRanks","19 / 9 / 1","Moderate Buy","$206.15"]],
+ ratingNote:"JPMorgan -27% 삭감 vs KBW 신규 커버리지 Outperform $237 — 의견 분산 극심. Barclays $95(Underweight) 최저, Citizens/Wolfe $330 최고.",
+ short:"플로트 12.4% (2,880만 주) — 9/10 하루 +29.5% 급증 후 유지. 기관 보유 68.84%, 내부자 3개월간 $20.7M 순매도.",
+ x402:[["누적 트랜잭션","약 1.99억 건 (2025-05 론칭 이후)"],["누적 결제 규모","$52.7M"],["활성 에이전트","69,000개 (Coinbase 발표, 4월)"],["USDC 결제 비중","99.6% — '어떤 코인으로 결제하나' 논쟁 종료"],["⚠️ 진짜 에이전트 비중","검증 가능한 에이전트 거래는 0.6~7.5%에 불과 (TRM Labs, 9월) — 밈코인·자가결제·테스트가 대다수"],["생태계","Linux Foundation 편입, AWS Bedrock AgentCore Payments GA(8/20) 네이티브 탑재"]],
+ bull:["x402가 AI 에이전트 머신결제의 사실상 표준 레일로 부상 — AWS·Google·Stripe·Visa·Mastercard 참여","SEC 토큰화주식 5년 면제(9/17) + CFTC 청산기관 승인(9/28) + Citi 파트너십(9/29) — 규제 급반전","기술적 반전: 52주 저점 +36%, 50/200일선 상회, 공매도 12.4% 잔존으로 스퀴즈 잠재력"],
+ bear:["x402 실체는 '에이전트 결제'가 아님 — 월간 실수요 run-rate $5천~$1.1만에 불과, 내러티브-펀더멘털 괴리","최근 6분기 5회 미스, FY2026 적자 전망, PSR 8.2x·EV/EBITDA 60x의 무거운 멀티플","사이클 의존: 거래수수료 -22% YoY, 내부자 매도·공매도 급증은 스마트머니의 신중 신호"],
+ stance:"매수",stanceSub:"신중",score:55,stancePos:62,
+ plan:[["1차 매수","$180 ~ $190","포트 3%"],["2차 매수","$165 ~ $172 (50일선 재테스트)","2%"],["손절선","$165 하회 종가","전량"],["1차 익절","$206","50%"],["2차 익절","$222","잔량"]],
+ monitor:"10/29 Q3 실적(구독·서비스 $500~580M 달성 여부), x402 실거래 지표(TRM·Chainalysis 분기 보고), CLARITY Act 입법 진전",
+ mbScore:"4.0",mbGrade:"보통 (4~6점 구간)",
+ mb:[["❌","시총 $49.9B — 10배 확률 통계 구간($5B 이하) 밖"],
+     ["❌","PSR 8.2x · EV/EBITDA 60.4x · FY26 적자 — 멀티플 부담"],
+     ["⚠️","매출 YoY -27% 전망이나 구독·서비스 48%로 질적 개선 중"],
+     ["⚠️","자산 증가율 대비 EBITDA 추이 — 데이터 미확인"],
+     ["⚠️","FCF yield — 데이터 미확인"],
+     ["⚠️","x402 1.99억 tx·Base 성장은 폭발적이나 실수요 검증 전"],
+     ["✅","현금 $9.06B · 부채비율 0.45 · 유동비율 2.42x"],
+     ["✅","52주 고점 대비 -52.9% — 추격매수 구간 아님"]]
+},
+nbis:{
+ ticker:"NBIS",name:"Nebius Group",price:"$232.28",asof:"2026-10-01 종가",
+ profile:[["전신","Yandex N.V. 해외사업부 — 2024-07 러시아 사업 $5.4B 매각 후 잔여 자산으로 리브랜딩, 2024-10 Nasdaq 거래 재개"],["본사","암스테르담, 네덜란드"],["CEO","Arkady Volozh (Yandex 공동창업자)"],["직원 수","약 1,500명"],["상장/섹터","NASDAQ · AI 인프라/네오클라우드"],["사업모델","GPU 네오클라우드: NVIDIA 최신 GPU 클러스터 임대·판매 풀스택 AI 인프라"]],
+ moat:"MSFT·Meta 앵커 계약(~$40B 백로그), NVIDIA 9.3% 전략 지분 + Reference Platform Cloud Partner, GB300/Vera Rubin 우선 확보",
+ roadmap:"2026년 말 연결 용량 800MW~1GW · 계약 전력 5GW, Vera Rubin NVL72 연내 제공, 연말 ARR $7~9B",
+ megatrend:"AI 컴퓨트 수요 > 공급 구조화, 소버린 AI (Palantir 제휴 9/8), 에이전트 시대의 '연산=화폐' 내러티브",
+ tech:[["현재가","$232.28 (10/1 종가)"],["52주 고/저","$299.86 / $73.52"],["고점 대비","-22.5% (저점 대비 +216%)"],["50일 이동평균","약 $217.95 → 현주가 상회"],["200일 이동평균","미확인"],["3개월 추세","6월 고점 후 -35% 급락 → 9월 V자 반등 (+13.8%/1개월)"],["10/1~ GPU 요금","H100 $3.85→$4.50/시간 등 17~21% 인상 — 수요>공급의 직접 증거"]],
+ techNote:"급락 후 V자 회복 진행 중. 50일선 회복은 긍정적이나 고점 매물대($260~300) 부담.",
+ entry:[["1차 매수","$215 ~ $228 (50일선 부근, 분할)"],["손절선","$195 (9월 저점 하회 시 전량)"],["1차 목표가","$260 (BNP Paribas 구 목표)"],["2차 목표가","$300 (52주 고점 부근)"]],
+ fund:[["시가총액","약 $63.7B"],["PER (TTM)","약 1,487x (Q1 비현금 이익 왜곡 — 참고치)"],["Forward PER","사용 불가 (컨센서스 순손실)"],["PBR","5.70x"],["PSR","Trailing 36.5x / FY2026 기준 약 17x"],["EV/매출","LTM 약 48x / FY2026 가이던스 기준 약 19~22x"],["현금보유","$8.04B (6/30) + 8월 $5.75B 전환사채 조달"],["순부채","현금 대비 약 $0.46B 수준 (CB 발행 전)"]],
+ fundNote:"완벽한 백로그 집행을 선반영한 밸류에이션. 2026 capex $20~25B는 매출 가이던스($3~3.4B)의 6~8배.",
+ revLabels:["Q1'25","Q2'25","Q3'25","Q4'25","Q1'26","Q2'26"],
+ rev:[55.3,105.1,146.1,227.7,399.0,582.3],yoy:[430,322,355,547,684,454],
+ ebitdaM:["—","—","—","—","32%","41%"],
+ earnNote:"조정 EBITDA 마진 32%→41% (AI 사업부문 단독 50%). GAAP는 여전히 적자 (Q2 희석 EPS -$0.68).",
+ nextEarn:[["발표일","2026-10-22 (목) 예상"],["매출 컨센서스","약 $905M"],["회사 가이던스","FY2026 매출 $3.0~3.4B · 연말 ARR $7~9B · 조정 EBITDA 마진 ~40%"]],
+ kpi:["① 백로그의 매출 전환 속도 — $40B 중 분기 인식액","② ARR 진척 (Q2말 $3.0B → 연말 $7~9B 경로)","③ GPU 납품 스케줄 (Vineland NJ 발전기 인가 이슈)","④ 선급금 유입 지속 — capex $20~25B 커버의 핵심","⑤ 고객 집중도 완화 (MSFT·Meta 외 신규 앵커)"],
+ backlogLabels:["Microsoft\n$17.4~19.4B","Meta\n최대 $27B"],backlog:[18.4,27],
+ ratings:[["MarketBeat","2 / 10 / 5 / 2 (SB/B/H/S)","Moderate Buy","$241.80"]],
+ ratingNote:"BNP Paribas Neutral→Outperform, $260→$399 (9/24) vs Rothschild Redburn 신규 Sell $84 (9/21) — 시각이 극단적으로 갈림.",
+ short:"유통주식의 18.49% (4,678만 주, $9.7B) — 7월 정점 후 감소세이나 여전히 높음. NVIDIA 9.3% 보유 (22,256,412주).",
+ x402:[["Microsoft 계약","$17.4B 기본 / 최대 $19.4B, 5년 (2025-09) — GB300 10만+ 개"],["Meta 계약","최대 $27B, 5년 (2026-03) — Vera Rubin 기반, 역대 최대급"],["수주잔고","계약 전력 기준 ~$40B 접근"],["고객 선급금","2026년 $9B+ 예상 — capex의 50~60% 커버"],["전략 지분","NVIDIA $2B 지분 투자 (2026-03) + 9.3% 보유"],["리스크 신호","NJ Vineland 운영사 무허가 발전기 $1.07M 벌금 (9/22) — 납품 스케줄 변수"]],
+ bull:["사상 최대급 수주잔고 ~$40B — 2028년까지 수요 가시성 확보","가격 결정력 입증: 10/1 GPU 온디맨드 요금 17~21% 인상","수익성 궤적: 조정 EBITDA 마진 41%, AI 부문 50%, 매출 +454% YoY"],
+ bear:["capex $20~25B (매출의 6~8배) — 납품 지연 시 유동성·멀티플 동시 타격","희석: 2026년 조달 ~$15.6B, 8월 CB $5.75B (전환가 $313.46), 공매도 18.5%가 상방 제한","고객 편중: 백로그 대부분이 MSFT·Meta 2곳 — 단일 지연 시 매출 충격"],
+ stance:"매수",stanceSub:"",score:60,stancePos:68,
+ plan:[["1차 매수","$215 ~ $228","포트 3%"],["2차 매수","$200 ~ $210","2%"],["손절선","$195 하회 종가","전량"],["1차 익절","$260","50%"],["2차 익절","$300","잔량"]],
+ monitor:"10/22 Q3 실적(매출 $905M 컨센서스·ARR 진척), Vineland 전력 인가, GPU 납품·선급금 흐름, 전환사채 물량 출회",
+ mbScore:"4.0",mbGrade:"보통 (4~6점 구간)",
+ mb:[["❌","시총 $63.7B — 소형주 구간 밖"],
+     ["❌","Trailing PSR 36.5x · FY26 EV/Sales ~20x — 완벽한 집행 선반영"],
+     ["✅","매출 +454% · 조정 EBITDA 마진 41% · OCF +$2.2B (선급금 포함)"],
+     ["⚠️","capex $20~25B로 자산 급증 vs EBITDA 고성장 — 효율 검증 중"],
+     ["⚠️","대규모 capex로 FCF 마이너스 구간"],
+     ["✅","백로그 ~$40B — MSFT $19.4B + Meta $27B 실수요 연결"],
+     ["✅","현금 $8B+ · 순부채 ~0 · 선급금 $9B+"],
+     ["⚠️","고점 대비 -22.5% 조정 후 회복 — 과열은 아니나 추격도 아님"]]
+}};
+
+const RADAR=[
+ {t:"CRCL",n:"Circle",p:82.91,mc:"$21.9B",ax:"결제(간접)",s:"중립",sc:"45/100",c:"b-y",
+  d:"x402 결제의 99%가 USDC — 테마 최대 간접 수혜. 고점 대비 -48% ($159→$83), 공매도 11.4%. P/S 8.6x·Fwd PER 96x로 비싸고, 스테이블코인 제도화 기대는 선반영. $75~80 관심."},
+ {t:"IREN",n:"Iris Energy",p:40.65,mc:"$16.3B",ax:"컴퓨팅 공급",s:"매수(관심)",sc:"55/100",c:"b-g",
+  d:"채굴→AI 클라우드 전환. $2.8B 신규 AI 계약, 2026 ARR 목표 $4B+(상향). MSFT 첫 납품·NVIDIA 제휴. 고점 대비 -47% 할인, 목표주가 평균 $78(+92%). 리스크: capex $25~30B, FY26 Q4 실적 미스 이력."},
+ {t:"CRWV",n:"CoreWeave",p:88.57,mc:"$46.9B",ax:"컴퓨팅 공급",s:"중립",sc:"50/100",c:"b-y",
+  d:"수주잔고 $67B(+Anthropic $88B), NVIDIA 11.5% 지분, 매출 +113% YoY. 그러나 부채 $51.6B > 시총, D/E 5.53, 200일선($94.65) 하회. 밸류에이션보다 재무 레버리지가 변수."},
+ {t:"XYZ",n:"Block",p:74.04,mc:"$44.4B",ax:"결제(주변)",s:"중립",sc:"50/100",c:"b-y",
+  d:"Lightning을 x402에 접목(9/23), AI 구조조정 턴어라운드(영업마진 기록 경신). Builders Bank 연방 수탁 차터는 업사이드 옵션. P/E 124x로 비싸고 내부자 매도가 옥의 티."}
+];
+
+const X_COIN=[
+ ["@pivato.investing (Threads)","2026-09-23","b-g","긍정","“$1조 회사인데 주가 $200 아래 — 왜?” 저평가 매수 주장"],
+ ["@trendspider (FB/Threads)","2026-09-14","b-r","부정","Weinstein 스테이지 분석: $390 → Stage 4 하락 → Stage 1 복귀 시도, 추세 반전 미확인"],
+ ["@coinmarketcap (FB)","2026-09-23","b-g","긍정","William Blair “규제 개선 기대, 매력적인 진입 구간” 보도 전달"],
+ ["@coinmarketcap (FB)","2026-09-21","b-g","긍정","Goldman Sachs “커스터디·토큰화·USDC 정산 수혜” 분석 전달"],
+ ["@cryptosrus (FB)","2026-09-26","b-g","긍정","SEC 토큰화주식 5년 면제 — COIN·HOOD·CRCL에 BULLISH"],
+ ["@jayb13335 (Threads)","2026-09-21","b-g","긍정(기술적)","$190 지지 시 $200→$210→$214→$220, 일봉 $190 이탈 시 손절"],
+ ["@bobobearfren (IG)","2026-09-22","b-r","부정","Michael Burry COIN 매도 언급 인용하며 하락 베팅 확산"],
+ ["@thefinancepastor (IG)","2026-09-12","b-y","중립~긍정","“장기 플레이 vs 위험한 베팅? 박살났지만 좋아하는 종목” — 신중 낙관"]];
+const R_COIN=[
+ ["r/stocks · r/wallstreetbets (집계)","2026-09 중순","b-y","관심","9월 중순 COIN이 MSTR·HOOD와 함께 가장 활발히 언급된 크립토 주식 (coinmarketcap 자산워치 그래픽)"],
+ ["r/wallstreetbets 정서","2026-09","b-g","긍정 우위","x402·SEC 면제 모멘텀으로 강세론 우세하나, 실적 미스 연속에 대한 경계 댓글 병존"],
+ ["r/investing","2026-09","b-y","중립","“거래소가 아니라 인프라 회사로 리레이팅될 수 있나” — 구독·서비스 48% 논쟁"]];
+const X_NBIS=[
+ ["stocktwits 뉴스","2026-09-24","b-g","긍정","BNP Paribas $399 목표주가, 2027 ARR $22B 전망 — 당일 +9%"],
+ ["@CryptoCompass (X)","2026-09-30","b-g","긍정","William Blair 커버리지 개시 Outperform — “단순 네오클라우드를 넘어선 포지셔닝”"],
+ ["@AIStockSavvy (X)","2026-07-20","b-g","긍정","Freedom Capital Hold→Buy, $159→$200 — 2028 EV/EBITDA 4~6배 적용"],
+ ["r/wallstreetbets (ApeWisdom)","2026-09-20","b-y","관심","주간 Mania Index 상위 3종목 지속 등재 — 소매 매니아 유입 높음"],
+ ["ainvest (WSB 동향)","2026-09-14","b-r","부정","WSB 화제종목 동반 조정 — “월요일 하락 출발”"],
+ ["trefis","2026-09-17","b-y","중립","“백로그 $40B는 견고하나 실행력 입증 전까지 밸류에이션 부담”"],
+ ["weex / financefeeds","2026-09-25","b-r","부정","2027년 자금조달 공백 우려 — 선급금 커버리지 10%p 하락 시마다 $2.25B 신주 발행 필요"],
+ ["runtimewire","2026-09-25","b-r","부정","DataOne 무허가 발전기 $1.07M 벌금 — MSFT 계약 Vineland 전력 인가 변수"]];
+const R_NBIS=[
+ ["r/wallstreetbets (집계)","2026-09","b-y","관심","Mania Index 상위권 — “AI 인프라 대장” 밈화 진행 중"],
+ ["r/stocks","2026-09","b-g","긍정 우위","MSFT·Meta 계약 규모에 대한 강세론 vs 희석 우려 논쟁"],
+ ["r/SecurityAnalysis","2026-08","b-y","중립","capex $20B+ 대비 매출 $3B — “설비투자 회수 기간”이 핵심 쟁점"]];
+
+const GLOSS={
+ coin:[
+ ["RSI (상대강도지수)","기술적","과매수/과매도를 재는 0~100 지표. 70↑ 과매수, 30↓ 과매도.","COIN의 RSI는 미확인 — 추격매수 판단에 보조 지표로만 활용"],
+ ["PER (주가수익비율)","재무","주가 ÷ 주당순이익. 낮을수록 저평가.","COIN은 GAAP 적자로 PER 음수 — 전통 PER로 평가 불가"],
+ ["PSR (주가매출비율)","재무","주가 ÷ 주당매출액. 적자 기업 평가에 유용.","COIN 8.2x — 성장주치고 무거운 편"],
+ ["EV/EBITDA","재무","기업가치 ÷ 상각전영업이익. 인수합병 시 자주 사용.","COIN 60.4x — EBITDA 대비 비쌈"],
+ ["서프라이즈","실적","실적 발표치가 컨센서스를 벗어난 정도.","COIN은 최근 6분기 중 5분기 미스 — 기대치가 낮아진 상태"],
+ ["컨센서스","실적","월가 애널리스트들의 평균 전망치.","Q3 EPS -$0.34 / 매출 $11.7억"],
+ ["공매도 비율","시장","빌려서 판 주식 비중. 높으면 하락 베팅 과다.","COIN 12.4% — 반등 시 스퀴즈 연료"],
+ ["x402","기타","Coinbase가 만든 AI 에이전트용 결제 프로토콜 (HTTP 402 활용).","COIN 투자 테제의 핵심 — 표준화 진행 중"],
+ ["스테이블코인","기타","달러 등에 연동된 암호화폐 (USDC 등).","COIN 매출의 25%가 USDC 관련 수익"],
+ ["베이스 (Base)","기타","Coinbase의 이더리움 L2 네트워크.","x402 결제의 90% 이상이 Base에서 발생"]],
+ nbis:[
+ ["네오클라우드","기타","GPU 등 AI 전용 클라우드를 파는 신흥 사업자.","NBIS·CRWV·IREN이 대표 — 하이퍼스케일러와 경쟁"],
+ ["ARR (연간반복매출)","재무","연 단위로 환산한 반복 매출.","NBIS Q2말 $3.0B → 연말 $7~9B 목표"],
+ ["백로그","실적","이미 계약된 미래 매출 (수주잔고).","NBIS ~$40B — MSFT $19.4B + Meta $27B"],
+ ["조정 EBITDA 마진","재무","일회성 제외 영업현금창출력 비율.","NBIS 41% (AI 부문 50%) — 인프라 사업자로 매우 높음"],
+ ["Capex (설비투자)","재무","데이터센터·GPU 매입 등 투자 지출.","2026년 $20~25B — 매출의 6~8배, 최대 리스크"],
+ ["선급금","재무","고객이 미리 낸 돈. capex 재원으로 활용.","2026년 $9B+ 예상 — 자금조달의 핵심 축"],
+ ["전환사채","시장","주식으로 바꿀 수 있는 채권. 희석 리스크.","8월 $5.75B 발행 (전환가 $313.46)"],
+ ["PSR (주가매출비율)","재무","주가 ÷ 주당매출액.","NBIS trailing 36.5x — 고성장 기대 선반영"],
+ ["공매도 비율","시장","빌려서 판 주식 비중.","NBIS 18.49% — 높은 숏이 상방 압력으로 작용 가능"],
+ ["Vera Rubin","기타","NVIDIA 차세대 GPU 플랫폼.","Meta $27B 계약의 기반 — 2027년 납품 시작"]]
+};
+</script>
+<script>
+const TABS=[["overview","개요"],["tech","기술적분석"],["earn","실적"],["fin","재무"],["radar","비교"],["x","🐦 X"],["reddit","💬 Reddit"],["gloss","📖 용어"],["mb","🔟 멀티배거"]];
+let curTicker="coin",curTab={coin:"overview",nbis:"overview"};const drawn={};
+
+function kv(rows){return rows.map(r=>'<div class="kv"><span>'+r[0]+'</span><span style="text-align:right">'+r[1]+'</span></div>').join("")}
+function tbl(head,rows,numLast){let h='<table><tr>'+head.map(c=>'<th>'+c+'</th>').join("")+'</tr>';rows.forEach(r=>{h+='<tr>'+r.map((c,i)=>'<td'+(numLast&&i===r.length-1?' class="num"':'')+'>'+c+'</td>').join("")+'</tr>'});return h+'</table>'}
+function bullBear(bull,bear){
+ let h='<h4>🟢 Bull Case (상승 근거)</h4><ul class="tight">'+bull.map(b=>'<li>'+b+'</li>').join("")+'</ul>';
+ h+='<h4>🔴 Bear Case (하락 근거)</h4><ul class="tight">'+bear.map(b=>'<li>'+b+'</li>').join("")+'</ul>';return h}
+function opCards(list){return list.map(o=>'<div class="opcard"><div class="who">'+o[0]+' · '+o[1]+' <span class="badge '+o[2]+'">'+o[3]+'</span></div><div class="txt">'+o[4]+'</div></div>').join("")}
+function stanceHTML(d){
+ return '<div class="card"><h3>🎯 종합 의견 — <span class="badge '+(d.score>=60?'b-g':'b-y')+'">'+d.stance+(d.stanceSub?'('+d.stanceSub+')':'')+'</span> <span class="mut">'+d.score+'/100</span></h3>'
+ +'<div class="stance"><span class="mut" style="font-size:11px">매도</span><div class="bar"><div class="pin" style="left:'+d.stancePos+'%"></div></div><span class="mut" style="font-size:11px">매수</span></div>'
+ +'<h4>실행 계획</h4>'+tbl(["구분","가격","비중"],d.plan,true)
+ +'<h4>핵심 모니터링</h4><div class="mut">'+d.monitor+'</div></div>'}
+function mbHTML(d){
+ let h='<div class="card"><h3>🔟 멀티배거 체크리스트 (Anna Yartseva, CAFE WP 33)</h3><div class="score">'+d.mbScore+'<span style="font-size:16px">/8</span></div><div class="grade"><span class="badge b-y">'+d.mbGrade+'</span></div>'
+ +'<div class="chartbox tall"><canvas id="mb-'+d.ticker+'"></canvas></div>';
+ d.mb.forEach((m,i)=>{h+='<div class="opcard"><div class="who"><b>'+MB_Q[i]+'</b></div><div class="txt"><span class="badge '+(m[0]==="✅"?"b-g":m[0]==="⚠️"?"b-y":"b-r")+'">'+m[0]+'</span> '+m[1]+'</div></div>'});
+ h+='<div class="warn">⚠️ 워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.</div></div>';return h}
+function glossHTML(t){
+ const g=GLOSS[t];const cats=["전체","기술적","재무","실적","시장","기타"];
+ let h='<div class="card"><h3>📖 용어 사전</h3><div class="gfilter">'+cats.map((c,i)=>'<button class="'+(i===0?'on':'')+'" onclick="gfilter(this,\''+t+'\',\''+c+'\')">'+c+'</button>').join("")+'</div><div id="glist-'+t+'">';
+ g.forEach(x=>{const col=x[1]==="기술적"?"#3b82f6":x[1]==="재무"?"#22c55e":x[1]==="실적"||x[1]==="시장"?"#f97316":"#a855f7";
+ h+='<div class="gcard" data-cat="'+x[1]+'" style="border-left-color:'+col+'"><div class="gname">'+x[0]+' <span class="badge b-b">'+x[1]+'</span></div><div class="gdesc">'+x[2]+'</div><div class="guse">→ '+x[3]+'</div></div>'});
+ return h+'</div></div>'}
+function gfilter(btn,t,cat){const w=btn.parentElement.querySelectorAll("button");w.forEach(b=>b.classList.remove("on"));btn.classList.add("on");
+ document.querySelectorAll("#glist-"+t+" .gcard").forEach(c=>{c.style.display=(cat==="전체"||c.dataset.cat===cat)?"block":"none"})}
+
+function renderPanel(t){
+ const d=PICKS[t];const el=document.getElementById("panel-"+t);
+ let h='<div class="tabbar">'+TABS.map(x=>'<button data-tab="'+x[0]+'" class="'+(curTab[t]===x[0]?'on':'')+'" onclick="switchTab(\''+t+'\',\''+x[0]+'\')">'+x[1]+'</button>').join("")+'</div>';
+ // overview
+ h+='<div class="tsec'+(curTab[t]==="overview"?" on":"")+'" id="sec-'+t+'-overview">'
+ +'<div class="card"><h3>'+d.name+' ('+d.ticker+') <span class="badge b-b">'+d.price+'</span> <span class="mut">'+d.asof+'</span></h3>'+kv(d.profile)
+ +'<h4>경쟁우위 (Moat)</h4><div class="mut">'+d.moat+'</div><h4>로드맵</h4><div class="mut">'+d.roadmap+'</div><h4>메가트렌드</h4><div class="mut">'+d.megatrend+'</div></div>'
+ +'<div class="card"><h3>📊 주가 위치 (52주)</h3><div class="chartbox"><canvas id="pos-'+t+'"></canvas></div></div>';
+ if(t==="coin")h+='<div class="card"><h3>💰 사업 부문별 매출 비중 (Q2 2026)</h3><div class="chartbox"><canvas id="seg-'+t+'"></canvas></div><div class="mut">순매출 $1,154M 기준. 구독·서비스 합계 48.1%.</div></div>';
+ else h+='<div class="card"><h3>📦 앵커 계약 백로그 ($B)</h3><div class="chartbox"><canvas id="seg-'+t+'"></canvas></div><div class="mut">계약 전력 기준 총 ~$40B. 2026년 고객 선급금 $9B+ 예상.</div></div>';
+ h+='</div>';
+ // tech
+ h+='<div class="tsec'+(curTab[t]==="tech"?" on":"")+'" id="sec-'+t+'-tech">'
+ +'<div class="card"><h3>📈 기술적 지표</h3>'+tbl(["지표","값"],d.tech)+'<div class="note">'+d.techNote+'</div></div>'
+ +'<div class="card"><h3>🎯 진입·청산 포인트</h3>'+tbl(["구분","가격"],d.entry)+'</div></div>';
+ // earn
+ h+='<div class="tsec'+(curTab[t]==="earn"?" on":"")+'" id="sec-'+t+'-earn">'
+ +'<div class="card"><h3>💵 분기별 매출 추이</h3><div class="chartbox"><canvas id="rev-'+t+'"></canvas></div><div class="mut">'+d.earnNote+'</div></div>'
+ +'<div class="card"><h3>📅 다음 실적</h3>'+kv(d.nextEarn)+'<h4>주목할 핵심 지표 TOP 5</h4><ul class="tight">'+d.kpi.map(k=>'<li>'+k+'</li>').join("")+'</ul></div></div>';
+ // fin
+ h+='<div class="tsec'+(curTab[t]==="fin"?" on":"")+'" id="sec-'+t+'-fin">'
+ +'<div class="card"><h3>🏦 핵심 재무 지표</h3>'+tbl(["지표","값"],d.fund)+'<div class="note">'+d.fundNote+'</div></div></div>';
+ // radar
+ let rh='<div class="tsec'+(curTab[t]==="radar"?" on":"")+'" id="sec-'+t+'-radar"><div class="card"><h3>📡 같은 테마 레이더</h3>';
+ RADAR.forEach(r=>{rh+='<div class="opcard"><div class="who"><b>'+r.t+'</b> '+r.n+' · '+r.ax+' <span class="badge '+r.c+'">'+r.s+'</span> <span class="mut">'+r.sc+'</span></div><div class="txt" style="font-size:12.5px;color:#cdd8ea">$'+r.p+' · 시총 '+r.mc+'</div><div class="txt" style="margin-top:4px">'+r.d+'</div></div>'});
+ h+=rh+'</div></div>';
+ // x
+ h+='<div class="tsec'+(curTab[t]==="x"?" on":"")+'" id="sec-'+t+'-x"><div class="card"><h3>🐦 X / 소셜 — '+(t==="coin"?X_COIN.length:X_NBIS.length)+'건</h3>'+opCards(t==="coin"?X_COIN:X_NBIS)+'<div class="mut">X 직접 조회 제한으로 공개 게시물(Threads/IG/FB) 및 언론 인용 기준 수집.</div></div></div>';
+ // reddit
+ h+='<div class="tsec'+(curTab[t]==="reddit"?" on":"")+'" id="sec-'+t+'-reddit"><div class="card"><h3>💬 Reddit — '+(t==="coin"?R_COIN.length:R_NBIS.length)+'건</h3>'+opCards(t==="coin"?R_COIN:R_NBIS)+'<div class="mut">Reddit API 직접 조회 제한 — 서브레딧 집계 지표 기준.</div></div></div>';
+ // gloss
+ h+='<div class="tsec'+(curTab[t]==="gloss"?" on":"")+'" id="sec-'+t+'-gloss">'+glossHTML(t)+'</div>';
+ // mb
+ h+='<div class="tsec'+(curTab[t]==="mb"?" on":"")+'" id="sec-'+t+'-mb">'
+ +'<div class="card"><h3>⚖️ Bull vs Bear</h3>'+bullBear(d.bull,d.bear)+'</div>'
+ +stanceHTML(d)+mbHTML(d)+'</div>';
+ el.innerHTML=h;
+}
+
+function switchTab(t,tab){curTab[t]=tab;
+ document.querySelectorAll("#panel-"+t+" .tabbar button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+ document.querySelectorAll("#panel-"+t+" .tsec").forEach(s=>s.classList.toggle("on",s.id==="sec-"+t+"-"+tab));
+ drawFor(t,tab)}
+function showTicker(t){curTicker=t;
+ ["coin","nbis"].forEach(x=>{document.getElementById("tabbtn-"+x).classList.toggle("on",x===t);document.getElementById("panel-"+x).style.display=x===t?"block":"none"});
+ drawFor(t,curTab[t])}
+
+function posData(t){return t==="coin"?{low:139.11,ma50:172.31,ma200:175.94,cur:189.29,high:402.16}:{low:73.52,ma50:217.95,ma200:null,cur:232.28,high:299.86}}
+function drawFor(t,tab){
+ const key=t+"-"+tab;if(drawn[key]){Object.values(Chart.instances||{}).forEach(c=>{try{c.resize()}catch(e){}});return}
+ drawn[key]=1;const d=PICKS[t];
+ if(tab==="overview"){
+  const p=posData(t);
+  const labels=["52주 저점","50일선"];const data=[p.low,p.ma50];
+  if(p.ma200){labels.push("200일선");data.push(p.ma200)}
+  labels.push("현재가","52주 고점");data.push(p.cur,p.high);
+  const bg=labels.map(l=>l==="현재가"?"#3b82f6":l.includes("고점")?"#ef4444":l.includes("저점")?"#22c55e":"#8b98ad");
+  new Chart(document.getElementById("pos-"+t),{type:"bar",data:{labels:labels,datasets:[{data:data,backgroundColor:bg,borderRadius:6}]},options:{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  if(t==="coin")new Chart(document.getElementById("seg-coin"),{type:"doughnut",data:{labels:d.segLabels,datasets:[{data:d.seg,backgroundColor:["#3b82f6","#22c55e","#a855f7","#f59e0b","#64748b"],borderWidth:0}]},options:{maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{boxWidth:12,font:{size:10}}}}}});
+  else new Chart(document.getElementById("seg-nbis"),{type:"bar",data:{labels:d.backlogLabels,datasets:[{label:"$B",data:d.backlog,backgroundColor:["#3b82f6","#a855f7"],borderRadius:8}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+ }
+ if(tab==="earn"){
+  const ds=[{type:"bar",label:"매출"+(t==="coin"?" ($B)":" ($M)"),data:d.rev,backgroundColor:"#3b82f6",borderRadius:5,yAxisID:"y"}];
+  if(t==="coin")ds.push({type:"line",label:"EPS ($)",data:d.eps,borderColor:"#f59e0b",backgroundColor:"#f59e0b",tension:.3,yAxisID:"y1"});
+  else ds.push({type:"line",label:"YoY (%)",data:d.yoy,borderColor:"#22c55e",backgroundColor:"#22c55e",tension:.3,yAxisID:"y1"});
+  new Chart(document.getElementById("rev-"+t),{type:"bar",data:{labels:d.revLabels,datasets:ds},options:{maintainAspectRatio:false,scales:{y:{position:"left"},y1:{position:"right",grid:{drawOnChartArea:false}}}}});
+ }
+ if(tab==="mb"){
+  const vals=d.mb.map(m=>m[0]==="✅"?1:m[0]==="⚠️"?0.5:0);
+  new Chart(document.getElementById("mb-"+d.ticker),{type:"radar",data:{labels:MB_LABELS,datasets:[{label:d.ticker+" ("+d.mbScore+"/8)",data:vals,backgroundColor:"rgba(59,130,246,.25)",borderColor:"#3b82f6",pointBackgroundColor:"#3b82f6"}]},options:{maintainAspectRatio:false,scales:{r:{min:0,max:1,ticks:{stepSize:.5,display:false},pointLabels:{font:{size:10},color:"#cdd8ea"}}},plugins:{legend:{labels:{boxWidth:12}}}}});
+ }
+ if(tab==="radar"&&!drawn.upside){
+  drawn.upside=1;
+  const items=[["COIN",189.29,222.47],["NBIS",232.28,241.80],["CRCL",82.91,130.41],["IREN",40.65,77.97],["CRWV",88.57,138.78],["XYZ",74.04,105]];
+  new Chart(document.getElementById("upsideChart"),{type:"bar",data:{labels:items.map(i=>i[0]),datasets:[{label:"목표주가 대비 상승여력 %",data:items.map(i=>+(((i[2]-i[1])/i[1]*100).toFixed(1))),backgroundColor:["#3b82f6","#a855f7","#22c55e","#f59e0b","#ef4444","#64748b"],borderRadius:6}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+ }
+}
+
+renderPanel("coin");renderPanel("nbis");
+drawFor("coin","overview");
+</script>
+</body>
+</html>
