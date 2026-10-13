@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SLNH 종목분석 대시보드 2026-10-13</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0b3340 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #0e5566;}
+.hdr h1{font-size:1.45rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.05rem;font-weight:700;color:#06b6d4;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;}
+.tb.on{color:#06b6d4;border-bottom-color:#06b6d4;}
+.cnt{padding:14px;max-width:600px;margin:0 auto;}
+.card{background:#111827;border:1px solid #123e4a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;}
+.mc .vl{font-size:1.02rem;font-weight:700;margin-top:3px;}
+.g{color:#10b981;}.r{color:#ef4444;}.y{color:#f59e0b;}.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bd,.wd,.dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}.br{background:rgba(239,68,68,0.15);color:#ef4444;}.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #1e2d4a;color:#cbd5e1;}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;font-weight:600;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #22c55e;}
+.term.tec{border-left-color:#3b82f6;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;margin-bottom:4px;}
+.term-f{font-size:0.74rem;color:#f59e0b;margin-top:5px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.flt button{background:#0d1426;border:1px solid #1e2d4a;color:#94a3b8;border-radius:9999px;padding:4px 10px;font-size:0.72rem;cursor:pointer;}
+.flt button.on{border-color:#f59e0b;color:#f59e0b;}
+.mb-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;font-size:0.78rem;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.hz{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:12px;}
+.hz-t{font-size:0.9rem;font-weight:700;color:#f59e0b;margin-bottom:4px;}
+.hz-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+.hz-c{border-radius:8px;padding:8px 4px;}
+.hz-c .l{font-size:0.66rem;color:#94a3b8;}
+.hz-c .p{font-size:1.1rem;font-weight:800;margin-top:2px;}
+.hz-c .s{font-size:0.6rem;color:#64748b;margin-top:2px;}
+.hz-ev{margin-top:8px;font-size:0.78rem;color:#cbd5e1;text-align:center;}
+.gauge .bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#0a0f1e;font-weight:700;}
+.src{font-size:0.68rem;color:#475569;margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props){var a=[tag,props];for(var i=2;i<arguments.length;i++)a.push(arguments[i]);return React.createElement.apply(React,a);};
+var useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
+function mk(cRef,chRef,cfg,deps){useEffect(function(){if(!cRef.current)return;if(chRef.current)chRef.current.destroy();chRef.current=new Chart(cRef.current,cfg);return function(){if(chRef.current){chRef.current.destroy();chRef.current=null;}};},deps||[]);}
+var AX={ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}};
+var LG={legend:{labels:{color:'#94a3b8'}}};
+function box(k,t,d){var c={g:['bx','bt'],y:['wx','wt'],r:['dx','dt']}[k];return e('div',{className:c[0]},t?e('div',{className:c[1]},t):null,e('div',{className:'bd'},d));}
+function tbl(h,rows){return e('div',{className:'table-wrap'},e('table',null,e('thead',null,e('tr',null,h.map(function(x,i){return e('th',{key:i},x);}))),e('tbody',null,rows.map(function(r,i){return e('tr',{key:i},r.map(function(c,j){return e('td',{key:j},c);}));}))));}
+function mc(lb,vl,cls){return e('div',{className:'mc'},e('div',{className:'lb'},lb),e('div',{className:'vl '+(cls||'')},vl));}
+
+
+/* 기준: 10/12 종가 $0.85 · 발행주식 246.7M(8/21) */
+var P0=0.85;
+function pct(v){var p=Math.round((v/P0-1)*100);return (p>=0?'+':'')+p+'%';}
+var HZ=[
+  {h:'1개월 (~2026년 11월 중순)',w:'10/16 주총(10억 주 승인) · Q3 실적 · $1 회복 여부',bear:0.60,base:0.90,bull:1.20},
+  {h:'3개월 (~2027년 1월 중순)',w:'Kati 2 자금조달 · Nasdaq 호가 요건(재통지 가능)',bear:0.50,base:1.00,bull:1.50},
+  {h:'12개월 (~2027년 10월)',w:'AI/HPC 계약 전환 · 희석 속도',bear:0.40,base:1.30,bull:2.80},
+  {h:'장기 (~2028~2030년)',w:'6.3GW 파이프라인 실현도',bear:0.20,base:2.00,bull:5.00}
+];
+function ev(z){return Math.round((z.bear*0.25+z.base*0.5+z.bull*0.25)*100)/100;}
+function d(v){return '$'+v.toFixed(2);}
+
+/* 1 개요 */
+function Tab1(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🏢 기업 개요'),
+      box('y',null,'Soluna Holdings(나스닥 SLNH)는 미국 뉴욕주 올버니 본사, CEO 존 벨리자이어. 텍사스 등 재생에너지 발전소 옆에 데이터센터를 지어, 버려지는(curtailed) 풍력·태양광 전력으로 비트코인 채굴 호스팅과 AI/HPC(고성능 컴퓨팅) 연산을 제공한다. 수익 구조: 호스팅·자체 채굴·HPC 임대 → 전력 마진.'),
+      e('div',{className:'mg'},
+        mc('종가 (10/12)','$0.85 (−5.6%)','r'),mc('9/23 대비','−34%','r'),
+        mc('시가총액','~$2.1억'),mc('발행주식 (8/21)','246.7M주'),
+        mc('현금 (Q2)','$113.4M','g'),mc('주당 현금','~$0.46','g'),
+        mc('공매도 비율','~12%','r'),mc('1년 수익률','−41.7%','r')),
+      box('r','정정','9/23 대시보드의 시가총액 ~$1.45억은 과거 주식 수 기준이었다. 8/21 발행주식 246.7M주 기준으로는 당시($1.28) 약 $3.2억, 현재($0.85) 약 $2.1억이다.')),
+    e('div',{className:'card'},e('h2',null,'🏗️ 프로젝트 포트폴리오'),
+      tbl(['프로젝트','규모','상태'],[
+        ['Dorothy 1A/1B','텍사스','가동 — 1A 분기 최대 매출·28% 마진, 1B 지분 100% 확보'],
+        ['Kati 1','48MW (Bitdeer 35MW)','9/28 Bitdeer 계약 35MW로 확대, 11월 완료 예정'],
+        ['Kati 2','350MW JV','JV 지배권 확보 — AI/HPC 핵심, 투자은행 통해 자금조달 중'],
+        ['Dorothy 2','JV (Metrobloks)','확정 JV 계약'],
+        ['Dorothy 3','397에이커 부지','브리스코 카운티 부지 매입 완료'],
+        ['전체 파이프라인','~6.3GW','장기 옵션']])),
+    e('div',{className:'card'},e('h2',null,'🔭 미래 인사이트'),
+      box('g','메가트렌드','AI 데이터센터의 최대 병목 = 전력. 발전소 옆 "전력 확보형" 부지는 희소 자산이다.'),
+      box('r','리스크','① 대형 자금 필요 → 대규모 희석(10억 주 승인 안건) ② 비트코인 가격·해시프라이스 노출 ③ 마이크로캡 유동성·Nasdaq $1 요건 ④ HPC 계약 실체화 지연.')));
+}
+
+/* 2 기술적 */
+function Tab2(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'line',data:{labels:['3/30','4월','6월','7/9','7/20','9/23','10/5','10/7','10/12'],datasets:[
+    {label:'SLNH ($)',data:[0.62,0.74,1.45,1.30,1.13,1.28,1.03,1.00,0.85],borderColor:'#06b6d4',tension:0.3},
+    {label:'$1 Nasdaq 기준',data:[1,1,1,1,1,1,1,1,1],borderColor:'#ef4444',borderDash:[5,5],pointRadius:0}]},
+    options:{plugins:LG,scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📈 가격 흐름'),e('canvas',{ref:cr}),e('div',{className:'src'},'중간 시점은 보도·이전 분석의 근사치.')),
+    e('div',{className:'card'},e('h2',null,'🕯️ 하이킨아시 & 지표'),
+      tbl(['지표','판단','신호'],[
+        ['일봉 HA','9/23 이후 연속 음봉','하락'],
+        ['주봉 HA','3주 연속 음봉','하락'],
+        ['RSI(14)','수치 미확보 — 3주 −34% 급락으로 30 부근 추정','과매도 근접(재확인)'],
+        ['50일선','$1.1~1.2대 추정 — 하회','약세'],
+        ['거래량','10/12 평균 대비 143%','투매성']]),
+      box('r','⚠️ 과매도 근접 구간','주봉 연속 음봉 + 단기 −34% 급락. RSI 정확값은 미확인이지만 기술적 반등 가능 구간. 단, 하락 원인(희석 안건)이 10/16 해소되기 전까지는 "떨어지는 칼".')),
+    e('div',{className:'card'},e('h2',null,'🧱 지지·저항'),
+      e('div',{className:'mg'},mc('1차 지지','$0.73~0.75 (4월)','g'),mc('2차 지지','$0.60~0.62 (3월)','g'),mc('1차 저항','$1.00 (Nasdaq 기준)','r'),mc('2차 저항','$1.13 / $1.28','r')),
+      box('y','패턴: 하락 채널','9/23 고점 이후 하락 채널. $1.00 회복이 추세 전환의 첫 조건. $0.73 이탈 시 $0.60까지 열림.')),
+    e('div',{className:'card'},e('h2',null,'⚡ 진입·청산'),
+      tbl(['구분','가격','조건'],[
+        ['1차 매수','$0.72~0.78','10/16 주총 결과 확인 후'],
+        ['2차 매수','$0.60~0.65','Q3 실적에서 매출 성장 확인 시'],
+        ['손절','$0.58 이탈','3월 저점 붕괴'],
+        ['1차 목표','$1.10~1.15','$1 회복 + 갭 메우기'],
+        ['2차 목표','$1.45','6월 고점']])));
+}
+
+/* 3 재무 */
+function Tab3(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'bar',data:{labels:['시가총액','현금','부채','EV'],datasets:[{label:'$M',data:[210,113.4,33.1,130],backgroundColor:['#06b6d4','#10b981','#ef4444','#f59e0b']}]},
+    options:{plugins:{legend:{display:false}},scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'💰 핵심 재무 지표'),
+      tbl(['지표','값','평가'],[
+        ['PER','적자','—'],
+        ['PSR (연환산)','~3.5× (Q2×4=$60M)','성장 대비 낮음'],
+        ['EV/매출','~2.2×','저평가'],
+        ['PBR','재확인 필요','—'],
+        ['매출총이익','+$0.8M (Q2)','흑자 전환'],
+        ['adj. EBITDA','−$1.6M (Q1比 25% 개선)','개선 중'],
+        ['순손실','−$22.6M (Q2)','지속'],
+        ['부채','$33.1M','낮음']]),
+      e('canvas',{ref:cr}),
+      e('div',{className:'src'},'시총 = 246.7M주 × $0.85. EV = 시총 − 현금 + 부채 ≈ $130M. 6/30 이후 현금 변동은 미반영.')),
+    e('div',{className:'card'},e('h2',null,'⚠️ 희석 구조'),
+      tbl(['항목','내용'],[
+        ['수권주식 증가 안건','3.75억 → 10억 주 (10/16 투표)'],
+        ['Exchange Cap 안건','20% 이상 발행 허용 — YA II(Yorkville) SEPA'],
+        ['SEPA 규모','최대 $2.5억 주식 매도 약정 (2026.3.24)'],
+        ['Q2 ATM','+$23.6M 조달'],
+        ['2025.11 선례','0.75억 → 3.75억 주 승인']]),
+      box('r','해석','현재 시총($2.1억)에 맞먹는 $2.5억 SEPA를 쓰면 현 주가 기준 주식 수가 2배 이상 늘 수 있다. 승인 자체가 곧 발행은 아니지만, 시장은 이를 선반영하며 하락 중.')));
+}
+
+/* 4 실적 */
+function Tab4(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'bar',data:{labels:['Q2 25','Q1 26','Q2 26'],datasets:[{label:'매출 ($M)',data:[6.2,9.4,15.1],backgroundColor:'#06b6d4'}]},options:{plugins:LG,scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📊 실적 추이'),e('canvas',{ref:cr}),
+      e('div',{className:'src'},'Q2 25는 +145% YoY에서 역산한 추정치. 분기별 EPS 서프라이즈 이력은 이번 검색에서 확보하지 못함.')),
+    e('div',{className:'card'},e('h2',null,'📅 Q3 2026 프리뷰'),
+      e('div',{className:'mg'},mc('발표 예정','11월 중순 (추정)'),mc('Q2 매출','$15.1M'),mc('컨센서스','미확보'),mc('애널','Rosenblatt·HCW 매수')),
+      box('y','주목 지표 TOP 5','① 매출 성장(Kati 1 Bitdeer 확대분) ② 매출총이익률 ③ adj. EBITDA 흑자 전환 여부 ④ 현금 잔고·SEPA 사용액 ⑤ Kati 2 자금조달·고객 계약')),
+    e('div',{className:'card'},e('h2',null,'🎲 이벤트 플레이북'),
+      tbl(['이벤트','결과','대응'],[
+        ['10/16 주총','증자 안건 부결','단기 급반등 가능 — 단 자금조달 불확실성↑'],
+        ['10/16 주총','가결 (기본 시나리오)','"재료 소멸" 반등 vs 실제 발행 시작 — SEPA 사용 공시 주시'],
+        ['Q3 실적','매출 +30% QoQ↑, EBITDA 흑자','$1 회복 시도, 1차 매수분 보유'],
+        ['Q3 실적','성장 둔화·현금 급감','$0.60 지지 실패 시 손절']]),
+      box('r','Nasdaq 요건','10/7 이후 $1 하회. 30거래일 연속 $1 미만이면 11월 중순께 재통지(180일 유예) 가능. 2023년 1:25 병합 이력이 있어 재병합 리스크도 염두.')));
+}
+
+/* 5 뉴스 */
+function Tab5(){
+  return e('div',null,e('div',{className:'card'},e('h2',null,'📰 최신 뉴스'),
+    box('r','10/16 연례 주총 — 수권주식 10억 주·20% 초과 발행 안건','하락의 핵심 원인으로 추정. 회사는 "즉시 발행 아님, 유연성 확보"라는 입장.'),
+    box('r','10/12 종가 $0.85 (−5.6%), 거래량 평균 143%','10/7 $1.00 → $1 하회 진입.'),
+    box('g','9/28 Bitdeer와 Kati 1 계약 35MW로 확대','11월 완료 예정 — Q4 매출 기여.'),
+    box('g','Kati 2 350MW JV 지배권 확보','AI/HPC 확장의 핵심 자산.'),
+    box('g','애널리스트','Rosenblatt 매수 개시(9/17, 목표 $5 — 9/23 분석 기준), H.C. Wainwright 매수·목표 $4(8/17).'),
+    box('y','내부자 매도','최고회계책임자(CAO) 30,000주 $1.26 매도(9/23) — 규모는 작음.'),
+    box('g','Dorothy 3 부지 397에이커 매입 완료','파이프라인 확장.')));
+}
+
+/* 6 센티먼트 */
+function Tab6(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'💬 소셜 센티먼트'),
+      box('r','데이터 정합성 고지','X 15개·Reddit 15개 실제 게시물은 이번 세션의 검색 도구로 개별 수집하지 못했다. 인용을 지어내지 않기 위해 뉴스·애널리스트 논조 요약으로 대체한다.'),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'강세론',e('span',{className:'badge bg'},'🟢')),e('div',{className:'bd'},'주당 현금 ~$0.46, EV ~$1.3억에 350MW AI 부지 + 매출 +145%. 애널 목표 $4~5. "전력 확보 AI 부지가 이 가격이면 싸다".')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'약세론',e('span',{className:'badge br'},'🔴')),e('div',{className:'bd'},'"10억 주 승인 = 희석 폭탄". SEPA $2.5억은 현 시총 이상. 공매도 12%, $1 하회.')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'중립론',e('span',{className:'badge by'},'🟡')),e('div',{className:'bd'},'"10/16 결과와 SEPA 사용 속도 확인 전엔 손대지 말 것".'))),
+    e('div',{className:'card'},e('h2',null,'🏦 기관 & 애널리스트'),
+      tbl(['항목','값'],[
+        ['Rosenblatt','매수 (9/17 개시)'],
+        ['H.C. Wainwright','매수 · $4 (8/17)'],
+        ['공매도 비율','~12.0% (MarketBeat)'],
+        ['기관 13F','이번 검색에서 미확보']]),
+      box('y',null,'애널 목표가 $4~5는 현재가의 5~6배 — 커버리지가 2곳뿐이고 HCW는 과거 증자 주관사였던 점(2025.12)을 감안해 할인해서 볼 것.')));
+}
+
+/* 7 관련 */
+function Tab7(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🔗 같은 분야 종목'),
+      tbl(['티커','특징'],[
+        ['IREN','채굴 → AI 클라우드 전환 선두'],
+        ['CIFR','HPC 리스 계약(빅테크) 확보'],
+        ['WULF','TeraWulf — 무탄소 전력 + HPC'],
+        ['HUT','Hut 8 — 전력 부지 + AI'],
+        ['BTDR','Bitdeer — SLNH Kati 1 고객'],
+        ['APLD','Applied Digital — AI 데이터센터']])),
+    e('div',{className:'card'},e('h2',null,'📦 ETF'),
+      tbl(['ETF','비고'],[['WGMI','비트코인 채굴 ETF — 소형주 편입 여부 재확인'],['소형주 지수','마이크로캡이라 주요 ETF 영향 제한적']]),
+      box('y',null,'동종사 대비 SLNH는 규모가 가장 작고, 빅테크 HPC 장기계약이 아직 없다는 점이 할인 요인. 계약 발표 시 리레이팅 폭도 가장 크다.')));
+}
+
+/* 8 기간별 목표가 */
+function Hz(props){var z=props.z,v=ev(z);
+  function cell(l,val,cls,bg){return e('div',{className:'hz-c',style:{background:bg}},e('div',{className:'l'},l),e('div',{className:'p '+cls},d(val)),e('div',{className:'s'},pct(val)));}
+  return e('div',{className:'hz'},e('div',{className:'hz-t'},z.h),e('div',{style:{fontSize:'0.72rem',color:'#64748b',marginBottom:'8px'}},z.w),
+    e('div',{className:'hz-row'},cell('약세(25%)',z.bear,'r','rgba(239,68,68,0.1)'),cell('기준(50%)',z.base,'y','rgba(245,158,11,0.1)'),cell('강세(25%)',z.bull,'g','rgba(16,185,129,0.1)')),
+    e('div',{className:'hz-ev'},'확률가중 기대가격: ',e('b',{className:'y'},d(v)),' ('+pct(v)+')'));}
+function Tab8(){
+  var cr=useRef(null),cc=useRef(null);
+  function s(k){return [P0].concat(HZ.map(function(z){return z[k];}));}
+  mk(cr,cc,{type:'line',data:{labels:['현재','1개월','3개월','12개월','장기'],datasets:[
+    {label:'강세',data:s('bull'),borderColor:'#10b981',tension:0.3},{label:'기준',data:s('base'),borderColor:'#f59e0b',tension:0.3},{label:'약세',data:s('bear'),borderColor:'#ef4444',tension:0.3}]},
+    options:{plugins:LG,scales:{x:AX,y:{type:'logarithmic',min:0.15,max:6,ticks:{color:'#94a3b8',autoSkip:false,callback:function(v){return [0.2,0.5,1,2,5].indexOf(v)>=0?'$'+v:'';}},grid:{color:'#1e2d4a'}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🎯 기간별 목표가 — 시나리오'),
+      box('r','⚠️ 예측이 아닌 시나리오','기준 10/12 종가 $0.85. 약세 = 대규모 희석 + 계약 지연, 기준 = 점진적 증자 + Kati 1 확대분 반영, 강세 = Kati 2 HPC 장기계약 체결. 확률 25/50/25는 주관적 가정. 장기 강세는 커버리지 애널 목표($4~5)를 참고했으며, 희석이 크면 주당 가치는 이보다 낮아진다.'),
+      e('canvas',{ref:cr})),
+    HZ.map(function(z,i){return e(Hz,{key:i,z:z});}),
+    e('div',{className:'card'},e('h2',null,'📏 바닥 참고선'),
+      tbl(['기준','주당 가치'],[['주당 현금 (Q2)','~$0.46'],['52주 저점','~$0.36'],['3월 저점','$0.62'],['애널 목표','$4~5']]),
+      box('y',null,'현금만으로 주가의 약 54%가 뒷받침되지만, 현금은 프로젝트에 계속 소진되므로 "청산가치 바닥"으로 보긴 어렵다.')));
+}
+
+/* 9 용어 */
+function Tab9(){
+  var sf=useState('all'),f=sf[0],setF=sf[1];
+  var T=[
+    {c:'fin',n:'수권주식 (Authorized Shares)',d:'회사가 발행할 수 있는 주식의 최대 한도예요. 늘리면 나중에 주식을 더 찍을 수 있어요.',f:'3.75억 → 10억 주 안건 (10/16).'},
+    {c:'fin',n:'SEPA (주식 매도 약정)',d:'투자사가 회사가 원할 때 주식을 사 주기로 약속한 계약. 회사는 쉽게 돈을 모으지만 주식 수가 늘어요.',f:'Yorkville과 최대 $2.5억.'},
+    {c:'fin',n:'희석 (Dilution)',d:'새 주식 발행으로 내 1주의 몫이 작아지는 거예요.',f:'SLNH 최대 리스크.'},
+    {c:'fin',n:'EV (기업가치)',d:'시가총액에서 현금을 빼고 빚을 더한 값. 회사를 통째로 살 때 실제 드는 돈이에요.',f:'~$1.3억.'},
+    {c:'fin',n:'adj. EBITDA',d:'이자·세금·감가상각 등을 빼기 전 영업 현금이익 비슷한 지표예요.',f:'−$1.6M, 흑자 전환 직전.'},
+    {c:'fin',n:'PSR',d:'시가총액 ÷ 매출. 적자 기업의 비싸고 싼 정도를 볼 때 써요.',f:'~3.5×.'},
+    {c:'tec',n:'하이킨아시',d:'평균값으로 그린 캔들. 추세를 보기 쉬워요.',f:'일·주봉 모두 연속 음봉.'},
+    {c:'tec',n:'RSI',d:'0~100으로 과열(70↑)·과매도(30↓)를 보는 지표예요.',f:'정확값 미확보, 과매도 근접 추정.'},
+    {c:'ear',n:'Nasdaq 최소 호가 요건',d:'주가가 30거래일 연속 $1 아래면 경고를 받고, 180일 안에 회복 못하면 상장폐지 절차가 시작돼요.',f:'10/7 이후 $1 하회.'},
+    {c:'ear',n:'HPC',d:'고성능 컴퓨팅. AI 학습·추론처럼 전력을 많이 쓰는 연산이에요.',f:'Kati 2 350MW의 목표 용도.'},
+    {c:'ear',n:'호스팅',d:'고객의 채굴기·서버를 우리 데이터센터에 두고 전력·관리를 제공해 돈 받는 사업이에요.',f:'Bitdeer 35MW.'},
+    {c:'etc',n:'커테일먼트 (Curtailment)',d:'전력망이 못 받아 버려지는 재생에너지 전력이에요.',f:'SLNH 사업 모델의 출발점.'}
+  ];
+  var F=[['all','전체'],['tec','기술적'],['fin','재무'],['ear','실적/시장'],['etc','기타']];
+  return e('div',null,e('div',{className:'card'},e('h2',null,'📖 용어'),
+    e('div',{className:'flt'},F.map(function(x){return e('button',{key:x[0],className:f===x[0]?'on':'',onClick:function(){setF(x[0]);}},x[1]);})),
+    T.filter(function(t){return f==='all'||t.c===f;}).map(function(t,i){return e('div',{key:i,className:'term '+t.c},e('div',{className:'term-h'},t.n),e('div',{className:'bd'},t.d),e('div',{className:'term-f'},'→ '+t.f));})));
+}
+
+/* 10 멀티배거 */
+var MB=[
+  {q:'1. 아직 충분히 작은 기업인가?',d:'시총 ~$2.1억',v:1},
+  {q:'2. 가격이 미래를 과대반영하지 않았나?',d:'EV/매출 ~2.2×, PSR ~3.5×',v:1},
+  {q:'3. 매출보다 EBITDA·FCF 개선이 따라오나?',d:'매출총이익 흑자 전환, EBITDA 손실 25% 축소 — FCF는 음(−)',v:0.5},
+  {q:'4. 자산 증가율 ≤ EBITDA 증가율?',d:'프로젝트 투자 확대 중, EBITDA 아직 적자',v:0.5},
+  {q:'5. FCF yield 합리적인가?',d:'FCF 음(−)',v:0},
+  {q:'6. 투자가 실제 수요·주문과 연결?',d:'Bitdeer 35MW 확대, Kati 2 JV — 빅테크 HPC 계약은 아직',v:1},
+  {q:'7. 고금리를 버티는가?',d:'현금 $113M·부채 $33M, 단 확장은 증자 의존',v:0.5},
+  {q:'8. 단기 급등 후 추격 구간 아닌가?',d:'3주 −34%, 과매도 근접',v:1}
+];
+function Tab10(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'radar',data:{labels:MB.map(function(x,i){return '#'+(i+1);}),datasets:[{label:'SLNH',data:MB.map(function(x){return x.v;}),borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.2)'}]},
+    options:{plugins:LG,scales:{r:{min:0,max:1,ticks:{display:false},grid:{color:'#1e2d4a'},angleLines:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8'}}}}});
+  var s=MB.reduce(function(a,b){return a+b.v;},0);
+  return e('div',null,e('div',{className:'card'},e('h2',null,'🔟 멀티배거 체크 (Anna Yartseva 8항목)'),
+    e('div',{style:{textAlign:'center',fontSize:'2.2rem',fontWeight:700,color:'#f59e0b'}},s+'/8'),
+    e('div',{style:{textAlign:'center',fontSize:'0.8rem',color:'#94a3b8',marginBottom:'10px'}},'등급: 보통 (4~6점) — 9/23 6.5점에서 하향'),
+    e('canvas',{ref:cr}),
+    MB.map(function(it,i){return e('div',{key:i,className:'mb-row'},e('div',null,it.v===1?'✅':it.v===0.5?'⚠️':'❌'),e('div',{style:{flex:1}},it.q,e('div',{className:'mb-sub'},it.d)),e('div',null,it.v+'점'));}),
+    box('y',null,'하향 이유: 10억 주 수권 안건으로 "고금리·자금조달 내성"(7번)이 증자 의존으로 재평가됨. 체크리스트 점수는 희석 리스크를 직접 반영하지 못하므로 주의.'),
+    box('r',null,'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')));
+}
+
+/* 11 결론 */
+function Tab11(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🏁 종합 의견'),
+      e('div',{className:'gauge'},e('div',{className:'bar'},
+        e('div',{className:'seg',style:{background:'#ef4444'}},'강한매도'),e('div',{className:'seg',style:{background:'#f87171'}},'매도'),
+        e('div',{className:'seg',style:{background:'#f59e0b'}},'중립 ●'),e('div',{className:'seg',style:{background:'#34d399'}},'매수'),
+        e('div',{className:'seg',style:{background:'#10b981'}},'강한매수'))),
+      e('div',{style:{textAlign:'center',fontSize:'1.15rem',fontWeight:700,color:'#f59e0b'}},'중립 (10/16 주총 후 소액 분할)'),
+      box('y',null,'9/23 "매수(투기적)"에서 한 단계 하향. 사업 개선(매출 +145%, Bitdeer 확대, Kati 2)은 유효하지만, 10억 주 수권·$2.5억 SEPA로 희석 규모가 현 시총에 맞먹을 수 있고 주가는 $1을 다시 밑돌았다. 과매도 근접이라 반등 여지는 있으나, 주총 결과와 SEPA 사용 공시를 확인한 뒤 $0.72~0.78에서 소액으로 접근하는 것이 합리적.')),
+    e('div',{className:'card'},e('h2',null,'🐂 / 🐻'),
+      box('g','Bull','① EV ~$1.3억에 350MW AI 부지·6.3GW 파이프라인 ② 매출 +145%, 매출총이익 흑자 ③ 주당 현금 ~$0.46 ④ 애널 목표 $4~5, 과매도 근접.'),
+      box('r','Bear','① 수권 10억 주·SEPA $2.5억 = 대규모 희석 ② $1 하회 → Nasdaq 재통지·재병합 리스크 ③ 빅테크 HPC 계약 부재 ④ 공매도 12%·내부자 매도.')),
+    e('div',{className:'card'},e('h2',null,'📋 실행 계획'),
+      tbl(['구분','가격','비중'],[['1차 매수','$0.72~0.78','포트폴리오 0.5~1%'],['2차 매수','$0.60~0.65','+0.5% (Q3 확인 후)'],['손절','$0.58 이탈','전량'],['1차 익절','$1.10~1.15','50%'],['2차 익절','$1.45','나머지']])),
+    e('div',{className:'card'},e('h2',null,'👀 모니터링'),
+      box('y',null,'10/16 주총 결과 · SEPA 사용·8-K 공시 · Q3 실적(11월) · Kati 2 자금조달·고객 · Nasdaq $1 요건(30거래일) · Bitdeer 35MW 11월 완료'),
+      e('div',{className:'src'},'출처: MarketBeat, StockTitan, Investing.com, Gotrade, Yahoo Finance, Simply Wall St, SEC DEF 14A(2026.8.24), CryptoSlate, Business Wire, Investing.com(Nasdaq 컴플라이언스). 본 자료는 투자 권유가 아니다.')));
+}
+
+function App(){
+  var sa=useState(10),tab=sa[0],set=sa[1];
+  var T=['🏢개요','📈기술적','💰재무','📊실적','📰뉴스','💬센티먼트','🔗관련·ETF','🎯기간별목표가','📖용어','🔟멀티배거','🏁결론'];
+  var P=[Tab1,Tab2,Tab3,Tab4,Tab5,Tab6,Tab7,Tab8,Tab9,Tab10,Tab11];
+  return e('div',null,
+    e('div',{className:'hdr'},e('a',{href:'https://disntm90.github.io/disntm90/',className:'back'},'← 목록으로'),
+      e('h1',null,'⚡ SLNH — Soluna Holdings'),e('div',{className:'px'},'$0.85 · 시총 ~$2.1억 · 현금 $113.4M'),
+      e('div',{className:'sub'},'재생에너지 데이터센터 · AI/HPC · 비트코인 호스팅 | 2026-10-13')),
+    e('div',{className:'tabs'},T.map(function(n,i){return e('button',{key:i,className:'tb'+(tab===i?' on':''),onClick:function(){set(i);}},n);})),
+    e('div',{className:'cnt'},e(P[tab],{key:tab})));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
