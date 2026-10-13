@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BTC 비트코인 분석 대시보드 2026-10-13</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d2408 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #7a4a10;}
+.hdr h1{font-size:1.45rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.05rem;font-weight:700;color:#f59e0b;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;}
+.tb.on{color:#f59e0b;border-bottom-color:#f59e0b;}
+.cnt{padding:14px;max-width:600px;margin:0 auto;}
+.card{background:#111827;border:1px solid #4a3412;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;}
+.mc .vl{font-size:1.02rem;font-weight:700;margin-top:3px;}
+.g{color:#10b981;}.r{color:#ef4444;}.y{color:#f59e0b;}.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bd,.wd,.dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}.br{background:rgba(239,68,68,0.15);color:#ef4444;}.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #1e2d4a;color:#cbd5e1;}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;font-weight:600;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #22c55e;}
+.term.tec{border-left-color:#3b82f6;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;margin-bottom:4px;}
+.term-f{font-size:0.74rem;color:#f59e0b;margin-top:5px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.flt button{background:#0d1426;border:1px solid #1e2d4a;color:#94a3b8;border-radius:9999px;padding:4px 10px;font-size:0.72rem;cursor:pointer;}
+.flt button.on{border-color:#f59e0b;color:#f59e0b;}
+.mb-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;font-size:0.78rem;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.hz{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:12px;}
+.hz-t{font-size:0.9rem;font-weight:700;color:#f59e0b;margin-bottom:4px;}
+.hz-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+.hz-c{border-radius:8px;padding:8px 4px;}
+.hz-c .l{font-size:0.66rem;color:#94a3b8;}
+.hz-c .p{font-size:1.1rem;font-weight:800;margin-top:2px;}
+.hz-c .s{font-size:0.6rem;color:#64748b;margin-top:2px;}
+.hz-ev{margin-top:8px;font-size:0.78rem;color:#cbd5e1;text-align:center;}
+.gauge .bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#0a0f1e;font-weight:700;}
+.src{font-size:0.68rem;color:#475569;margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props){var a=[tag,props];for(var i=2;i<arguments.length;i++)a.push(arguments[i]);return React.createElement.apply(React,a);};
+var useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
+function mk(cRef,chRef,cfg,deps){useEffect(function(){if(!cRef.current)return;if(chRef.current)chRef.current.destroy();chRef.current=new Chart(cRef.current,cfg);return function(){if(chRef.current){chRef.current.destroy();chRef.current=null;}};},deps||[]);}
+var AX={ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}};
+var LG={legend:{labels:{color:'#94a3b8'}}};
+function box(k,t,d){var c={g:['bx','bt'],y:['wx','wt'],r:['dx','dt']}[k];return e('div',{className:c[0]},t?e('div',{className:c[1]},t):null,e('div',{className:'bd'},d));}
+function tbl(h,rows){return e('div',{className:'table-wrap'},e('table',null,e('thead',null,e('tr',null,h.map(function(x,i){return e('th',{key:i},x);}))),e('tbody',null,rows.map(function(r,i){return e('tr',{key:i},r.map(function(c,j){return e('td',{key:j},c);}));}))));}
+function mc(lb,vl,cls){return e('div',{className:'mc'},e('div',{className:'lb'},lb),e('div',{className:'vl '+(cls||'')},vl));}
+
+/* 기준: BTC $83.4K (10/13 오전) */
+var P0=83.4;
+function pct(v){var p=Math.round((v/P0-1)*100);return (p>=0?'+':'')+p+'%';}
+var HZ=[
+  {h:'1개월 (~2026년 11월 중순)',w:'CPI·10월 FOMC·ETF 수급',bear:74,base:85,bull:95},
+  {h:'3개월 (~2027년 1월 중순)',w:'연말 유동성·CLARITY 법안·금리 경로',bear:70,base:90,bull:105},
+  {h:'12개월 (~2027년 10월)',w:'반감기 후 사이클 중반·기관 수요',bear:62,base:105,bull:150},
+  {h:'장기 (~2030년)',w:'2028년 4월 반감기 1회 포함',bear:70,base:200,bull:350}
+];
+function ev(z){return Math.round((z.bear*0.25+z.base*0.5+z.bull*0.25)*10)/10;}
+
+/* 1 개요 */
+function Tab1(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'₿ 자산 개요'),
+      box('y',null,'비트코인(BTC)은 2009년 사토시 나카모토가 만든 최초의 탈중앙 디지털 자산. 발행 한도 2,100만 개, 약 4년마다 신규 발행량이 절반으로 줄어드는 "반감기" 구조. 기업이 아니므로 매출·이익이 없고, 가치는 수요(ETF·기업·개인)와 고정 공급의 균형, 그리고 글로벌 유동성(금리·달러)에 좌우된다.'),
+      e('div',{className:'mg'},
+        mc('현재가 (10/13 오전)','~$83,400','y'),mc('시가총액','~$1.66조'),
+        mc('사상 최고가','$126,210 (2025.10)'),mc('고점 대비','−34%','r'),
+        mc('1년 수익률','약 −28%','r'),mc('2026년 저점','~$60K (6월)'),
+        mc('유통량','~1,993만 개'),mc('다음 반감기','~2028년 4월','b'))),
+    e('div',{className:'card'},e('h2',null,'🧭 로드맵 & 구조 변화'),
+      tbl(['기간','관전 포인트'],[
+        ['1년','미국 시장구조법(CLARITY) 처리, 현물 ETF 수급 회복, 연준 금리 경로'],
+        ['3년','2028년 반감기(블록 보상 3.125→1.5625 BTC), 기업 트레저리 재편'],
+        ['5년+','국가·중앙은행 준비자산 편입 여부, 레이어2(라이트닝 등) 결제 확산']])),
+    e('div',{className:'card'},e('h2',null,'🔭 미래 인사이트'),
+      box('g','메가트렌드','디지털 금(가치저장) 내러티브 + 기관 자산배분 편입. 현물 ETF·기업 보유로 유통 물량이 구조적으로 잠기는 중.'),
+      box('r','리스크','① 고금리 장기화(실질금리↑ = 무이자 자산 불리) ② 기업 트레저리 모델 약화 시 매도 압력 ③ 양자컴퓨팅 등 장기 기술 리스크 ④ 규제 지연.')));
+}
+
+/* 2 기술적 */
+function Tab2(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'line',data:{labels:['2025.10 고점','2026.06 저점','7/20','9/10','9/25','10/13'],datasets:[
+    {label:'BTC ($K)',data:[126.2,60,63,79,84.5,83.4],borderColor:'#f7931a',tension:0.3},
+    {label:'200일선 (~$72K)',data:[null,null,null,null,null,71.9],borderColor:'#06b6d4',pointRadius:6,showLine:false}]},
+    options:{plugins:LG,scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📈 가격 흐름'),e('canvas',{ref:cr}),
+      e('div',{className:'src'},'중간 시점 값은 이전 분석 시점의 근사치.')),
+    e('div',{className:'card'},e('h2',null,'🕯️ 하이킨아시 & 지표'),
+      tbl(['지표','값','신호'],[
+        ['일봉 HA','$84K 저항 후 음봉 전환','중립~약세'],
+        ['주봉 HA','6월 저점 이후 양봉 → 이번 주 −4%','상승 둔화'],
+        ['RSI(14)','~52 (TipRanks 10/11)','중립'],
+        ['200일선','~$71.9K — 가격이 +16% 위','장기 상승'],
+        ['50/200일선','골든크로스 유지 (CoinStats)','매수'],
+        ['파생','10/12 청산 $7.7억+, 미결제약정 회복 중','변동성 주의']]),
+      box('y',null,'과매도(주봉 연속 음봉 + RSI<30) 아님. 200일선 위 + 골든크로스로 중기 추세는 살아 있으나, $84~87K 매물대에서 3주째 막힘.')),
+    e('div',{className:'card'},e('h2',null,'🧱 지지·저항 & 패턴'),
+      e('div',{className:'mg'},mc('1차 지지','$81.4~82.9K','g'),mc('2차 지지','$75K / $72K(200일선)','g'),mc('1차 저항','$84~84.5K','r'),mc('2차 저항','$87K / $90K','r')),
+      box('g','패턴: 박스권 $81~87K','수주째 $81.4~87.4K 박스. 상단 돌파 시 목표 $93K(박스 높이), 하단 $81K 이탈 시 $75K → 200일선 $72K 재시험. CPI 전 예상 범위 $81.3~84.5K(Bitfinex).')),
+    e('div',{className:'card'},e('h2',null,'⚡ 진입·청산'),
+      tbl(['구분','가격','조건'],[
+        ['1차 매수','$78~81K','박스 하단 지지 확인'],
+        ['2차 매수','$70~74K','200일선 부근'],
+        ['손절(무효화)','주봉 $68K 하회','200일선 이탈 + LTH 원가($62.7K) 접근'],
+        ['1차 목표','$93~95K','박스 돌파 목표'],
+        ['2차 목표','$105K+','3개월 강세 시나리오']])));
+}
+
+/* 3 온체인 (재무 대체) */
+function Tab3(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'bar',data:{labels:['실현가격(전체)','LTH 실현가격','200일선','현재가','ATH'],datasets:[{label:'$K',data:[54,62.7,71.9,83.4,126.2],backgroundColor:['#64748b','#06b6d4','#3b82f6','#f7931a','#ef4444']}]},
+    options:{plugins:{legend:{display:false}},scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'⛓️ 온체인 밸류에이션 (재무 지표 대체)'),
+      box('y',null,'비트코인은 PER·PBR·FCF가 없다. 대신 "보유자들의 평균 매입가(실현가격)" 대비 현재가를 보는 MVRV 등 온체인 지표로 고평가·저평가를 판단한다.'),
+      e('canvas',{ref:cr}),
+      tbl(['지표','값','해석'],[
+        ['MVRV (전체)','~1.24 (8월) / 실현가 ~$52~54K','과열(3+) 한참 아래'],
+        ['LTH MVRV','1.35 (9/27)','6/30 0.94 저점 → 압력 구간 탈출'],
+        ['LTH 실현가격','~$62.7K','장기보유자 평균 원가 — 강한 바닥 후보'],
+        ['해시레이트','~1,116 EH/s','사상 최고 근처 — 네트워크 보안 견고'],
+        ['해시프라이스','~$32/PH/일','채굴 수익성 압박 — 채굴자 매도 압력 요인']]),
+      e('div',{className:'src'},'온체인 수치는 출처·시점이 엇갈림(8~9월 기준 포함). 재확인 권장.')),
+    e('div',{className:'card'},e('h2',null,'🏦 수급 구조'),
+      tbl(['주체','최근 동향'],[
+        ['현물 ETF','10/12 −$65.4M(전량 IBIT), 직전 주 −$678.9M, 10월 누적 유출 $10억+'],
+        ['Strategy','848,250 BTC — 매입 주 250~334개로 둔화'],
+        ['고래','휴면 지갑 4,582 BTC(~$3.8억) 이동 — 매도 확인은 안 됨'],
+        ['채굴자','신규 발행 ~450 BTC/일, 해시프라이스 압박']]),
+      box('r',null,'이번 사이클 최대 매수 주체였던 ETF·기업 트레저리가 동시에 둔화 — 가격이 박스를 못 뚫는 핵심 이유.')));
+}
+
+/* 4 이벤트 (실적 대체) */
+function Tab4(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📅 핵심 이벤트 캘린더'),
+      tbl(['날짜','이벤트','영향'],[
+        ['10/14','미국 9월 CPI','물가↑ → 추가 인상 우려 → BTC 약세'],
+        ['10월 말','FOMC','9월 인상 이후 추가 인상 여부(보도 기준, 재확인)'],
+        ['10/29 전후','Strategy Q3 실적','BTC 매입 재개·매도 여부'],
+        ['미정','CLARITY 법안 상원 표결','9월 절차표결 예정이었으나 결과 미확인'],
+        ['~2028.4','4차 반감기 이후 다음 반감기','공급 감소 내러티브']])),
+    e('div',{className:'card'},e('h2',null,'🎲 CPI 플레이북'),
+      tbl(['시나리오','예상 반응','대응'],[
+        ['CPI 예상 하회','$84.5K 돌파 → $87K 시험','돌파 확인 후 일부 추가'],
+        ['예상 부합','$81~85K 박스 유지','관망, 하단 분할'],
+        ['예상 상회','$81K 이탈 → $78K/$75K','$78~81K 1차, $70~74K 2차'],
+        ['큰 폭 상회 + 금리 급등','$72K(200일선)까지','손절 기준(주봉 $68K) 점검']]),
+      box('y','주목 지표 TOP 5','① 미 10년물 금리 ② 현물 ETF 일일 순유입 ③ 달러 인덱스 ④ 미결제약정·펀딩비(레버리지 과열) ⑤ Strategy 등 트레저리 기업 매입량')));
+}
+
+/* 5 뉴스 */
+function Tab5(){
+  return e('div',null,e('div',{className:'card'},e('h2',null,'📰 최신 뉴스 (10월)'),
+    box('r','10/12~13: 청산 $8억+, 이번 주 −4%','CPI 경계 + 한국 증시 AI 우려 매도와 동조. $81K~84K 등락.'),
+    box('r','ETF 10월 누적 유출 $10억+','직전 주 −$678.9M(수요일 −$484.9M 집중). 10/12 −$65.4M 전량 IBIT.'),
+    box('y','휴면 지갑 4,582 BTC 이동','약 $3.8억. 거래소 입금·매도 여부는 미확인.'),
+    box('y','Strategy: 250 BTC 매입, STRC $1.92억 자사매입','최대 기업 매수자의 매입 속도 둔화.'),
+    box('g','기관 목표가','스탠다드차타드 연말 $100K(종전 $150K), 번스타인 연말 $125K·2027 중반 $150K(출처 엇갈림), 씨티 2027 중반 중심값 $82K, 톰 리 $200~250K.'),
+    box('r','약세 경고','전 NBAD 펀드매니저 Aksel Kibar: $60K까지 하락 가능.')));
+}
+
+/* 6 센티먼트 */
+function Tab6(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'bar',data:{labels:['Citi','StanChart','Bernstein','Tom Lee'],datasets:[{label:'연말/중기 목표 ($K)',data:[82,100,125,225],backgroundColor:['#ef4444','#f59e0b','#34d399','#10b981']}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'💬 소셜 센티먼트'),
+      box('r','데이터 정합성 고지','X 15개·Reddit 15개 실제 게시물은 이번 세션의 검색 도구로 개별 수집하지 못했다. 인용을 지어내지 않기 위해 뉴스·분석 논조 요약으로 대체한다. 공포·탐욕 지수도 10월 값 미확보(8/26 65 "탐욕").'),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'강세론',e('span',{className:'badge bg'},'🟢')),e('div',{className:'bd'},'200일선 위·골든크로스, LTH 원가($62.7K) 대비 여유, 해시레이트 최고치. "6월 바닥 확인, 사이클 재개".')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'약세론',e('span',{className:'badge br'},'🔴')),e('div',{className:'bd'},'ETF 유출 + 트레저리 매수 둔화 + 고금리. "$84K 3중 저항, $75K 재시험".')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'중립론',e('span',{className:'badge by'},'🟡')),e('div',{className:'bd'},'CPI·FOMC 확인 전까지 박스 매매.'))),
+    e('div',{className:'card'},e('h2',null,'🏦 기관 전망 분포'),e('canvas',{ref:cr}),
+      e('div',{className:'src'},'Tom Lee는 $200~250K 중간값 표시. 시점 기준이 서로 달라(연말 vs 2027 중반) 단순 비교 주의.')));
+}
+
+/* 7 관련종목·ETF */
+function Tab7(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🔗 BTC 연동 종목'),
+      tbl(['티커','특징','BTC 대비'],[
+        ['MSTR','최대 보유 기업, mNAV 1.07×','베타 ~1.5~2×'],
+        ['COIN','거래소 — 거래량 연동','베타 높음'],
+        ['MARA / RIOT','채굴 — 해시프라이스 민감','베타 2×+'],
+        ['IREN / CIFR / HUT','채굴→AI 데이터센터 전환','AI 테마 혼합'],
+        ['ASST / 3350.T','후발 트레저리','고변동']])),
+    e('div',{className:'card'},e('h2',null,'📦 ETF'),
+      tbl(['ETF','성격'],[
+        ['IBIT (블랙록)','최대 현물 ETF — 수급 바로미터'],
+        ['FBTC (피델리티)','현물'],
+        ['BTC (그레이스케일 미니)','저보수 현물 — 티커가 "BTC"'],
+        ['BITO','선물 기반 — 롤오버 비용'],
+        ['BITX / BITI','2배 레버리지 / 인버스']]),
+      box('y',null,'참고: 미국 상장 티커 "BTC"는 그레이스케일 비트코인 미니 트러스트 ETF. 이 대시보드는 비트코인 자체를 분석했으며, ETF 가격은 BTC 가격을 그대로 추종한다(보수 차이만 존재).')));
+}
+
+/* 8 기간별 목표가 */
+function Hz(props){var z=props.z,v=ev(z);
+  function cell(l,val,cls,bg){return e('div',{className:'hz-c',style:{background:bg}},e('div',{className:'l'},l),e('div',{className:'p '+cls},'$'+val+'K'),e('div',{className:'s'},pct(val)));}
+  return e('div',{className:'hz'},e('div',{className:'hz-t'},z.h),e('div',{style:{fontSize:'0.72rem',color:'#64748b',marginBottom:'8px'}},z.w),
+    e('div',{className:'hz-row'},cell('약세(25%)',z.bear,'r','rgba(239,68,68,0.1)'),cell('기준(50%)',z.base,'y','rgba(245,158,11,0.1)'),cell('강세(25%)',z.bull,'g','rgba(16,185,129,0.1)')),
+    e('div',{className:'hz-ev'},'확률가중 기대가격: ',e('b',{className:'y'},'$'+v+'K'),' ('+pct(v)+')'));}
+function Tab8(){
+  var cr=useRef(null),cc=useRef(null);
+  function s(k){return [P0].concat(HZ.map(function(z){return z[k];}));}
+  mk(cr,cc,{type:'line',data:{labels:['현재','1개월','3개월','12개월','2030'],datasets:[
+    {label:'강세',data:s('bull'),borderColor:'#10b981',tension:0.3},{label:'기준',data:s('base'),borderColor:'#f59e0b',tension:0.3},{label:'약세',data:s('bear'),borderColor:'#ef4444',tension:0.3}]},
+    options:{plugins:LG,scales:{x:AX,y:{type:'logarithmic',min:50,max:400,ticks:{color:'#94a3b8',autoSkip:false,callback:function(v){return [50,100,200,400].indexOf(v)>=0?'$'+v+'K':'';}},grid:{color:'#1e2d4a'}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🎯 기간별 목표가 — 시나리오'),
+      box('r','⚠️ 예측이 아닌 시나리오','기준 $83.4K. 약세/기준/강세 가정과 확률(25/50/25)은 분석자의 주관. 하단은 LTH 실현가격·200일선·2026 저점, 상단은 기관 목표가·과거 사이클 고점 배수를 참고했다.'),
+      e('canvas',{ref:cr})),
+    HZ.map(function(z,i){return e(Hz,{key:i,z:z});}),
+    e('div',{className:'card'},e('h2',null,'🏦 기관 전망과 비교'),
+      tbl(['구분','가격'],[['본 3개월 기준','$90K'],['StanChart 2026 말','$100K'],['Bernstein 2026 말','$125K'],['본 12개월 기준','$105K'],['Citi 2027 중반 중심','$82K'],['Bernstein 2027 중반','$150K']]),
+      box('y',null,'본 기준 시나리오는 스탠다드차타드와 씨티 사이의 보수적 중간값. MSTR 대시보드(10/13)의 BTC 가정과 동일하게 맞췄다.')));
+}
+
+/* 9 용어 */
+function Tab9(){
+  var sf=useState('all'),f=sf[0],setF=sf[1];
+  var T=[
+    {c:'etc',n:'반감기 (Halving)',d:'약 4년마다 새로 캐지는 비트코인 양이 절반으로 줄어드는 규칙이에요.',f:'다음은 ~2028년 4월.'},
+    {c:'fin',n:'MVRV',d:'현재 시가총액을 보유자들의 평균 매입가 총액으로 나눈 값. 높을수록 이익 중인 사람이 많아 차익 매물이 나오기 쉬워요.',f:'~1.24 — 과열(3 이상)과 거리 멂.'},
+    {c:'fin',n:'실현가격 (Realized Price)',d:'모든 비트코인이 마지막으로 움직였을 때 가격의 평균. 시장 전체의 "평균 원가"예요.',f:'전체 ~$54K, 장기보유자 ~$62.7K.'},
+    {c:'fin',n:'LTH (장기 보유자)',d:'비트코인을 155일 이상 안 움직인 지갑. 보통 쉽게 팔지 않아요.',f:'LTH MVRV 1.35 — 압력 구간 탈출.'},
+    {c:'fin',n:'해시레이트',d:'비트코인 네트워크를 지키는 채굴 컴퓨터 성능의 합이에요.',f:'~1,116 EH/s, 사상 최고 근처.'},
+    {c:'tec',n:'200일 이동평균',d:'최근 200일 평균 가격. 그 위면 장기 상승, 아래면 장기 하락 추세로 봐요.',f:'~$71.9K, 현재가가 16% 위.'},
+    {c:'tec',n:'골든크로스',d:'단기 평균선(50일)이 장기 평균선(200일)을 위로 뚫는 것. 상승 신호예요.',f:'현재 유지 중.'},
+    {c:'tec',n:'RSI',d:'0~100으로 과열(70↑)·과매도(30↓)를 보는 지표예요.',f:'~52, 중립.'},
+    {c:'ear',n:'청산 (Liquidation)',d:'빚내서 투자한 포지션이 손실로 강제 정리되는 거예요.',f:'10/12~13 $8억+.'},
+    {c:'ear',n:'현물 ETF 순유입',d:'ETF로 들어온 돈에서 빠진 돈을 뺀 값. 플러스면 실제 BTC를 사요.',f:'10월 누적 −$10억+.'},
+    {c:'ear',n:'CPI',d:'소비자물가지수. 높게 나오면 금리 인상 우려로 위험자산이 약해져요.',f:'10/14 발표가 단기 분수령.'},
+    {c:'fin',n:'해시프라이스',d:'채굴 장비 성능 1단위가 하루에 버는 돈이에요.',f:'~$32 — 채굴자 수익성 압박.'}
+  ];
+  var F=[['all','전체'],['tec','기술적'],['fin','온체인'],['ear','시장'],['etc','기타']];
+  return e('div',null,e('div',{className:'card'},e('h2',null,'📖 용어'),
+    e('div',{className:'flt'},F.map(function(x){return e('button',{key:x[0],className:f===x[0]?'on':'',onClick:function(){setF(x[0]);}},x[1]);})),
+    T.filter(function(t){return f==='all'||t.c===f;}).map(function(t,i){return e('div',{key:i,className:'term '+t.c},e('div',{className:'term-h'},t.n),e('div',{className:'bd'},t.d),e('div',{className:'term-f'},'→ '+t.f));})));
+}
+
+/* 10 멀티배거 */
+var MB=[
+  {q:'1. 아직 충분히 작은가?',d:'시총 ~$1.66조',v:0},
+  {q:'2. 가격이 미래를 과대반영하지 않았나?',d:'MVRV ~1.24, LTH MVRV 1.35 — 과열 아님',v:1},
+  {q:'3. 매출보다 EBITDA·FCF 개선?',d:'현금흐름 없는 자산 — 해당 없음',v:0},
+  {q:'4. 자산 증가율 ≤ EBITDA 증가율?',d:'해당 없음',v:0},
+  {q:'5. FCF yield 합리적인가?',d:'무수익 자산(수익률 0%)',v:0},
+  {q:'6. 투자가 실제 수요와 연결?',d:'ETF·기업 수요 존재하나 10월 유출',v:0.5},
+  {q:'7. 고금리를 버티는가?',d:'실질금리에 민감 — 고금리에 약함',v:0},
+  {q:'8. 단기 급등 후 추격 구간 아닌가?',d:'고점 −34%, RSI ~52',v:1}
+];
+function Tab10(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'radar',data:{labels:MB.map(function(x,i){return '#'+(i+1);}),datasets:[{label:'BTC',data:MB.map(function(x){return x.v;}),borderColor:'#f7931a',backgroundColor:'rgba(247,147,26,0.2)'}]},
+    options:{plugins:LG,scales:{r:{min:0,max:1,ticks:{display:false},grid:{color:'#1e2d4a'},angleLines:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8'}}}}});
+  var s=MB.reduce(function(a,b){return a+b.v;},0);
+  return e('div',null,e('div',{className:'card'},e('h2',null,'🔟 멀티배거 체크 (Anna Yartseva 8항목)'),
+    e('div',{style:{textAlign:'center',fontSize:'2.2rem',fontWeight:700,color:'#ef4444'}},s+'/8'),
+    e('div',{style:{textAlign:'center',fontSize:'0.8rem',color:'#94a3b8',marginBottom:'10px'}},'등급: 낮음 (4점 미만) — 단, 자산 특성상 부적합'),
+    e('canvas',{ref:cr}),
+    MB.map(function(it,i){return e('div',{key:i,className:'mb-row'},e('div',null,it.v===1?'✅':it.v===0.5?'⚠️':'❌'),e('div',{style:{flex:1}},it.q,e('div',{className:'mb-sub'},it.d)),e('div',null,it.v+'점'));}),
+    box('y',null,'이 체크리스트는 매출·이익이 있는 상장 기업용이다. 비트코인은 현금흐름이 없는 화폐성 자산이라 3~5번이 구조적으로 0점이며, 점수를 투자 판단에 직접 쓰면 안 된다.'),
+    box('r',null,'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')));
+}
+
+/* 11 결론 */
+function Tab11(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🏁 종합 의견'),
+      e('div',{className:'gauge'},e('div',{className:'bar'},
+        e('div',{className:'seg',style:{background:'#ef4444'}},'강한매도'),e('div',{className:'seg',style:{background:'#f87171'}},'매도'),
+        e('div',{className:'seg',style:{background:'#f59e0b'}},'중립'),e('div',{className:'seg',style:{background:'#34d399'}},'매수 ●'),
+        e('div',{className:'seg',style:{background:'#10b981'}},'강한매수'))),
+      e('div',{style:{textAlign:'center',fontSize:'1.15rem',fontWeight:700,color:'#34d399'}},'중립~매수 (분할 적립)'),
+      box('y',null,'중기 추세(200일선 위·골든크로스)와 온체인 밸류(MVRV 과열 아님)는 우호적. 반면 ETF 유출·트레저리 둔화·고금리로 단기 상단이 막혀 있다. 추격보다 $78~81K, $70~74K 분할 적립이 합리적. 기준 시나리오 3개월 $90K, 12개월 $105K.')),
+    e('div',{className:'card'},e('h2',null,'🐂 / 🐻'),
+      box('g','Bull','① 200일선($72K) 위 + 골든크로스 ② LTH MVRV 1.35 — 바닥권 탈출 초기 ③ 해시레이트 최고치·고정 공급 ④ CLARITY 법안 통과 시 촉매.'),
+      box('r','Bear','① 현물 ETF 10월 $10억+ 유출 ② MSTR 등 트레저리 매입 둔화 ③ 고금리·CPI 상회 시 $72~75K 재시험 ④ 채굴자 수익성 압박에 따른 매도.')),
+    e('div',{className:'card'},e('h2',null,'📋 실행 계획'),
+      tbl(['구분','가격','비중'],[['1차 매수','$78~81K','포트폴리오 2~3%'],['2차 매수','$70~74K','+2~3%'],['무효화(손절)','주봉 $68K 하회','전량 또는 절반'],['1차 익절','$93~95K','30~50%'],['2차 익절','$105K+','나머지 일부']])),
+    e('div',{className:'card'},e('h2',null,'👀 모니터링'),
+      box('y',null,'10/14 CPI · 10월 FOMC · 현물 ETF 일일 순유입 · 미 10년물 금리 · Strategy 주간 매입 · CLARITY 법안 표결 · $81K/$72K 지지'),
+      e('div',{className:'src'},'출처: Fortune, CoinGecko, CoinDesk, TipRanks, CoinLore, crypto.news, Investing.com, Farside(보도 인용), Crypto Economy, Chaincatcher/CryptoQuant, KuCoin News, Coinotag, CoinGecko Learn, Cointelegraph, Decrypt. 본 자료는 투자 권유가 아니다.')));
+}
+
+function App(){
+  var sa=useState(7),tab=sa[0],set=sa[1];
+  var T=['₿개요','📈기술적','⛓️온체인','📅이벤트','📰뉴스','💬센티먼트','🔗관련·ETF','🎯기간별목표가','📖용어','🔟멀티배거','🏁결론'];
+  var P=[Tab1,Tab2,Tab3,Tab4,Tab5,Tab6,Tab7,Tab8,Tab9,Tab10,Tab11];
+  return e('div',null,
+    e('div',{className:'hdr'},e('a',{href:'https://disntm90.github.io/disntm90/',className:'back'},'← 목록으로'),
+      e('h1',null,'₿ BTC — 비트코인'),e('div',{className:'px'},'~$83,400 · 고점 대비 −34% · 200일선 $71.9K'),
+      e('div',{className:'sub'},'디지털 자산 · 종합분석 & 기간별 목표가 | 2026-10-13')),
+    e('div',{className:'tabs'},T.map(function(n,i){return e('button',{key:i,className:'tb'+(tab===i?' on':''),onClick:function(){set(i);}},n);})),
+    e('div',{className:'cnt'},e(P[tab],{key:tab})));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
