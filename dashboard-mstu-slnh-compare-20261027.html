@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MSTU vs SLNH 비교 2026-10-27</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d1f0f 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #6b2e10;}
+.hdr h1{font-size:1.45rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.05rem;font-weight:700;color:#f97316;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;}
+.tb.on{color:#f97316;border-bottom-color:#f97316;}
+.cnt{padding:14px;max-width:600px;margin:0 auto;}
+.card{background:#111827;border:1px solid #4a2a12;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;}
+.mc .vl{font-size:1.02rem;font-weight:700;margin-top:3px;}
+.g{color:#10b981;}.r{color:#ef4444;}.y{color:#f59e0b;}.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bd,.wd,.dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}.br{background:rgba(239,68,68,0.15);color:#ef4444;}.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #1e2d4a;color:#cbd5e1;}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;font-weight:600;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #22c55e;}
+.term.tec{border-left-color:#3b82f6;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;margin-bottom:4px;}
+.term-f{font-size:0.74rem;color:#f59e0b;margin-top:5px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.flt button{background:#0d1426;border:1px solid #1e2d4a;color:#94a3b8;border-radius:9999px;padding:4px 10px;font-size:0.72rem;cursor:pointer;}
+.flt button.on{border-color:#f59e0b;color:#f59e0b;}
+.mb-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;font-size:0.78rem;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.hz{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:12px;}
+.hz-t{font-size:0.9rem;font-weight:700;color:#f59e0b;margin-bottom:4px;}
+.hz-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+.hz-c{border-radius:8px;padding:8px 4px;}
+.hz-c .l{font-size:0.66rem;color:#94a3b8;}
+.hz-c .p{font-size:1.1rem;font-weight:800;margin-top:2px;}
+.hz-c .s{font-size:0.6rem;color:#64748b;margin-top:2px;}
+.hz-ev{margin-top:8px;font-size:0.78rem;color:#cbd5e1;text-align:center;}
+.gauge .bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#0a0f1e;font-weight:700;}
+.src{font-size:0.68rem;color:#475569;margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props){var a=[tag,props];for(var i=2;i<arguments.length;i++)a.push(arguments[i]);return React.createElement.apply(React,a);};
+var useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
+function mk(cRef,chRef,cfg,deps){useEffect(function(){if(!cRef.current)return;if(chRef.current)chRef.current.destroy();chRef.current=new Chart(cRef.current,cfg);return function(){if(chRef.current){chRef.current.destroy();chRef.current=null;}};},deps||[]);}
+var AX={ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}};
+var LG={legend:{labels:{color:'#94a3b8'}}};
+function box(k,t,d){var c={g:['bx','bt'],y:['wx','wt'],r:['dx','dt']}[k];return e('div',{className:c[0]},t?e('div',{className:c[1]},t):null,e('div',{className:'bd'},d));}
+function tbl(h,rows){return e('div',{className:'table-wrap'},e('table',null,e('thead',null,e('tr',null,h.map(function(x,i){return e('th',{key:i},x);}))),e('tbody',null,rows.map(function(r,i){return e('tr',{key:i},r.map(function(c,j){return e('td',{key:j},c);}));}))));}
+function mc(lb,vl,cls){return e('div',{className:'mc'},e('div',{className:'lb'},lb),e('div',{className:'vl '+(cls||'')},vl));}
+
+
+/* MSTU vs SLNH — 10/27 대시보드 시나리오 값 사용 */
+var U={p:33,h:[[20.2,31.5,46.5],[14.7,33.1,55.9],[7.1,33.6,82.5]]};
+var S={p:0.55,h:[[0.40,0.55,0.75],[0.32,0.60,0.95],[0.25,0.80,1.80]]};
+var HL=['1개월','3개월','12개월'];
+function r(x,p){return Math.round((x/p-1)*100);}
+function evr(a,p){return r(a[0]*0.25+a[1]*0.5+a[2]*0.25,p);}
+function sg(v){return (v>=0?'+':'')+v+'%';}
+
+function Tab1(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'⚖️ 한눈에 비교'),
+      tbl(['항목','🦖 MSTU','⚡ SLNH'],[
+        ['정체','MSTR 일일 2배 레버리지 ETF','재생에너지 데이터센터 마이크로캡'],
+        ['현재가','~$33 (추정)','$0.55 (10/23)'],
+        ['무엇에 베팅?','BTC × MSTR 프리미엄 × 2','AI/HPC 부지 가치 실현'],
+        ['BTC 민감도','실효 3~4×','간접 (호스팅·채굴 일부)'],
+        ['1년 성과','−98%','~−68% (추정)'],
+        ['시간의 편','❌ 보유할수록 손실 (변동성 손실)','⭕ 프로젝트 진척 시 가치 축적'],
+        ['최대 리스크','MSTR 급락·장기 녹아내림','대규모 희석(10억 주)·주식 병합'],
+        ['바닥 근거','없음 (파생상품)','주당 현금 ~$0.32(추정), 부채 $9.2M'],
+        ['촉매','BTC 반등·MSTR 실적','Q3 실적·APLD JV 클로징·임대 확정'],
+        ['적합한 기간','수일~2주','3~12개월'],
+        ['10/27 의견','매도/회피 (단기 트레이딩만)','중립 — 관망 우세, 초소액'],
+        ['멀티배거 점수','1.5/8','5.5/8']]))
+  );
+}
+
+function Tab2(){
+  var c1=useRef(null),h1=useRef(null),c2=useRef(null),h2=useRef(null);
+  mk(c1,h1,{type:'bar',data:{labels:HL,datasets:[
+    {label:'MSTU 기대수익',data:U.h.map(function(a){return evr(a,U.p);}),backgroundColor:'#f97316'},
+    {label:'SLNH 기대수익',data:S.h.map(function(a){return evr(a,S.p);}),backgroundColor:'#06b6d4'}]},
+    options:{plugins:LG,scales:{x:AX,y:{ticks:{color:'#94a3b8',callback:function(v){return v+'%';}},grid:{color:'#1e2d4a'}}}}});
+  mk(c2,h2,{type:'bar',data:{labels:HL,datasets:[
+    {label:'MSTU 약세',data:U.h.map(function(a){return r(a[0],U.p);}),backgroundColor:'#ef4444'},
+    {label:'SLNH 약세',data:S.h.map(function(a){return r(a[0],S.p);}),backgroundColor:'#f87171'},
+    {label:'MSTU 강세',data:U.h.map(function(a){return r(a[2],U.p);}),backgroundColor:'#10b981'},
+    {label:'SLNH 강세',data:S.h.map(function(a){return r(a[2],S.p);}),backgroundColor:'#34d399'}]},
+    options:{plugins:LG,scales:{x:AX,y:{ticks:{color:'#94a3b8',callback:function(v){return v+'%';}},grid:{color:'#1e2d4a'}}}}});
+  var rows=HL.map(function(h,i){return [h,
+    sg(r(U.h[i][0],U.p))+' / '+sg(r(U.h[i][1],U.p))+' / '+sg(r(U.h[i][2],U.p)),
+    sg(r(S.h[i][0],S.p))+' / '+sg(r(S.h[i][1],S.p))+' / '+sg(r(S.h[i][2],S.p))];});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🎯 기간별 기대수익 (확률가중)'),e('canvas',{ref:c1}),
+      box('y',null,'두 종목 모두 각 대시보드(10/27)의 약세·기준·강세 시나리오를 25/50/25로 가중한 값. 주관적 가정이므로 순위 비교용으로만 볼 것.')),
+    e('div',{className:'card'},e('h2',null,'📊 약세 vs 강세 폭'),e('canvas',{ref:c2}),
+      tbl(['기간','MSTU 약/기준/강','SLNH 약/기준/강'],rows)),
+    e('div',{className:'card'},e('h2',null,'🔑 핵심 차이'),
+      box('r','MSTU','기준 시나리오(MSTR이 12개월 +32%)에서도 MSTU는 +2%. 시간이 지날수록 기대수익이 기초자산 대비 깎인다.'),
+      box('g','SLNH','기준 시나리오에서 12개월 +45%. 단, 이 숫자는 "희석이 점진적"이라는 가정에 크게 의존한다.')));
+}
+
+function Tab3(){
+  var cr=useRef(null),cc=useRef(null);
+  var L=['손실 위험(낮을수록↑)','시간 내성','바닥 근거','촉매 가시성','유동성','정보 투명성'];
+  mk(cr,cc,{type:'radar',data:{labels:L,datasets:[
+    {label:'MSTU',data:[1,1,0,3,5,4],borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.15)'},
+    {label:'SLNH',data:[2,4,3,3,2,2],borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.15)'}]},
+    options:{plugins:LG,scales:{r:{min:0,max:5,ticks:{display:false},grid:{color:'#1e2d4a'},angleLines:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'⚠️ 리스크 프로필 (0~5, 높을수록 유리)'),e('canvas',{ref:cr}),
+      e('div',{className:'src'},'분석자의 정성 평가 점수.')),
+    e('div',{className:'card'},e('h2',null,'💀 "크게 잃는" 경로'),
+      tbl(['종목','시나리오','결과'],[
+        ['MSTU','BTC $70K 하회 + MSTR mNAV 1.0↓','수주 내 −50%↑'],
+        ['MSTU','MSTR 횡보 1년','약 −42% (변동성 손실)'],
+        ['SLNH','SEPA 대량 발행 + JV 지연','12개월 −50~60%'],
+        ['SLNH','Nasdaq 통지 → 병합','병합 직후 추가 급락 경향']]),
+      box('y',null,'둘 다 원금의 절반 이상을 잃을 수 있는 초고위험 자산. "어느 쪽이 덜 위험한가"가 아니라 "어느 쪽 위험이 보상받을 구조인가"의 문제다.')));
+}
+
+function Tab4(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🏁 하나만 고른다면'),
+      e('div',{style:{textAlign:'center',fontSize:'1.6rem',fontWeight:800,color:'#06b6d4',margin:'6px 0'}},'⚡ SLNH (조건부·초소액)'),
+      box('g','이유 ① 시간이 편이다','MSTU는 가만히 있어도 녹는다(MSTR 보합 1년 −42%). SLNH는 부채를 거의 다 갚았고(−76%) APLD JV·Kati 2가 진척되면 가치가 쌓인다.'),
+      box('g','이유 ② 하방에 근거가 있다','SLNH는 주당 현금 ~$0.32(추정)·EV ~$0.65억이라는 바닥 참고선이 있다. MSTU는 파생상품이라 하방 근거가 없다.'),
+      box('g','이유 ③ 기대수익 비대칭','12개월 기준 시나리오: SLNH +45% vs MSTU +2%. 강세 시 SLNH +227% vs MSTU +150%.'),
+      box('r','단, 조건','① 10/16 승인된 희석이 실제로 얼마나 빨리 집행되는지 Q3 실적(11/12~13 예상)에서 확인 ② $0.50~0.54 지지 확인 ③ 포트폴리오 0.5% 이내 ④ $0.40 이탈 시 손절.')),
+    e('div',{className:'card'},e('h2',null,'🦖 MSTU를 고를 유일한 경우'),
+      box('y',null,'"BTC가 며칠~2주 안에 반등한다"는 확신이 있고 매일 시세를 볼 수 있을 때. MSTR $135~140 지지 확인 후 진입, MSTR $128 이탈 시 손절, 최대 2주 보유.')),
+    e('div',{className:'card'},e('h2',null,'💡 솔직한 대안'),
+      box('y',null,'BTC 반등에 베팅하고 싶다면 MSTU보다 MSTR(1×) 또는 IBIT가 장기 보유에 맞다. AI 데이터센터 전력 테마라면 SLNH보다 덜 희석적인 동종사(CIFR·IREN·WULF 등)도 비교해 볼 만하다.')),
+    e('div',{className:'card'},e('h2',null,'📋 실행 요약'),
+      tbl(['','SLNH (추천)','MSTU (트레이딩만)'],[
+        ['진입','$0.50~0.54','MSTR $135~140 반등 확인'],
+        ['비중','≤0.5%','≤1%, 최대 2주'],
+        ['손절','$0.40','MSTR $128'],
+        ['익절','$0.72~0.75 / $0.85~0.95','MSTR $155 / $165'],
+        ['확인 이벤트','Q3 실적·SEPA 공시','MSTR Q3·BTC $80K']]),
+      e('div',{className:'src'},'개별 분석: mstu-20261027 · slnh-20261027 대시보드. 본 자료는 투자 권유가 아니다.')));
+}
+
+function App(){
+  var sa=useState(3),tab=sa[0],set=sa[1];
+  var T=['⚖️비교표','🎯기대수익','⚠️리스크','🏁결론'];
+  var P=[Tab1,Tab2,Tab3,Tab4];
+  return e('div',null,
+    e('div',{className:'hdr'},e('a',{href:'https://disntm90.github.io/disntm90/',className:'back'},'← 목록으로'),
+      e('h1',null,'⚖️ MSTU vs SLNH'),e('div',{className:'px'},'하나만 산다면? → SLNH (조건부·초소액)'),
+      e('div',{className:'sub'},'레버리지 ETF vs 마이크로캡 비교 | 2026-10-27')),
+    e('div',{className:'tabs'},T.map(function(n,i){return e('button',{key:i,className:'tb'+(tab===i?' on':''),onClick:function(){set(i);}},n);})),
+    e('div',{className:'cnt'},e(P[tab],{key:tab})));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>

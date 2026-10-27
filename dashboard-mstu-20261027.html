@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MSTU 종목분석 대시보드 2026-10-27</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#3d1f0f 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #6b2e10;}
+.hdr h1{font-size:1.45rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.05rem;font-weight:700;color:#f97316;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;}
+.tb.on{color:#f97316;border-bottom-color:#f97316;}
+.cnt{padding:14px;max-width:600px;margin:0 auto;}
+.card{background:#111827;border:1px solid #4a2a12;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;}
+.mc .vl{font-size:1.02rem;font-weight:700;margin-top:3px;}
+.g{color:#10b981;}.r{color:#ef4444;}.y{color:#f59e0b;}.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bd,.wd,.dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}.br{background:rgba(239,68,68,0.15);color:#ef4444;}.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #1e2d4a;color:#cbd5e1;}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;font-weight:600;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #22c55e;}
+.term.tec{border-left-color:#3b82f6;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;margin-bottom:4px;}
+.term-f{font-size:0.74rem;color:#f59e0b;margin-top:5px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.flt button{background:#0d1426;border:1px solid #1e2d4a;color:#94a3b8;border-radius:9999px;padding:4px 10px;font-size:0.72rem;cursor:pointer;}
+.flt button.on{border-color:#f59e0b;color:#f59e0b;}
+.mb-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;font-size:0.78rem;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.hz{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:12px;}
+.hz-t{font-size:0.9rem;font-weight:700;color:#f59e0b;margin-bottom:4px;}
+.hz-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+.hz-c{border-radius:8px;padding:8px 4px;}
+.hz-c .l{font-size:0.66rem;color:#94a3b8;}
+.hz-c .p{font-size:1.1rem;font-weight:800;margin-top:2px;}
+.hz-c .s{font-size:0.6rem;color:#64748b;margin-top:2px;}
+.hz-ev{margin-top:8px;font-size:0.78rem;color:#cbd5e1;text-align:center;}
+.gauge .bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#0a0f1e;font-weight:700;}
+.src{font-size:0.68rem;color:#475569;margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props){var a=[tag,props];for(var i=2;i<arguments.length;i++)a.push(arguments[i]);return React.createElement.apply(React,a);};
+var useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
+function mk(cRef,chRef,cfg,deps){useEffect(function(){if(!cRef.current)return;if(chRef.current)chRef.current.destroy();chRef.current=new Chart(cRef.current,cfg);return function(){if(chRef.current){chRef.current.destroy();chRef.current=null;}};},deps||[]);}
+var AX={ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}};
+var LG={legend:{labels:{color:'#94a3b8'}}};
+function box(k,t,d){var c={g:['bx','bt'],y:['wx','wt'],r:['dx','dt']}[k];return e('div',{className:c[0]},t?e('div',{className:c[1]},t):null,e('div',{className:'bd'},d));}
+function tbl(h,rows){return e('div',{className:'table-wrap'},e('table',null,e('thead',null,e('tr',null,h.map(function(x,i){return e('th',{key:i},x);}))),e('tbody',null,rows.map(function(r,i){return e('tr',{key:i},r.map(function(c,j){return e('td',{key:j},c);}));}))));}
+function mc(lb,vl,cls){return e('div',{className:'mc'},e('div',{className:'lb'},lb),e('div',{className:'vl '+(cls||'')},vl));}
+
+
+/* 기준: MSTR ~$140 (10/26) · MSTU ~$33 (추정, 10/22 종가 $34.29 확인) */
+var M0=140, U0=33, KD=0.54; /* KD = σ²(0.70²=0.49) + 비용(보수 1.05% + 차입 ~4%) 연율 */
+function mstu(m,t){return Math.round(U0*Math.pow(m/M0,2)*Math.exp(-KD*t)*10)/10;}
+function pct(v,b){var p=Math.round((v/(b||U0)-1)*100);return (p>=0?'+':'')+p+'%';}
+var HZ=[
+  {h:'1개월 (~2026년 11월 말)',t:1/12,w:'MSTR Q3 실적 · BTC $80K 공방',m:[112,140,170]},
+  {h:'3개월 (~2027년 1월 말)',t:0.25,w:'연말 BTC 방향 · STRC 방어 지속 여부',m:[100,150,195]},
+  {h:'12개월 (~2027년 10월)',t:1,w:'장기 보유 시 변동성 손실 누적 구간',m:[85,185,290]}
+];
+function ev(a){return Math.round((a[0]*0.25+a[1]*0.5+a[2]*0.25)*10)/10;}
+
+/* 1 개요 */
+function Tab1(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🦖 상품 개요'),
+      box('y',null,'MSTU(T-Rex 2X Long MSTR Daily Target ETF)는 REX Shares/Tuttle이 운용하는 레버리지 ETF로, MSTR(Strategy) 주가의 "하루" 수익률 2배를 목표로 한다. 스왑 계약으로 노출을 만들며, 매일 리밸런싱하기 때문에 하루를 넘겨 보유하면 MSTR 수익률의 2배와 크게 달라질 수 있다.'),
+      e('div',{className:'mg'},
+        mc('종가 (10/22)','$34.29 (−10%)','r'),mc('10/26 추정','~$31~33'),
+        mc('52주 범위 (병합 반영)','$14.45~376.21'),mc('1년 수익률','−97.9% (9/3)','r'),
+        mc('총보수','1.05%'),mc('순자산 (9/3)','~$4.8억'),
+        mc('기초자산 MSTR','~$140 (10/26)'),mc('MSTR mNAV','1.19× (mnav.com)')),
+      e('div',{className:'src'},'10/23·10/26 MSTU 종가는 확인하지 못해 MSTR 등락으로 추정. 순자산은 9/3 기준.')),
+    e('div',{className:'card'},e('h2',null,'✂️ 1:10 주식 병합 (2026.8.24)'),
+      box('r',null,'주가가 너무 낮아져 8/24 10주를 1주로 합쳤다. 이전 대시보드(6월)의 가격과 비교할 때는 10을 곱해 환산해야 한다. 레버리지 ETF는 장기적으로 가치가 계속 줄어들어 병합이 반복되는 경향이 있다.')),
+    e('div',{className:'card'},e('h2',null,'🔗 노출 구조'),
+      tbl(['층','배수'],[
+        ['BTC','1×'],
+        ['MSTR (BTC 대비, mNAV·부채·우선주 레버리지)','~1.5~2×'],
+        ['MSTU (MSTR 일일 2×)','BTC 대비 실효 ~3~4×']]),
+      box('r',null,'구조상 MSTR이 하루에 −50% 이상 빠지면 MSTU는 이론적으로 전액 손실이 가능하다(운용사 고지).')));
+}
+
+/* 2 기술적 */
+function Tab2(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'line',data:{labels:['9/25','10/12','10/22','10/23','10/26'],datasets:[
+    {label:'MSTR ($)',data:[157.86,152.68,null,146.01,140],borderColor:'#f59e0b',yAxisID:'y',tension:0.3,spanGaps:true},
+    {label:'MSTU ($)',data:[null,null,34.29,null,32],borderColor:'#f97316',yAxisID:'y1',tension:0.3,spanGaps:true}]},
+    options:{plugins:LG,scales:{x:AX,y:AX,y1:{position:'right',ticks:{color:'#f97316'},grid:{display:false}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📈 가격 흐름'),e('canvas',{ref:cr}),e('div',{className:'src'},'MSTU 10/26은 추정치. 9/25·10/12 MSTU 종가는 미확보.')),
+    e('div',{className:'card'},e('h2',null,'🕯️ 하이킨아시 & 지표'),
+      tbl(['지표','판단','신호'],[
+        ['MSTR 일봉 HA','9/25 고점 후 연속 음봉','하락'],
+        ['MSTR 주봉 HA','4주 연속 음봉','하락'],
+        ['MSTU','MSTR 방향 × 2 — 하락 가속','하락'],
+        ['RSI(14)','신뢰할 수치 미확보','재확인'],
+        ['MSTR 박스','$139~165 하단 이탈 시도','경계']]),
+      box('y',null,'MSTR이 10/13 제시한 박스 하단($139)에 와 있다. 이탈 시 MSTR $120대, MSTU는 약 −25~30% 추가 하락 구간. 지지 확인 반등 시에는 MSTU가 가장 탄력적으로 오른다.')),
+    e('div',{className:'card'},e('h2',null,'⚡ 트레이딩 가이드 (단기 전용)'),
+      tbl(['구분','MSTR 기준','MSTU 환산(대략)'],[
+        ['진입','$135~140 지지 확인','~$29~33'],
+        ['손절','MSTR $128 이탈','~$26 (−20%)'],
+        ['1차 목표','MSTR $155','~$40 (+20%)'],
+        ['2차 목표','MSTR $165','~$45 (+35%)'],
+        ['보유 기간','—','수일~2주 이내 권장']]),
+      e('div',{className:'src'},'MSTU 환산은 일일 2배·경로를 단순화한 근사치.')));
+}
+
+/* 3 변동성 손실 */
+function Tab3(){
+  var cr=useRef(null),cc=useRef(null);
+  var days=[0,21,63,126,189,252];
+  mk(cr,cc,{type:'line',data:{labels:['0','1M','3M','6M','9M','12M'],datasets:[
+    {label:'MSTR 보합 시 MSTU',data:days.map(function(d){return Math.round(100*Math.exp(-KD*d/252));}),borderColor:'#ef4444',tension:0.3},
+    {label:'MSTR',data:days.map(function(){return 100;}),borderColor:'#64748b',borderDash:[5,5],pointRadius:0}]},
+    options:{plugins:LG,scales:{x:AX,y:{min:40,max:110,ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📉 변동성 손실 (Volatility Decay)'),
+      box('r','핵심','MSTR이 1년 뒤 "제자리"여도 MSTU는 약 −42% (MSTR 연변동성 70% 가정 + 비용). 오르락내리락할수록 2배 ETF는 녹아내린다.'),
+      e('canvas',{ref:cr}),
+      tbl(['예시 (MSTR)','MSTR 결과','MSTU 결과'],[
+        ['+10% → −9.1%','0%','+20% → −18.2% = −1.8%'],
+        ['−20% → +25%','0%','−40% → +50% = −10%'],
+        ['−50% → +100%','0%','−100% → 회복 불가']]),
+      e('div',{className:'src'},'연 손실률 ≈ σ²(0.49) + 비용(~5%) 근사. 실제는 경로에 따라 다르다.')),
+    e('div',{className:'card'},e('h2',null,'💰 비용 구조'),
+      tbl(['항목','값'],[['총보수','1.05%/년'],['스왑 차입 비용','~단기금리 수준 (고금리 국면 부담↑)'],['스프레드·괴리','변동성 클 때 확대']])));
+}
+
+/* 4 이벤트 */
+function Tab4(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📅 기초자산(MSTR) 이벤트'),
+      tbl(['시점','이벤트','MSTU 영향'],[
+        ['10월 말~11월 초','MSTR Q3 실적 (일정 미확정)','MSTR ±10% → MSTU ±20%'],
+        ['매주 월요일','Strategy 8-K (BTC·STRC 매입)','BTC 매입 재개 = 호재'],
+        ['11월','FOMC·CPI','BTC 경유 변동'],
+        ['상시','BTC $80K 지지','이탈 시 연쇄 하락']])),
+    e('div',{className:'card'},e('h2',null,'🎲 실적 플레이북'),
+      tbl(['MSTR 반응','MSTU 반응','대응'],[
+        ['+8%↑','+16%↑','일부 익절'],
+        ['±3%','±6%','보유 기간 짧게 유지'],
+        ['−8%↓','−16%↓','손절선 준수 — 물타기 금지']]),
+      box('r',null,'레버리지 ETF로 실적 이벤트를 넘기는 것은 동전 던지기에 2배 베팅. 비중을 줄이고 넘기는 것이 원칙.')));
+}
+
+/* 5 뉴스 */
+function Tab5(){
+  return e('div',null,e('div',{className:'card'},e('h2',null,'📰 최신 뉴스'),
+    box('r','10/26 MSTR −3~5%','지난주 BTC 매입 없이 STRC $2.05억 자사매입. BTC ~$80K.'),
+    box('y','10/19 STRC 등 우선주 매입 한도 $20억 → $30억 확대','남은 한도 $9.57억. 같은 주 BTC 267개($22.1M) 매입.'),
+    box('y','USD 준비금 $48.3억 (10/25)','우선주 배당 여력은 충분, 그러나 현금이 BTC가 아닌 우선주 방어에 쓰임.'),
+    box('r','10/22 MSTU −10%','$38.08 → $34.29.'),
+    box('y','보유 BTC ~848,517개','10/13 대비 소폭 증가.'),
+    box('r','MSTU 1년 −97.9%','8/24 1:10 병합.')));
+}
+
+/* 6 센티먼트 */
+function Tab6(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'💬 센티먼트'),
+      box('r','데이터 정합성 고지','X·Reddit 실제 게시물 원문은 이번 세션에서 개별 수집하지 못했다. 뉴스·운용 데이터 기반 요약이다.'),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'강세론',e('span',{className:'badge bg'},'🟢')),e('div',{className:'bd'},'MSTR mNAV 1.19×, 박스 하단. BTC 반등 시 가장 빠르게 회복하는 수단.')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'약세론',e('span',{className:'badge br'},'🔴')),e('div',{className:'bd'},'1년 −98%가 보여주듯 장기 보유는 구조적으로 손실. MSTR 자체도 BTC 매입 둔화.')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'중립론',e('span',{className:'badge by'},'🟡')),e('div',{className:'bd'},'"방향이 확실할 때 며칠만" — 트레이딩 도구로만.'))),
+    e('div',{className:'card'},e('h2',null,'🏦 MSTR 애널리스트 (기초자산)'),
+      tbl(['출처','의견','목표가'],[['MarketBeat (18명)','Moderate Buy','$258.94'],['StockAnalysis (16명)','Strong Buy','$237.80']]),
+      box('y',null,'애널 목표가는 MSTR 기준이며 MSTU에 2배로 적용되지 않는다(변동성 손실 때문).')));
+}
+
+/* 7 관련 */
+function Tab7(){
+  return e('div',null,e('div',{className:'card'},e('h2',null,'🔗 대안 상품'),
+    tbl(['티커','성격','비고'],[
+      ['MSTR','기초자산 1×','장기 보유 가능'],
+      ['MSTX','Defiance 2× MSTR','MSTU와 유사 구조'],
+      ['MSTZ','2× 인버스 MSTR','하락 베팅/헤지'],
+      ['MSTY','커버드콜 인컴','상승 제한, 분배금'],
+      ['IBIT','BTC 현물 1×','가장 단순'],
+      ['BITX','BTC 2×','MSTR 프리미엄 리스크 제거']]),
+    box('y',null,'BTC 상승에 레버리지로 베팅하고 싶다면 MSTU(실효 3~4×)보다 BITX(2×)나 MSTR(1.5~2×)이 변동성 손실·프리미엄 리스크가 작다.')));
+}
+
+/* 8 기간별 목표가 */
+function Hz(props){var z=props.z;var u=z.m.map(function(m){return mstu(m,z.t);});var v=ev(u);
+  function cell(l,i,cls,bg){return e('div',{className:'hz-c',style:{background:bg}},e('div',{className:'l'},l),e('div',{className:'p '+cls},'$'+u[i]),e('div',{className:'s'},pct(u[i])+' · MSTR $'+z.m[i]+' ('+pct(z.m[i],M0)+')'));}
+  return e('div',{className:'hz'},e('div',{className:'hz-t'},z.h),e('div',{style:{fontSize:'0.72rem',color:'#64748b',marginBottom:'8px'}},z.w),
+    e('div',{className:'hz-row'},cell('약세(25%)',0,'r','rgba(239,68,68,0.1)'),cell('기준(50%)',1,'y','rgba(245,158,11,0.1)'),cell('강세(25%)',2,'g','rgba(16,185,129,0.1)')),
+    e('div',{className:'hz-ev'},'확률가중 기대가격: ',e('b',{className:'y'},'$'+v),' ('+pct(v)+') · MSTR 보합 시 $'+mstu(M0,z.t)));}
+function Tab8(){
+  var cr=useRef(null),cc=useRef(null);
+  function s(i){return [U0].concat(HZ.map(function(z){return mstu(z.m[i],z.t);}));}
+  mk(cr,cc,{type:'line',data:{labels:['현재','1개월','3개월','12개월'],datasets:[
+    {label:'강세',data:s(2),borderColor:'#10b981',tension:0.3},{label:'기준',data:s(1),borderColor:'#f59e0b',tension:0.3},{label:'약세',data:s(0),borderColor:'#ef4444',tension:0.3}]},
+    options:{plugins:LG,scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🎯 기간별 목표가 — 시나리오'),
+      box('r','⚠️ 예측이 아닌 근사 계산','MSTU ≈ $33 × (MSTR 가정가 ÷ $140)² × e^(−0.54×기간). MSTR 연변동성 70%·비용 ~5% 가정. 실제는 경로에 따라 크게 다르다. 확률 25/50/25는 주관적.'),
+      e('canvas',{ref:cr})),
+    HZ.map(function(z,i){return e(Hz,{key:i,z:z});}),
+    e('div',{className:'card'},e('h2',null,'🚫 장기(2030) 목표가는 제시하지 않음'),
+      box('r',null,'12개월 기준 시나리오에서 MSTR이 +32% 올라도 MSTU는 제자리($33.6)다. 수년 보유는 MSTR이 크게 올라도 손실이 날 수 있는 구조라 장기 목표가 산정이 의미 없다.')));
+}
+
+/* 9 용어 */
+function Tab9(){
+  var sf=useState('all'),f=sf[0],setF=sf[1];
+  var T=[
+    {c:'etc',n:'일일 레버리지 ETF',d:'하루 수익률의 2배를 목표로 매일 다시 맞추는 ETF예요. 하루가 지나면 "2배"가 보장되지 않아요.',f:'MSTU = MSTR 일일 2×.'},
+    {c:'fin',n:'변동성 손실 (Volatility Decay)',d:'오르락내리락만 반복해도 레버리지 ETF 가격이 줄어드는 현상이에요.',f:'MSTR 보합 1년 → MSTU 약 −42%.'},
+    {c:'fin',n:'리밸런싱',d:'매일 장 마감에 레버리지 비율을 다시 2배로 맞추는 매매예요.',f:'장 막판 변동성 확대 요인.'},
+    {c:'fin',n:'스왑 (Swap)',d:'증권사와 수익을 주고받기로 한 계약. 레버리지 ETF가 2배 노출을 만드는 수단이에요.',f:'차입 비용이 숨은 비용.'},
+    {c:'fin',n:'총보수',d:'ETF가 매년 떼가는 운용 비용이에요.',f:'1.05%.'},
+    {c:'etc',n:'주식 병합',d:'여러 주를 1주로 합쳐 가격을 올리는 것. 가치는 그대로예요.',f:'8/24 1:10 병합.'},
+    {c:'fin',n:'mNAV',d:'MSTR 기업가치 ÷ 보유 BTC 가치예요.',f:'1.19×.'},
+    {c:'tec',n:'하이킨아시',d:'평균값 캔들로 추세를 보기 쉽게 한 차트예요.',f:'MSTR 주봉 4주 음봉.'},
+    {c:'tec',n:'지지선',d:'사려는 사람이 많아 잘 안 떨어지는 가격대예요.',f:'MSTR $139.'},
+    {c:'ear',n:'경로 의존성',d:'같은 출발·도착 가격이어도 중간 경로에 따라 레버리지 ETF 결과가 달라지는 성질이에요.',f:'목표가가 근사치인 이유.'},
+    {c:'ear',n:'실효 레버리지',d:'최종적으로 BTC 대비 몇 배로 움직이는지예요.',f:'MSTU ≈ BTC의 3~4배.'}
+  ];
+  var F=[['all','전체'],['tec','기술적'],['fin','구조/재무'],['ear','시장'],['etc','기타']];
+  return e('div',null,e('div',{className:'card'},e('h2',null,'📖 용어'),
+    e('div',{className:'flt'},F.map(function(x){return e('button',{key:x[0],className:f===x[0]?'on':'',onClick:function(){setF(x[0]);}},x[1]);})),
+    T.filter(function(t){return f==='all'||t.c===f;}).map(function(t,i){return e('div',{key:i,className:'term '+t.c},e('div',{className:'term-h'},t.n),e('div',{className:'bd'},t.d),e('div',{className:'term-f'},'→ '+t.f));})));
+}
+
+/* 10 멀티배거 */
+var MB=[
+  {q:'1. 아직 충분히 작은 기업인가?',d:'ETF — 기초자산 MSTR 시총 ~$600억',v:0},
+  {q:'2. 가격이 미래를 과대반영하지 않았나?',d:'MSTR mNAV 1.19× — 1년 범위 중간',v:0.5},
+  {q:'3. 매출보다 EBITDA·FCF 개선?',d:'해당 없음 (파생상품 ETF)',v:0},
+  {q:'4. 자산 증가율 ≤ EBITDA 증가율?',d:'해당 없음',v:0},
+  {q:'5. FCF yield 합리적인가?',d:'해당 없음 — 오히려 연 ~5% 비용',v:0},
+  {q:'6. 투자가 실제 수요와 연결?',d:'해당 없음',v:0},
+  {q:'7. 고금리를 버티는가?',d:'스왑 차입 비용 상승 — 불리',v:0},
+  {q:'8. 단기 급등 후 추격 구간 아닌가?',d:'1년 −98%, MSTR 박스 하단',v:1}
+];
+function Tab10(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'radar',data:{labels:MB.map(function(x,i){return '#'+(i+1);}),datasets:[{label:'MSTU',data:MB.map(function(x){return x.v;}),borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.2)'}]},
+    options:{plugins:LG,scales:{r:{min:0,max:1,ticks:{display:false},grid:{color:'#1e2d4a'},angleLines:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8'}}}}});
+  var s=MB.reduce(function(a,b){return a+b.v;},0);
+  return e('div',null,e('div',{className:'card'},e('h2',null,'🔟 멀티배거 체크 (Anna Yartseva 8항목)'),
+    e('div',{style:{textAlign:'center',fontSize:'2.2rem',fontWeight:700,color:'#ef4444'}},s+'/8'),
+    e('div',{style:{textAlign:'center',fontSize:'0.8rem',color:'#94a3b8',marginBottom:'10px'}},'등급: 낮음 — 레버리지 ETF에는 부적합'),
+    e('canvas',{ref:cr}),
+    MB.map(function(it,i){return e('div',{key:i,className:'mb-row'},e('div',null,it.v===1?'✅':it.v===0.5?'⚠️':'❌'),e('div',{style:{flex:1}},it.q,e('div',{className:'mb-sub'},it.d)),e('div',null,it.v+'점'));}),
+    box('y',null,'이 체크리스트는 기업용이다. 레버리지 ETF는 10배 상승이 이론상 가능하더라도 장기 보유 시 구조적 손실이 기본값이다.'),
+    box('r',null,'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')));
+}
+
+/* 11 결론 */
+function Tab11(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🏁 종합 의견'),
+      e('div',{className:'gauge'},e('div',{className:'bar'},
+        e('div',{className:'seg',style:{background:'#ef4444'}},'강한매도'),e('div',{className:'seg',style:{background:'#f87171'}},'매도 ●'),
+        e('div',{className:'seg',style:{background:'#f59e0b'}},'중립'),e('div',{className:'seg',style:{background:'#34d399'}},'매수'),
+        e('div',{className:'seg',style:{background:'#10b981'}},'강한매수'))),
+      e('div',{style:{textAlign:'center',fontSize:'1.1rem',fontWeight:700,color:'#f87171'}},'보유 목적: 매도/회피 · 단기 트레이딩: 조건부'),
+      box('y',null,'MSTR이 박스 하단이고 mNAV가 과열이 아니라 단기 반등 시 탄력은 크다. 그러나 MSTR 하락 추세(4주 음봉)·BTC 매입 둔화 중이며, 12개월 기준 시나리오에서 MSTR이 +32% 올라도 MSTU는 제자리다. 수일~2주 단기 매매 외에는 MSTR 직접 보유가 우월하다.')),
+    e('div',{className:'card'},e('h2',null,'🐂 / 🐻'),
+      box('g','Bull','① MSTR 박스 하단·mNAV 1.19× ② BTC 반등 시 실효 3~4× 탄력 ③ 1년 −98%로 가격 부담은 없음(단, 의미 없는 지표).'),
+      box('r','Bear','① 변동성 손실 — MSTR 보합 1년 −42% ② MSTR 주봉 하락 추세·BTC 매입 둔화 ③ 고금리 스왑 비용 ④ 반복 병합 이력.')),
+    e('div',{className:'card'},e('h2',null,'📋 실행 계획 (트레이딩 한정)'),
+      tbl(['구분','조건','비중'],[['진입','MSTR $135~140 지지 + 반등 확인','포트폴리오 1% 이내'],['손절','MSTR $128 이탈 (MSTU ~−20%)','전량'],['1차 익절','MSTR $155 (MSTU ~+20%)','50%'],['2차 익절','MSTR $165','나머지'],['최대 보유','2주','기간 초과 시 정리']])),
+    e('div',{className:'card'},e('h2',null,'👀 모니터링'),
+      box('y',null,'MSTR $139/$128 · BTC $80K · Strategy 주간 BTC 매입 재개 여부 · MSTR Q3 실적 · MSTU 순자산·괴리율'),
+      e('div',{className:'src'},'출처: Investing.com, Pluang, OCC 인포메모, Yahoo(T-REX 병합 공지), MarketXLS, ETF Central, REX Shares, Seeking Alpha, Benzinga, mnav.com, Strategy 8-K(10/19·10/26). 본 자료는 투자 권유가 아니다.')));
+}
+
+function App(){
+  var sa=useState(7),tab=sa[0],set=sa[1];
+  var T=['🦖개요','📈기술적','📉변동성손실','📅이벤트','📰뉴스','💬센티먼트','🔗대안상품','🎯기간별목표가','📖용어','🔟멀티배거','🏁결론'];
+  var P=[Tab1,Tab2,Tab3,Tab4,Tab5,Tab6,Tab7,Tab8,Tab9,Tab10,Tab11];
+  return e('div',null,
+    e('div',{className:'hdr'},e('a',{href:'https://disntm90.github.io/disntm90/',className:'back'},'← 목록으로'),
+      e('h1',null,'🦖 MSTU — 2X Long MSTR'),e('div',{className:'px'},'~$33 · MSTR ~$140 · 1년 −98%'),
+      e('div',{className:'sub'},'MSTR 일일 2배 레버리지 ETF · 기간별 목표가 | 2026-10-27')),
+    e('div',{className:'tabs'},T.map(function(n,i){return e('button',{key:i,className:'tb'+(tab===i?' on':''),onClick:function(){set(i);}},n);})),
+    e('div',{className:'cnt'},e(P[tab],{key:tab})));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
