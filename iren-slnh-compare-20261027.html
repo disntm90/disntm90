@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>IREN vs SLNH 비교 2026-10-27</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0f1f45 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #1e3a8a;}
+.hdr h1{font-size:1.45rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.05rem;font-weight:700;color:#60a5fa;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;}
+.tb.on{color:#3b82f6;border-bottom-color:#3b82f6;}
+.cnt{padding:14px;max-width:600px;margin:0 auto;}
+.card{background:#111827;border:1px solid #1e2f5a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;}
+.mc .vl{font-size:1.02rem;font-weight:700;margin-top:3px;}
+.g{color:#10b981;}.r{color:#ef4444;}.y{color:#f59e0b;}.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bd,.wd,.dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}.br{background:rgba(239,68,68,0.15);color:#ef4444;}.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #1e2d4a;color:#cbd5e1;}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;font-weight:600;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #22c55e;}
+.term.tec{border-left-color:#3b82f6;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;margin-bottom:4px;}
+.term-f{font-size:0.74rem;color:#f59e0b;margin-top:5px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.flt button{background:#0d1426;border:1px solid #1e2d4a;color:#94a3b8;border-radius:9999px;padding:4px 10px;font-size:0.72rem;cursor:pointer;}
+.flt button.on{border-color:#f59e0b;color:#f59e0b;}
+.mb-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;font-size:0.78rem;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.hz{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:12px;}
+.hz-t{font-size:0.9rem;font-weight:700;color:#f59e0b;margin-bottom:4px;}
+.hz-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+.hz-c{border-radius:8px;padding:8px 4px;}
+.hz-c .l{font-size:0.66rem;color:#94a3b8;}
+.hz-c .p{font-size:1.1rem;font-weight:800;margin-top:2px;}
+.hz-c .s{font-size:0.6rem;color:#64748b;margin-top:2px;}
+.hz-ev{margin-top:8px;font-size:0.78rem;color:#cbd5e1;text-align:center;}
+.gauge .bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#0a0f1e;font-weight:700;}
+.src{font-size:0.68rem;color:#475569;margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props){var a=[tag,props];for(var i=2;i<arguments.length;i++)a.push(arguments[i]);return React.createElement.apply(React,a);};
+var useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
+function mk(cRef,chRef,cfg,deps){useEffect(function(){if(!cRef.current)return;if(chRef.current)chRef.current.destroy();chRef.current=new Chart(cRef.current,cfg);return function(){if(chRef.current){chRef.current.destroy();chRef.current=null;}};},deps||[]);}
+var AX={ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}};
+var LG={legend:{labels:{color:'#94a3b8'}}};
+function box(k,t,d){var c={g:['bx','bt'],y:['wx','wt'],r:['dx','dt']}[k];return e('div',{className:c[0]},t?e('div',{className:c[1]},t):null,e('div',{className:'bd'},d));}
+function tbl(h,rows){return e('div',{className:'table-wrap'},e('table',null,e('thead',null,e('tr',null,h.map(function(x,i){return e('th',{key:i},x);}))),e('tbody',null,rows.map(function(r,i){return e('tr',{key:i},r.map(function(c,j){return e('td',{key:j},c);}));}))));}
+function mc(lb,vl,cls){return e('div',{className:'mc'},e('div',{className:'lb'},lb),e('div',{className:'vl '+(cls||'')},vl));}
+
+
+/* IREN vs SLNH — 10/27 대시보드 시나리오 값 */
+var I={p:25.43,h:[[19,28,36],[16,32,45],[14,42,75],[10,70,140]]};
+var S={p:0.55,h:[[0.40,0.55,0.75],[0.32,0.60,0.95],[0.25,0.80,1.80],[0.10,1.20,3.50]]};
+var HL=['1개월','3개월','12개월','장기'];
+function r(x,p){return Math.round((x/p-1)*100);}
+function evr(a,p){return r(a[0]*0.25+a[1]*0.5+a[2]*0.25,p);}
+function sg(v){return (v>=0?'+':'')+v+'%';}
+
+function Tab1(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'⚖️ 한눈에 비교'),
+      tbl(['항목','🧠 IREN','⚡ SLNH'],[
+        ['사업','GPU 직접 보유 AI 클라우드 (네오클라우드)','재생에너지 부지·전력 공급 + 호스팅'],
+        ['주가','$25.43 (10/26)','$0.55 (10/23)'],
+        ['시가총액','~$100억','~$1.36억 (추정)'],
+        ['규모 차이','—','IREN의 약 1/70'],
+        ['핵심 고객/계약','Microsoft $97억 + $28억, 계약 ARR $40억','Bitdeer 35MW, APLD JV(49%), 임대는 비구속 LOI'],
+        ['최근 매출 (분기)','$1.37억 (AI $0.71억)','$0.15억'],
+        ['현금','$59억 + 제한 $17억','~$0.8억 (추정)'],
+        ['부채','전환사채 ~$63억 (연 1% 등)','$9.2M'],
+        ['희석 리스크','ATM $60억·추가 조달 ~$80억','수권 10억 주·SEPA $2.5억 (시총의 ~2배)'],
+        ['상장 리스크','없음','$1 하회 → Nasdaq 통지·병합 가능'],
+        ['애널리스트','~20명, 평균 ~$78 (+206%)','2명, $2~4'],
+        ['고점 대비','−67%','−57% (9/23 대비)'],
+        ['다음 이벤트','11/5 실적 (확정)','11/12~13 실적 (추정)'],
+        ['멀티배거','4.5/8','5.5/8'],
+        ['10/27 의견','매수 (분할)','중립 — 관망 우세']]))
+  );
+}
+
+function Tab2(){
+  var c1=useRef(null),h1=useRef(null);
+  mk(c1,h1,{type:'bar',data:{labels:HL,datasets:[
+    {label:'IREN 기대수익',data:I.h.map(function(a){return evr(a,I.p);}),backgroundColor:'#3b82f6'},
+    {label:'SLNH 기대수익',data:S.h.map(function(a){return evr(a,S.p);}),backgroundColor:'#06b6d4'}]},
+    options:{plugins:LG,scales:{x:AX,y:{ticks:{color:'#94a3b8',callback:function(v){return v+'%';}},grid:{color:'#1e2d4a'}}}}});
+  var rows=HL.map(function(h,i){return [h,
+    sg(r(I.h[i][0],I.p))+' / '+sg(r(I.h[i][1],I.p))+' / '+sg(r(I.h[i][2],I.p)),
+    sg(r(S.h[i][0],S.p))+' / '+sg(r(S.h[i][1],S.p))+' / '+sg(r(S.h[i][2],S.p))];});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🎯 기간별 기대수익 (확률가중)'),e('canvas',{ref:c1}),
+      box('y',null,'각 대시보드(10/27) 시나리오를 25/50/25로 가중. 기대수익은 비슷하지만, 약세 시나리오의 확률·깊이와 "가정에 대한 신뢰도"가 다르다.')),
+    e('div',{className:'card'},e('h2',null,'📊 약세 / 기준 / 강세'),tbl(['기간','IREN','SLNH'],rows)),
+    e('div',{className:'card'},e('h2',null,'🔑 기대수익을 받쳐 주는 것'),
+      box('g','IREN','계약된 매출(Microsoft 등 $40억 ARR)이 기준 시나리오의 근거 — 실행 리스크.'),
+      box('r','SLNH','기준 시나리오는 "희석이 점진적"이고 "임대 LOI가 계약으로 바뀐다"는 두 가정 모두에 의존 — 가정 리스크.')));
+}
+
+function Tab3(){
+  var cr=useRef(null),cc=useRef(null);
+  var L=['계약 가시성','재무 체력','희석 통제','유동성','상장 안정성','상승 탄력'];
+  mk(cr,cc,{type:'radar',data:{labels:L,datasets:[
+    {label:'IREN',data:[5,4,3,5,5,3],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.15)'},
+    {label:'SLNH',data:[2,2,1,2,1,5],borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.15)'}]},
+    options:{plugins:LG,scales:{r:{min:0,max:5,ticks:{display:false},grid:{color:'#1e2d4a'},angleLines:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8',font:{size:10}}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'⚠️ 리스크 프로필 (0~5, 높을수록 유리)'),e('canvas',{ref:cr}),e('div',{className:'src'},'분석자 정성 평가.')),
+    e('div',{className:'card'},e('h2',null,'💀 크게 잃는 경로'),
+      tbl(['종목','시나리오','결과'],[
+        ['IREN','GPU 금융 공백 + 대규모 증자','12개월 −45%'],
+        ['IREN','AI 인프라 버블 붕괴 / Microsoft 이탈','−60%↑'],
+        ['SLNH','SEPA 대량 발행 + JV 지연','12개월 −55%'],
+        ['SLNH','Nasdaq 통지 → 병합 → 추가 희석','−80%↑ 가능']]),
+      box('y',null,'둘 다 AI 인프라 업종 센티먼트에 같이 흔들린다(상관관계 높음). 둘 다 사는 것은 분산 효과가 작다.')));
+}
+
+function Tab4(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🏁 하나만 고른다면'),
+      e('div',{style:{textAlign:'center',fontSize:'1.6rem',fontWeight:800,color:'#3b82f6',margin:'6px 0'}},'🧠 IREN'),
+      box('g','이유 ① 계약이 있다','Microsoft $97억 등 계약 ARR $40억. SLNH의 HPC 임대는 아직 비구속 LOI 단계.'),
+      box('g','이유 ② 버틸 체력','현금 $59억 vs SLNH ~$0.8억(추정). 둘 다 희석하지만 IREN은 매출을 만들기 위한 희석, SLNH는 생존·착공을 위한 희석에 가깝다.'),
+      box('g','이유 ③ 가격 위치','IREN도 고점 대비 −67%·52주 최저권이라 "비싼 우량주"가 아니다. EV/계약 ARR ~2.9×.'),
+      box('g','이유 ④ 상장·유동성','IREN은 일 거래대금이 크고 상장 리스크가 없다. SLNH는 $1 하회로 병합 이벤트가 남아 있다.'),
+      box('r','IREN의 조건','11/5 실적에서 추가 GPU·데이터센터 금융 확보 여부 확인. 업종 변동성이 크므로 분할 매수 + 주봉 $18 손절.')),
+    e('div',{className:'card'},e('h2',null,'⚡ SLNH를 고를 경우'),
+      box('y',null,'"작은 돈으로 큰 배수"를 노리는 복권형 포지션. 강세 시 상승률은 SLNH가 더 크지만(12개월 +227% vs +195%), 그 시나리오의 실현 확률이 IREN보다 낮다고 본다. 포트폴리오 0.5% 이내.')),
+    e('div',{className:'card'},e('h2',null,'💡 둘 다 담는다면'),
+      tbl(['종목','비중(예시)','역할'],[['IREN','2~3%','핵심 — 계약 기반 AI 인프라'],['SLNH','0.3~0.5%','위성 — 고위험 옵션']]),
+      box('y',null,'같은 업종 센티먼트에 같이 움직이므로 합산 비중을 관리할 것.')),
+    e('div',{className:'card'},e('h2',null,'📋 실행 요약'),
+      tbl(['','IREN (추천)','SLNH'],[
+        ['진입','$23~26 / $19~21','$0.50~0.54 / $0.42~0.46'],
+        ['손절','주봉 $18','$0.40'],
+        ['익절','$34~35 / $42~45','$0.72~0.75 / $0.85~0.95'],
+        ['확인 이벤트','11/5 실적·금융 공시','Q3 실적·SEPA 공시']]),
+      e('div',{className:'src'},'개별 분석: iren-20261027 · slnh-20261027 대시보드. 본 자료는 투자 권유가 아니다.')));
+}
+
+function App(){
+  var sa=useState(3),tab=sa[0],set=sa[1];
+  var T=['⚖️비교표','🎯기대수익','⚠️리스크','🏁결론'];
+  var P=[Tab1,Tab2,Tab3,Tab4];
+  return e('div',null,
+    e('div',{className:'hdr'},e('a',{href:'https://disntm90.github.io/disntm90/',className:'back'},'← 목록으로'),
+      e('h1',null,'⚖️ IREN vs SLNH'),e('div',{className:'px'},'하나만 산다면? → IREN'),
+      e('div',{className:'sub'},'AI 클라우드 vs 부지·전력 마이크로캡 | 2026-10-27')),
+    e('div',{className:'tabs'},T.map(function(n,i){return e('button',{key:i,className:'tb'+(tab===i?' on':''),onClick:function(){set(i);}},n);})),
+    e('div',{className:'cnt'},e(P[tab],{key:tab})));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
