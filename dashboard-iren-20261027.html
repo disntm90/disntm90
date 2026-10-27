@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>IREN 종목분석 대시보드 2026-10-27</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0f1f45 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #1e3a8a;}
+.hdr h1{font-size:1.45rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.05rem;font-weight:700;color:#60a5fa;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;}
+.tb.on{color:#3b82f6;border-bottom-color:#3b82f6;}
+.cnt{padding:14px;max-width:600px;margin:0 auto;}
+.card{background:#111827;border:1px solid #1e2f5a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;}
+.mc .vl{font-size:1.02rem;font-weight:700;margin-top:3px;}
+.g{color:#10b981;}.r{color:#ef4444;}.y{color:#f59e0b;}.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bd,.wd,.dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}.br{background:rgba(239,68,68,0.15);color:#ef4444;}.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #1e2d4a;color:#cbd5e1;}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;font-weight:600;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #22c55e;}
+.term.tec{border-left-color:#3b82f6;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;margin-bottom:4px;}
+.term-f{font-size:0.74rem;color:#f59e0b;margin-top:5px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.flt button{background:#0d1426;border:1px solid #1e2d4a;color:#94a3b8;border-radius:9999px;padding:4px 10px;font-size:0.72rem;cursor:pointer;}
+.flt button.on{border-color:#f59e0b;color:#f59e0b;}
+.mb-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;font-size:0.78rem;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.hz{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:12px;}
+.hz-t{font-size:0.9rem;font-weight:700;color:#f59e0b;margin-bottom:4px;}
+.hz-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+.hz-c{border-radius:8px;padding:8px 4px;}
+.hz-c .l{font-size:0.66rem;color:#94a3b8;}
+.hz-c .p{font-size:1.1rem;font-weight:800;margin-top:2px;}
+.hz-c .s{font-size:0.6rem;color:#64748b;margin-top:2px;}
+.hz-ev{margin-top:8px;font-size:0.78rem;color:#cbd5e1;text-align:center;}
+.gauge .bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#0a0f1e;font-weight:700;}
+.src{font-size:0.68rem;color:#475569;margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props){var a=[tag,props];for(var i=2;i<arguments.length;i++)a.push(arguments[i]);return React.createElement.apply(React,a);};
+var useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
+function mk(cRef,chRef,cfg,deps){useEffect(function(){if(!cRef.current)return;if(chRef.current)chRef.current.destroy();chRef.current=new Chart(cRef.current,cfg);return function(){if(chRef.current){chRef.current.destroy();chRef.current=null;}};},deps||[]);}
+var AX={ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}};
+var LG={legend:{labels:{color:'#94a3b8'}}};
+function box(k,t,d){var c={g:['bx','bt'],y:['wx','wt'],r:['dx','dt']}[k];return e('div',{className:c[0]},t?e('div',{className:c[1]},t):null,e('div',{className:'bd'},d));}
+function tbl(h,rows){return e('div',{className:'table-wrap'},e('table',null,e('thead',null,e('tr',null,h.map(function(x,i){return e('th',{key:i},x);}))),e('tbody',null,rows.map(function(r,i){return e('tr',{key:i},r.map(function(c,j){return e('td',{key:j},c);}));}))));}
+function mc(lb,vl,cls){return e('div',{className:'mc'},e('div',{className:'lb'},lb),e('div',{className:'vl '+(cls||'')},vl));}
+
+
+/* 기준: 10/26 종가 $25.43 · 발행주식 ~394M */
+var P0=25.43;
+function pct(v){var p=Math.round((v/P0-1)*100);return (p>=0?'+':'')+p+'%';}
+var HZ=[
+  {h:'1개월 (~2026년 11월 말)',w:'11/5 Q1 FY27 실적 · Horizon 2~4 인도 · 추가 GPU 금융',bear:19,base:28,bull:36},
+  {h:'3개월 (~2027년 1월 말)',w:'연말 AI Cloud ARR $40억 달성 여부',bear:16,base:32,bull:45},
+  {h:'12개월 (~2027년 10월)',w:'2027 1.2GW 확장 · 신규 하이퍼스케일러 계약',bear:14,base:42,bull:75},
+  {h:'장기 (~2028~2030년)',w:'AI 인프라 사이클 지속 여부',bear:10,base:70,bull:140}
+];
+function ev(z){return Math.round((z.bear*0.25+z.base*0.5+z.bull*0.25)*100)/100;}
+function d(v){return '$'+v;}
+
+/* 1 개요 */
+function Tab1(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🏢 기업 개요'),
+      box('y',null,'IREN(구 Iris Energy, 나스닥 IREN)은 호주 시드니 기반, 공동 CEO 대니얼·윌 로버츠 형제. 텍사스 차일드리스·스위트워터, 캐나다 BC주 등에서 자체 전력 부지를 가진 데이터센터를 운영한다. 비트코인 채굴에서 출발해 2026년 채굴을 정리하고 엔비디아 GPU 기반 AI 클라우드(네오클라우드)로 전환했다.'),
+      e('div',{className:'mg'},
+        mc('종가 (10/26)','$25.43 (+2.1%)'),mc('10/27 장중','~$27.5 (+8%)','g'),
+        mc('52주 범위','$23.72~76.87'),mc('고점 대비','−67%','r'),
+        mc('시가총액','~$100억'),mc('발행주식','~394M주'),
+        mc('애널 평균 목표','~$78 (20명)','g'),mc('다음 실적','11/5 (확정)','b'))),
+    e('div',{className:'card'},e('h2',null,'🤝 핵심 계약 & 용량'),
+      tbl(['항목','내용'],[
+        ['Microsoft','5년 $97억, GB300 GPU 200MW(4단계), 20% 선급금, 완전 가동 시 ARR ~$19.4억'],
+        ['Horizon 1','차일드리스 50MW — 8월 Microsoft 인수 완료'],
+        ['기타 AI 기업','다년 계약 총 $28억 (7월)'],
+        ['AI Cloud ARR','2026년 말 목표 $40억+ — 약 85% 계약 완료, $10억 가동 중'],
+        ['용량 목표','2026 480MW → 2027 1.2GW'],
+        ['자금','현금 + 확약 GPU 금융·선급금 $140억']])),
+    e('div',{className:'card'},e('h2',null,'🔭 미래 인사이트'),
+      box('g','메가트렌드','AI 연산 수요 폭증 × 전력 병목. 자체 전력·부지를 가진 네오클라우드는 하이퍼스케일러의 외주 용량.'),
+      box('r','리스크','① 추가 GPU 금융 ~$80억 필요 ② Microsoft 고객 집중 ③ GPU 감가상각·기술 세대교체 ④ 네오클라우드 업종 센티먼트(머스크 발언·CRWV 급락).')));
+}
+
+/* 2 기술적 */
+function Tab2(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'line',data:{labels:['52주 고점','5/11','10/13','10/21','10/26','10/27 장중'],datasets:[
+    {label:'IREN ($)',data:[76.87,55.15,34.80,27,25.43,27.5],borderColor:'#3b82f6',tension:0.3}]},
+    options:{plugins:LG,scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📈 가격 흐름'),e('canvas',{ref:cr}),e('div',{className:'src'},'10/21은 보도 기준 근사치. 52주 고점 날짜는 미확인.')),
+    e('div',{className:'card'},e('h2',null,'🕯️ 하이킨아시 & 지표'),
+      tbl(['지표','판단','신호'],[
+        ['일봉 HA','10월 연속 음봉 → 10/27 장대 양봉','반전 시도'],
+        ['주봉 HA','6주 연속 음봉 추정','하락'],
+        ['RSI(14)','수치 미확보 — 1개월 −43%로 30 이하 추정','과매도(재확인)'],
+        ['200일선','고점 대비 −67% → 크게 하회 추정','장기 약세'],
+        ['거래량','10/26 52주 최저 후 반등','투매 후 매수 유입']]),
+      box('r','🔴 과매도 구간','1개월 −43%, 52주 최저 $23.72 터치 후 반등. RSI 정확값은 미확인이나 과매도 영역으로 추정. 앤트로픽 IPO 신청 소식(10/27)으로 AI 인프라 섹터가 동반 반등.')),
+    e('div',{className:'card'},e('h2',null,'🧱 지지·저항'),
+      e('div',{className:'mg'},mc('1차 지지','$23.7 (52주 최저)','g'),mc('2차 지지','$19~20','g'),mc('1차 저항','$30','r'),mc('2차 저항','$35 / $40','r')),
+      box('y','패턴: V자 반등 시도','$23.7 이중바닥 여부가 관건. $30 회복 시 $35(10/13 수준), 실패 시 $23.7 재시험.')),
+    e('div',{className:'card'},e('h2',null,'⚡ 진입·청산'),
+      tbl(['구분','가격','조건'],[
+        ['1차 매수','$23~26','52주 최저 지지 확인'],
+        ['2차 매수','$19~21','실적 후 급락 시'],
+        ['손절','주봉 $18 이탈','바닥 붕괴'],
+        ['1차 목표','$34~35','10/13 수준'],
+        ['2차 목표','$42~45','12개월 기준 시나리오']])));
+}
+
+/* 3 재무 */
+function Tab3(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'bar',data:{labels:['시가총액','현금','전환사채','기업가치(EV)','계약 ARR'],datasets:[{label:'$B',data:[10.0,5.9,6.3,11.5,4.0],backgroundColor:['#3b82f6','#10b981','#ef4444','#f59e0b','#a855f7']}]},
+    options:{plugins:{legend:{display:false}},scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'💰 핵심 재무 지표'),
+      tbl(['지표','값','평가'],[
+        ['PER','적자 (FY26 순손실 −$7.0억)','채굴 장비 손상 $4.5억 포함'],
+        ['FY26 매출','$7.07억 (+41%)','성장'],
+        ['FY26 adj. EBITDA','$2.46억','전년 $2.70억 대비 감소'],
+        ['Q4 매출 / AI Cloud','$1.37억 / $0.71억','AI 비중 51%'],
+        ['Q4 adj. EBITDA','$0.19억','전환 비용으로 급감'],
+        ['EV / 계약 ARR','~2.9×','실현 시 저평가'],
+        ['현금 (6/30)','$59억 + 제한현금 $17억','풍부'],
+        ['전환사채','~$63억 (최근분 연 1%)','희석 잠재']]),
+      e('canvas',{ref:cr}),
+      e('div',{className:'src'},'EV = 시총 $100억 + 전환사채 $63억 + 금융 약정 일부 − 현금 $59억 ≈ $115억 (단순 추정). GPU 금융 차입 총액은 확인 못함.')),
+    e('div',{className:'card'},e('h2',null,'⚠️ 자금 조달 구조'),
+      tbl(['항목','내용'],[
+        ['전환사채','2031~2033년 만기 4종 ~$63억 (5월 $30억, 연 1%, 전환 프리미엄 32.5%)'],
+        ['ATM 프로그램','$60억으로 확대 (2026.3)'],
+        ['추가 필요','GPU 금융·선급금 ~$80억, 데이터센터 금융 미발표'],
+        ['2025년 말','전환사채 재매입 위해 3,970만 주 발행']]),
+      box('r','해석','계약 매출이 뒷받침되는 성장 투자지만, 규모가 커서 주식 발행(ATM)·전환사채 희석은 계속된다. 다만 SLNH와 달리 하이퍼스케일러 계약과 현금 $59억이 바닥을 받친다.')));
+}
+
+/* 4 실적 */
+function Tab4(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'bar',data:{labels:['Q3 FY26','Q4 FY26'],datasets:[{label:'AI Cloud 매출 ($M)',data:[33.6,70.5],backgroundColor:'#3b82f6'}]},options:{plugins:LG,scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📊 AI Cloud 매출 급증'),e('canvas',{ref:cr}),
+      e('div',{className:'src'},'Q4 FY26(6월 분기) AI Cloud 매출 전분기 대비 +110%. 분기별 EPS 서프라이즈 이력은 확보 못함.')),
+    e('div',{className:'card'},e('h2',null,'📅 Q1 FY27 실적 (11/5, 확정)'),
+      e('div',{className:'mg'},mc('발표','11/5 장 마감 후'),mc('직전 Q4 매출','$1.37억'),mc('컨센서스','미확보'),mc('관전','ARR 진척')),
+      box('y','주목 지표 TOP 5','① AI Cloud 매출(Horizon 1 전 분기 반영) ② 가동 ARR — $10억에서 얼마나 증가 ③ Horizon 2~4 인도 일정 ④ 추가 GPU·데이터센터 금융 확보 ⑤ 신규 고객 계약')),
+    e('div',{className:'card'},e('h2',null,'🎲 실적 플레이북'),
+      tbl(['시나리오','반응','대응'],[
+        ['ARR 가이던스 상향 + 금융 확보','갭업 +15%↑','$34~35 1차 익절 고려'],
+        ['계획대로 진행','±5%','보유, $23~26 추가'],
+        ['인도 지연 or 금융 공백','갭다운 −15%↓','$19~21 2차 매수 검토, $18 손절'],
+        ['대규모 증자 발표','급락','희석 규모 확인 후 판단']])));
+}
+
+/* 5 뉴스 */
+function Tab5(){
+  return e('div',null,e('div',{className:'card'},e('h2',null,'📰 최신 뉴스'),
+    box('g','10/27 +8% 반등','앤트로픽 IPO 신청 소식에 AI 인프라주 동반 상승. 장중 ~$27.5.'),
+    box('r','10/26 52주 최저 $23.72','머스크의 네오클라우드 회의론 발언, 부채 우려로 CRWV 등과 함께 급락. 1개월 −43%.'),
+    box('g','10/22 Q1 FY27 실적일 11/5 확정',''),
+    box('y','애널 목표가 유지','평균 ~$78, 범위 $40~139. 번스타인 $100, 노스랜드·캔터 $99. 매도 의견 없음.'),
+    box('g','8월 FY26 실적','매출 $7.07억(+41%), 계약 ARR $40억, Microsoft Horizon 1 인수. 채굴 정리로 손상 $4.5억.'),
+    box('y','5월 $30억 전환사채','연 1%, 캡 콜 상한 $110.30.')));
+}
+
+/* 6 센티먼트 */
+function Tab6(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'bar',data:{labels:['최저','평균','번스타인','최고'],datasets:[{label:'목표가 ($)',data:[40,78,100,139],backgroundColor:['#f59e0b','#3b82f6','#10b981','#34d399']}]},options:{plugins:{legend:{display:false}},scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'💬 센티먼트'),
+      box('r','데이터 정합성 고지','X 15개·Reddit 15개 실제 게시물은 이번 세션에서 개별 수집하지 못했다. 뉴스·애널 논조 요약으로 대체.'),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'강세론',e('span',{className:'badge bg'},'🟢')),e('div',{className:'bd'},'Microsoft $97억 계약 + 계약 ARR $40억인데 시총 $100억. EV/ARR ~3×는 하이퍼스케일러 공급사치고 싸다.')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'약세론',e('span',{className:'badge br'},'🔴')),e('div',{className:'bd'},'$80억 추가 조달 필요·전환사채 $63억. 네오클라우드는 GPU 감가상각에 마진이 녹는다는 회의론.')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'중립론',e('span',{className:'badge by'},'🟡')),e('div',{className:'bd'},'"11/5 실적에서 금융 확보 확인 후".'))),
+    e('div',{className:'card'},e('h2',null,'🏦 애널리스트 (약 20명)'),e('canvas',{ref:cr}),
+      tbl(['출처','의견','평균 목표'],[['24/7 Wall St. 집계','매수 우위, 매도 0','$77.81'],['MarketBeat','Moderate Buy','$80.79'],['Tickzen (18명)','—','$78.14']]),
+      box('y',null,'평균 목표가가 현재가의 3배 — 주가 급락을 아직 반영 못한 목표가가 많아 실적 후 하향 조정 가능성도 염두.')));
+}
+
+/* 7 관련 */
+function Tab7(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🔗 동종 종목'),
+      tbl(['티커','특징'],[
+        ['CRWV','CoreWeave — 최대 네오클라우드, 동반 52주 최저'],
+        ['NBIS','Nebius — 네오클라우드'],
+        ['CIFR','Cipher — HPC 리스'],
+        ['APLD','Applied Digital — CoreWeave 임대, SLNH JV'],
+        ['WULF','TeraWulf — HPC 리스'],
+        ['SLNH','Soluna — 초소형, 부지 공급자']])),
+    e('div',{className:'card'},e('h2',null,'📦 ETF'),
+      tbl(['ETF','비고'],[['WGMI','채굴·AI 전환 기업 ETF — IREN 비중 큼(재확인)'],['IRE (2× IREN)','레버리지 — 장기 보유 부적합']]),
+      box('y',null,'IREN은 "리스(임대)"가 아닌 "클라우드(GPU 직접 보유·운영)" 모델이라 수익성·위험 모두 CIFR·APLD 같은 임대형보다 크다.')));
+}
+
+/* 8 기간별 목표가 */
+function Hz(props){var z=props.z,v=ev(z);
+  function cell(l,val,cls,bg){return e('div',{className:'hz-c',style:{background:bg}},e('div',{className:'l'},l),e('div',{className:'p '+cls},d(val)),e('div',{className:'s'},pct(val)));}
+  return e('div',{className:'hz'},e('div',{className:'hz-t'},z.h),e('div',{style:{fontSize:'0.72rem',color:'#64748b',marginBottom:'8px'}},z.w),
+    e('div',{className:'hz-row'},cell('약세(25%)',z.bear,'r','rgba(239,68,68,0.1)'),cell('기준(50%)',z.base,'y','rgba(245,158,11,0.1)'),cell('강세(25%)',z.bull,'g','rgba(16,185,129,0.1)')),
+    e('div',{className:'hz-ev'},'확률가중 기대가격: ',e('b',{className:'y'},'$'+v),' ('+pct(v)+')'));}
+function Tab8(){
+  var cr=useRef(null),cc=useRef(null);
+  function s(k){return [P0].concat(HZ.map(function(z){return z[k];}));}
+  mk(cr,cc,{type:'line',data:{labels:['현재','1개월','3개월','12개월','장기'],datasets:[
+    {label:'강세',data:s('bull'),borderColor:'#10b981',tension:0.3},{label:'기준',data:s('base'),borderColor:'#f59e0b',tension:0.3},{label:'약세',data:s('bear'),borderColor:'#ef4444',tension:0.3}]},
+    options:{plugins:LG,scales:{x:AX,y:{type:'logarithmic',min:8,max:160,ticks:{color:'#94a3b8',autoSkip:false,callback:function(v){return [10,20,40,80,160].indexOf(v)>=0?'$'+v:'';}},grid:{color:'#1e2d4a'}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🎯 기간별 목표가 — 시나리오'),
+      box('r','⚠️ 예측이 아닌 시나리오','기준 10/26 종가 $25.43. 약세 = 금융 공백·인도 지연·추가 희석, 기준 = 계약 ARR 대부분 가동, 강세 = 2027 1.2GW + 신규 하이퍼스케일러. 확률 25/50/25는 주관적. 기준 12개월 $42는 애널 평균($78)의 절반 수준으로 보수적으로 잡았다.'),
+      e('canvas',{ref:cr})),
+    HZ.map(function(z,i){return e(Hz,{key:i,z:z});}),
+    e('div',{className:'card'},e('h2',null,'📏 참고선'),
+      tbl(['기준','가격'],[['52주 최저','$23.72'],['10/13 수준','~$35'],['5/11 (전환사채 발행 시)','$55.15'],['애널 평균','~$78'],['캡 콜 상한','$110.30']])));
+}
+
+/* 9 용어 */
+function Tab9(){
+  var sf=useState('all'),f=sf[0],setF=sf[1];
+  var T=[
+    {c:'etc',n:'네오클라우드 (Neocloud)',d:'AI용 GPU를 대량으로 갖추고 빌려주는 신흥 클라우드 회사예요.',f:'IREN·CoreWeave·Nebius.'},
+    {c:'ear',n:'ARR (연환산 반복매출)',d:'지금 계약된 매출이 1년 내내 이어진다고 가정한 연간 매출이에요.',f:'계약 ARR $40억, 가동 $10억.'},
+    {c:'ear',n:'하이퍼스케일러',d:'Microsoft·Google·Amazon처럼 초대형 데이터센터를 운영하는 회사예요.',f:'Microsoft $97억 계약.'},
+    {c:'fin',n:'전환사채 (Convertible Notes)',d:'나중에 주식으로 바꿀 수 있는 채권. 이자가 낮은 대신 주식으로 바뀌면 희석돼요.',f:'~$63억, 연 1%.'},
+    {c:'fin',n:'캡 콜 (Capped Call)',d:'전환사채로 인한 희석을 일정 가격까지 막아 주는 옵션 계약이에요.',f:'상한 $110.30.'},
+    {c:'fin',n:'ATM 프로그램',d:'시장에서 주식을 조금씩 수시로 파는 방식이에요.',f:'$60억 한도.'},
+    {c:'fin',n:'EV / ARR',d:'기업가치를 연환산 매출로 나눈 값. 낮을수록 매출 대비 싸요.',f:'~2.9×.'},
+    {c:'fin',n:'손상차손 (Impairment)',d:'자산 가치가 떨어져 장부에서 깎는 회계 손실. 현금이 나가진 않아요.',f:'채굴 장비 $4.5억.'},
+    {c:'tec',n:'하이킨아시',d:'평균값 캔들로 추세를 보기 쉽게 한 차트예요.',f:'10/27 장대 양봉 반전 시도.'},
+    {c:'tec',n:'52주 최저',d:'최근 1년 중 가장 낮은 가격이에요.',f:'$23.72 (10/26).'},
+    {c:'ear',n:'GB300',d:'엔비디아의 최신 AI 가속기(블랙웰 울트라) 시스템이에요.',f:'Microsoft 계약 장비.'}
+  ];
+  var F=[['all','전체'],['tec','기술적'],['fin','재무'],['ear','실적/시장'],['etc','기타']];
+  return e('div',null,e('div',{className:'card'},e('h2',null,'📖 용어'),
+    e('div',{className:'flt'},F.map(function(x){return e('button',{key:x[0],className:f===x[0]?'on':'',onClick:function(){setF(x[0]);}},x[1]);})),
+    T.filter(function(t){return f==='all'||t.c===f;}).map(function(t,i){return e('div',{key:i,className:'term '+t.c},e('div',{className:'term-h'},t.n),e('div',{className:'bd'},t.d),e('div',{className:'term-f'},'→ '+t.f));})));
+}
+
+/* 10 멀티배거 */
+var MB=[
+  {q:'1. 아직 충분히 작은 기업인가?',d:'시총 ~$100억 ($5~20B 구간)',v:0.5},
+  {q:'2. 가격이 미래를 과대반영하지 않았나?',d:'EV/계약 ARR ~2.9×',v:1},
+  {q:'3. 매출보다 EBITDA·FCF 개선?',d:'Q4 EBITDA $0.19억으로 급감(전환 비용), FCF 음(−)',v:0.5},
+  {q:'4. 자산 증가율 ≤ EBITDA 증가율?',d:'GPU·데이터센터 대규모 투자, EBITDA 감소',v:0},
+  {q:'5. FCF yield 합리적인가?',d:'FCF 대규모 음(−)',v:0},
+  {q:'6. 투자가 실제 수요·주문과 연결?',d:'Microsoft $97억 + $28억 계약, ARR 85% 계약',v:1},
+  {q:'7. 고금리를 버티는가?',d:'현금 $59억, 전환사채 연 1% — 단 추가 조달 $80억',v:0.5},
+  {q:'8. 단기 급등 후 추격 구간 아닌가?',d:'고점 −67%, 52주 최저권',v:1}
+];
+function Tab10(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'radar',data:{labels:MB.map(function(x,i){return '#'+(i+1);}),datasets:[{label:'IREN',data:MB.map(function(x){return x.v;}),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.2)'}]},
+    options:{plugins:LG,scales:{r:{min:0,max:1,ticks:{display:false},grid:{color:'#1e2d4a'},angleLines:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8'}}}}});
+  var s=MB.reduce(function(a,b){return a+b.v;},0);
+  return e('div',null,e('div',{className:'card'},e('h2',null,'🔟 멀티배거 체크 (Anna Yartseva 8항목)'),
+    e('div',{style:{textAlign:'center',fontSize:'2.2rem',fontWeight:700,color:'#f59e0b'}},s+'/8'),
+    e('div',{style:{textAlign:'center',fontSize:'0.8rem',color:'#94a3b8',marginBottom:'10px'}},'등급: 보통 (4~6점)'),
+    e('canvas',{ref:cr}),
+    MB.map(function(it,i){return e('div',{key:i,className:'mb-row'},e('div',null,it.v===1?'✅':it.v===0.5?'⚠️':'❌'),e('div',{style:{flex:1}},it.q,e('div',{className:'mb-sub'},it.d)),e('div',null,it.v+'점'));}),
+    box('r',null,'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')));
+}
+
+/* 11 결론 */
+function Tab11(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🏁 종합 의견'),
+      e('div',{className:'gauge'},e('div',{className:'bar'},
+        e('div',{className:'seg',style:{background:'#ef4444'}},'강한매도'),e('div',{className:'seg',style:{background:'#f87171'}},'매도'),
+        e('div',{className:'seg',style:{background:'#f59e0b'}},'중립'),e('div',{className:'seg',style:{background:'#34d399'}},'매수 ●'),
+        e('div',{className:'seg',style:{background:'#10b981'}},'강한매수'))),
+      e('div',{style:{textAlign:'center',fontSize:'1.15rem',fontWeight:700,color:'#34d399'}},'매수 (분할, 11/5 실적 전후)'),
+      box('y',null,'Microsoft 등 계약 ARR $40억, 현금 $59억을 가진 회사가 업종 센티먼트로 1개월 −43% 빠져 EV/ARR ~3배에 거래된다. 추가 조달·희석 리스크는 실재하지만 계약 매출이 뒷받침한다. 과매도 구간이므로 $23~26 분할 매수, 실적 후 급락 시 $19~21 추가. 기준 시나리오 3개월 $32, 12개월 $42.')),
+    e('div',{className:'card'},e('h2',null,'🐂 / 🐻'),
+      box('g','Bull','① Microsoft $97억·계약 ARR $40억 ② 현금 $59억·저금리 전환사채 ③ EV/ARR ~2.9× ④ 고점 −67%·과매도, 애널 평균 $78.'),
+      box('r','Bear','① 추가 조달 ~$80억 → ATM·전환사채 희석 ② Microsoft 집중 ③ 네오클라우드 회의론·GPU 감가상각 ④ EBITDA 일시 급감.')),
+    e('div',{className:'card'},e('h2',null,'📋 실행 계획'),
+      tbl(['구분','가격','비중'],[['1차 매수','$23~26','포트폴리오 2%'],['2차 매수','$19~21','+1~2%'],['손절','주봉 $18 이탈','전량'],['1차 익절','$34~35','30~50%'],['2차 익절','$42~45','나머지 일부']])),
+    e('div',{className:'card'},e('h2',null,'👀 모니터링'),
+      box('y',null,'11/5 Q1 FY27 실적 · Horizon 2~4 인도 · GPU·데이터센터 금융 공시 · ATM 사용량 · CRWV 등 업종 흐름 · 신규 하이퍼스케일러 계약'),
+      e('div',{className:'src'},'출처: Google Finance, StockAnalysis, Investing.com, Benzinga, 24/7 Wall St., MarketBeat, Tickzen, IREN 10-K·FY26 실적·전환사채 공시, IREN 블로그(Microsoft), Yahoo Finance, Pluang(실적일). 본 자료는 투자 권유가 아니다.')));
+}
+
+function App(){
+  var sa=useState(10),tab=sa[0],set=sa[1];
+  var T=['🏢개요','📈기술적','💰재무','📊실적','📰뉴스','💬센티먼트','🔗관련·ETF','🎯기간별목표가','📖용어','🔟멀티배거','🏁결론'];
+  var P=[Tab1,Tab2,Tab3,Tab4,Tab5,Tab6,Tab7,Tab8,Tab9,Tab10,Tab11];
+  return e('div',null,
+    e('div',{className:'hdr'},e('a',{href:'https://disntm90.github.io/disntm90/',className:'back'},'← 목록으로'),
+      e('h1',null,'🧠 IREN — AI Cloud'),e('div',{className:'px'},'$25.43 · 시총 ~$100억 · 계약 ARR $40억'),
+      e('div',{className:'sub'},'네오클라우드 · Microsoft $97억 계약 | 2026-10-27')),
+    e('div',{className:'tabs'},T.map(function(n,i){return e('button',{key:i,className:'tb'+(tab===i?' on':''),onClick:function(){set(i);}},n);})),
+    e('div',{className:'cnt'},e(P[tab],{key:tab})));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
