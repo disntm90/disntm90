@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SLNH 종목분석 대시보드 2026-11-11</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0b3340 0%,#0f1a2e 100%);padding:20px 16px;border-bottom:1px solid #0e5566;}
+.hdr h1{font-size:1.45rem;font-weight:700;color:#fff;}
+.hdr .px{font-size:1.05rem;font-weight:700;color:#06b6d4;margin-top:6px;}
+.hdr .sub{color:#94a3b8;font-size:0.82rem;margin-top:4px;}
+.hdr .back{display:inline-block;margin-bottom:8px;font-size:0.78rem;color:#64748b;text-decoration:none;}
+.tabs{display:flex;overflow-x:auto;background:#0d1426;border-bottom:1px solid #1e2d4a;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tb{padding:10px 12px;font-size:0.75rem;color:#64748b;cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;}
+.tb.on{color:#06b6d4;border-bottom-color:#06b6d4;}
+.cnt{padding:14px;max-width:600px;margin:0 auto;}
+.card{background:#111827;border:1px solid #123e4a;border-radius:12px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:0.95rem;font-weight:600;margin-bottom:12px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{background:#0d1426;border-radius:8px;padding:10px;}
+.mc .lb{font-size:0.68rem;color:#64748b;}
+.mc .vl{font-size:1.02rem;font-weight:700;margin-top:3px;}
+.g{color:#10b981;}.r{color:#ef4444;}.y{color:#f59e0b;}.b{color:#06b6d4;}
+.bx{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.bx .bt{font-size:0.78rem;font-weight:600;color:#10b981;margin-bottom:5px;}
+.bd,.wd,.dd{font-size:0.82rem;color:#94a3b8;line-height:1.6;}
+.wx{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.wx .wt{font-size:0.78rem;font-weight:600;color:#f59e0b;margin-bottom:5px;}
+.dx{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:10px;}
+.dx .dt{font-size:0.78rem;font-weight:600;color:#ef4444;margin-bottom:5px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9999px;font-size:0.68rem;font-weight:600;}
+.bg{background:rgba(16,185,129,0.15);color:#10b981;}.br{background:rgba(239,68,68,0.15);color:#ef4444;}.by{background:rgba(245,158,11,0.15);color:#f59e0b;}
+canvas{max-width:100%;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.76rem;}
+th{background:#0d1426;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #1e2d4a;white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid #1e2d4a;color:#cbd5e1;}
+.soc{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:10px;}
+.soc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.78rem;font-weight:600;}
+.term{background:#0d1426;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #22c55e;}
+.term.tec{border-left-color:#3b82f6;}.term.ear{border-left-color:#f97316;}.term.etc{border-left-color:#a855f7;}
+.term-h{font-size:0.82rem;font-weight:600;margin-bottom:4px;}
+.term-f{font-size:0.74rem;color:#f59e0b;margin-top:5px;}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.flt button{background:#0d1426;border:1px solid #1e2d4a;color:#94a3b8;border-radius:9999px;padding:4px 10px;font-size:0.72rem;cursor:pointer;}
+.flt button.on{border-color:#f59e0b;color:#f59e0b;}
+.mb-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;font-size:0.78rem;}
+.mb-sub{font-size:0.7rem;color:#64748b;margin-top:2px;}
+.hz{background:#0d1426;border:1px solid #1e2d4a;border-radius:10px;padding:12px;margin-bottom:12px;}
+.hz-t{font-size:0.9rem;font-weight:700;color:#f59e0b;margin-bottom:4px;}
+.hz-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+.hz-c{border-radius:8px;padding:8px 4px;}
+.hz-c .l{font-size:0.66rem;color:#94a3b8;}
+.hz-c .p{font-size:1.1rem;font-weight:800;margin-top:2px;}
+.hz-c .s{font-size:0.6rem;color:#64748b;margin-top:2px;}
+.hz-ev{margin-top:8px;font-size:0.78rem;color:#cbd5e1;text-align:center;}
+.gauge .bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0 6px;}
+.gauge .seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#0a0f1e;font-weight:700;}
+.src{font-size:0.68rem;color:#475569;margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+var e = function(tag, props){var a=[tag,props];for(var i=2;i<arguments.length;i++)a.push(arguments[i]);return React.createElement.apply(React,a);};
+var useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
+function mk(cRef,chRef,cfg,deps){useEffect(function(){if(!cRef.current)return;if(chRef.current)chRef.current.destroy();chRef.current=new Chart(cRef.current,cfg);return function(){if(chRef.current){chRef.current.destroy();chRef.current=null;}};},deps||[]);}
+var AX={ticks:{color:'#94a3b8'},grid:{color:'#1e2d4a'}};
+var LG={legend:{labels:{color:'#94a3b8'}}};
+function box(k,t,d){var c={g:['bx','bt'],y:['wx','wt'],r:['dx','dt']}[k];return e('div',{className:c[0]},t?e('div',{className:c[1]},t):null,e('div',{className:'bd'},d));}
+function tbl(h,rows){return e('div',{className:'table-wrap'},e('table',null,e('thead',null,e('tr',null,h.map(function(x,i){return e('th',{key:i},x);}))),e('tbody',null,rows.map(function(r,i){return e('tr',{key:i},r.map(function(c,j){return e('td',{key:j},c);}));}))));}
+function mc(lb,vl,cls){return e('div',{className:'mc'},e('div',{className:'lb'},lb),e('div',{className:'vl '+(cls||'')},vl));}
+
+
+/* 기준: 11/9 종가 $0.5445 · 발행주식 246.7M(8/21) */
+var P0=0.5445;
+function pct(v){var p=Math.round((v/P0-1)*100);return (p>=0?'+':'')+p+'%';}
+var HZ=[
+  {h:'1개월 (~2026년 12월 중순)',w:'Q3 실적(11/16 확정) · Nasdaq 결손 통지(11/18~20 예상) · SEPA 발행',bear:0.38,base:0.55,bull:0.78},
+  {h:'3개월 (~2027년 2월 중순)',w:'Applied Digital JV 연말 클로징 · 임대 확정 여부 · 병합 여부',bear:0.30,base:0.60,bull:0.95},
+  {h:'12개월 (~2027년 11월)',w:'HPC 임대 매출 가시화 vs 희석 누적',bear:0.22,base:0.78,bull:1.80},
+  {h:'장기 (~2028~2030년)',w:'Kati 2·Dorothy 3 HPC 가동',bear:0.10,base:1.20,bull:3.50}
+];
+function ev(z){return Math.round((z.bear*0.25+z.base*0.5+z.bull*0.25)*100)/100;}
+function d(v){return '$'+v.toFixed(2);}
+function RevChart(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'doughnut',data:{labels:['호스팅','자체 채굴','풍력','수요반응','AI/HPC'],datasets:[{data:[12.65,1.72,0.37,0.32,0],backgroundColor:['#06b6d4','#f59e0b','#10b981','#a855f7','#ef4444']}]},options:{plugins:LG}});
+  return e('canvas',{ref:cr});
+}
+
+/* 1 개요 */
+function Tab1(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🏢 기업 개요'),
+      box('y',null,'Soluna Holdings(나스닥 SLNH)는 텍사스 풍력·태양광 발전소 옆에 데이터센터를 짓고, 그 안에 고객의 비트코인 채굴기를 맡아 운영하는 "호스팅" 회사다(Q2 매출의 ~84%). 자체 채굴·풍력 발전·전력망 수요반응 매출이 일부 있고, AI/HPC는 아직 매출이 없는 전환 계획 단계. 가동 용량 약 206MW, 파이프라인 약 6.3GW.'),
+      e('div',{className:'mg'},
+        mc('종가 (11/9)','$0.5445','y'),mc('11/9 일중 범위','$0.495~0.576'),
+        mc('신 52주 최저 (11/5)','$0.4574','r'),mc('11/5 대비 반등','+19%','g'),
+        mc('시가총액(추정)','~$1.34억'),mc('발행주식 (8/21)','246.7M주'),
+        mc('부채 원금','$9.2M','g'),mc('BlackRock','992만 주(~4%)','b'),
+        mc('Q3 실적 발표','11/16(월) 장후 · 확정','b'),mc('$1 하회','~26거래일째','r')),
+      e('div',{className:'src'},'11/10 종가는 확인하지 못해 11/9 종가를 기준으로 했다. 시가총액은 8/21 주식 수 기준(이후 SEPA 발행분 미반영).')),
+    e('div',{className:'card'},e('h2',null,'📅 일별 시세 기록 (확인된 값)'),
+      tbl(['날짜','종가','비고'],[
+        ['9/23','$1.28','9월 분석 기준'],
+        ['10/7','$1.00','이 무렵부터 $1 하회'],
+        ['10/12','$0.85',''],
+        ['10/22','$0.53','당시 52주 최저($0.5207)'],
+        ['10/23','$0.55','거래량 ~740만 주'],
+        ['10/30','~$0.67','11/2 전일 종가 역산'],
+        ['11/2','$0.58','−13%, 뉴스 없음'],
+        ['11/5','$0.4574','신 52주 최저 (CNBC)'],
+        ['11/9','$0.5445','범위 $0.495~0.576, 거래량 ~790만 주']]),
+      box('r','지난 계획 점검 (11/3 대시보드)','1차 매수 $0.52~0.56을 제시했고 11/5 저점 $0.457까지 −15% 흔들렸다. 손절선 $0.40은 지켜졌고 11/9 $0.5445로 매수 구간에 복귀 — 현재 평가손익은 대략 본전 수준.')),
+    e('div',{className:'card'},e('h2',null,'💵 매출 구성 추이'),
+      e(RevChart,null),
+      tbl(['사업','Q1 26','Q2 26','변화'],[
+        ['데이터 호스팅','$6.7M','$12.65M','+89% (전기료 총액 계상 $4.4M 포함)'],
+        ['자체 채굴','$2.2M','$1.72M','−22% (해시프라이스 하락)'],
+        ['수요반응 (ERCOT)','$0.5M','$0.32M','계절성'],
+        ['풍력 발전','—','$0.37M','브리스코 인수 후 신규'],
+        ['AI/HPC 클라우드','$0.03M','$0','미개시'],
+        ['합계','$9.4M','$15.1M','+60% QoQ']]),
+      box('y',null,'실적은 "비트코인 채굴 경기", 주가는 "AI 전환 기대"에 연동되는 이중 구조. 채굴 경기가 나빠지면 호스팅 고객(채굴사)의 가동·재계약에도 부담.')),
+    e('div',{className:'card'},e('h2',null,'🏗️ 프로젝트'),
+      tbl(['프로젝트','규모','상태'],[
+        ['Dorothy 1A/1B','텍사스','가동 — 1A 28% 마진, Blockware 등 호스팅'],
+        ['Kati 1','83MW','전량 가동, Bitdeer 35MW 확대(11월 완료 예정)'],
+        ['Dorothy 3','50MW AI (JV)','APLD 51% / SLNH 49%, 연말 클로징 목표, 임대 LOI 비구속'],
+        ['Kati 2','100MW+ (최대 300MW+)','Metrobloks 공동개발, 네오클라우드 비구속 LOI'],
+        ['파이프라인','~6.3GW','장기 옵션']])));
+}
+
+/* 2 기술적 */
+function Tab2(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'line',data:{labels:['9/23','10/7','10/12','10/22','10/23','10/30','11/2','11/5','11/9'],datasets:[
+    {label:'SLNH ($)',data:[1.28,1.00,0.85,0.53,0.55,0.67,0.58,0.4574,0.5445],borderColor:'#06b6d4',tension:0.3},
+    {label:'$1 Nasdaq 기준',data:[1,1,1,1,1,1,1,1,1],borderColor:'#ef4444',borderDash:[5,5],pointRadius:0}]},
+    options:{plugins:LG,scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📈 가격 흐름'),e('canvas',{ref:cr}),e('div',{className:'src'},'10/30은 역산치. 11/3·11/4·11/6·11/10 종가는 미확보.')),
+    e('div',{className:'card'},e('h2',null,'🕯️ 하이킨아시 & 지표'),
+      tbl(['지표','판단','신호'],[
+        ['일봉 HA','11/5 저점 후 양봉 전환','단기 반등'],
+        ['주봉 HA','11/2 주 음봉(저점 $0.457) → 11/9 주 양봉 출발','하락 둔화'],
+        ['RSI(14)','수치 미확보 — 신저가 후 반등으로 30~40대 추정','재확인'],
+        ['200일선','하회 (CNN)','장기 약세'],
+        ['거래량','11/9 ~790만 주 (10/23 ~740만 주와 비슷)','반등에 거래 동반']]),
+      box('y','저점 낮아짐 → 반등','10/22 $0.52 → 11/5 $0.457로 저점이 한 단계 낮아졌다(하락 추세 유지). 다만 11/9 +19% 반등에 거래량이 붙어 단기 바닥 형성 시도. 11/16 실적이 방향을 정할 분수령.')),
+    e('div',{className:'card'},e('h2',null,'🧱 지지·저항'),
+      e('div',{className:'mg'},mc('1차 지지','$0.495 (11/9 저가)','g'),mc('2차 지지','$0.457 (52주 최저) / $0.40','g'),mc('1차 저항','$0.58 (11/2)','r'),mc('2차 저항','$0.67 / $0.75','r')),
+      box('y','패턴: $0.457~0.67 하락 박스','$0.58 돌파 시 $0.67 재시험, $0.457 이탈 시 $0.40 → 2025년 저점 $0.36.')),
+    e('div',{className:'card'},e('h2',null,'⚡ 진입·청산'),
+      tbl(['구분','가격','조건'],[
+        ['신규 진입','11/16 실적 확인 후','실적 전 신규 진입 보류'],
+        ['1차 매수','$0.46~0.52','실적 무난 + $0.457 지지'],
+        ['손절','$0.40 이탈','2차 지지 붕괴'],
+        ['1차 목표','$0.67','10/30 반등 고점'],
+        ['2차 목표','$0.75~0.80','박스 상단 돌파 시']])));
+}
+
+/* 3 재무 */
+function Tab3(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'bar',data:{labels:['6/30 부채','현재 부채','Q2 현금','현금(추정)'],datasets:[{label:'$M',data:[37.9,9.2,113.4,80],backgroundColor:['#ef4444','#10b981','#06b6d4','#64748b']}]},
+    options:{plugins:{legend:{display:false}},scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'💰 부채·현금 (10/26 상환 완료)'),
+      e('canvas',{ref:cr}),
+      tbl(['항목','값'],[
+        ['Generate 대출 상환','$28.7M 전액 (8월 $19.1M + 10월 잔액)'],
+        ['총 부채 원금','$37.9M → $9.2M (−76%)'],
+        ['담보권','해제 — 프로젝트 자산 자유롭게 활용 가능'],
+        ['남은 현금(추정)','~$80M = Q2 $113.4M − 상환 $28.7M ± 운영·조달']]),
+      e('div',{className:'src'},'"현금(추정)"은 단순 계산치로 공시 수치가 아니다. Q3 실적에서 확인 필요. 10-Q·보도자료 간 부채 수치가 일부 엇갈림.')),
+    e('div',{className:'card'},e('h2',null,'📊 밸류에이션'),
+      tbl(['지표','값','평가'],[
+        ['PER','적자','—'],
+        ['시가총액','~$1.34억','추정 ($0.5445 × 246.7M)'],
+        ['EV(추정)','~$0.63억 (시총 − 현금 ~$80M + 부채 $9.2M)','매우 낮음'],
+        ['EV/연환산 매출','~1.0× (Q2×4 = $60M) / ~0.9× (Q3E×4 = $72M)','저평가'],
+        ['주당 현금(추정)','~$0.32','주가의 ~59%'],
+        ['H1 26 순손실(지배)','−$38.2M','전년 −$14.9M 대비 확대'],
+        ['adj. EBITDA (Q2)','−$1.6M','흑자 전환 직전']])),
+    e('div',{className:'card'},e('h2',null,'⚠️ 희석 — 이제 "가능성"이 아닌 "실행 단계"'),
+      tbl(['항목','내용'],[
+        ['수권주식','10억 주 (10/16 승인, 같은 날 발효)'],
+        ['Exchange Cap','20% 초과 발행 승인 — YA II(Yorkville) SEPA 최대 $2.5억'],
+        ['$0.5445에 $2.5억 전액 발행 시','약 4.6억 주 신규 → 주식 수 약 2.9배'],
+        ['기타 YA II 금융','2026.4 약속어음 최대 $12M (재확인)']]),
+      box('r','해석','9/30 기준 발행주식 수(Q3 10-Q)가 SEPA 사용량을 처음 보여줄 것이다. SEPA는 시장가보다 약간 할인된 가격에 수시로 주식을 넘기는 구조라, 주가가 오를 때마다 매도 물량이 나오기 쉽다. 반대로 부채가 거의 사라져 "파산 리스크"는 크게 줄었다 — 이제 핵심 리스크는 생존이 아니라 주주가치 희석이다.')));
+}
+
+/* 4 실적 */
+function Tab4(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'bar',data:{labels:['Q2 25','Q1 26','Q2 26','Q3 26E'],datasets:[{label:'매출 ($M)',data:[6.2,9.4,15.1,18.0],backgroundColor:['#06b6d4','#06b6d4','#06b6d4','#64748b']}]},options:{plugins:LG,scales:{x:AX,y:AX}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📊 매출 추이 & Q3 컨센서스'),e('canvas',{ref:cr}),
+      e('div',{className:'src'},'Q2 25는 YoY +145%에서 역산. Q3 26E는 MarketBeat 컨센서스.')),
+    e('div',{className:'card'},e('h2',null,'📅 Q3 2026 실적 — 11/16(월) 장 마감 후 · 컨퍼런스콜 17:00 ET'),
+      e('div',{className:'mg'},
+        mc('매출 컨센서스','$18.0M (+19% QoQ)'),mc('EPS 컨센서스','−$0.06'),
+        mc('Q2 실제 매출','$15.06M'),mc('Q2 컨센서스','$15.70M (미스)','r'),
+        mc('H1 26 순손실(지배)','−$38.2M','r'),mc('H1 25 순손실','−$14.9M')),
+      box('y',null,'발표일은 11/9 8-K로 확정(11/16). 일부 사이트의 11/12 예상은 추정치였다. Q2는 매출이 컨센서스를 4% 밑돌았다.')),
+    e('div',{className:'card'},e('h2',null,'🔍 주목 지표 TOP 6'),
+      tbl(['#','지표','왜 중요한가'],[
+        ['1','분기말 현금','Q2 $113.4M − Generate 상환($19.1M 8월분) ± 운영 — 생존 체력'],
+        ['2','발행주식 수','9/30 기준 주식 수 = SEPA·ATM 사용량 → 희석 속도'],
+        ['3','호스팅 매출','Kati 1 83MW 전량 반영 여부, 전기료 총액 계상 효과 제외 성장률'],
+        ['4','자체 채굴 매출','해시프라이스 $32 수준(30일 평균 $35.7) — 추가 감소 예상'],
+        ['5','adj. EBITDA','Q2 −$1.6M → 흑자 전환 여부'],
+        ['6','AI 진척','APLD JV 클로징 조건·ChronoScale 확정 임대, Kati 2 자금조달']])),
+    e('div',{className:'card'},e('h2',null,'🎲 실적 플레이북'),
+      tbl(['시나리오','예상 반응','대응'],[
+        ['매출 $18M+·EBITDA 흑자·주식 수 증가 제한적','+15~25%','$0.58 돌파 확인 후 보유, $0.67 1차 익절'],
+        ['매출 컨센 부합·희석 중간','±5~10%','$0.46~0.52 분할 진입 검토'],
+        ['매출 미스·현금 급감·대규모 SEPA','−15~25%','진입 보류, 보유분 $0.40 손절'],
+        ['병합 계획 언급','단기 급락 경향','신규 진입 보류']]),
+      e('div',{className:'src'},'옵션 내재변동성은 확보하지 못함. 과거 실적일 변동폭도 미확인.')),
+    e('div',{className:'card'},e('h2',null,'⏳ Nasdaq $1 카운트다운'),
+      tbl(['항목','내용'],[
+        ['$1 하회 시작','10/7~8 무렵'],
+        ['11/11 기준','약 26거래일째'],
+        ['30거래일 도달','11/17 전후 (실적 다음날)'],
+        ['결손 통지','11/18~20 전후 예상 → 180일(~2027년 5월) 유예'],
+        ['회복 방법','10거래일 연속 $1 이상 종가 or 주식 병합']]),
+      box('r',null,'회사가 X에 "$1 규정 설명" 글을 올릴 만큼 투자자 관심이 크다. 2025·2026년 두 번은 병합 없이 회복했지만, 현재 $0.54에서 자력 회복에는 +84%가 필요. 2023년 1:25 병합 선례.')));
+}
+
+/* 5 뉴스 */
+function Tab5(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'📰 최신 뉴스 (11월)'),
+      box('g','11/9 8-K: Q3 실적 11/16(월) 발표 확정','장 마감 후 보도자료, 17:00 ET 컨퍼런스콜.'),
+      box('g','11/9 종가 $0.5445 (+19% vs 11/5 저점)','범위 $0.495~0.576, 거래량 ~790만 주. 뚜렷한 개별 뉴스는 확인 못함.'),
+      box('r','11/5 신 52주 최저 $0.4574','비트코인 약세(주간 −4.7%)·채굴 수익성 악화와 동조한 것으로 추정 — 개별 원인 기사는 확인 못함.'),
+      box('y','Soluna, X에 Nasdaq $1 규정 설명','"30거래일 연속 $1 미만이어야 결손" — 투자자 우려 대응.'),
+      box('r','11/2 −13%','$0.67 → $0.58, 뉴스 없음.')),
+    e('div',{className:'card'},e('h2',null,'⛏️ 채굴 업황 (호스팅 고객 체력)'),
+      tbl(['지표','값 (11/9 주간)','의미'],[
+        ['비트코인','~$74,600 (주간 −4.7%, 연초 대비 −14.6%)','약세'],
+        ['해시프라이스','$31.89/PH/일 (30일 평균 $35.73)','채굴 수익성 악화'],
+        ['난이도','148.36T (10/29 +5.5%)','경쟁 심화'],
+        ['다음 조정','11/13 약 −2.8% 예상','소폭 완화']]),
+      box('r',null,'자체 채굴 매출은 Q4에도 줄어들 가능성이 높고, 호스팅 고객이 비효율 장비를 끄면 호스팅 매출에도 부담. 반대로 Bitdeer 35MW 확대(11월)는 Q4 호스팅 매출을 지지.')),
+    e('div',{className:'card'},e('h2',null,'🗂️ 10월 주요 이벤트 (요약)'),
+      tbl(['날짜','이벤트'],[
+        ['10/16','주총: 수권주식 10억 주·Exchange Cap(YA SEPA) 승인'],
+        ['10/21','Applied Digital과 50MW AI JV (SLNH 49%)'],
+        ['10/22','Rosenblatt 목표가 $4→$2 ("경제성 축소")'],
+        ['10/26','Generate Capital 대출 $28.7M 전액 상환 → 부채 $9.2M'],
+        ['10/27','BlackRock 13G/A 992만 주']])));
+}
+
+/* 6 센티먼트 */
+function Tab6(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'💬 소셜 센티먼트'),
+      box('r','데이터 정합성 고지','X 15개·Reddit 15개 실제 게시물은 이번 세션의 검색 도구로 개별 수집하지 못했다(검색에 잡힌 X 게시물 1건은 뉴스 요약형). 인용을 지어내지 않기 위해 뉴스·애널리스트 논조 요약으로 대체한다.'),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'강세론',e('span',{className:'badge bg'},'🟢')),e('div',{className:'bd'},'부채 거의 0, EV ~$0.63억에 206MW 가동 + APLD JV. 신저가 후 거래량 동반 반등. "APLD가 파트너로 고른 부지가 이 가격".')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'약세론',e('span',{className:'badge br'},'🔴')),e('div',{className:'bd'},'10억 주 승인·SEPA, $1 하회 26거래일째 → 통지·병합 수순. 채굴 업황 악화로 호스팅 고객 체력 우려.')),
+      e('div',{className:'soc'},e('div',{className:'soc-h'},'중립론',e('span',{className:'badge by'},'🟡')),e('div',{className:'bd'},'"11/16 실적에서 현금·주식 수 보고 판단" — 실적 전 진입 보류.'))),
+    e('div',{className:'card'},e('h2',null,'🏦 애널리스트'),
+      tbl(['기관','의견','목표가'],[
+        ['Rosenblatt','매수','$2 (10/22, $4에서 하향 — "경제성 축소")'],
+        ['H.C. Wainwright','매수','$4 (8/17)'],
+        ['공정가치 추정(내러티브)','—','$4 → $3']]),
+      box('y',null,'커버리지 2곳뿐이고 HCW는 과거 증자 주관사. 목표가가 현재가의 4~7배지만 희석 반영 전 수치로 보고 크게 할인해야 한다.')));
+}
+
+/* 7 관련 */
+function Tab7(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🔗 같은 분야 종목'),
+      tbl(['티커','특징'],[
+        ['APLD','Applied Digital — SLNH JV 파트너, CoreWeave 대형 임대'],
+        ['IREN','채굴 → AI 클라우드 전환 선두'],
+        ['CIFR','빅테크 HPC 임대 확보'],
+        ['WULF','무탄소 전력 + HPC'],
+        ['BTDR','Bitdeer — SLNH Kati 1 최대 호스팅 고객'],
+        ['HUT','전력 부지 + AI']])),
+    e('div',{className:'card'},e('h2',null,'📦 ETF'),
+      tbl(['ETF','비고'],[['WGMI','비트코인 채굴 ETF — 편입 여부 재확인'],['소형주 지수','마이크로캡이라 영향 제한적']]),
+      box('y',null,'APLD와의 JV는 SLNH가 "부지·전력 공급자"로서 가치를 인정받은 첫 대형 사례. 다만 개발자금을 APLD가 대므로 SLNH의 경제적 몫은 49%.')));
+}
+
+/* 8 기간별 목표가 */
+function Hz(props){var z=props.z,v=ev(z);
+  function cell(l,val,cls,bg){return e('div',{className:'hz-c',style:{background:bg}},e('div',{className:'l'},l),e('div',{className:'p '+cls},d(val)),e('div',{className:'s'},pct(val)));}
+  return e('div',{className:'hz'},e('div',{className:'hz-t'},z.h),e('div',{style:{fontSize:'0.72rem',color:'#64748b',marginBottom:'8px'}},z.w),
+    e('div',{className:'hz-row'},cell('약세(25%)',z.bear,'r','rgba(239,68,68,0.1)'),cell('기준(50%)',z.base,'y','rgba(245,158,11,0.1)'),cell('강세(25%)',z.bull,'g','rgba(16,185,129,0.1)')),
+    e('div',{className:'hz-ev'},'확률가중 기대가격: ',e('b',{className:'y'},d(v)),' ('+pct(v)+')'));}
+function Tab8(){
+  var cr=useRef(null),cc=useRef(null);
+  function s(k){return [P0].concat(HZ.map(function(z){return z[k];}));}
+  mk(cr,cc,{type:'line',data:{labels:['현재','1개월','3개월','12개월','장기'],datasets:[
+    {label:'강세',data:s('bull'),borderColor:'#10b981',tension:0.3},{label:'기준',data:s('base'),borderColor:'#f59e0b',tension:0.3},{label:'약세',data:s('bear'),borderColor:'#ef4444',tension:0.3}]},
+    options:{plugins:LG,scales:{x:AX,y:{type:'logarithmic',min:0.08,max:4,ticks:{color:'#94a3b8',autoSkip:false,callback:function(v){return [0.1,0.2,0.5,1,2].indexOf(v)>=0?'$'+v:'';}},grid:{color:'#1e2d4a'}}}}});
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🎯 기간별 목표가 — 시나리오'),
+      box('r','⚠️ 예측이 아닌 시나리오','기준 11/9 종가 $0.5445. 약세 = SEPA 대량 발행 + JV 지연, 기준 = 점진적 발행 + JV 클로징, 강세 = APLD JV 임대 확정 + Kati 2 HPC 계약. 확률 25/50/25는 주관적 가정. 모든 가격은 "병합 전 기준" — 주식 병합 시 비율만큼 환산해야 한다. 11/3 대비 약세 시나리오를 소폭 낮춤(신저가 $0.457 반영).'),
+      e('canvas',{ref:cr})),
+    HZ.map(function(z,i){return e(Hz,{key:i,z:z});}),
+    e('div',{className:'card'},e('h2',null,'📏 참고선'),
+      tbl(['기준','주당 가치'],[['주당 현금(추정, 상환 후)','~$0.32'],['이전 저점 (10/22)','$0.52'],['2025년 저점','~$0.36'],['52주 최저 (11/5)','$0.4574'],['11/3 대시보드 기준가','$0.58'],['10/30 반등 고점','~$0.67'],['애널 목표','$2~4']]),
+      box('y',null,'10/27에 제시한 1개월 약세($0.40)에 근접한 $0.457까지 밀렸다가 반등. 실적 전후 변동성이 크므로 약세 시나리오를 $0.38로 낮췄다.')));
+}
+
+/* 9 용어 */
+function Tab9(){
+  var sf=useState('all'),f=sf[0],setF=sf[1];
+  var T=[
+    {c:'fin',n:'수권주식 (Authorized Shares)',d:'회사가 발행할 수 있는 주식의 최대 한도예요.',f:'10/16 10억 주로 확대 승인.'},
+    {c:'fin',n:'SEPA (주식 매도 약정)',d:'투자사가 회사가 원할 때 주식을 사 주기로 약속한 계약. 돈은 쉽게 모이지만 주식 수가 늘어요.',f:'Yorkville과 최대 $2.5억.'},
+    {c:'fin',n:'Exchange Cap',d:'나스닥은 기존 주식의 20% 넘게 새로 찍으려면 주주 승인을 받게 해요.',f:'10/16 승인 — SEPA 한도 해제.'},
+    {c:'fin',n:'희석 (Dilution)',d:'새 주식 발행으로 내 1주의 몫이 작아지는 거예요.',f:'$2.5억 전액 시 주식 수 ~2.8배.'},
+    {c:'fin',n:'EV (기업가치)',d:'시가총액에서 현금을 빼고 빚을 더한 값이에요.',f:'~$0.63억 (추정).'},
+    {c:'fin',n:'담보권 해제',d:'대출 담보로 잡혀 있던 자산이 자유로워지는 거예요.',f:'Generate 상환으로 프로젝트 자산 해제.'},
+    {c:'etc',n:'JV (합작법인)',d:'두 회사가 함께 세운 회사. 지분만큼 이익과 비용을 나눠요.',f:'APLD 51% / SLNH 49%.'},
+    {c:'etc',n:'LOI (의향서)',d:'계약하겠다는 의사 표시. "비구속"이면 법적 의무는 없어요.',f:'ChronoScale 임대 LOI는 비구속.'},
+    {c:'tec',n:'하이킨아시',d:'평균값으로 그린 캔들. 추세를 보기 쉬워요.',f:'11/5 저점 후 양봉 전환.'},
+    {c:'tec',n:'이중바닥',d:'비슷한 가격에서 두 번 바닥을 찍고 오르는 반등 패턴이에요.',f:'$0.457 지지 시 시도 중.'},
+    {c:'ear',n:'Nasdaq 최소 호가 요건',d:'30거래일 연속 $1 아래면 경고, 180일 안에 회복 못하면 상장폐지 절차가 시작돼요.',f:'11/17 전후 30거래일 도달.'},
+    {c:'ear',n:'호스팅 (Hosting)',d:'고객의 채굴기·서버를 우리 데이터센터에 두고 전기·공간·관리를 제공해 돈 받는 사업이에요.',f:'SLNH 매출의 ~84%.'},
+    {c:'ear',n:'해시프라이스 (Hashprice)',d:'채굴 장비 성능 1단위가 하루에 버는 돈이에요. 낮을수록 채굴이 어려워요.',f:'$31.89/PH/일 — 30일 평균보다 낮음.'},
+    {c:'ear',n:'컨센서스',d:'애널리스트들의 평균 예상치예요.',f:'Q3 매출 $18.0M, EPS −$0.06.'},
+    {c:'ear',n:'수요반응 (Demand Response)',d:'전력이 부족할 때 전기를 덜 써 주고 전력망에서 보상을 받는 거예요.',f:'Q2 $0.32M.'},
+    {c:'ear',n:'주식 병합 (Reverse Split)',d:'여러 주를 1주로 합쳐 주가를 올리는 것. 가치는 그대로지만 보통 부정적으로 받아들여져요.',f:'2023년 1:25 선례.'}
+  ];
+  var F=[['all','전체'],['tec','기술적'],['fin','재무'],['ear','실적/시장'],['etc','기타']];
+  return e('div',null,e('div',{className:'card'},e('h2',null,'📖 용어'),
+    e('div',{className:'flt'},F.map(function(x){return e('button',{key:x[0],className:f===x[0]?'on':'',onClick:function(){setF(x[0]);}},x[1]);})),
+    T.filter(function(t){return f==='all'||t.c===f;}).map(function(t,i){return e('div',{key:i,className:'term '+t.c},e('div',{className:'term-h'},t.n),e('div',{className:'bd'},t.d),e('div',{className:'term-f'},'→ '+t.f));})));
+}
+
+/* 10 멀티배거 */
+var MB=[
+  {q:'1. 아직 충분히 작은 기업인가?',d:'시총 ~$1.34억',v:1},
+  {q:'2. 가격이 미래를 과대반영하지 않았나?',d:'EV/매출 ~1.0× (추정)',v:1},
+  {q:'3. 매출보다 EBITDA·FCF 개선이 따라오나?',d:'매출총이익 흑자, EBITDA 손실 축소 — FCF 음(−)',v:0.5},
+  {q:'4. 자산 증가율 ≤ EBITDA 증가율?',d:'투자 확대 중, EBITDA 적자',v:0.5},
+  {q:'5. FCF yield 합리적인가?',d:'FCF 음(−)',v:0},
+  {q:'6. 투자가 실제 수요·주문과 연결?',d:'APLD JV 확정 계약·Bitdeer 35MW — 임대는 비구속 LOI',v:1},
+  {q:'7. 고금리를 버티는가?',d:'부채 $9.2M로 급감 — 단 성장 자금은 증자 의존',v:0.5},
+  {q:'8. 단기 급등 후 추격 구간 아닌가?',d:'9/23 대비 −57%, 신저가 후 +19% 반등',v:1}
+];
+function Tab10(){
+  var cr=useRef(null),cc=useRef(null);
+  mk(cr,cc,{type:'radar',data:{labels:MB.map(function(x,i){return '#'+(i+1);}),datasets:[{label:'SLNH',data:MB.map(function(x){return x.v;}),borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.2)'}]},
+    options:{plugins:LG,scales:{r:{min:0,max:1,ticks:{display:false},grid:{color:'#1e2d4a'},angleLines:{color:'#1e2d4a'},pointLabels:{color:'#94a3b8'}}}}});
+  var s=MB.reduce(function(a,b){return a+b.v;},0);
+  return e('div',null,e('div',{className:'card'},e('h2',null,'🔟 멀티배거 체크 (Anna Yartseva 8항목)'),
+    e('div',{style:{textAlign:'center',fontSize:'2.2rem',fontWeight:700,color:'#f59e0b'}},s+'/8'),
+    e('div',{style:{textAlign:'center',fontSize:'0.8rem',color:'#94a3b8',marginBottom:'10px'}},'등급: 보통 (4~6점) — 11/3과 동일'),
+    e('canvas',{ref:cr}),
+    MB.map(function(it,i){return e('div',{key:i,className:'mb-row'},e('div',null,it.v===1?'✅':it.v===0.5?'⚠️':'❌'),e('div',{style:{flex:1}},it.q,e('div',{className:'mb-sub'},it.d)),e('div',null,it.v+'점'));}),
+    box('y',null,'체크리스트상 "싸고 작고 과매도"는 맞지만, 이 체크리스트는 대규모 희석을 직접 반영하지 못한다. 주식 수가 2~3배 늘면 1·2번의 매력은 그만큼 줄어든다.'),
+    box('r',null,'워킹페이퍼 기반 통계 신호 — 이 조건 충족이 10배 수익을 보장하지 않음. 성공 기업 중심 표본으로 선택 편향 존재. 참고 지표로만 활용.')));
+}
+
+/* 11 결론 */
+function Tab11(){
+  return e('div',null,
+    e('div',{className:'card'},e('h2',null,'🏁 종합 의견'),
+      e('div',{className:'gauge'},e('div',{className:'bar'},
+        e('div',{className:'seg',style:{background:'#ef4444'}},'강한매도'),e('div',{className:'seg',style:{background:'#f87171'}},'매도'),
+        e('div',{className:'seg',style:{background:'#f59e0b'}},'중립 ●'),e('div',{className:'seg',style:{background:'#34d399'}},'매수'),
+        e('div',{className:'seg',style:{background:'#10b981'}},'강한매수'))),
+      e('div',{style:{textAlign:'center',fontSize:'1.15rem',fontWeight:700,color:'#f59e0b'}},'중립 — 11/16 실적 확인 전 신규 진입 보류'),
+      box('y',null,'11/3 의견 유지, 진입 타이밍만 "실적 후"로 조정. 11/5 신저가 $0.457(비트코인 주간 −4.7%·해시프라이스 약세와 동조) 뒤 11/9 +19% 반등했지만 저점은 계속 낮아지는 중. 5일 뒤 실적(11/16)과 바로 이어질 Nasdaq 결손 통지(11/18~20 예상)가 연달아 있어 변동성이 크다. 실적에서 ① 9/30 주식 수(SEPA 사용량) ② 현금 ③ 매출 $18M 달성·EBITDA 흑자 여부를 확인한 뒤 $0.46~0.52에서 포트폴리오 0.5% 이내로 접근. 기존 보유분은 $0.40 손절 유지.')),
+    e('div',{className:'card'},e('h2',null,'🐂 / 🐻'),
+      box('g','Bull','① 부채 $9.2M(−76%), 담보권 해제 ② APLD와 50MW JV ③ EV ~$0.63억(매출 ~1배), 주당 현금 ~$0.32(주가의 59%) ④ 신저가 후 거래량 동반 반등·BlackRock 보유·Bitdeer 35MW 확대.'),
+      box('r','Bear','① 10억 주·SEPA $2.5억(현 시총의 ~1.9배) ② $1 하회 26거래일째 → 통지·병합 ③ 채굴 업황 악화(해시프라이스 $32) — 호스팅 고객 체력 ④ H1 순손실 −$38.2M로 확대·Q2 매출 컨센 미스 ⑤ AI 매출 0, 임대 비구속 LOI.')),
+    e('div',{className:'card'},e('h2',null,'📋 실행 계획'),
+      tbl(['구분','가격','비중'],[['진입 시점','11/16 실적 후','—'],['1차 매수','$0.46~0.52','포트폴리오 0.3~0.5%'],['2차 매수','$0.40~0.42 지지 확인 시','+0.2%'],['손절','$0.40 종가 이탈','전량'],['1차 익절','$0.67','50%'],['2차 익절','$0.75~0.80','나머지']])),
+    e('div',{className:'card'},e('h2',null,'👀 모니터링 일정'),
+      tbl(['날짜','이벤트'],[['11/13','비트코인 난이도 조정 (약 −2.8% 예상)'],['11/16 장후','Q3 실적·컨퍼런스콜 17:00 ET'],['11/17~20','Nasdaq 30거래일 도달 → 결손 통지 8-K'],['11월 중','Bitdeer 35MW 확대 완료'],['연말','APLD JV 클로징·ChronoScale 확정 임대']]),
+      e('div',{className:'src'},'출처: CNBC(11/5 저가), StockInvest.us(11/9 시세), SEC 8-K(11/9 실적일), MarketBeat(Q3 컨센서스·Q2 실적), rallies.ai, Hashrate Index(11/9 채굴 지표), Investing.com(Rosenblatt), StockTitan(BlackRock 13G/A), Nasdaq(Q1·Q2 매출 구성), Soluna X(Nasdaq 규정), Simply Wall St, CNN(200일선). 본 자료는 투자 권유가 아니다.')));
+}
+
+function App(){
+  var sa=useState(10),tab=sa[0],set=sa[1];
+  var T=['🏢개요','📈기술적','💰재무','📊실적','📰뉴스','💬센티먼트','🔗관련·ETF','🎯기간별목표가','📖용어','🔟멀티배거','🏁결론'];
+  var P=[Tab1,Tab2,Tab3,Tab4,Tab5,Tab6,Tab7,Tab8,Tab9,Tab10,Tab11];
+  return e('div',null,
+    e('div',{className:'hdr'},e('a',{href:'https://disntm90.github.io/disntm90/',className:'back'},'← 목록으로'),
+      e('h1',null,'⚡ SLNH — Soluna Holdings'),e('div',{className:'px'},'$0.5445 · 시총 ~$1.34억 · Q3 실적 11/16'),
+      e('div',{className:'sub'},'채굴기 호스팅 84% · AI 전환 중 · 신저가 후 반등 | 2026-11-11')),
+    e('div',{className:'tabs'},T.map(function(n,i){return e('button',{key:i,className:'tb'+(tab===i?' on':''),onClick:function(){set(i);}},n);})),
+    e('div',{className:'cnt'},e(P[tab],{key:tab})));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App,null));
+</script>
+</body>
+</html>
