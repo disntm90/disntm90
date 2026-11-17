@@ -4,10 +4,10 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>IREN 종목분석 대시보드 2026-10-27</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>window.onerror=function(m){var r=document.getElementById('root');if(r&&!r.firstChild){r.innerHTML='<div style="padding:24px;color:#f87171;font-family:sans-serif">대시보드를 불러오지 못했습니다. 새로고침해 주세요.<br><small style="color:#94a3b8">'+String(m).slice(0,160)+'</small></div>';}};</script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh;}
@@ -68,7 +68,9 @@ td{padding:7px 8px;border-bottom:1px solid #1e2d4a;color:#cbd5e1;}
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
+<script>
+window.addEventListener("load",function(){if(!window.React||!window.ReactDOM||!window.Chart){var r=document.getElementById("root");if(r&&!r.firstChild)r.innerHTML='<div style="padding:24px;color:#f87171;font-family:sans-serif">라이브러리(CDN) 로딩에 실패했습니다. 네트워크 확인 후 새로고침해 주세요.</div>';}});
+
 var e = function(tag, props){var a=[tag,props];for(var i=2;i<arguments.length;i++)a.push(arguments[i]);return React.createElement.apply(React,a);};
 var useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
 function mk(cRef,chRef,cfg,deps){useEffect(function(){if(!cRef.current)return;if(chRef.current)chRef.current.destroy();chRef.current=new Chart(cRef.current,cfg);return function(){if(chRef.current){chRef.current.destroy();chRef.current=null;}};},deps||[]);}
